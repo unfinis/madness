@@ -17,6 +17,8 @@ import '../widgets/screenshot_editor/layers_panel.dart';
 import '../widgets/screenshot_editor/properties_panel.dart';
 import '../widgets/screenshot_editor/collapsible_side_panel.dart';
 import '../widgets/screenshot_editor/editor_constants.dart';
+import '../widgets/screenshot_editor/drag_drop_wrapper.dart';
+import '../dialogs/image_replacement_dialog.dart';
 
 class ScreenshotEditorScreen extends ConsumerStatefulWidget {
   final String screenshotId;
@@ -45,6 +47,7 @@ class _ScreenshotEditorScreenState
   bool _isVerticalGuideMode = true;
   int _nextNumberLabelValue = 1;
   final GlobalKey<CollapsibleSidePanelState> _sidePanelKey = GlobalKey();
+  Rect? _activeCropBounds; // Current active crop bounds
 
   @override
   void initState() {
@@ -59,8 +62,9 @@ class _ScreenshotEditorScreenState
         _layers = List.from(screenshot.layers);
         // Update next number label value based on existing number labels
         _updateNextNumberLabelValue();
-        // Load saved guides from metadata
+        // Load saved guides and crop from metadata
         _loadGuidesFromMetadata(screenshot.metadata);
+        _loadCropFromMetadata(screenshot.metadata);
       });
     }
   }
@@ -72,13 +76,13 @@ class _ScreenshotEditorScreenState
       if (canvasState != null) {
         final verticalGuides = metadata['verticalGuides'] as List<dynamic>?;
         final horizontalGuides = metadata['horizontalGuides'] as List<dynamic>?;
-        
+
         if (verticalGuides != null) {
           canvasState.setVerticalGuides(
             verticalGuides.map((e) => (e as num).toDouble()).toList()
           );
         }
-        
+
         if (horizontalGuides != null) {
           canvasState.setHorizontalGuides(
             horizontalGuides.map((e) => (e as num).toDouble()).toList()
@@ -86,6 +90,20 @@ class _ScreenshotEditorScreenState
         }
       }
     });
+  }
+
+  void _loadCropFromMetadata(Map<String, dynamic> metadata) {
+    final activeCropData = metadata['activeCrop'] as Map<String, dynamic>?;
+    if (activeCropData != null) {
+      setState(() {
+        _activeCropBounds = Rect.fromLTWH(
+          activeCropData['left'] as double,
+          activeCropData['top'] as double,
+          activeCropData['width'] as double,
+          activeCropData['height'] as double,
+        );
+      });
+    }
   }
 
   void _updateNextNumberLabelValue() {
@@ -176,6 +194,59 @@ class _ScreenshotEditorScreenState
   void _onGuidesChanged() {
     // Auto-save guides when they change
     _saveChanges();
+  }
+
+  void _onCropChanged(Rect? cropBounds) {
+    setState(() {
+      _activeCropBounds = cropBounds;
+    });
+    // Auto-save crop changes
+    _saveChanges();
+  }
+
+  void _onImageReplaced(ui.Image newImage) async {
+    try {
+      // Update the canvas with the new background image
+      final canvasState = _canvasKey.currentState as dynamic;
+      if (canvasState != null && canvasState.updateBackgroundImage != null) {
+        canvasState.updateBackgroundImage(newImage);
+      }
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Image replaced successfully (${newImage.width}×${newImage.height})',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+
+      // Auto-save changes
+      _saveChanges();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error replacing image: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showImageReplacementDialog() async {
+    final result = await showDialog<ui.Image>(
+      context: context,
+      builder: (context) => const ImageReplacementDialog(),
+    );
+
+    if (result != null) {
+      _onImageReplaced(result);
+    }
   }
 
   void _onLayerAdded(EditorLayer layer) {
@@ -886,17 +957,35 @@ class _ScreenshotEditorScreenState
     }
   }
 
-  // Crop functionality removed - methods kept for compatibility
   void _applyCrop() {
-    // Crop functionality disabled
+    final canvas = _canvasKey.currentState as dynamic;
+    if (canvas != null && canvas.hasPendingCrop) {
+      canvas.applyCrop();
+      // Switch back to select tool after applying crop
+      setState(() {
+        _selectedTool = EditorTool.select;
+      });
+    }
   }
 
   void _cancelCrop() {
-    // Crop functionality disabled
+    final canvas = _canvasKey.currentState as dynamic;
+    if (canvas != null) {
+      canvas.cancelCrop();
+      // Switch back to select tool after canceling crop
+      setState(() {
+        _selectedTool = EditorTool.select;
+      });
+    }
   }
 
   bool get _hasPendingCrop {
-    return false; // Always false since crop is disabled
+    final canvas = _canvasKey.currentState as dynamic;
+    return canvas?.hasPendingCrop ?? false;
+  }
+
+  bool get _isCropToolActive {
+    return _selectedTool == EditorTool.crop;
   }
 
   @override
@@ -957,8 +1046,41 @@ class _ScreenshotEditorScreenState
               },
             ),
             
-            // Crop controls removed - functionality disabled
-            
+            // Crop controls - shown when crop tool is active
+            if (_isCropToolActive) ...[
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: _hasPendingCrop ? _applyCrop : null,
+                icon: const Icon(Icons.check, size: 18),
+                label: const Text('Apply'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _hasPendingCrop
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceVariant,
+                  foregroundColor: _hasPendingCrop
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 4),
+              OutlinedButton.icon(
+                onPressed: _cancelCrop,
+                icon: const Icon(Icons.close, size: 18),
+                label: const Text('Cancel'),
+              ),
+            ],
+
+            // Image replacement button
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _showImageReplacementDialog,
+              icon: const Icon(Icons.image, size: 18),
+              label: const Text('Replace Image'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+              ),
+            ),
+
             const SizedBox(width: 8),
             FilledButton.icon(
               onPressed: _saveChanges,
@@ -1079,22 +1201,28 @@ class _ScreenshotEditorScreenState
                 Expanded(
                   child: Stack(
                     children: [
-                      EditorCanvas(
-                        key: _canvasKey,
-                        screenshotId: widget.screenshotId,
-                        projectId: widget.projectId,
-                        selectedTool: _selectedTool,
-                        toolConfig: _toolConfig,
-                        layers: _layers,
-                        onLayerAdded: _onLayerAdded,
-                        onLayerUpdated: _onLayerUpdated,
-                        onLayerSelected: _onLayerSelected,
-                        enableSnapping: _enableSnapping,
-                        showGuides: _showGuides,
-                        isVerticalGuideMode: _isVerticalGuideMode,
-                        onGuideToolTapped: _toggleGuideMode,
-                        getNextNumberLabelValue: _getNextNumberLabelValue,
-                        onGuidesChanged: _onGuidesChanged,
+                      DragDropWrapper(
+                        onImageDropped: _onImageReplaced,
+                        child: EditorCanvas(
+                          key: _canvasKey,
+                          screenshotId: widget.screenshotId,
+                          projectId: widget.projectId,
+                          selectedTool: _selectedTool,
+                          toolConfig: _toolConfig,
+                          layers: _layers,
+                          onLayerAdded: _onLayerAdded,
+                          onLayerUpdated: _onLayerUpdated,
+                          onLayerSelected: _onLayerSelected,
+                          enableSnapping: _enableSnapping,
+                          showGuides: _showGuides,
+                          isVerticalGuideMode: _isVerticalGuideMode,
+                          onGuideToolTapped: _toggleGuideMode,
+                          getNextNumberLabelValue: _getNextNumberLabelValue,
+                          onGuidesChanged: _onGuidesChanged,
+                          onCropChanged: _onCropChanged,
+                          initialCropBounds: _activeCropBounds,
+                          onImageReplaced: _onImageReplaced,
+                        ),
                       ),
                     ],
                   ),
@@ -1186,19 +1314,25 @@ class _ScreenshotEditorScreenState
         Expanded(
           child: Container(
             color: const Color(0xFF2A2A2A),
-            child: EditorCanvas(
-              key: _canvasKey,
-              screenshotId: widget.screenshotId,
-              projectId: widget.projectId,
-              selectedTool: _selectedTool,
-              toolConfig: _toolConfig,
-              layers: _layers,
-              onLayerAdded: _onLayerAdded,
-              onLayerUpdated: _onLayerUpdated,
-              onLayerSelected: _onLayerSelected,
-              isVerticalGuideMode: _isVerticalGuideMode,
-              onGuideToolTapped: _toggleGuideMode,
-              getNextNumberLabelValue: _getNextNumberLabelValue,
+            child: DragDropWrapper(
+              onImageDropped: _onImageReplaced,
+              child: EditorCanvas(
+                key: _canvasKey,
+                screenshotId: widget.screenshotId,
+                projectId: widget.projectId,
+                selectedTool: _selectedTool,
+                toolConfig: _toolConfig,
+                layers: _layers,
+                onLayerAdded: _onLayerAdded,
+                onLayerUpdated: _onLayerUpdated,
+                onLayerSelected: _onLayerSelected,
+                isVerticalGuideMode: _isVerticalGuideMode,
+                onGuideToolTapped: _toggleGuideMode,
+                getNextNumberLabelValue: _getNextNumberLabelValue,
+                onCropChanged: _onCropChanged,
+                initialCropBounds: _activeCropBounds,
+                onImageReplaced: _onImageReplaced,
+              ),
             ),
           ),
         ),

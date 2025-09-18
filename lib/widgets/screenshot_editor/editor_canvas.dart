@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/editor_tool.dart';
 import '../../models/editor_layer.dart';
 import '../../providers/screenshot_providers.dart';
+import '../../services/image_replacement_service.dart';
 
 class EditorCanvas extends ConsumerStatefulWidget {
   final String screenshotId;
@@ -22,6 +23,9 @@ class EditorCanvas extends ConsumerStatefulWidget {
   final VoidCallback? onGuideToolTapped;
   final bool isVerticalGuideMode;
   final VoidCallback? onGuidesChanged;
+  final Function(Rect?)? onCropChanged; // Callback for crop changes
+  final Rect? initialCropBounds; // Initial crop bounds from metadata
+  final Function(ui.Image)? onImageReplaced; // Callback for image replacement
 
   const EditorCanvas({
     super.key,
@@ -39,6 +43,9 @@ class EditorCanvas extends ConsumerStatefulWidget {
     this.onGuideToolTapped,
     this.isVerticalGuideMode = true,
     this.onGuidesChanged,
+    this.onCropChanged,
+    this.initialCropBounds,
+    this.onImageReplaced,
   });
 
   @override
@@ -57,7 +64,13 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   Offset? _drawingEnd;
   bool _isDrawing = false;
   
-  // Crop functionality disabled - tool button remains for future implementation
+  // Crop state - non-destructive crop that works on all layers
+  Rect? _activeCropBounds; // Current confirmed crop bounds (from metadata)
+  Rect? _previewCropBounds; // Temporary crop bounds being drawn
+  Rect? _previousCropBounds; // Previous crop bounds for cancellation
+  bool _isCropMode = false;
+  bool _isCropResizing = false;
+  String? _cropResizeHandle; // 'tl', 'tr', 'bl', 'br', 't', 'b', 'l', 'r'
   
   // Move/Resize state
   String? _selectedLayerId;
@@ -83,7 +96,24 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       case EditorTool.pan:
         return _isDrawing ? SystemMouseCursors.grabbing : SystemMouseCursors.grab; // Hand cursor
       case EditorTool.crop:
-        return SystemMouseCursors.basic; // Crop functionality disabled
+        // Return resize cursor when hovering over handles
+        if (_hoverHandle != null) {
+          switch (_hoverHandle) {
+            case 'tl':
+            case 'br':
+              return SystemMouseCursors.resizeUpLeftDownRight;
+            case 'tr':
+            case 'bl':
+              return SystemMouseCursors.resizeUpRightDownLeft;
+            case 't':
+            case 'b':
+              return SystemMouseCursors.resizeUpDown;
+            case 'l':
+            case 'r':
+              return SystemMouseCursors.resizeLeftRight;
+          }
+        }
+        return SystemMouseCursors.precise;
       case EditorTool.select:
         // Return resize cursor when hovering over handles
         if (_hoverHandle != null) {
@@ -153,10 +183,41 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         _isVerticalGuideMode = widget.isVerticalGuideMode;
       });
     }
-    // Crop tool functionality disabled
+    // Handle crop tool activation/deactivation
+    if (widget.selectedTool == EditorTool.crop && oldWidget.selectedTool != EditorTool.crop) {
+      _activateCropMode();
+    } else if (widget.selectedTool != EditorTool.crop && oldWidget.selectedTool == EditorTool.crop) {
+      _deactivateCropMode();
+    }
   }
 
-  // Crop functionality methods removed - to be re-implemented from scratch
+  void _activateCropMode() {
+    setState(() {
+      _isCropMode = true;
+      // Store previous crop bounds for cancellation
+      _previousCropBounds = _activeCropBounds;
+      // Load existing crop bounds from screenshot metadata if they exist
+      _loadExistingCropBounds();
+    });
+  }
+
+  void _deactivateCropMode() {
+    setState(() {
+      _isCropMode = false;
+      _previewCropBounds = null;
+      _isCropResizing = false;
+      _cropResizeHandle = null;
+    });
+  }
+
+  void _loadExistingCropBounds() {
+    // Load crop bounds from parent component if available
+    if (widget.initialCropBounds != null) {
+      setState(() {
+        _activeCropBounds = widget.initialCropBounds;
+      });
+    }
+  }
 
   Future<void> _loadScreenshotImage() async {
     try {
@@ -279,16 +340,231 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     });
   }
 
-  // Crop functionality removed - methods kept for API compatibility but do nothing
   void applyCrop() {
-    // Crop functionality disabled - to be re-implemented
+    if (_previewCropBounds != null) {
+      // Confirm the crop - store in metadata and update active crop
+      setState(() {
+        _activeCropBounds = _previewCropBounds;
+        _previewCropBounds = null;
+      });
+
+      // Notify parent about crop change for metadata persistence
+      _onCropChanged(_activeCropBounds);
+    }
   }
 
   void cancelCrop() {
-    // Crop functionality disabled - to be re-implemented
+    setState(() {
+      // Revert to previous crop state
+      _activeCropBounds = _previousCropBounds;
+      _previewCropBounds = null;
+      _isCropResizing = false;
+      _cropResizeHandle = null;
+    });
+
+    // Notify parent about reverting crop change
+    _onCropChanged(_activeCropBounds);
   }
 
-  bool get hasPendingCrop => false; // Always false since crop is disabled
+  bool get hasPendingCrop => _previewCropBounds != null;
+
+  void _onCropChanged(Rect? cropBounds) {
+    // Notify parent component about crop changes
+    widget.onCropChanged?.call(cropBounds);
+  }
+
+  void _onImageReplaced(ui.Image newImage) {
+    // Notify parent component about image replacement
+    widget.onImageReplaced?.call(newImage);
+  }
+
+  void _handleCropDrawingStart(Offset canvasPoint) {
+    // Check if we're clicking on an existing crop handle first
+    if (_previewCropBounds != null || _activeCropBounds != null) {
+      final cropBounds = _previewCropBounds ?? _activeCropBounds!;
+      final handle = _getHandleAtPoint(canvasPoint, cropBounds);
+      if (handle != null) {
+        // Start resizing existing crop
+        setState(() {
+          _isCropResizing = true;
+          _cropResizeHandle = handle;
+          _dragStart = canvasPoint;
+          _initialLayerBounds = cropBounds;
+          if (_activeCropBounds != null && _previewCropBounds == null) {
+            // Copy active crop to preview for editing
+            _previewCropBounds = _activeCropBounds;
+          }
+        });
+        return;
+      }
+
+      // Check if clicking inside existing crop (for moving)
+      if (cropBounds.contains(canvasPoint)) {
+        setState(() {
+          _isDragging = true;
+          _dragStart = canvasPoint;
+          _initialLayerBounds = cropBounds;
+          if (_activeCropBounds != null && _previewCropBounds == null) {
+            // Copy active crop to preview for editing
+            _previewCropBounds = _activeCropBounds;
+          }
+        });
+        return;
+      }
+    }
+
+    // Start drawing new crop rectangle
+    setState(() {
+      _isDrawing = true;
+      _drawingStart = canvasPoint;
+      _drawingEnd = canvasPoint;
+    });
+  }
+
+  void _handleCropDrawingUpdate(Offset canvasPoint) {
+    if (_isCropResizing && _cropResizeHandle != null && _initialLayerBounds != null) {
+      _handleCropResize(canvasPoint);
+    } else if (_isDragging && _initialLayerBounds != null) {
+      _handleCropMove(canvasPoint);
+    } else if (_isDrawing && _drawingStart != null) {
+      // Update crop rectangle drawing
+      setState(() {
+        _drawingEnd = canvasPoint;
+      });
+    }
+  }
+
+  void _handleCropDrawingEnd() {
+    if (_isDrawing && _drawingStart != null && _drawingEnd != null) {
+      // Create new crop preview from drawn rectangle
+      final cropRect = Rect.fromPoints(_drawingStart!, _drawingEnd!);
+      // Ensure minimum size
+      if (cropRect.width > 20 && cropRect.height > 20) {
+        setState(() {
+          _previewCropBounds = cropRect;
+        });
+      }
+    }
+
+    // Reset drawing state
+    setState(() {
+      _isDrawing = false;
+      _isDragging = false;
+      _isCropResizing = false;
+      _cropResizeHandle = null;
+      _drawingStart = null;
+      _drawingEnd = null;
+      _dragStart = null;
+      _initialLayerBounds = null;
+    });
+  }
+
+  void _handleCropResize(Offset currentPoint) {
+    final delta = currentPoint - _dragStart!;
+    Rect newCropRect = _initialLayerBounds!;
+
+    switch (_cropResizeHandle) {
+      case 'tl':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left + delta.dx,
+          _initialLayerBounds!.top + delta.dy,
+          _initialLayerBounds!.right,
+          _initialLayerBounds!.bottom,
+        );
+        break;
+      case 'tr':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left,
+          _initialLayerBounds!.top + delta.dy,
+          _initialLayerBounds!.right + delta.dx,
+          _initialLayerBounds!.bottom,
+        );
+        break;
+      case 'bl':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left + delta.dx,
+          _initialLayerBounds!.top,
+          _initialLayerBounds!.right,
+          _initialLayerBounds!.bottom + delta.dy,
+        );
+        break;
+      case 'br':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left,
+          _initialLayerBounds!.top,
+          _initialLayerBounds!.right + delta.dx,
+          _initialLayerBounds!.bottom + delta.dy,
+        );
+        break;
+      case 't':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left,
+          _initialLayerBounds!.top + delta.dy,
+          _initialLayerBounds!.right,
+          _initialLayerBounds!.bottom,
+        );
+        break;
+      case 'b':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left,
+          _initialLayerBounds!.top,
+          _initialLayerBounds!.right,
+          _initialLayerBounds!.bottom + delta.dy,
+        );
+        break;
+      case 'l':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left + delta.dx,
+          _initialLayerBounds!.top,
+          _initialLayerBounds!.right,
+          _initialLayerBounds!.bottom,
+        );
+        break;
+      case 'r':
+        newCropRect = Rect.fromLTRB(
+          _initialLayerBounds!.left,
+          _initialLayerBounds!.top,
+          _initialLayerBounds!.right + delta.dx,
+          _initialLayerBounds!.bottom,
+        );
+        break;
+    }
+
+    // Ensure minimum size and canvas bounds
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final canvasSize = renderBox?.size ?? Size.zero;
+    newCropRect = Rect.fromLTRB(
+      newCropRect.left.clamp(0.0, canvasSize.width - 20),
+      newCropRect.top.clamp(0.0, canvasSize.height - 20),
+      newCropRect.right.clamp(20.0, canvasSize.width),
+      newCropRect.bottom.clamp(20.0, canvasSize.height),
+    );
+
+    if (newCropRect.width > 20 && newCropRect.height > 20) {
+      setState(() {
+        _previewCropBounds = newCropRect;
+      });
+    }
+  }
+
+  void _handleCropMove(Offset currentPoint) {
+    final delta = currentPoint - _dragStart!;
+    final newCropRect = _initialLayerBounds!.shift(delta);
+
+    // Keep crop area within canvas bounds
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final canvasSize = renderBox?.size ?? Size.zero;
+    final clampedRect = Rect.fromLTRB(
+      newCropRect.left.clamp(0.0, canvasSize.width - newCropRect.width),
+      newCropRect.top.clamp(0.0, canvasSize.height - newCropRect.height),
+      (newCropRect.left + newCropRect.width).clamp(newCropRect.width, canvasSize.width),
+      (newCropRect.top + newCropRect.height).clamp(newCropRect.height, canvasSize.height),
+    );
+
+    setState(() {
+      _previewCropBounds = clampedRect;
+    });
+  }
 
   EditorLayer? _findLayerAtPoint(Offset point) {
     // Search layers in reverse order (top to bottom)
@@ -548,10 +824,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleDrawingStart(Offset point) {
-    // Crop tool disabled - no drawing for crop
-    if (widget.selectedTool == EditorTool.crop) return;
-
     final canvasPoint = _screenToCanvasCoords(point);
+
+    if (widget.selectedTool == EditorTool.crop) {
+      // Crop tool uses special handling
+      _handleCropDrawingStart(canvasPoint);
+      return;
+    }
+
     final startPoint = _snapPoint(canvasPoint);
     setState(() {
       _isDrawing = true;
@@ -561,10 +841,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleDrawingUpdate(Offset point) {
-    // Crop tool disabled - no drawing for crop
-    if (widget.selectedTool == EditorTool.crop) return;
-
     final canvasPoint = _screenToCanvasCoords(point);
+
+    if (widget.selectedTool == EditorTool.crop) {
+      // Crop tool uses special handling
+      _handleCropDrawingUpdate(canvasPoint);
+      return;
+    }
+
     final endPoint = _snapPoint(canvasPoint);
     setState(() {
       _drawingEnd = endPoint;
@@ -572,8 +856,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleDrawingEnd() {
-    // Crop tool disabled - no drawing for crop
-    if (widget.selectedTool == EditorTool.crop) return;
+    if (widget.selectedTool == EditorTool.crop) {
+      // Crop tool uses special handling
+      _handleCropDrawingEnd();
+      return;
+    }
 
     if (_drawingStart != null && _drawingEnd != null) {
       final layer = _createLayerFromGesture();
@@ -794,49 +1081,95 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     // Crop functionality disabled - to be re-implemented
   }
 
+  Future<void> _handleKeyPress(KeyEvent event) async {
+    if (event is KeyDownEvent) {
+      final isCtrlPressed = HardwareKeyboard.instance.isControlPressed;
+
+      // Handle Ctrl+V for paste image (disabled for now)
+      if (isCtrlPressed && event.logicalKey == LogicalKeyboardKey.keyV) {
+        // await _pasteImageFromClipboard();
+        debugPrint('Ctrl+V paste not yet implemented - use Replace Image button instead');
+      }
+    }
+  }
+
+  Future<void> _pasteImageFromClipboard() async {
+    try {
+      final image = await ImageReplacementService.getImageFromClipboard();
+      if (image != null) {
+        _onImageReplaced(image);
+      }
+    } catch (e) {
+      debugPrint('Error pasting image from clipboard: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return MouseRegion(
-      cursor: _getCursorForTool(widget.selectedTool),
-      onHover: (event) {
-        // Track handle hover for select and move tools
-        if ((widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.move) && _selectedLayerId != null) {
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        _handleKeyPress(event);
+        return KeyEventResult.ignored;
+      },
+      child: MouseRegion(
+        cursor: _getCursorForTool(widget.selectedTool),
+        onHover: (event) {
           final canvasPoint = _screenToCanvasCoords(event.localPosition);
-          final selectedLayer = widget.layers.firstWhere(
-            (l) => l.id == _selectedLayerId,
-            orElse: () => widget.layers.first,
-          );
-          
-          if (selectedLayer.bounds != null) {
-            final handle = _getHandleAtPoint(canvasPoint, selectedLayer.bounds!);
-            if (_hoverHandle != handle) {
+
+          // Track handle hover for crop tool
+          if (widget.selectedTool == EditorTool.crop) {
+            final cropBounds = _previewCropBounds ?? _activeCropBounds;
+            if (cropBounds != null) {
+              final handle = _getHandleAtPoint(canvasPoint, cropBounds);
+              if (_hoverHandle != handle) {
+                setState(() {
+                  _hoverHandle = handle;
+                });
+              }
+            } else if (_hoverHandle != null) {
               setState(() {
-                _hoverHandle = handle;
+                _hoverHandle = null;
               });
             }
           }
-        } else if (_hoverHandle != null) {
-          setState(() {
-            _hoverHandle = null;
-          });
-        }
-      },
-      child: GestureDetector(
+          // Track handle hover for select and move tools
+          else if ((widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.move) && _selectedLayerId != null) {
+            final selectedLayer = widget.layers.firstWhere(
+              (l) => l.id == _selectedLayerId,
+              orElse: () => widget.layers.first,
+            );
+
+            if (selectedLayer.bounds != null) {
+              final handle = _getHandleAtPoint(canvasPoint, selectedLayer.bounds!);
+              if (_hoverHandle != handle) {
+                setState(() {
+                  _hoverHandle = handle;
+                });
+              }
+            }
+          } else if (_hoverHandle != null) {
+            setState(() {
+              _hoverHandle = null;
+            });
+          }
+        },
+        child: GestureDetector(
         onTap: () {
-        // Handle single-click for number label placement
-        if (widget.selectedTool == EditorTool.numberLabel) {
-          // We need to get the tap position, but onTap doesn't provide details
-          // We'll use the last known mouse position or handle this differently
-          return;
-        }
-      },
+          // Handle single-click for number label placement
+          if (widget.selectedTool == EditorTool.numberLabel) {
+            // We need to get the tap position, but onTap doesn't provide details
+            // We'll use the last known mouse position or handle this differently
+            return;
+          }
+        },
         onTapDown: (details) {
-        // Handle single-click for number label placement
-        if (widget.selectedTool == EditorTool.numberLabel) {
+          // Handle single-click for number label placement
+          if (widget.selectedTool == EditorTool.numberLabel) {
           // Small adjustment to align with crosshair center (compensates for cursor hotspot)
           final adjustedPosition = details.localPosition ;
           final canvasPoint = _screenToCanvasCoords(adjustedPosition);
@@ -870,40 +1203,40 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
             _addHorizontalGuide(snappedPoint.dy);
           }
         }
-      },
+        },
         onDoubleTap: () {
-        // For guides, we need the last tap position
-        // This is handled in onDoubleTapDown
-      },
+          // For guides, we need the last tap position
+          // This is handled in onDoubleTapDown
+        },
         onDoubleTapDown: (details) {
-        final canvasPoint = _screenToCanvasCoords(details.localPosition);
-        
-        // Check for guide deletion only with select or guide tools
-        // This prevents accidental guide deletion when using drawing tools
-        if (widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.guide) {
-          final guide = _getGuideAtPoint(canvasPoint);
-          if (guide != null) {
-            _removeGuide(guide);
-            return;
+          final canvasPoint = _screenToCanvasCoords(details.localPosition);
+
+          // Check for guide deletion only with select or guide tools
+          // This prevents accidental guide deletion when using drawing tools
+          if (widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.guide) {
+            final guide = _getGuideAtPoint(canvasPoint);
+            if (guide != null) {
+              _removeGuide(guide);
+              return;
+            }
           }
-        }
-        
-        // Handle double-tap for text editing
-        if (_selectedLayerId != null) {
-          final selectedLayer = widget.layers.firstWhere(
-            (l) => l.id == _selectedLayerId,
-            orElse: () => widget.layers.first,
-          );
-          if (selectedLayer.layerType == LayerType.text) {
-            _showTextEditDialog(selectedLayer as TextLayer);
+
+          // Handle double-tap for text editing
+          if (_selectedLayerId != null) {
+            final selectedLayer = widget.layers.firstWhere(
+              (l) => l.id == _selectedLayerId,
+              orElse: () => widget.layers.first,
+            );
+            if (selectedLayer.layerType == LayerType.text) {
+              _showTextEditDialog(selectedLayer as TextLayer);
+            }
           }
-        }
-      },
+        },
         onScaleStart: (details) {
-        final canvasPoint = _screenToCanvasCoords(details.localFocalPoint);
-        
-        // Check for guide interaction only with select or guide tools
-        // This prevents accidental guide movement when using drawing tools
+          final canvasPoint = _screenToCanvasCoords(details.localFocalPoint);
+
+          // Check for guide interaction only with select or guide tools
+          // This prevents accidental guide movement when using drawing tools
         if (widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.guide) {
           final guide = _getGuideAtPoint(canvasPoint);
           if (guide != null) {
@@ -961,8 +1294,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
           }
           return; // Don't continue to other gesture handling
         } else if (widget.selectedTool == EditorTool.crop) {
-          // Crop functionality disabled - do nothing
-          return;
+          // Handle crop tool gesture
+          _handleDrawingStart(details.localFocalPoint);
         } else if (widget.selectedTool == EditorTool.move) {
           // Handle move tool - check for resize handles first
           if (_selectedLayerId != null) {
@@ -1201,77 +1534,90 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
             _updateLayerBounds(_selectedLayerId!, newBounds);
           }
         } else if (widget.selectedTool == EditorTool.crop) {
-          // Crop functionality disabled - do nothing
-          return;
+          // Handle crop tool updates
+          _handleDrawingUpdate(details.localFocalPoint);
         } else if (_isDrawing) {
           // Handle drawing update
           _handleDrawingUpdate(details.localFocalPoint);
         }
-      },
+        },
         onScaleEnd: (details) {
-        if (_isDrawing) {
-          _handleDrawingEnd();
-        } else if (_isDragging || _isResizing || _isDraggingGuide) {
-          setState(() {
-            _isDragging = false;
-            _isResizing = false;
-            _isDraggingGuide = false;
-            _resizeHandle = null;
-            _draggingGuide = null;
-            _dragStart = null;
-            _initialLayerPosition = null;
-            _initialLayerBounds = null;
-          });
-        }
-      },
-      child: Container(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        child: ClipRect(
-          child: Center(
-            child: Transform(
-              transform: Matrix4.identity()
-                ..translate(_pan.dx, _pan.dy)
-                ..scale(_zoom),
-              child: CustomPaint(
-                size: MediaQuery.of(context).size,
-                painter: CanvasPainter(
-                _backgroundImage, 
-                widget.layers,
-                _drawingStart,
-                _drawingEnd,
-                widget.selectedTool,
-                widget.toolConfig,
-                null, // Crop functionality disabled
-                _selectedLayerId,
-                _verticalGuides,
-                _horizontalGuides,
-                widget.showGuides,
-                Theme.of(context).colorScheme,
+          if (_isDrawing) {
+            _handleDrawingEnd();
+          } else if (_isDragging || _isResizing || _isDraggingGuide) {
+            setState(() {
+              _isDragging = false;
+              _isResizing = false;
+              _isDraggingGuide = false;
+              _resizeHandle = null;
+              _draggingGuide = null;
+              _dragStart = null;
+              _initialLayerPosition = null;
+              _initialLayerBounds = null;
+            });
+          }
+        },
+        child: Container(
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          child: ClipRect(
+            child: Center(
+              child: Transform(
+                transform: Matrix4.identity()
+                  ..translate(_pan.dx, _pan.dy)
+                  ..scale(_zoom),
+                child: CustomPaint(
+                  size: MediaQuery.of(context).size,
+                  painter: CanvasPainter(
+                    _backgroundImage,
+                    widget.layers,
+                    _drawingStart,
+                    _drawingEnd,
+                    widget.selectedTool,
+                    widget.toolConfig,
+                    _previewCropBounds, // Preview crop bounds for drawing
+                    _activeCropBounds, // Active confirmed crop bounds
+                    _selectedLayerId,
+                    _verticalGuides,
+                    _horizontalGuides,
+                    widget.showGuides,
+                    Theme.of(context).colorScheme,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ), // Container
-    ), // GestureDetector
-    ), // GestureDetector
-  ); // MouseRegion
+        ), // Container
+        ), // GestureDetector
+      ), // MouseRegion
+    ); // Focus
 }
 
   // Public methods for accessing guides
   List<double> get verticalGuides => _verticalGuides;
   List<double> get horizontalGuides => _horizontalGuides;
-  
+
   void setVerticalGuides(List<double> guides) {
     setState(() {
       _verticalGuides.clear();
       _verticalGuides.addAll(guides);
     });
   }
-  
+
   void setHorizontalGuides(List<double> guides) {
     setState(() {
       _horizontalGuides.clear();
       _horizontalGuides.addAll(guides);
+    });
+  }
+
+  // Public methods for crop functionality
+  Rect? get activeCropBounds => _activeCropBounds;
+  Rect? get previewCropBounds => _previewCropBounds;
+
+  // Public method for image replacement
+  void updateBackgroundImage(ui.Image newImage) {
+    setState(() {
+      _backgroundImage = newImage;
     });
   }
 }
@@ -1283,7 +1629,8 @@ class CanvasPainter extends CustomPainter {
   final Offset? drawingEnd;
   final EditorTool selectedTool;
   final ToolConfig toolConfig;
-  final Rect? cropRect;
+  final Rect? cropRect; // Preview crop bounds (for drawing preview)
+  final Rect? activeCropBounds; // Active confirmed crop bounds
   final String? selectedLayerId;
   final List<double> verticalGuides;
   final List<double> horizontalGuides;
@@ -1291,13 +1638,14 @@ class CanvasPainter extends CustomPainter {
   final ColorScheme colorScheme;
 
   CanvasPainter(
-    this.backgroundImage, 
+    this.backgroundImage,
     this.layers,
     this.drawingStart,
     this.drawingEnd,
     this.selectedTool,
     this.toolConfig,
     this.cropRect,
+    this.activeCropBounds,
     this.selectedLayerId,
     this.verticalGuides,
     this.horizontalGuides,
@@ -1328,9 +1676,20 @@ class CanvasPainter extends CustomPainter {
       canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
     }
     
+    // Apply global crop clipping if there's an active crop
+    if (activeCropBounds != null) {
+      canvas.save();
+      canvas.clipRect(activeCropBounds!);
+    }
+
     // Draw all layers
     for (final layer in layers.where((l) => l.visible)) {
       _drawLayer(canvas, layer, size);
+    }
+
+    // Restore canvas state if we applied global clipping
+    if (activeCropBounds != null) {
+      canvas.restore();
     }
     
     // Draw preview of current drawing
@@ -1338,7 +1697,11 @@ class CanvasPainter extends CustomPainter {
       _drawDrawingPreview(canvas, size);
     }
     
-    // Crop functionality disabled - no crop border to draw
+    // Draw crop preview and borders
+    final currentCropBounds = cropRect ?? activeCropBounds;
+    if (currentCropBounds != null && selectedTool == EditorTool.crop) {
+      _drawCropBorder(canvas, currentCropBounds, size);
+    }
     
     // Draw selection handles for select and move tools
     if ((selectedTool == EditorTool.select || selectedTool == EditorTool.move) && selectedLayerId != null) {
@@ -1614,9 +1977,21 @@ class CanvasPainter extends CustomPainter {
     return Color.fromRGBO(r, g, b, 1.0);
   }
 
-  // Crop functionality removed - method kept for potential future use
   void _drawImageWithCrop(Canvas canvas, Rect cropRect, Offset imageOffset, Size scaledSize, Size canvasSize) {
-    // Crop functionality disabled
+    // Save canvas state for clipping
+    canvas.save();
+
+    // Clip to crop area
+    canvas.clipRect(cropRect);
+
+    // Draw the image with proper scaling
+    final imageSize = Size(backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
+    final rect = Rect.fromLTWH(imageOffset.dx, imageOffset.dy, scaledSize.width, scaledSize.height);
+    final srcRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
+    canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
+
+    // Restore canvas state
+    canvas.restore();
   }
 
   void _drawSelectionHandles(Canvas canvas, Rect bounds) {
@@ -1722,9 +2097,80 @@ class CanvasPainter extends CustomPainter {
     }
   }
 
-  // Crop functionality removed - method kept for potential future use
   void _drawCropBorder(Canvas canvas, Rect cropRect, Size canvasSize) {
-    // Crop functionality disabled
+    // Draw dimmed overlay outside crop area
+    final overlayPaint = Paint()..color = Colors.black.withOpacity(0.4);
+
+    // Top overlay
+    if (cropRect.top > 0) {
+      canvas.drawRect(
+        Rect.fromLTRB(0, 0, canvasSize.width, cropRect.top),
+        overlayPaint,
+      );
+    }
+
+    // Bottom overlay
+    if (cropRect.bottom < canvasSize.height) {
+      canvas.drawRect(
+        Rect.fromLTRB(0, cropRect.bottom, canvasSize.width, canvasSize.height),
+        overlayPaint,
+      );
+    }
+
+    // Left overlay
+    if (cropRect.left > 0) {
+      canvas.drawRect(
+        Rect.fromLTRB(0, cropRect.top, cropRect.left, cropRect.bottom),
+        overlayPaint,
+      );
+    }
+
+    // Right overlay
+    if (cropRect.right < canvasSize.width) {
+      canvas.drawRect(
+        Rect.fromLTRB(cropRect.right, cropRect.top, canvasSize.width, cropRect.bottom),
+        overlayPaint,
+      );
+    }
+
+    // Draw crop border
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawRect(cropRect, borderPaint);
+
+    // Draw resize handles
+    const handleSize = 8.0;
+    final handlePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final handleBorderPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    final handles = [
+      cropRect.topLeft,     // tl
+      cropRect.topRight,    // tr
+      cropRect.bottomLeft,  // bl
+      cropRect.bottomRight, // br
+      Offset(cropRect.center.dx, cropRect.top),    // t
+      Offset(cropRect.center.dx, cropRect.bottom), // b
+      Offset(cropRect.left, cropRect.center.dy),   // l
+      Offset(cropRect.right, cropRect.center.dy),  // r
+    ];
+
+    for (final handlePos in handles) {
+      final handleRect = Rect.fromCenter(
+        center: handlePos,
+        width: handleSize,
+        height: handleSize,
+      );
+      canvas.drawRect(handleRect, handlePaint);
+      canvas.drawRect(handleRect, handleBorderPaint);
+    }
   }
 
 
@@ -1738,7 +2184,36 @@ class CanvasPainter extends CustomPainter {
     
     switch (selectedTool) {
       case EditorTool.crop:
-        // Crop functionality disabled - no preview drawn
+        if (drawingStart != null && drawingEnd != null) {
+          final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
+
+          // Draw crop overlay - darken everything outside crop area
+          final overlayPaint = Paint()..color = Colors.black.withOpacity(0.4);
+
+          // Top overlay
+          if (rect.top > 0) {
+            canvas.drawRect(Rect.fromLTRB(0, 0, canvasSize.width, rect.top), overlayPaint);
+          }
+          // Bottom overlay
+          if (rect.bottom < canvasSize.height) {
+            canvas.drawRect(Rect.fromLTRB(0, rect.bottom, canvasSize.width, canvasSize.height), overlayPaint);
+          }
+          // Left overlay
+          if (rect.left > 0) {
+            canvas.drawRect(Rect.fromLTRB(0, rect.top, rect.left, rect.bottom), overlayPaint);
+          }
+          // Right overlay
+          if (rect.right < canvasSize.width) {
+            canvas.drawRect(Rect.fromLTRB(rect.right, rect.top, canvasSize.width, rect.bottom), overlayPaint);
+          }
+
+          // Draw crop border
+          paint
+            ..color = Colors.white
+            ..strokeWidth = 2.0
+            ..style = PaintingStyle.stroke;
+          canvas.drawRect(rect, paint);
+        }
         break;
         
       case EditorTool.highlightRect:

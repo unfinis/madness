@@ -5,7 +5,9 @@
       "Bash(flutter pub:*)",
       "Bash(flutter clean:*)",
       "Bash(find:*)",
-      "Bash(dart analyze:*)"
+      "Bash(dart analyze:*)",
+      "Bash(awk:*)",
+      "Bash(dart:*)"
     ],
     "deny": [],
     "ask": []
