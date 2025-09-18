@@ -396,6 +396,76 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     return null;
   }
 
+  Offset _snapPoint(Offset point) {
+    if (!widget.enableSnapping) return point;
+    
+    const snapDistance = 8.0;
+    double snappedX = point.dx;
+    double snappedY = point.dy;
+    bool snappedToGuide = false;
+    
+    // Snap to guides (highest priority)
+    for (final guideX in _verticalGuides) {
+      if ((point.dx - guideX).abs() < snapDistance) {
+        snappedX = guideX;
+        snappedToGuide = true;
+        break;
+      }
+    }
+    
+    for (final guideY in _horizontalGuides) {
+      if ((point.dy - guideY).abs() < snapDistance) {
+        snappedY = guideY;
+        snappedToGuide = true;
+        break;
+      }
+    }
+    
+    // Snap to other layer bounds (medium priority)
+    if (!snappedToGuide) {
+      for (final layer in widget.layers) {
+        if (layer.bounds != null && layer.visible) {
+          final bounds = layer.bounds!;
+          
+          // Snap to edges
+          if ((point.dx - bounds.left).abs() < snapDistance && snappedX == point.dx) {
+            snappedX = bounds.left;
+          }
+          if ((point.dx - bounds.right).abs() < snapDistance && snappedX == point.dx) {
+            snappedX = bounds.right;
+          }
+          if ((point.dx - bounds.center.dx).abs() < snapDistance && snappedX == point.dx) {
+            snappedX = bounds.center.dx;
+          }
+          
+          if ((point.dy - bounds.top).abs() < snapDistance && snappedY == point.dy) {
+            snappedY = bounds.top;
+          }
+          if ((point.dy - bounds.bottom).abs() < snapDistance && snappedY == point.dy) {
+            snappedY = bounds.bottom;
+          }
+          if ((point.dy - bounds.center.dy).abs() < snapDistance && snappedY == point.dy) {
+            snappedY = bounds.center.dy;
+          }
+        }
+      }
+    }
+    
+    // Snap to grid (lowest priority)
+    const gridSize = 8.0;
+    final gridX = (point.dx / gridSize).round() * gridSize;
+    final gridY = (point.dy / gridSize).round() * gridSize;
+    
+    if ((point.dx - gridX).abs() < snapDistance && snappedX == point.dx) {
+      snappedX = gridX;
+    }
+    if ((point.dy - gridY).abs() < snapDistance && snappedY == point.dy) {
+      snappedY = gridY;
+    }
+    
+    return Offset(snappedX, snappedY);
+  }
+
   void _addVerticalGuide(double x) {
     setState(() {
       _verticalGuides.add(x);
@@ -536,16 +606,20 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleDrawingStart(Offset point) {
+    final canvasPoint = _screenToCanvasCoords(point);
+    final snappedPoint = _snapPoint(canvasPoint);
     setState(() {
       _isDrawing = true;
-      _drawingStart = _screenToCanvasCoords(point);
+      _drawingStart = snappedPoint;
       _drawingEnd = _drawingStart;
     });
   }
 
   void _handleDrawingUpdate(Offset point) {
+    final canvasPoint = _screenToCanvasCoords(point);
+    final snappedPoint = _snapPoint(canvasPoint);
     setState(() {
-      _drawingEnd = _screenToCanvasCoords(point);
+      _drawingEnd = snappedPoint;
     });
   }
 
@@ -843,8 +917,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
           // Small adjustment to align with crosshair center (compensates for cursor hotspot)
           final adjustedPosition = details.localPosition ;
           final canvasPoint = _screenToCanvasCoords(adjustedPosition);
+          final snappedPoint = _snapPoint(canvasPoint);
           try {
-            final layer = _createNumberLabel(canvasPoint);
+            final layer = _createNumberLabel(snappedPoint);
             if (layer != null) {
               widget.onLayerAdded?.call(layer);
             }
@@ -864,11 +939,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
             return;
           }
           
-          // Create guide based on current mode
+          // Create guide based on current mode with snapping
+          final snappedPoint = _snapPoint(canvasPoint);
           if (_isVerticalGuideMode) {
-            _addVerticalGuide(canvasPoint.dx);
+            _addVerticalGuide(snappedPoint.dx);
           } else {
-            _addHorizontalGuide(canvasPoint.dy);
+            _addHorizontalGuide(snappedPoint.dy);
           }
         }
       },
@@ -879,11 +955,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         onDoubleTapDown: (details) {
         final canvasPoint = _screenToCanvasCoords(details.localPosition);
         
-        // Check for guide deletion first - works with any tool
-        final guide = _getGuideAtPoint(canvasPoint);
-        if (guide != null) {
-          _removeGuide(guide);
-          return;
+        // Check for guide deletion only with select or guide tools
+        // This prevents accidental guide deletion when using drawing tools
+        if (widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.guide) {
+          final guide = _getGuideAtPoint(canvasPoint);
+          if (guide != null) {
+            _removeGuide(guide);
+            return;
+          }
         }
         
         // Handle double-tap for text editing
@@ -900,14 +979,17 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         onScaleStart: (details) {
         final canvasPoint = _screenToCanvasCoords(details.localFocalPoint);
         
-        // Check for guide interaction first (works with any tool)
-        final guide = _getGuideAtPoint(canvasPoint);
-        if (guide != null) {
-          setState(() {
-            _draggingGuide = guide;
-            _isDraggingGuide = true;
-          });
-          return;
+        // Check for guide interaction only with select or guide tools
+        // This prevents accidental guide movement when using drawing tools
+        if (widget.selectedTool == EditorTool.select || widget.selectedTool == EditorTool.guide) {
+          final guide = _getGuideAtPoint(canvasPoint);
+          if (guide != null) {
+            setState(() {
+              _draggingGuide = guide;
+              _isDraggingGuide = true;
+            });
+            return;
+          }
         }
         
         if (widget.selectedTool == EditorTool.pan) {
@@ -1038,7 +1120,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         // Handle guide dragging first
         if (_isDraggingGuide && _draggingGuide != null) {
           final canvasPoint = _screenToCanvasCoords(details.localFocalPoint);
-          _updateGuide(_draggingGuide!, canvasPoint);
+          final snappedPoint = _snapPoint(canvasPoint);
+          _updateGuide(_draggingGuide!, snappedPoint);
           return;
         }
         
@@ -1124,9 +1207,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
             }
             _updateLayerBounds(_selectedLayerId!, newBounds);
           } else if (_isDragging && _selectedLayerId != null && _dragStart != null && _initialLayerBounds != null) {
-            // Handle dragging
+            // Handle dragging with snapping
             final currentPoint = _screenToCanvasCoords(details.localFocalPoint);
-            final delta = currentPoint - _dragStart!;
+            final snappedPoint = _snapPoint(currentPoint);
+            final delta = snappedPoint - _dragStart!;
             final newBounds = _initialLayerBounds!.shift(delta);
             _updateLayerBounds(_selectedLayerId!, newBounds);
           }
@@ -1209,9 +1293,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
               _updateLayerBounds(_selectedLayerId!, newBounds);
             }
           } else if (_isDragging && _initialLayerBounds != null) {
-            // Handle layer moving
+            // Handle layer moving with snapping
             final currentPoint = _screenToCanvasCoords(details.localFocalPoint);
-            final delta = currentPoint - _dragStart!;
+            final snappedPoint = _snapPoint(currentPoint);
+            final delta = snappedPoint - _dragStart!;
             final newBounds = _initialLayerBounds!.shift(delta);
             _updateLayerBounds(_selectedLayerId!, newBounds);
           }
