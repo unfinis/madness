@@ -57,11 +57,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   Offset? _drawingEnd;
   bool _isDrawing = false;
   
-  // Crop state - now non-destructive
-  Rect? _cropRect;
-  bool _isCropMode = false;
-  bool _isCropResizing = false;
-  String? _cropHandle;
+  // Crop functionality disabled - tool button remains for future implementation
   
   // Move/Resize state
   String? _selectedLayerId;
@@ -87,7 +83,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       case EditorTool.pan:
         return _isDrawing ? SystemMouseCursors.grabbing : SystemMouseCursors.grab; // Hand cursor
       case EditorTool.crop:
-        return SystemMouseCursors.precise;
+        return SystemMouseCursors.basic; // Crop functionality disabled
       case EditorTool.select:
         // Return resize cursor when hovering over handles
         if (_hoverHandle != null) {
@@ -157,41 +153,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         _isVerticalGuideMode = widget.isVerticalGuideMode;
       });
     }
-    // Check if crop tool was selected
-    if (widget.selectedTool == EditorTool.crop && oldWidget.selectedTool != EditorTool.crop) {
-      _activateCropMode();
-    } else if (widget.selectedTool != EditorTool.crop && oldWidget.selectedTool == EditorTool.crop) {
-      _deactivateCropMode();
-    }
+    // Crop tool functionality disabled
   }
 
-  void _activateCropMode() {
-    setState(() {
-      _isCropMode = true;
-      // Only set existing crop bounds if they exist, don't create a default
-      _cropRect = _getExistingCropBounds();
-    });
-  }
-
-  void _deactivateCropMode() {
-    setState(() {
-      _isCropMode = false;
-      _cropRect = null;
-      _isCropResizing = false;
-      _cropHandle = null;
-    });
-  }
-
-  Rect? _getExistingCropBounds() {
-    // Find the most recent crop layer
-    final cropLayers = widget.layers.where((layer) => 
-        layer.layerType == LayerType.crop && layer.visible).cast<CropLayer>().toList();
-    
-    if (cropLayers.isNotEmpty) {
-      return cropLayers.first.cropRect;
-    }
-    return null;
-  }
+  // Crop functionality methods removed - to be re-implemented from scratch
 
   Future<void> _loadScreenshotImage() async {
     try {
@@ -314,39 +279,16 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     });
   }
 
+  // Crop functionality removed - methods kept for API compatibility but do nothing
   void applyCrop() {
-    if (_cropRect == null) return;
-    
-    // Create a non-destructive crop layer
-    final now = DateTime.now();
-    final cropLayer = CropLayer(
-      id: 'crop-${now.millisecondsSinceEpoch}',
-      name: 'Crop',
-      visible: true,
-      locked: false,
-      opacity: 1.0,
-      blendModeType: BlendModeType.normal,
-      bounds: _cropRect!,
-      cropRect: _cropRect!,
-      createdDate: now,
-      modifiedDate: now,
-    );
-    
-    // Add the crop layer through the parent widget
-    widget.onLayerAdded?.call(cropLayer);
-    
-    setState(() {
-      _cropRect = null;
-    });
+    // Crop functionality disabled - to be re-implemented
   }
 
   void cancelCrop() {
-    setState(() {
-      _cropRect = null;
-    });
+    // Crop functionality disabled - to be re-implemented
   }
 
-  bool get hasPendingCrop => _cropRect != null;
+  bool get hasPendingCrop => false; // Always false since crop is disabled
 
   EditorLayer? _findLayerAtPoint(Offset point) {
     // Search layers in reverse order (top to bottom)
@@ -606,44 +548,43 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleDrawingStart(Offset point) {
+    // Crop tool disabled - no drawing for crop
+    if (widget.selectedTool == EditorTool.crop) return;
+
     final canvasPoint = _screenToCanvasCoords(point);
-    final snappedPoint = _snapPoint(canvasPoint);
+    final startPoint = _snapPoint(canvasPoint);
     setState(() {
       _isDrawing = true;
-      _drawingStart = snappedPoint;
+      _drawingStart = startPoint;
       _drawingEnd = _drawingStart;
     });
   }
 
   void _handleDrawingUpdate(Offset point) {
+    // Crop tool disabled - no drawing for crop
+    if (widget.selectedTool == EditorTool.crop) return;
+
     final canvasPoint = _screenToCanvasCoords(point);
-    final snappedPoint = _snapPoint(canvasPoint);
+    final endPoint = _snapPoint(canvasPoint);
     setState(() {
-      _drawingEnd = snappedPoint;
+      _drawingEnd = endPoint;
     });
   }
 
   void _handleDrawingEnd() {
+    // Crop tool disabled - no drawing for crop
+    if (widget.selectedTool == EditorTool.crop) return;
+
     if (_drawingStart != null && _drawingEnd != null) {
-      if (widget.selectedTool == EditorTool.crop) {
-        // For crop tool, store the crop rectangle and create crop layer
-        final cropRect = Rect.fromPoints(_drawingStart!, _drawingEnd!);
+      final layer = _createLayerFromGesture();
+      if (layer != null) {
+        widget.onLayerAdded?.call(layer);
         setState(() {
-          _cropRect = cropRect;
+          _tempLayers.clear();
         });
-        // Create the crop layer immediately
-        _applyCropToAllLayers(cropRect);
-      } else {
-        final layer = _createLayerFromGesture();
-        if (layer != null) {
-          widget.onLayerAdded?.call(layer);
-          setState(() {
-            _tempLayers.clear();
-          });
-        }
       }
     }
-    
+
     setState(() {
       _isDrawing = false;
       _drawingStart = null;
@@ -848,27 +789,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     }
   }
 
+  // Crop functionality removed
   void _applyCropToAllLayers(Rect cropRect) {
-    // Create a new crop layer that applies to all layers
-    final now = DateTime.now();
-    final cropLayerId = 'crop-${now.millisecondsSinceEpoch}';
-    
-    final cropLayer = CropLayer(
-      id: cropLayerId,
-      name: 'Crop',
-      visible: true,
-      locked: false,
-      opacity: 1.0,
-      blendModeType: BlendModeType.normal,
-      bounds: cropRect,
-      cropRect: cropRect,
-      createdDate: now,
-      modifiedDate: now,
-    );
-
-    // Remove any existing crop layers to prevent multiple crops
-    // Add the new crop layer
-    widget.onLayerAdded?.call(cropLayer);
+    // Crop functionality disabled - to be re-implemented
   }
 
   @override
@@ -1038,31 +961,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
           }
           return; // Don't continue to other gesture handling
         } else if (widget.selectedTool == EditorTool.crop) {
-          // Handle crop tool - check for crop handles first
-          if (_cropRect != null) {
-            final handle = _getHandleAtPoint(canvasPoint, _cropRect!);
-            if (handle != null) {
-              // Start crop resizing
-              setState(() {
-                _cropHandle = handle;
-                _isCropResizing = true;
-                _dragStart = canvasPoint;
-                _initialLayerBounds = _cropRect;
-              });
-              return;
-            } else if (_cropRect!.contains(canvasPoint)) {
-              // Start moving the crop area
-              setState(() {
-                _isDragging = true;
-                _dragStart = canvasPoint;
-                _initialLayerBounds = _cropRect;
-              });
-              return;
-            }
-          }
-          
-          // Start new crop selection
-          _handleDrawingStart(details.localFocalPoint);
+          // Crop functionality disabled - do nothing
+          return;
         } else if (widget.selectedTool == EditorTool.move) {
           // Handle move tool - check for resize handles first
           if (_selectedLayerId != null) {
@@ -1301,114 +1201,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
             _updateLayerBounds(_selectedLayerId!, newBounds);
           }
         } else if (widget.selectedTool == EditorTool.crop) {
-          // Handle crop tool updates
-          if (_isCropResizing && _cropHandle != null && _initialLayerBounds != null && _cropRect != null) {
-            final currentPoint = _screenToCanvasCoords(details.localFocalPoint);
-            final delta = currentPoint - _dragStart!;
-            Rect newCropRect = _initialLayerBounds!;
-            
-            switch (_cropHandle) {
-              case 'tl':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left + delta.dx,
-                  _initialLayerBounds!.top + delta.dy,
-                  _initialLayerBounds!.right,
-                  _initialLayerBounds!.bottom,
-                );
-                break;
-              case 'tr':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left,
-                  _initialLayerBounds!.top + delta.dy,
-                  _initialLayerBounds!.right + delta.dx,
-                  _initialLayerBounds!.bottom,
-                );
-                break;
-              case 'bl':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left + delta.dx,
-                  _initialLayerBounds!.top,
-                  _initialLayerBounds!.right,
-                  _initialLayerBounds!.bottom + delta.dy,
-                );
-                break;
-              case 'br':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left,
-                  _initialLayerBounds!.top,
-                  _initialLayerBounds!.right + delta.dx,
-                  _initialLayerBounds!.bottom + delta.dy,
-                );
-                break;
-              case 't':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left,
-                  _initialLayerBounds!.top + delta.dy,
-                  _initialLayerBounds!.right,
-                  _initialLayerBounds!.bottom,
-                );
-                break;
-              case 'b':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left,
-                  _initialLayerBounds!.top,
-                  _initialLayerBounds!.right,
-                  _initialLayerBounds!.bottom + delta.dy,
-                );
-                break;
-              case 'l':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left + delta.dx,
-                  _initialLayerBounds!.top,
-                  _initialLayerBounds!.right,
-                  _initialLayerBounds!.bottom,
-                );
-                break;
-              case 'r':
-                newCropRect = Rect.fromLTRB(
-                  _initialLayerBounds!.left,
-                  _initialLayerBounds!.top,
-                  _initialLayerBounds!.right + delta.dx,
-                  _initialLayerBounds!.bottom,
-                );
-                break;
-            }
-            
-            // Ensure minimum crop size and stay within canvas bounds
-            final renderBox = context.findRenderObject() as RenderBox?;
-            final canvasSize = renderBox?.size ?? Size.zero;
-            newCropRect = Rect.fromLTRB(
-              newCropRect.left.clamp(0.0, canvasSize.width - 50),
-              newCropRect.top.clamp(0.0, canvasSize.height - 50),
-              newCropRect.right.clamp(50.0, canvasSize.width),
-              newCropRect.bottom.clamp(50.0, canvasSize.height),
-            );
-            
-            if (newCropRect.width > 50 && newCropRect.height > 50) {
-              setState(() {
-                _cropRect = newCropRect;
-              });
-            }
-          } else if (_isDragging && _initialLayerBounds != null && _cropRect != null) {
-            // Handle moving the entire crop area
-            final currentPoint = _screenToCanvasCoords(details.localFocalPoint);
-            final delta = currentPoint - _dragStart!;
-            final newCropRect = _initialLayerBounds!.shift(delta);
-            
-            // Keep crop area within canvas bounds
-            final renderBox = context.findRenderObject() as RenderBox?;
-            final canvasSize = renderBox?.size ?? Size.zero;
-            final clampedRect = Rect.fromLTRB(
-              newCropRect.left.clamp(0.0, canvasSize.width - newCropRect.width),
-              newCropRect.top.clamp(0.0, canvasSize.height - newCropRect.height),
-              (newCropRect.left + newCropRect.width).clamp(newCropRect.width, canvasSize.width),
-              (newCropRect.top + newCropRect.height).clamp(newCropRect.height, canvasSize.height),
-            );
-            
-            setState(() {
-              _cropRect = clampedRect;
-            });
-          }
+          // Crop functionality disabled - do nothing
+          return;
         } else if (_isDrawing) {
           // Handle drawing update
           _handleDrawingUpdate(details.localFocalPoint);
@@ -1417,24 +1211,17 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         onScaleEnd: (details) {
         if (_isDrawing) {
           _handleDrawingEnd();
-        } else if (_isDragging || _isResizing || _isCropResizing || _isDraggingGuide) {
+        } else if (_isDragging || _isResizing || _isDraggingGuide) {
           setState(() {
             _isDragging = false;
             _isResizing = false;
-            _isCropResizing = false;
             _isDraggingGuide = false;
             _resizeHandle = null;
-            _cropHandle = null;
             _draggingGuide = null;
             _dragStart = null;
             _initialLayerPosition = null;
             _initialLayerBounds = null;
           });
-          
-          // If we were working with crop tool, apply the crop to all layers
-          if (widget.selectedTool == EditorTool.crop && _cropRect != null) {
-            _applyCropToAllLayers(_cropRect!);
-          }
         }
       },
       child: Container(
@@ -1454,7 +1241,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
                 _drawingEnd,
                 widget.selectedTool,
                 widget.toolConfig,
-                _cropRect,
+                null, // Crop functionality disabled
                 _selectedLayerId,
                 _verticalGuides,
                 _horizontalGuides,
@@ -1520,39 +1307,25 @@ class CanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Find active crop layers
-    final activeCropLayers = layers.where((layer) => 
-        layer.layerType == LayerType.crop && layer.visible).cast<CropLayer>().toList();
-    
-    // Draw background image
+    // Draw background image (crop functionality disabled)
     if (backgroundImage != null) {
       // Calculate scaling to fit the image within the canvas while maintaining aspect ratio
       final imageSize = Size(backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
       final scaleX = size.width / imageSize.width;
       final scaleY = size.height / imageSize.height;
       final scale = math.min(scaleX, scaleY);
-      
+
       // Center the scaled image
       final scaledSize = Size(imageSize.width * scale, imageSize.height * scale);
       final offset = Offset(
         (size.width - scaledSize.width) / 2,
         (size.height - scaledSize.height) / 2,
       );
-      
-      // If there are active crop layers or a crop preview, apply clipping
-      if (activeCropLayers.isNotEmpty) {
-        // Use the first (most recent) crop layer
-        final activeCrop = activeCropLayers.first;
-        _drawImageWithCrop(canvas, activeCrop.cropRect, offset, scaledSize, size);
-      } else if (cropRect != null) {
-        // Temporary crop preview
-        _drawImageWithCrop(canvas, cropRect!, offset, scaledSize, size);
-      } else {
-        // Normal drawing without crop
-        final rect = Rect.fromLTWH(offset.dx, offset.dy, scaledSize.width, scaledSize.height);
-        final srcRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
-        canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
-      }
+
+      // Always draw normal image without crop
+      final rect = Rect.fromLTWH(offset.dx, offset.dy, scaledSize.width, scaledSize.height);
+      final srcRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
+      canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
     }
     
     // Draw all layers
@@ -1562,13 +1335,10 @@ class CanvasPainter extends CustomPainter {
     
     // Draw preview of current drawing
     if (drawingStart != null && drawingEnd != null) {
-      _drawDrawingPreview(canvas);
+      _drawDrawingPreview(canvas, size);
     }
     
-    // Draw crop border when there's an active crop (but not while drawing)
-    if (cropRect != null && drawingStart == null) {
-      _drawCropBorder(canvas, cropRect!);
-    }
+    // Crop functionality disabled - no crop border to draw
     
     // Draw selection handles for select and move tools
     if ((selectedTool == EditorTool.select || selectedTool == EditorTool.move) && selectedLayerId != null) {
@@ -1604,7 +1374,7 @@ class CanvasPainter extends CustomPainter {
         _drawRedactionLayer(canvas, layer as RedactionLayer, canvasSize);
         break;
       case LayerType.crop:
-        // Crop layers don't draw anything - they affect background image rendering
+        // Crop functionality disabled - layers ignored
         break;
       case LayerType.bitmap:
         // TODO: Implement bitmap layer rendering
@@ -1844,58 +1614,9 @@ class CanvasPainter extends CustomPainter {
     return Color.fromRGBO(r, g, b, 1.0);
   }
 
+  // Crop functionality removed - method kept for potential future use
   void _drawImageWithCrop(Canvas canvas, Rect cropRect, Offset imageOffset, Size scaledSize, Size canvasSize) {
-    // Save canvas state for clipping
-    canvas.save();
-    
-    // Clip to crop area
-    canvas.clipRect(cropRect);
-    
-    // Draw the image with proper scaling
-    final imageSize = Size(backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
-    final rect = Rect.fromLTWH(imageOffset.dx, imageOffset.dy, scaledSize.width, scaledSize.height);
-    final srcRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
-    canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
-    
-    // Restore canvas state
-    canvas.restore();
-    
-    // Draw darkened overlay outside crop area for preview (only if cropRect is temporary)
-    if (this.cropRect != null) {
-      final overlayPaint = Paint()..color = Colors.black.withOpacity(0.7);
-      
-      // Top overlay
-      if (cropRect.top > 0) {
-        canvas.drawRect(
-          Rect.fromLTRB(0, 0, canvasSize.width, cropRect.top),
-          overlayPaint,
-        );
-      }
-      
-      // Bottom overlay
-      if (cropRect.bottom < canvasSize.height) {
-        canvas.drawRect(
-          Rect.fromLTRB(0, cropRect.bottom, canvasSize.width, canvasSize.height),
-          overlayPaint,
-        );
-      }
-      
-      // Left overlay
-      if (cropRect.left > 0) {
-        canvas.drawRect(
-          Rect.fromLTRB(0, cropRect.top, cropRect.left, cropRect.bottom),
-          overlayPaint,
-        );
-      }
-      
-      // Right overlay
-      if (cropRect.right < canvasSize.width) {
-        canvas.drawRect(
-          Rect.fromLTRB(cropRect.right, cropRect.top, canvasSize.width, cropRect.bottom),
-          overlayPaint,
-        );
-      }
-    }
+    // Crop functionality disabled
   }
 
   void _drawSelectionHandles(Canvas canvas, Rect bounds) {
@@ -2001,111 +1722,13 @@ class CanvasPainter extends CustomPainter {
     }
   }
 
-  void _drawCropBorder(Canvas canvas, Rect cropRect) {
-    // Draw crop border
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawRect(cropRect, borderPaint);
-    
-    // Draw crop overlay - darken everything outside crop area
-    final canvasRect = Rect.fromLTWH(0, 0, 800, 600);
-    final overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5);
-    
-    // Top overlay
-    if (cropRect.top > 0) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, 0, 800, cropRect.top),
-        overlayPaint,
-      );
-    }
-    
-    // Bottom overlay
-    if (cropRect.bottom < 600) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, cropRect.bottom, 800, 600),
-        overlayPaint,
-      );
-    }
-    
-    // Left overlay
-    if (cropRect.left > 0) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, cropRect.top, cropRect.left, cropRect.bottom),
-        overlayPaint,
-      );
-    }
-    
-    // Right overlay
-    if (cropRect.right < 800) {
-      canvas.drawRect(
-        Rect.fromLTRB(cropRect.right, cropRect.top, 800, cropRect.bottom),
-        overlayPaint,
-      );
-    }
-    
-    // Draw resize handles when crop tool is selected
-    if (selectedTool == EditorTool.crop) {
-      const handleSize = 8.0;
-      final handlePaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
-      
-      final handleBorderPaint = Paint()
-        ..color = Colors.black
-        ..strokeWidth = 1.0
-        ..style = PaintingStyle.stroke;
-      
-      final handles = [
-        cropRect.topLeft,     // tl
-        cropRect.topRight,    // tr
-        cropRect.bottomLeft,  // bl
-        cropRect.bottomRight, // br
-        Offset(cropRect.center.dx, cropRect.top),    // t
-        Offset(cropRect.center.dx, cropRect.bottom), // b
-        Offset(cropRect.left, cropRect.center.dy),   // l
-        Offset(cropRect.right, cropRect.center.dy),  // r
-      ];
-      
-      for (final handlePos in handles) {
-        final handleRect = Rect.fromCenter(
-          center: handlePos,
-          width: handleSize,
-          height: handleSize,
-        );
-        canvas.drawRect(handleRect, handlePaint);
-        canvas.drawRect(handleRect, handleBorderPaint);
-      }
-    } else {
-      // Draw crop corners when not actively editing
-      const cornerSize = 10.0;
-      final cornerPaint = Paint()
-        ..color = Colors.white
-        ..strokeWidth = 3.0
-        ..style = PaintingStyle.stroke;
-      
-      // Top-left corner
-      canvas.drawLine(cropRect.topLeft, cropRect.topLeft + const Offset(cornerSize, 0), cornerPaint);
-      canvas.drawLine(cropRect.topLeft, cropRect.topLeft + const Offset(0, cornerSize), cornerPaint);
-      
-      // Top-right corner
-      canvas.drawLine(cropRect.topRight, cropRect.topRight + const Offset(-cornerSize, 0), cornerPaint);
-      canvas.drawLine(cropRect.topRight, cropRect.topRight + const Offset(0, cornerSize), cornerPaint);
-      
-      // Bottom-left corner
-      canvas.drawLine(cropRect.bottomLeft, cropRect.bottomLeft + const Offset(cornerSize, 0), cornerPaint);
-      canvas.drawLine(cropRect.bottomLeft, cropRect.bottomLeft + const Offset(0, -cornerSize), cornerPaint);
-      
-      // Bottom-right corner
-      canvas.drawLine(cropRect.bottomRight, cropRect.bottomRight + const Offset(-cornerSize, 0), cornerPaint);
-      canvas.drawLine(cropRect.bottomRight, cropRect.bottomRight + const Offset(0, -cornerSize), cornerPaint);
-    }
+  // Crop functionality removed - method kept for potential future use
+  void _drawCropBorder(Canvas canvas, Rect cropRect, Size canvasSize) {
+    // Crop functionality disabled
   }
 
 
-  void _drawDrawingPreview(Canvas canvas) {
+  void _drawDrawingPreview(Canvas canvas, Size canvasSize) {
     if (drawingStart == null || drawingEnd == null) return;
     
     final paint = Paint()
@@ -2115,57 +1738,7 @@ class CanvasPainter extends CustomPainter {
     
     switch (selectedTool) {
       case EditorTool.crop:
-        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
-        
-        // Draw crop overlay - darken everything outside crop area
-        final canvasRect = Rect.fromLTWH(0, 0, 800, 600);
-        final overlayPaint = Paint()
-          ..color = Colors.black.withOpacity(0.5)
-          ..style = PaintingStyle.fill;
-        
-        // Draw overlay on all four sides of the crop rectangle
-        if (rect.top > 0) {
-          canvas.drawRect(Rect.fromLTRB(canvasRect.left, canvasRect.top, canvasRect.right, rect.top), overlayPaint);
-        }
-        if (rect.bottom < canvasRect.bottom) {
-          canvas.drawRect(Rect.fromLTRB(canvasRect.left, rect.bottom, canvasRect.right, canvasRect.bottom), overlayPaint);
-        }
-        if (rect.left > 0) {
-          canvas.drawRect(Rect.fromLTRB(canvasRect.left, rect.top, rect.left, rect.bottom), overlayPaint);
-        }
-        if (rect.right < canvasRect.right) {
-          canvas.drawRect(Rect.fromLTRB(rect.right, rect.top, canvasRect.right, rect.bottom), overlayPaint);
-        }
-        
-        // Draw crop border
-        paint
-          ..color = Colors.white
-          ..strokeWidth = 2.0
-          ..style = PaintingStyle.stroke;
-        canvas.drawRect(rect, paint);
-        
-        // Draw crop corners
-        const cornerSize = 10.0;
-        final cornerPaint = Paint()
-          ..color = Colors.white
-          ..strokeWidth = 3.0
-          ..style = PaintingStyle.stroke;
-        
-        // Top-left corner
-        canvas.drawLine(rect.topLeft, rect.topLeft + const Offset(cornerSize, 0), cornerPaint);
-        canvas.drawLine(rect.topLeft, rect.topLeft + const Offset(0, cornerSize), cornerPaint);
-        
-        // Top-right corner
-        canvas.drawLine(rect.topRight, rect.topRight + const Offset(-cornerSize, 0), cornerPaint);
-        canvas.drawLine(rect.topRight, rect.topRight + const Offset(0, cornerSize), cornerPaint);
-        
-        // Bottom-left corner
-        canvas.drawLine(rect.bottomLeft, rect.bottomLeft + const Offset(cornerSize, 0), cornerPaint);
-        canvas.drawLine(rect.bottomLeft, rect.bottomLeft + const Offset(0, -cornerSize), cornerPaint);
-        
-        // Bottom-right corner
-        canvas.drawLine(rect.bottomRight, rect.bottomRight + const Offset(-cornerSize, 0), cornerPaint);
-        canvas.drawLine(rect.bottomRight, rect.bottomRight + const Offset(0, -cornerSize), cornerPaint);
+        // Crop functionality disabled - no preview drawn
         break;
         
       case EditorTool.highlightRect:

@@ -459,19 +459,8 @@ class _ScreenshotEditorScreenState
         );
         break;
       case LayerType.crop:
-        final cropLayer = layer as CropLayer;
-        duplicatedLayer = CropLayer(
-          id: duplicatedLayerId,
-          name: '${layer.name} Copy',
-          visible: layer.visible,
-          locked: layer.locked,
-          opacity: layer.opacity,
-          blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
-          cropRect: cropLayer.cropRect.translate(10, 10),
-          createdDate: now,
-          modifiedDate: now,
-        );
+        // Crop functionality disabled - skip duplication
+        return;
         break;
       case LayerType.bitmap:
         final bitmapLayer = layer as BitmapLayer;
@@ -651,19 +640,8 @@ class _ScreenshotEditorScreenState
         );
         break;
       case LayerType.crop:
-        final cropLayer = layer as CropLayer;
-        duplicatedLayer = CropLayer(
-          id: duplicatedLayerId,
-          name: '${layer.name} Copy',
-          visible: layer.visible,
-          locked: layer.locked,
-          opacity: layer.opacity,
-          blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
-          cropRect: cropLayer.cropRect.translate(10, 10),
-          createdDate: now,
-          modifiedDate: now,
-        );
+        // Crop functionality disabled - skip duplication
+        return;
         break;
       case LayerType.bitmap:
         final bitmapLayer = layer as BitmapLayer;
@@ -908,23 +886,17 @@ class _ScreenshotEditorScreenState
     }
   }
 
+  // Crop functionality removed - methods kept for compatibility
   void _applyCrop() {
-    final canvas = _canvasKey.currentState as dynamic;
-    if (canvas != null && canvas.hasPendingCrop) {
-      canvas.applyCrop();
-    }
+    // Crop functionality disabled
   }
 
   void _cancelCrop() {
-    final canvas = _canvasKey.currentState as dynamic;
-    if (canvas != null) {
-      canvas.cancelCrop();
-    }
+    // Crop functionality disabled
   }
 
   bool get _hasPendingCrop {
-    final canvas = _canvasKey.currentState as dynamic;
-    return canvas?.hasPendingCrop ?? false;
+    return false; // Always false since crop is disabled
   }
 
   @override
@@ -985,25 +957,7 @@ class _ScreenshotEditorScreenState
               },
             ),
             
-            // Crop controls
-            if (_hasPendingCrop) ...[ 
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: _applyCrop,
-                icon: const Icon(Icons.check, size: 18),
-                label: const Text('Apply Crop'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                ),
-              ),
-              const SizedBox(width: 4),
-              OutlinedButton.icon(
-                onPressed: _cancelCrop,
-                icon: const Icon(Icons.close, size: 18),
-                label: const Text('Cancel'),
-              ),
-            ],
+            // Crop controls removed - functionality disabled
             
             const SizedBox(width: 8),
             FilledButton.icon(
