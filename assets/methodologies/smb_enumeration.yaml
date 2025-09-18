@@ -1,0 +1,158 @@
+id: "smb_enumeration"
+name: "SMB Share Enumeration"
+version: "1.0.0"
+category: "enumeration"
+description: "Enumerate SMB shares and accessible resources"
+rationale: "SMB shares often contain sensitive information and can provide initial foothold"
+
+risk_level: "medium"
+stealth_level: "active"
+estimated_duration: "20m"
+
+triggers:
+  - type: "service_detected"
+    conditions:
+      service: "smb"
+      port: [139, 445]
+    priority: 70
+    description: "SMB service detected"
+    deduplication:
+      strategy: "signature_based"
+      signature_fields: ["host_ip", "port"]
+      cooldown_period: "6h"
+
+  - type: "asset_discovered"
+    conditions:
+      and:
+        - asset_type: "host"
+        - properties:
+            os_type: "windows"
+    priority: 60
+    description: "Windows host discovered"
+
+steps:
+  - id: "smb_null_session"
+    name: "SMB Null Session Enumeration"
+    description: "Attempt SMB enumeration with null session"
+    type: "command"
+    order: 1
+    command: "smbclient -L {host_ip} -N"
+    expected_outputs:
+      - type: "smb_shares"
+        parser: "smbclient_list"
+        success_indicators: ["Sharename", "Type", "Comment"]
+        failure_indicators: ["NT_STATUS_ACCESS_DENIED", "Connection refused"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "\\s+(\\w+)\\s+Disk\\s+(.*)"
+          asset_type: "file"
+          confidence: 0.8
+          metadata:
+            share_type: "disk"
+            access_method: "null_session"
+
+  - id: "enum4linux"
+    name: "Comprehensive SMB Enumeration"
+    description: "Use enum4linux for detailed SMB enumeration"
+    type: "command"
+    order: 2
+    command: "enum4linux -a {host_ip}"
+    timeout: "300s"
+    expected_outputs:
+      - type: "smb_enumeration"
+        parser: "enum4linux"
+        success_indicators: ["Target Information", "Getting domain SID"]
+        failure_indicators: ["Cannot connect", "Access denied"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "user:\\[(\\w+)\\]"
+          asset_type: "user"
+          confidence: 0.7
+          metadata:
+            domain: "local"
+            discovery_method: "smb_enumeration"
+
+  - id: "smb_share_access"
+    name: "SMB Share Access Testing"
+    description: "Test access to discovered shares"
+    type: "command"
+    order: 3
+    command: "smbmap -H {host_ip} -u guest"
+    command_variants:
+      - condition: "null_session_available == true"
+        command: "smbmap -H {host_ip}"
+        description: "Use null session if available"
+      - condition: "credentials_available == true"
+        command: "smbmap -H {host_ip} -u {username} -p {password}"
+        description: "Use discovered credentials"
+    expected_outputs:
+      - type: "share_permissions"
+        parser: "smbmap"
+        success_indicators: ["READ", "WRITE"]
+        failure_indicators: ["NO ACCESS", "Permission denied"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "\\s+(READ|WRITE)\\s+(\\w+)\\s+(.*)"
+          asset_type: "file"
+          confidence: 0.9
+          metadata:
+            permissions: "$1"
+            share_name: "$2"
+
+asset_discovery:
+  expected_assets:
+    - type: "file"
+      confidence: 0.8
+      conditions:
+        - share_accessible: true
+    - type: "user"
+      confidence: 0.7
+      conditions:
+        - enumerable: true
+    - type: "credential"
+      confidence: 0.6
+      conditions:
+        - found_in_shares: true
+
+suppression_options:
+  available_scopes:
+    - scope: "this_host"
+      description: "Skip SMB enumeration for this host"
+      conditions: ["host_ip"]
+    - scope: "this_network"
+      description: "Skip SMB enumeration for this network"
+      conditions: ["network_range"]
+
+  auto_suppress:
+    on_completion: "this_host"
+    on_failure: null
+    on_no_assets: "this_host"
+
+next_methodologies:
+  - conditions:
+      discovered_shares.count: "> 0"
+      discovered_shares.writable: "> 0"
+    methodology: "smb_exploitation"
+    trigger_data:
+      writable_shares: "{writable_shares}"
+      target_host: "{host_ip}"
+
+documentation:
+  overview: |
+    This methodology enumerates SMB shares and tests access permissions
+    to identify potential data exfiltration or lateral movement opportunities.
+  
+  prerequisites:
+    - "SMB service accessible on ports 139 or 445"
+    - "Tools: smbclient, enum4linux, smbmap"
+  
+  expected_findings:
+    - "Available SMB shares"
+    - "Share permissions and access levels"
+    - "Enumerated users and groups"
+    - "Sensitive files in accessible shares"
+
+compatibility:
+  min_engine_version: "2.0.0"
+  required_tools: ["smbclient", "enum4linux", "smbmap"]
+  required_parsers: ["smbclient_list", "enum4linux", "smbmap"]

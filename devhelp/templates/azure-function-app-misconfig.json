@@ -1,0 +1,245 @@
+{
+  "id": "azure-function-app-misconfig",
+  "title": "Azure Function App Security Misconfigurations",
+  "category": "Cloud Security - Serverless",
+  "baseDescription": "LRQA identified multiple security misconfigurations in Azure Function Apps that could lead to unauthorized access, data exposure, and potential compromise of serverless applications.",
+  "subFindings": [
+    {
+      "id": "public-http-access",
+      "title": "Public HTTP Access Without HTTPS Enforcement",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "The Function App is configured to accept HTTP connections without enforcing HTTPS, allowing unencrypted data transmission over the internet. This exposes sensitive data including authentication tokens, function keys, and application data to potential interception through man-in-the-middle attacks.\n\nHTTP traffic can be intercepted and modified by attackers on the same network or through compromised network infrastructure, potentially exposing API keys, authentication tokens, and sensitive business data.",
+      "checkSteps": "1. Navigate to Azure Portal > Function Apps > [function-app-name]\n2. Go to 'Configuration' > 'General settings'\n3. Check 'HTTPS Only' setting - verify if it's OFF\n4. Go to 'TLS/SSL settings'\n5. Check 'Minimum TLS Version' - verify if less than 1.2\n6. Test HTTP endpoint: curl http://[function-app-name].azurewebsites.net\n7. Verify if HTTP requests are accepted without redirect\nPowerShell: Get-AzFunctionApp -Name [name] -ResourceGroupName [rg] | Select HttpsOnly, MinTlsVersion",
+      "recommendation": "Enable 'HTTPS Only' setting and set minimum TLS version to 1.2 or higher.",
+      "verificationProcedure": "1. Navigate to Function App > Configuration > General settings\n2. Verify 'HTTPS Only' is set to ON\n3. Go to TLS/SSL settings\n4. Verify 'Minimum TLS Version' is 1.2 or higher\n5. Test HTTP request - should redirect to HTTPS\n6. Test with curl: curl -I http://[function-app-name].azurewebsites.net\n7. Verify 301/302 redirect to HTTPS\n8. Run PowerShell: Get-AzFunctionApp -Name [name] | Select HttpsOnly\n9. Verify HttpsOnly shows 'True'",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Function App General Settings showing HTTPS Only disabled",
+          "steps": "1. Navigate to Function App > Configuration > General settings\n2. Screenshot showing 'HTTPS Only' set to OFF"
+        },
+        {
+          "caption": "HTTP request accepted without redirect",
+          "steps": "1. Use browser developer tools or curl\n2. Show HTTP request being accepted without HTTPS redirect"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure TLS/SSL for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-bindings"
+        },
+        {
+          "title": "Azure Functions Security Concepts",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/security-concepts"
+        }
+      ]
+    },
+    {
+      "id": "no-network-isolation",
+      "title": "Function App Publicly Accessible Without Network Isolation",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "The Function App is directly accessible from the public internet without any network isolation mechanisms such as private endpoints or VNet integration. This increases the attack surface and exposes the function to potential brute force attacks, DDoS attempts, and unauthorized access attempts.\n\nWithout network isolation, the function endpoints are exposed to the entire internet, making them vulnerable to automated scanning, reconnaissance, and attack attempts from any location globally.",
+      "checkSteps": "1. Navigate to Function App > Networking\n2. Check 'Inbound Traffic' configuration\n3. Verify no Private Endpoints configured\n4. Check 'Outbound Traffic' - verify no VNet Integration\n5. Under 'Access Restrictions' - verify if set to 'Allow All'\n6. Test public access: nslookup [function-app-name].azurewebsites.net\n7. Verify public IP resolution\nPowerShell: Get-AzFunctionApp -Name [name] | Select-Object -ExpandProperty SiteConfig | Select IpSecurityRestrictions",
+      "recommendation": "Implement Private Endpoints for inbound traffic and VNet Integration for outbound traffic. Configure access restrictions to limit access to specific IP ranges.",
+      "verificationProcedure": "1. Navigate to Function App > Networking\n2. Verify Private Endpoints are configured for inbound traffic\n3. Verify VNet Integration is enabled for outbound traffic\n4. Check Access Restrictions are configured with specific IP ranges\n5. Test access from unauthorized network - should be blocked\n6. Test access from authorized network - should succeed\n7. Verify DNS resolution returns private IP for private endpoint\n8. Document network architecture with screenshots",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Function App Networking showing no private endpoints or VNet integration",
+          "steps": "1. Navigate to Function App > Networking\n2. Screenshot showing empty Private Endpoints section\n3. Show no VNet Integration configured"
+        },
+        {
+          "caption": "Access Restrictions set to Allow All",
+          "steps": "1. Navigate to Function App > Networking > Access Restrictions\n2. Screenshot showing 'Allow All' configuration"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Functions Networking Options",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-networking-options"
+        },
+        {
+          "title": "Use Private Endpoints for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-vnet"
+        }
+      ]
+    },
+    {
+      "id": "anonymous-authentication",
+      "title": "Anonymous Authentication Enabled on Function Endpoints",
+      "cvssScore": 8.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N",
+      "severity": "High",
+      "description": "Function endpoints are configured with anonymous authentication level, allowing anyone with knowledge of the function URL to invoke them without any authentication. This poses a significant security risk as it allows unauthorized access to business logic and potential data manipulation.\n\nAnonymous functions can be invoked by anyone on the internet, potentially leading to data exfiltration, resource abuse, denial of service attacks, and unauthorized execution of business logic.",
+      "checkSteps": "1. Navigate to Function App > Functions\n2. Select each function and check 'Integration'\n3. Review HTTP trigger configuration\n4. Check 'Authorization level' - look for 'Anonymous'\n5. Review function.json files in source code\n6. Test endpoints without authentication keys\n7. Check for exposed function URLs in client-side code\nPowerShell: Get-AzFunctionAppFunction -Name [function-name] -FunctionAppName [app-name] -ResourceGroupName [rg]",
+      "recommendation": "Set authorization level to 'Function' or 'Admin' for all HTTP-triggered functions. Implement Azure AD authentication for user-facing functions.",
+      "verificationProcedure": "1. Navigate to each Function > Integration\n2. Verify Authorization level is set to 'Function' or 'Admin'\n3. Test function endpoints without keys - should return 401 Unauthorized\n4. Test with valid function key - should succeed\n5. Verify Azure AD authentication is configured if applicable\n6. Review App Service Authentication settings\n7. Document all function authorization levels",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Function Integration showing Anonymous authorization level",
+          "steps": "1. Navigate to Function > Integration\n2. Screenshot showing 'Authorization level' set to 'Anonymous'"
+        },
+        {
+          "caption": "Successful anonymous function invocation",
+          "steps": "1. Use Postman or curl to invoke function without authentication\n2. Screenshot showing successful response without auth keys"
+        }
+      ],
+      "links": [
+        {
+          "title": "Function Access Keys",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger#authorization-keys"
+        },
+        {
+          "title": "Securing Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/security-concepts"
+        }
+      ]
+    },
+    {
+      "id": "insufficient-logging",
+      "title": "Insufficient Diagnostic Logging and Monitoring",
+      "cvssScore": 4.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "severity": "Medium",
+      "description": "The Function App lacks proper diagnostic logging and Application Insights integration, limiting visibility into security events, performance issues, and potential attacks. Without comprehensive logging, security incidents may go undetected and forensic investigation capabilities are severely limited.\n\nThis configuration gap prevents detection of anomalous behavior, failed authentication attempts, and potential security breaches, while also hindering compliance with audit requirements.",
+      "checkSteps": "1. Navigate to Function App > Application Insights\n2. Check if Application Insights is disabled or not configured\n3. Go to Monitoring > Diagnostic settings\n4. Verify if diagnostic logs are not configured\n5. Check for FunctionAppLogs category\n6. Review log retention settings\n7. Check Scale Controller logging (SCALE_CONTROLLER_LOGGING_ENABLED)\nPowerShell: Get-AzFunctionApp -Name [name] | Select ApplicationInsightsKey",
+      "recommendation": "Enable Application Insights with appropriate sampling settings. Configure diagnostic settings to capture FunctionAppLogs and send to Log Analytics workspace.",
+      "verificationProcedure": "1. Navigate to Function App > Application Insights\n2. Verify Application Insights is enabled and connected\n3. Go to Diagnostic settings\n4. Verify FunctionAppLogs category is enabled\n5. Check logs are sent to Log Analytics workspace\n6. Test by triggering a function and verifying logs appear\n7. Query logs in Application Insights\n8. Verify Scale Controller logging is enabled",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Application Insights showing disabled or not configured",
+          "steps": "1. Navigate to Function App > Application Insights\n2. Screenshot showing Application Insights disabled"
+        },
+        {
+          "caption": "Diagnostic settings missing or incomplete",
+          "steps": "1. Navigate to Monitoring > Diagnostic settings\n2. Screenshot showing no diagnostic settings or missing categories"
+        }
+      ],
+      "links": [
+        {
+          "title": "Monitor Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-monitoring"
+        },
+        {
+          "title": "Configure Monitoring for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring"
+        }
+      ]
+    },
+    {
+      "id": "no-managed-identity",
+      "title": "Managed Identity Not Configured",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "The Function App is not configured with a Managed Identity, requiring the use of connection strings and secrets for accessing Azure resources. This increases the risk of credential exposure through code, configuration files, or logs.\n\nWithout Managed Identity, developers must manage and rotate secrets manually, increasing operational overhead and the risk of credential compromise through source code exposure or configuration errors.",
+      "checkSteps": "1. Navigate to Function App > Identity\n2. Check 'System assigned' tab - verify Status is 'Off'\n3. Check 'User assigned' tab - verify no identities assigned\n4. Review Configuration > Application settings\n5. Look for connection strings with keys/passwords\n6. Check source code for embedded credentials\n7. Review Key Vault references usage\nPowerShell: Get-AzFunctionApp -Name [name] | Select-Object -ExpandProperty Identity",
+      "recommendation": "Enable System-assigned or User-assigned Managed Identity and use it for accessing Azure resources instead of connection strings.",
+      "verificationProcedure": "1. Navigate to Function App > Identity\n2. Verify System-assigned identity Status is 'On'\n3. Or verify User-assigned identities are configured\n4. Check RBAC assignments for the identity\n5. Verify connection strings use identity-based authentication\n6. Test resource access using managed identity\n7. Confirm no secrets in application settings\n8. Document identity configuration and permissions",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Function App Identity showing disabled managed identity",
+          "steps": "1. Navigate to Function App > Identity\n2. Screenshot showing System assigned Status as 'Off'\n3. Show User assigned tab with no identities"
+        },
+        {
+          "caption": "Application settings containing connection strings with secrets",
+          "steps": "1. Navigate to Configuration > Application settings\n2. Screenshot showing connection strings with visible passwords (partially obscured)"
+        }
+      ],
+      "links": [
+        {
+          "title": "How to use managed identities for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/overview-managed-identity"
+        },
+        {
+          "title": "Identity-based connections for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-identity-based-connections-tutorial"
+        }
+      ]
+    },
+    {
+      "id": "cors-misconfiguration",
+      "title": "CORS Wildcard Configuration",
+      "cvssScore": 5.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "The Function App is configured with wildcard (*) CORS settings, allowing any origin to make cross-origin requests. This configuration can enable cross-site request forgery (CSRF) attacks and allows malicious websites to interact with the function endpoints on behalf of authenticated users.\n\nWildcard CORS settings bypass the browser's same-origin policy, potentially allowing attackers to craft malicious websites that make requests to your functions using victims' credentials.",
+      "checkSteps": "1. Navigate to Function App > CORS\n2. Check for wildcard (*) in allowed origins\n3. Review if 'Enable Access-Control-Allow-Credentials' is checked with wildcard\n4. Test CORS from different origins\n5. Check function.json for CORS settings\n6. Review API Management policies if applicable\nPowerShell: Get-AzFunctionApp -Name [name] | Select-Object -ExpandProperty SiteConfig | Select Cors",
+      "recommendation": "Configure specific allowed origins instead of wildcards. Only include trusted domains that need to access the function endpoints.",
+      "verificationProcedure": "1. Navigate to Function App > CORS\n2. Verify specific origins are listed (no wildcards)\n3. Verify only necessary origins are included\n4. Test CORS from allowed origin - should succeed\n5. Test CORS from non-allowed origin - should be blocked\n6. Verify credentials are not allowed with wildcards\n7. Document all allowed origins and justification",
+      "screenshotPlaceholders": [
+        {
+          "caption": "CORS configuration showing wildcard (*) origin",
+          "steps": "1. Navigate to Function App > CORS\n2. Screenshot showing '*' in Allowed Origins list"
+        },
+        {
+          "caption": "CORS test showing acceptance from any origin",
+          "steps": "1. Use browser developer tools\n2. Show successful CORS request from unauthorized domain"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure CORS for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings#cors"
+        }
+      ]
+    },
+    {
+      "id": "runtime-version-outdated",
+      "title": "Outdated Function Runtime Version",
+      "cvssScore": 4.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L",
+      "severity": "Medium",
+      "description": "The Function App is running on an outdated runtime version that may contain known security vulnerabilities and lacks the latest security features. Outdated runtimes miss critical security patches and improvements.\n\nUsing outdated runtime versions exposes the application to known vulnerabilities that have been patched in newer versions, and prevents the use of modern security features and performance improvements.",
+      "checkSteps": "1. Navigate to Function App > Configuration > Function runtime settings\n2. Check 'Runtime version'\n3. Compare with latest available version\n4. Check 'Platform' settings for 32-bit vs 64-bit\n5. Review Extension version\n6. Check for deprecated runtime stacks\nPowerShell: Get-AzFunctionApp -Name [name] | Select Version, Use32BitWorkerProcess",
+      "recommendation": "Update to the latest Function runtime version (v4.x) and ensure 64-bit platform is used for better security and performance.",
+      "verificationProcedure": "1. Navigate to Function runtime settings\n2. Verify Runtime version is ~4 (latest)\n3. Verify Platform is 64-bit\n4. Test function execution after update\n5. Verify all functions work correctly\n6. Check for any deprecation warnings\n7. Monitor for errors post-update",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Function runtime settings showing outdated version",
+          "steps": "1. Navigate to Configuration > Function runtime settings\n2. Screenshot showing Runtime version less than ~4"
+        },
+        {
+          "caption": "Platform settings showing 32-bit configuration",
+          "steps": "1. Navigate to Configuration > General settings\n2. Screenshot showing Platform set to 32 Bit"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Functions Runtime Versions",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions"
+        },
+        {
+          "title": "Migrate Azure Functions to Version 4",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-functions/migrate-version-3-version-4"
+        }
+      ]
+    },
+    {
+      "id": "excessive-rbac-permissions",
+      "title": "Excessive RBAC Role Assignments",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "LRQA identified that the Function App has users or service principals assigned to overly permissive RBAC roles such as Owner or Contributor. These roles provide far more access than typically required for Azure Functions operations and violate the principle of least privilege.\n\nExcessive permissions increase the risk of accidental or malicious actions that could compromise the function app, modify critical configurations, access sensitive application settings, or manipulate function code and deployment slots.",
+      "checkSteps": "1. Navigate to Function App > Access control (IAM)\n2. Review role assignments tab\n3. Identify users/service principals with Owner, Contributor, or other broad roles\n4. Check for more than 3 users with Owner permissions\n5. Verify if assignments use Function-specific roles instead\n6. Screenshot: IAM showing excessive role assignments\nPowerShell: Get-AzRoleAssignment -Scope \"/subscriptions/[sub-id]/resourceGroups/[rg]/providers/Microsoft.Web/sites/[function-name]\" | Where-Object {$_.RoleDefinitionName -in @('Owner','Contributor')}",
+      "recommendation": "Replace broad RBAC roles (Owner, Contributor) with specific Function App roles such as 'Website Contributor', 'Web Plan Contributor', or 'Reader' based on actual requirements. Limit Owner role assignments to maximum of 3 users.",
+      "verificationProcedure": "1. Navigate to Function App > Access control (IAM)\n2. Verify no users have Owner/Contributor roles unless justified\n3. Confirm Function-specific roles are used instead\n4. Test that users can still perform required operations\n5. Document role assignment justifications\n6. Run PowerShell commands to verify role assignments\n7. Set up periodic access reviews for role assignments",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Function App IAM showing users with excessive Owner/Contributor roles",
+          "steps": "1. Navigate to Function App > Access control (IAM)\n2. Click on 'Role assignments' tab\n3. Screenshot showing users assigned to Owner or Contributor roles\n4. Highlight the excessive permissions granted"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure built-in roles for Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#web"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure Function App Security Assessment Script\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$FunctionAppName,\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName\n)\n\nWrite-Host \"=== Azure Function App Security Assessment: $FunctionAppName ===\" -ForegroundColor Cyan\n\n# Get Function App details\n$functionApp = Get-AzFunctionApp -Name $FunctionAppName -ResourceGroupName $ResourceGroupName\n\n# RBAC Checks\nWrite-Host \"`n--- RBAC and Access Control ---\" -ForegroundColor Yellow\ntry {\n    $scope = \"/subscriptions/\" + (Get-AzContext).Subscription.Id + \"/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$FunctionAppName\"\n    $roleAssignments = Get-AzRoleAssignment -Scope $scope | Where-Object {$_.RoleDefinitionName -in @('Owner','Contributor')}\n    if ($roleAssignments.Count -gt 0) {\n        Write-Host \"⚠️ Found $($roleAssignments.Count) users with excessive RBAC permissions (Owner/Contributor)\" -ForegroundColor Yellow\n        foreach($assignment in $roleAssignments) {\n            Write-Host \"   $($assignment.DisplayName) - $($assignment.RoleDefinitionName)\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"✅ No excessive RBAC role assignments found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"⚠️ Could not check RBAC role assignments\" -ForegroundColor Yellow\n}\n\nWrite-Host \"`n--- Function App Configuration ---\" -ForegroundColor Yellow\n\n# Check HTTPS Only\nif (-not $functionApp.HttpsOnly) {\n    Write-Host \"❌ HTTPS Only is disabled\" -ForegroundColor Red\n} else {\n    Write-Host \"✅ HTTPS Only is enabled\" -ForegroundColor Green\n}\n\n# Check Minimum TLS Version\nif ($functionApp.SiteConfig.MinTlsVersion -lt \"1.2\") {\n    Write-Host \"❌ Minimum TLS version is less than 1.2\" -ForegroundColor Red\n} else {\n    Write-Host \"✅ Minimum TLS version is 1.2 or higher\" -ForegroundColor Green\n}\n\n# Check Managed Identity\nif (-not $functionApp.Identity.Type) {\n    Write-Host \"❌ Managed Identity is not configured\" -ForegroundColor Red\n} else {\n    Write-Host \"✅ Managed Identity is configured: $($functionApp.Identity.Type)\" -ForegroundColor Green\n}\n\n# Check Application Insights\nif (-not $functionApp.ApplicationInsightsKey) {\n    Write-Host \"❌ Application Insights is not configured\" -ForegroundColor Red\n} else {\n    Write-Host \"✅ Application Insights is configured\" -ForegroundColor Green\n}\n\n# Check CORS Settings\n$cors = $functionApp.SiteConfig.Cors\nif ($cors.AllowedOrigins -contains \"*\") {\n    Write-Host \"❌ CORS wildcard (*) is configured\" -ForegroundColor Red\n} else {\n    Write-Host \"✅ CORS is properly configured\" -ForegroundColor Green\n}\n\n# Check Runtime Version\nif ($functionApp.Version -ne \"~4\") {\n    Write-Host \"⚠️ Function runtime is not latest version (v4)\" -ForegroundColor Yellow\n} else {\n    Write-Host \"✅ Function runtime is latest version\" -ForegroundColor Green\n}\n\n# Check Platform\nif ($functionApp.Use32BitWorkerProcess) {\n    Write-Host \"⚠️ Function App is using 32-bit platform\" -ForegroundColor Yellow\n} else {\n    Write-Host \"✅ Function App is using 64-bit platform\" -ForegroundColor Green\n}\n\n# List all functions and their auth levels\nWrite-Host \"`n=== Function Authorization Levels ===\" -ForegroundColor Cyan\n$functions = Get-AzFunctionAppFunction -FunctionAppName $FunctionAppName -ResourceGroupName $ResourceGroupName\nforeach ($func in $functions) {\n    Write-Host \"Function: $($func.Name) - Auth Level: [Check manually in portal]\" -ForegroundColor White\n}"
+}

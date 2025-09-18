@@ -1,0 +1,69 @@
+{
+  "templates": [
+    {
+      "id": "azure-keyvault-misconfig",
+      "filename": "azure-keyvault-misconfig.json",
+      "title": "Azure Key Vault Misconfiguration",
+      "category": "Cloud Security",
+      "findingCount": 10
+    },
+    {
+      "id": "sql-injection",
+      "filename": "sql-injection.json",
+      "title": "SQL Injection Vulnerability",
+      "category": "Web Application",
+      "findingCount": 2
+    },
+    {
+      "id": "azure-function-app-misconfig",
+      "filename": "azure-function-app-misconfig.json",
+      "title": "Azure Function App Security Misconfigurations",
+      "category": "Cloud Security - Serverless",
+      "findingCount": 8
+    },
+    {
+      "id": "azure-sql-database-misconfig",
+      "filename": "azure-sql-database-misconfig.json",
+      "title": "Azure SQL Database Security Misconfigurations",
+      "category": "Database Security",
+      "findingCount": 7
+    },
+    {
+      "id": "azure-storage-account-misconfig",
+      "filename": "azure-storage-account-misconfig.json",
+      "title": "Azure Storage Account Security Misconfigurations",
+      "category": "Cloud Storage Security",
+      "findingCount": 10
+    },
+    {
+      "id": "azure-service-bus-misconfig",
+      "filename": "azure-service-bus-misconfig.json",
+      "title": "Azure Service Bus Security Misconfigurations",
+      "category": "Messaging Security",
+      "findingCount": 6
+    },
+    {
+      "id": "azure-web-app-misconfig",
+      "filename": "azure-web-app-misconfig.json",
+      "title": "Azure Web App Security Misconfigurations",
+      "category": "Web Application Security",
+      "findingCount": 12
+    },
+    {
+      "id": "azure-repository-misconfig",
+      "filename": "azure-repository-misconfig.json",
+      "title": "Azure Repository Security Misconfigurations",
+      "category": "DevOps Security",
+      "findingCount": 6
+    },
+    {
+      "id": "azure-data-factory-misconfig",
+      "filename": "azure-data-factory-misconfig.json",
+      "title": "Azure Data Factory V2 Security Misconfigurations",
+      "category": "Data Processing Security",
+      "findingCount": 6
+    }
+  ],
+  "version": "1.0",
+  "description": "Security Finding Builder Template Index"
+}

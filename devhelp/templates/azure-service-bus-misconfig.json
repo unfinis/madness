@@ -1,0 +1,195 @@
+{
+  "id": "azure-service-bus-misconfig",
+  "title": "Azure Service Bus Security Misconfigurations",
+  "category": "Messaging Security",
+  "baseDescription": "LRQA identified multiple security misconfigurations in Azure Service Bus that could lead to unauthorized message access, data interception, and potential compromise of messaging infrastructure.",
+  "subFindings": [
+    {
+      "id": "sas-authentication-enabled",
+      "title": "Shared Access Signature (SAS) Authentication Enabled Instead of Azure AD",
+      "cvssScore": 7.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N",
+      "severity": "High",
+      "description": "The Service Bus namespace is configured to use Shared Access Signature (SAS) authentication instead of Azure Active Directory (AAD) authentication with managed identities. SAS tokens lack fine-grained access control, are difficult to manage and rotate, and do not provide audit capabilities to associate usage with specific users or service principals.\n\nSAS keys are more susceptible to compromise than OAuth 2.0 tokens used by Azure AD, and they cannot leverage modern authentication features like conditional access policies, multi-factor authentication, and centralized identity management.",
+      "checkSteps": "1. Navigate to Service Bus Namespace > Settings > Shared access policies\n2. Check for existence of SAS policies beyond the default RootManageSharedAccessKey\n3. Navigate to Access control (IAM) to verify Azure AD role assignments\n4. Review application connection strings for SAS tokens\n5. Check 'Disable local authentication' setting\n6. Test connection using SAS vs Azure AD authentication\nPowerShell: Get-AzServiceBusNamespace -ResourceGroupName [rg] -Name [name] | Select DisableLocalAuth",
+      "recommendation": "Disable local authentication (SAS) and migrate to Azure Active Directory authentication with managed identities for enhanced security and audit capabilities.",
+      "verificationProcedure": "1. Navigate to Service Bus Namespace > Configuration\n2. Verify 'Disable local authentication' is set to Yes\n3. Verify Azure AD role assignments are configured for applications\n4. Test application connectivity using managed identity\n5. Verify SAS connection strings fail authentication\n6. Remove or rotate existing SAS keys after migration\n7. Document authentication migration and test failover scenarios\n8. Monitor authentication logs for successful Azure AD authentications",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Service Bus showing multiple SAS policies configured",
+          "steps": "1. Navigate to Service Bus > Shared access policies\n2. Screenshot showing multiple SAS policies beyond RootManageSharedAccessKey\n3. Highlight the security risk of shared keys"
+        },
+        {
+          "caption": "Local authentication enabled configuration",
+          "steps": "1. Navigate to Service Bus > Configuration\n2. Screenshot showing 'Disable local authentication' set to No\n3. Show that SAS authentication is still possible"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Service Bus authentication and authorization",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization"
+        },
+        {
+          "title": "Managed identities for Azure resources with Service Bus",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-managed-service-identity"
+        }
+      ]
+    },
+    {
+      "id": "public-network-access",
+      "title": "Service Bus Accessible from Public Networks",
+      "cvssScore": 8.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "The Service Bus namespace allows access from all networks without network restrictions or private endpoints, exposing messaging infrastructure to potential unauthorized access from any internet location. Without network isolation, the service is vulnerable to reconnaissance, brute force attacks, and message interception.\n\nPublic accessibility increases the attack surface significantly, allowing attackers worldwide to attempt connections and potentially compromise messages if authentication credentials are weak or compromised.",
+      "checkSteps": "1. Navigate to Service Bus Namespace > Networking\n2. Check 'Public network access' setting\n3. Verify if set to 'Enabled from all networks'\n4. Check for absence of private endpoints\n5. Review IP firewall rules (should be empty for unrestricted access)\n6. Test connectivity from external networks\n7. Check virtual network rules configuration\nPowerShell: Get-AzServiceBusNetworkRuleSet -ResourceGroupName [rg] -NamespaceName [name] | Select DefaultAction, IpRules",
+      "recommendation": "Configure network access restrictions using IP firewall rules, virtual network rules, and implement private endpoints for secure connectivity.",
+      "verificationProcedure": "1. Navigate to Service Bus > Networking\n2. Verify 'Public network access' is set to 'Enabled from selected virtual networks and IP addresses'\n3. Verify private endpoints are configured for critical applications\n4. Test access from unauthorized networks - should be blocked\n5. Test access from authorized networks/VNets - should succeed\n6. Verify private endpoint DNS resolution\n7. Document network architecture and access patterns\n8. Test message flow through private endpoints",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Service Bus networking showing public access from all networks",
+          "steps": "1. Navigate to Service Bus > Networking\n2. Screenshot showing 'Enabled from all networks' selected\n3. Show empty firewall rules and no private endpoints configured"
+        },
+        {
+          "caption": "Successful external access to Service Bus endpoints",
+          "steps": "1. Test Service Bus connection from external network\n2. Screenshot showing successful connection without network restrictions"
+        }
+      ],
+      "links": [
+        {
+          "title": "Network security for Azure Service Bus",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/network-security"
+        },
+        {
+          "title": "Integrate Azure Service Bus with Azure Private Link Service",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/private-link-service"
+        }
+      ]
+    },
+    {
+      "id": "standard-tier-limitations",
+      "title": "Standard Tier Used Instead of Premium for Security Features",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "The Service Bus namespace is using Standard tier instead of Premium tier, limiting access to advanced security features like private endpoints, customer-managed keys for encryption, and enhanced network isolation capabilities. Standard tier lacks critical security features required for enterprise-grade security.\n\nStandard tier does not support private endpoints (Premium only), customer-managed key encryption, or advanced networking features, potentially limiting the organization's ability to meet security and compliance requirements.",
+      "checkSteps": "1. Navigate to Service Bus Namespace > Overview\n2. Check 'Pricing tier' showing Standard instead of Premium\n3. Verify inability to configure private endpoints\n4. Check encryption options (customer-managed keys not available)\n5. Review networking limitations\n6. Assess security requirements vs tier capabilities\n7. Check virtual network integration options\nPowerShell: Get-AzServiceBusNamespace -ResourceGroupName [rg] -Name [name] | Select Sku",
+      "recommendation": "Upgrade to Premium tier for enhanced security features including private endpoints, customer-managed key encryption, and advanced network isolation.",
+      "verificationProcedure": "1. Navigate to Service Bus > Overview\n2. Verify 'Pricing tier' shows Premium\n3. Verify private endpoints can be configured\n4. Verify customer-managed key encryption is available\n5. Test advanced networking features\n6. Validate security features meet compliance requirements\n7. Document tier upgrade benefits and feature availability\n8. Test message throughput and performance improvements",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Service Bus showing Standard tier with limited security features",
+          "steps": "1. Navigate to Service Bus > Overview\n2. Screenshot showing 'Standard' pricing tier\n3. Highlight security feature limitations"
+        },
+        {
+          "caption": "Private endpoints option unavailable in Standard tier",
+          "steps": "1. Navigate to Service Bus > Networking\n2. Screenshot showing private endpoints option grayed out or unavailable\n3. Show tier upgrade requirement message"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Service Bus pricing tiers",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-premium-messaging"
+        },
+        {
+          "title": "Service Bus Premium and Standard messaging tiers",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-premium-messaging"
+        }
+      ]
+    },
+    {
+      "id": "no-customer-managed-keys",
+      "title": "Service Bus Encryption Uses Service-Managed Keys",
+      "cvssScore": 6.0,
+      "cvssVector": "CVSS:3.1/AV:P/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "Medium",
+      "description": "The Service Bus namespace uses Microsoft-managed keys for data-at-rest encryption instead of customer-managed keys, limiting organizational control over encryption key lifecycle and access. While messages are encrypted at rest with platform keys, the organization cannot control key rotation, access revocation, or meet specific compliance requirements.\n\nCustomer-managed keys provide enhanced security through Azure Key Vault integration, enabling organizations to control key lifecycle, implement key rotation policies, and revoke access to encrypted data when needed.",
+      "checkSteps": "1. Navigate to Service Bus Namespace > Encryption\n2. Check encryption configuration showing Microsoft-managed keys\n3. Verify Key Vault integration is not configured\n4. Review compliance requirements for encryption key management\n5. Check Premium tier requirement for customer-managed keys\n6. Assess data classification and encryption needs\nPowerShell: Get-AzServiceBusNamespace -ResourceGroupName [rg] -Name [name] | Select EncryptionConfig",
+      "recommendation": "Configure customer-managed keys using Azure Key Vault for enhanced control over encryption key lifecycle (requires Premium tier).",
+      "verificationProcedure": "1. Verify Service Bus is Premium tier\n2. Navigate to Service Bus > Encryption\n3. Verify customer-managed key is configured with Key Vault\n4. Test key rotation capability\n5. Verify message encryption uses customer-managed keys\n6. Test key access revocation impact\n7. Document key management procedures\n8. Verify backup and recovery procedures for encrypted messages",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Service Bus encryption showing Microsoft-managed keys",
+          "steps": "1. Navigate to Service Bus > Encryption\n2. Screenshot showing Microsoft-managed keys configuration\n3. Show lack of customer key management options"
+        },
+        {
+          "caption": "Premium tier requirement for customer-managed keys",
+          "steps": "1. Show encryption options in Standard vs Premium tier\n2. Screenshot highlighting Premium tier requirement for CMK\n3. Demonstrate security feature limitations"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure customer-managed keys for encrypting Azure Service Bus data at rest",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/configure-customer-managed-key"
+        },
+        {
+          "title": "Azure Service Bus data encryption at rest",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-encryption"
+        }
+      ]
+    },
+    {
+      "id": "insufficient-monitoring",
+      "title": "Diagnostic Logging and Monitoring Not Configured",
+      "cvssScore": 4.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "severity": "Medium",
+      "description": "Diagnostic logging is not properly configured for the Service Bus namespace, limiting visibility into message operations, security events, and potential attacks. Without comprehensive logging, security incidents may go undetected and forensic investigation capabilities are severely limited.\n\nLack of monitoring prevents detection of anomalous behavior, unauthorized access attempts, message tampering, and performance issues that could indicate security problems or service abuse.",
+      "checkSteps": "1. Navigate to Service Bus Namespace > Monitoring > Diagnostic settings\n2. Check if diagnostic settings are configured\n3. Verify log categories (OperationalLogs, RuntimeAuditLogs)\n4. Check log destinations (Log Analytics, Storage, Event Hub)\n5. Review metric monitoring and alerting\n6. Check Application Insights integration\n7. Verify log retention settings\nPowerShell: Get-AzDiagnosticSetting -ResourceId [service-bus-resource-id]",
+      "recommendation": "Configure comprehensive diagnostic logging with appropriate log categories and set up monitoring alerts for security and operational events.",
+      "verificationProcedure": "1. Navigate to Service Bus > Diagnostic settings\n2. Verify diagnostic logging is enabled with all relevant categories\n3. Verify logs are sent to appropriate destinations (Log Analytics recommended)\n4. Test log generation by performing Service Bus operations\n5. Verify security-related events are captured in logs\n6. Configure alerting for suspicious activities and errors\n7. Test log query capabilities and set up dashboards\n8. Document monitoring strategy and incident response procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Service Bus diagnostic settings showing no logging configured",
+          "steps": "1. Navigate to Service Bus > Monitoring > Diagnostic settings\n2. Screenshot showing no diagnostic settings configured\n3. Show missing audit and operational logging"
+        },
+        {
+          "caption": "Empty monitoring dashboard with no metrics",
+          "steps": "1. Navigate to Service Bus > Monitoring > Metrics\n2. Screenshot showing empty or default metrics dashboard\n3. Demonstrate lack of operational visibility"
+        }
+      ],
+      "links": [
+        {
+          "title": "Monitor Azure Service Bus",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/monitor-service-bus"
+        },
+        {
+          "title": "Azure Service Bus monitoring data reference",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/monitor-service-bus-reference"
+        }
+      ]
+    },
+    {
+      "id": "no-dead-letter-queue-monitoring",
+      "title": "Dead Letter Queue Not Monitored or Configured Properly",
+      "cvssScore": 4.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L",
+      "severity": "Medium",
+      "description": "Dead Letter Queues (DLQ) are not properly monitored or configured, potentially hiding message delivery failures, processing errors, or security issues. Messages that fail processing or delivery are moved to the DLQ, but without monitoring, these failures may indicate attacks, misconfigurations, or data corruption.\n\nUnmonitored DLQs can accumulate failed messages indefinitely, potentially indicating ongoing security issues, application vulnerabilities, or system compromises that prevent normal message processing.",
+      "checkSteps": "1. Navigate to Service Bus Queue/Topic > Overview\n2. Check Dead letter message count metrics\n3. Verify if DLQ monitoring alerts are configured\n4. Review message TTL (Time To Live) settings\n5. Check max delivery count configuration\n6. Examine DLQ messages for patterns indicating security issues\n7. Review DLQ cleanup and management procedures\nPowerShell: Get-AzServiceBusQueue -ResourceGroupName [rg] -NamespaceName [ns] -QueueName [queue] | Select DeadLetteringOnMessageExpiration, MaxDeliveryCount",
+      "recommendation": "Implement comprehensive monitoring of Dead Letter Queues with alerting for message accumulation and regular review of failed messages.",
+      "verificationProcedure": "1. Navigate to Service Bus queues/topics\n2. Verify Dead Letter Queue monitoring is configured\n3. Verify alerts are set up for DLQ message accumulation\n4. Review DLQ messages regularly for security indicators\n5. Test DLQ functionality by causing controlled message failures\n6. Verify message TTL and max delivery count settings are appropriate\n7. Document DLQ monitoring procedures and response workflows\n8. Set up automated DLQ cleanup processes with proper analysis",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Dead Letter Queue with accumulated unmonitored messages",
+          "steps": "1. Navigate to Service Bus queue > Overview\n2. Screenshot showing high dead letter message count\n3. Highlight lack of monitoring or alerting configuration"
+        },
+        {
+          "caption": "Missing DLQ monitoring and alerting configuration",
+          "steps": "1. Navigate to Service Bus > Monitoring\n2. Screenshot showing no alerts configured for DLQ metrics\n3. Show lack of visibility into message failures"
+        }
+      ],
+      "links": [
+        {
+          "title": "Service Bus dead-letter queues",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues"
+        },
+        {
+          "title": "Azure Service Bus metrics and alerts",
+          "url": "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-metrics-azure-monitor"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure Service Bus Security Assessment Script (2024)\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$NamespaceName,\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName\n)\n\nWrite-Host \"=== Azure Service Bus Security Assessment: $NamespaceName ===\" -ForegroundColor Cyan\n\n# Get Service Bus Namespace details\n$namespace = Get-AzServiceBusNamespace -ResourceGroupName $ResourceGroupName -Name $NamespaceName\n\n# Authentication and Authorization Checks\nWrite-Host \"`n--- Authentication & Authorization ---\" -ForegroundColor Yellow\nif ($namespace.DisableLocalAuth) {\n    Write-Host \"✅ Local authentication (SAS) is disabled\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ Local authentication (SAS) is enabled\" -ForegroundColor Red\n    # Check SAS policies\n    try {\n        $sasRules = Get-AzServiceBusAuthorizationRule -ResourceGroupName $ResourceGroupName -NamespaceName $NamespaceName\n        if ($sasRules.Count -gt 1) {\n            Write-Host \"⚠️ $($sasRules.Count) SAS policies configured (including RootManageSharedAccessKey)\" -ForegroundColor Yellow\n            foreach($rule in $sasRules) {\n                Write-Host \"   Policy: $($rule.Name) - Rights: $($rule.Rights -join ', ')\" -ForegroundColor White\n            }\n        }\n    } catch {\n        Write-Host \"⚠️ Could not check SAS authorization rules\" -ForegroundColor Yellow\n    }\n}\n\n# Pricing Tier Checks\nWrite-Host \"`n--- Service Tier & Security Features ---\" -ForegroundColor Yellow\nWrite-Host \"Service Bus Tier: $($namespace.Sku.Name)\" -ForegroundColor White\nif ($namespace.Sku.Name -eq 'Premium') {\n    Write-Host \"✅ Premium tier supports advanced security features\" -ForegroundColor Green\n    \n    # Check encryption\n    if ($namespace.Encryption) {\n        if ($namespace.Encryption.KeySource -eq 'Microsoft.KeyVault') {\n            Write-Host \"✅ Customer-managed keys configured for encryption\" -ForegroundColor Green\n        } else {\n            Write-Host \"⚠️ Using service-managed keys (consider customer-managed keys)\" -ForegroundColor Yellow\n        }\n    } else {\n        Write-Host \"⚠️ Encryption configuration not found\" -ForegroundColor Yellow\n    }\n} else {\n    Write-Host \"⚠️ Standard/Basic tier - limited security features available\" -ForegroundColor Yellow\n    Write-Host \"   Missing: Private endpoints, customer-managed keys, advanced networking\" -ForegroundColor White\n}\n\n# Network Security Checks\nWrite-Host \"`n--- Network Security ---\" -ForegroundColor Yellow\ntry {\n    $networkRules = Get-AzServiceBusNetworkRuleSet -ResourceGroupName $ResourceGroupName -NamespaceName $NamespaceName\n    if ($networkRules.DefaultAction -eq 'Allow') {\n        Write-Host \"❌ Network access allowed from all networks\" -ForegroundColor Red\n    } else {\n        Write-Host \"✅ Network access restricted\" -ForegroundColor Green\n        Write-Host \"   IP Rules: $($networkRules.IpRules.Count)\" -ForegroundColor White\n        Write-Host \"   VNet Rules: $($networkRules.VirtualNetworkRules.Count)\" -ForegroundColor White\n    }\n} catch {\n    Write-Host \"⚠️ Could not check network rule configuration\" -ForegroundColor Yellow\n}\n\n# Check for Private Endpoints\nWrite-Host \"`n--- Private Endpoints ---\" -ForegroundColor Yellow\nif ($namespace.Sku.Name -eq 'Premium') {\n    try {\n        $privateEndpoints = Get-AzPrivateEndpoint | Where-Object {\n            $_.PrivateLinkServiceConnections.PrivateLinkServiceId -like \"*$($namespace.Id)*\"\n        }\n        if ($privateEndpoints.Count -gt 0) {\n            Write-Host \"✅ $($privateEndpoints.Count) private endpoint(s) configured\" -ForegroundColor Green\n        } else {\n            Write-Host \"⚠️ No private endpoints configured\" -ForegroundColor Yellow\n        }\n    } catch {\n        Write-Host \"⚠️ Could not check private endpoint configuration\" -ForegroundColor Yellow\n    }\n} else {\n    Write-Host \"❌ Private endpoints not available in $($namespace.Sku.Name) tier\" -ForegroundColor Red\n}\n\n# Monitoring and Logging\nWrite-Host \"`n--- Monitoring & Logging ---\" -ForegroundColor Yellow\ntry {\n    $diagnosticSettings = Get-AzDiagnosticSetting -ResourceId $namespace.Id\n    if ($diagnosticSettings.Count -gt 0) {\n        Write-Host \"✅ Diagnostic logging configured\" -ForegroundColor Green\n        foreach($setting in $diagnosticSettings) {\n            Write-Host \"   Setting: $($setting.Name) - Categories: $($setting.Logs.Category.Count)\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"❌ No diagnostic logging configured\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"⚠️ Could not check diagnostic settings\" -ForegroundColor Yellow\n}\n\n# Check Queues and Topics\nWrite-Host \"`n--- Queues and Topics Analysis ---\" -ForegroundColor Yellow\ntry {\n    $queues = Get-AzServiceBusQueue -ResourceGroupName $ResourceGroupName -NamespaceName $NamespaceName\n    $topics = Get-AzServiceBusTopic -ResourceGroupName $ResourceGroupName -NamespaceName $NamespaceName\n    \n    Write-Host \"Queues: $($queues.Count), Topics: $($topics.Count)\" -ForegroundColor White\n    \n    # Check for dead letter queue monitoring\n    $queuesWithDLQ = $queues | Where-Object { $_.DeadLetteringOnMessageExpiration }\n    $topicsWithDLQ = $topics | Where-Object { $_.DeadLetteringOnMessageExpiration }\n    \n    if ($queuesWithDLQ.Count -gt 0 -or $topicsWithDLQ.Count -gt 0) {\n        Write-Host \"✅ Some queues/topics have dead letter queue enabled\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ No dead letter queue configuration found\" -ForegroundColor Yellow\n    }\n    \n    # Check for duplicate detection\n    $queuesWithDuplicateDetection = $queues | Where-Object { $_.RequiresDuplicateDetection }\n    $topicsWithDuplicateDetection = $topics | Where-Object { $_.RequiresDuplicateDetection }\n    \n    if ($queuesWithDuplicateDetection.Count -gt 0 -or $topicsWithDuplicateDetection.Count -gt 0) {\n        Write-Host \"✅ Some queues/topics have duplicate detection enabled\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ No duplicate detection configured\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"⚠️ Could not analyze queues and topics\" -ForegroundColor Yellow\n}\n\nWrite-Host \"`n=== Assessment Complete ===\" -ForegroundColor Cyan\nWrite-Host \"Namespace: $($namespace.Name) | Location: $($namespace.Location) | Tier: $($namespace.Sku.Name)\" -ForegroundColor White"
+}

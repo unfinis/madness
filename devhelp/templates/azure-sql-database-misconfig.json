@@ -1,0 +1,222 @@
+{
+  "id": "azure-sql-database-misconfig",
+  "title": "Azure SQL Database Security Misconfigurations",
+  "category": "Database Security",
+  "baseDescription": "LRQA identified multiple security misconfigurations in Azure SQL Database that could lead to unauthorized data access, data exfiltration, and potential compromise of sensitive information.",
+  "subFindings": [
+    {
+      "id": "public-network-access",
+      "title": "SQL Database Accessible from Public Internet",
+      "cvssScore": 8.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "The SQL Database server is configured to allow connections from all Azure services and public internet IP addresses (0.0.0.0 to 255.255.255.255). This configuration exposes the database to potential brute force attacks, unauthorized access attempts, and increases the attack surface significantly.\n\nPublic accessibility allows attackers worldwide to attempt connections to the database, potentially leading to data breaches if weak credentials or SQL injection vulnerabilities exist.",
+      "checkSteps": "1. Navigate to Azure Portal > SQL databases > [database-name]\n2. Go to 'Overview' > Click on Server name\n3. Select 'Networking' under Security\n4. Check 'Public network access' - verify if set to 'Selected networks' or 'All networks'\n5. Review firewall rules for 0.0.0.0 - 255.255.255.255\n6. Check 'Allow Azure services and resources to access this server'\n7. Test connectivity from external IP\nPowerShell: Get-AzSqlServerFirewallRule -ServerName [server] -ResourceGroupName [rg]",
+      "recommendation": "Disable public network access and implement Private Endpoints. If public access is required, restrict to specific IP ranges and disable 'Allow Azure services and resources'.",
+      "verificationProcedure": "1. Navigate to SQL Server > Networking\n2. Verify 'Public network access' is set to 'Disabled' OR 'Selected networks' with specific IPs\n3. Verify Private Endpoints are configured if public access disabled\n4. Test connectivity from unauthorized IP - should be blocked\n5. Test connectivity through private endpoint - should succeed\n6. Verify 'Allow Azure services' is unchecked unless specifically needed\n7. Run: nslookup [server].database.windows.net - should resolve to private IP if using private endpoint\n8. Document network architecture",
+      "screenshotPlaceholders": [
+        {
+          "caption": "SQL Server networking showing public access enabled with broad firewall rules",
+          "steps": "1. Navigate to SQL Server > Networking\n2. Screenshot showing 'All networks' or firewall rule 0.0.0.0-255.255.255.255\n3. Show 'Allow Azure services' checked"
+        },
+        {
+          "caption": "Successful connection from external internet",
+          "steps": "1. Use SQL Server Management Studio from external network\n2. Screenshot showing successful connection to public endpoint"
+        }
+      ],
+      "links": [
+        {
+          "title": "Network Access Controls - Azure SQL Database",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/network-access-controls-overview?view=azuresql"
+        },
+        {
+          "title": "Azure Private Link for Azure SQL Database",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/private-endpoint-overview?view=azuresql"
+        }
+      ]
+    },
+    {
+      "id": "tde-not-configured",
+      "title": "Transparent Data Encryption Not Configured with Customer-Managed Keys",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:P/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "Medium",
+      "description": "The SQL Database is using service-managed keys for Transparent Data Encryption (TDE) instead of customer-managed keys (BYOK - Bring Your Own Key). While data is encrypted at rest, the organization has no control over key rotation, access revocation, or key lifecycle management.\n\nUsing service-managed keys means Microsoft maintains full control over encryption keys, preventing the organization from implementing separation of duties between data owners and key managers, and limiting compliance with certain regulatory requirements.",
+      "checkSteps": "1. Navigate to SQL Database > Transparent data encryption\n2. Check 'Encryption key management' - look for 'Service-managed key'\n3. Verify if Key Vault integration is not configured\n4. Check for Key Vault permissions if BYOK was attempted\n5. Review compliance requirements for key management\nPowerShell: Get-AzSqlDatabaseTransparentDataEncryption -ServerName [server] -DatabaseName [db] -ResourceGroupName [rg]\nT-SQL: SELECT name, is_encrypted FROM sys.databases WHERE name = '[database-name]'",
+      "recommendation": "Implement customer-managed keys (BYOK) using Azure Key Vault for TDE to maintain control over encryption key lifecycle.",
+      "verificationProcedure": "1. Navigate to SQL Database > Transparent data encryption\n2. Verify 'Customer-managed key' is selected\n3. Verify Key Vault and key are properly configured\n4. Test key rotation capability\n5. Verify database remains accessible with customer key\n6. Test key access revocation (database should become inaccessible)\n7. Document key management procedures\n8. Verify backup encryption uses customer-managed keys",
+      "screenshotPlaceholders": [
+        {
+          "caption": "TDE configuration showing service-managed key",
+          "steps": "1. Navigate to SQL Database > Transparent data encryption\n2. Screenshot showing 'Service-managed key' selected"
+        },
+        {
+          "caption": "Key Vault not configured for TDE",
+          "steps": "1. Show empty Key Vault configuration in TDE settings\n2. Screenshot demonstrating no customer key management"
+        }
+      ],
+      "links": [
+        {
+          "title": "Customer-managed Transparent Data Encryption",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-byok-overview?view=azuresql"
+        },
+        {
+          "title": "Configure TDE with Azure Key Vault",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-byok-configure?view=azuresql"
+        }
+      ]
+    },
+    {
+      "id": "sql-authentication-only",
+      "title": "SQL Authentication Used Instead of Azure AD Authentication",
+      "cvssScore": 7.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N",
+      "severity": "High",
+      "description": "The SQL Database is configured to use only SQL Server authentication instead of Azure Active Directory (AAD) authentication. SQL authentication requires storing and managing usernames and passwords directly in the database, which increases the risk of credential theft, makes centralized access management difficult, and prevents the use of modern authentication features.\n\nSQL authentication lacks features like multi-factor authentication, conditional access policies, and centralized identity management that are available with Azure AD authentication.",
+      "checkSteps": "1. Navigate to SQL Server > Azure Active Directory admin\n2. Check if 'Azure Active Directory admin' is 'Not configured'\n3. Review connection strings for SQL authentication\n4. Test database connections using SQL credentials\n5. Check for Azure AD users/groups in database\n6. Review application connection methods\nPowerShell: Get-AzSqlServerActiveDirectoryAdministrator -ServerName [server] -ResourceGroupName [rg]\nT-SQL: SELECT name, type_desc FROM sys.server_principals WHERE type IN ('S', 'U', 'G', 'X')",
+      "recommendation": "Configure Azure Active Directory admin and migrate to Azure AD authentication. Disable SQL authentication if not required.",
+      "verificationProcedure": "1. Navigate to SQL Server > Azure Active Directory admin\n2. Verify Azure AD admin is configured\n3. Test Azure AD authentication with admin account\n4. Verify database users are created with Azure AD identities\n5. Test application connections using Azure AD authentication\n6. Consider disabling SQL authentication if no longer needed\n7. Verify MFA works with Azure AD authentication\n8. Document authentication migration plan",
+      "screenshotPlaceholders": [
+        {
+          "caption": "SQL Server showing no Azure AD admin configured",
+          "steps": "1. Navigate to SQL Server > Azure Active Directory admin\n2. Screenshot showing 'Not configured' status"
+        },
+        {
+          "caption": "Database users showing only SQL authentication accounts",
+          "steps": "1. Query sys.server_principals in SSMS\n2. Screenshot showing only SQL Server authentication users (type 'S')"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure Azure AD authentication for Azure SQL",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-configure?view=azuresql"
+        },
+        {
+          "title": "Azure AD authentication with Azure SQL Database",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-overview?view=azuresql"
+        }
+      ]
+    },
+    {
+      "id": "advanced-threat-protection-disabled",
+      "title": "Microsoft Defender for SQL Not Enabled",
+      "cvssScore": 5.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "severity": "Medium",
+      "description": "Microsoft Defender for SQL (formerly Advanced Threat Protection) is not enabled, leaving the database without advanced threat detection capabilities. This service detects anomalous activities indicating unusual and potentially harmful attempts to access or exploit databases.\n\nWithout Advanced Threat Protection, the database lacks detection for SQL injection attempts, brute force attacks, data exfiltration patterns, and other sophisticated attack vectors that could compromise sensitive data.",
+      "checkSteps": "1. Navigate to SQL Database > Microsoft Defender for Cloud\n2. Check if 'Microsoft Defender for SQL' shows 'Off' or 'Not configured'\n3. Go to Security Center > Azure Defender dashboard\n4. Verify SQL databases are not protected\n5. Check for threat detection alerts (should be none)\n6. Review email notification settings\nPowerShell: Get-AzSqlDatabaseAdvancedThreatProtection -ServerName [server] -DatabaseName [db] -ResourceGroupName [rg]",
+      "recommendation": "Enable Microsoft Defender for SQL to provide advanced threat detection, vulnerability assessment, and security recommendations.",
+      "verificationProcedure": "1. Navigate to Microsoft Defender for Cloud\n2. Verify SQL databases show as protected\n3. Enable Defender for SQL on the subscription or resource level\n4. Configure email notifications for alerts\n5. Test threat detection by simulating suspicious activity\n6. Verify vulnerability assessment scans run automatically\n7. Review security recommendations provided\n8. Configure alert notification workflows",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Microsoft Defender for Cloud showing SQL protection disabled",
+          "steps": "1. Navigate to Security Center > Azure Defender\n2. Screenshot showing SQL databases as 'Not protected'"
+        },
+        {
+          "caption": "SQL Database security showing no threat protection",
+          "steps": "1. Navigate to SQL Database > Microsoft Defender for Cloud\n2. Screenshot showing Advanced Threat Protection as 'Off'"
+        }
+      ],
+      "links": [
+        {
+          "title": "Microsoft Defender for SQL introduction",
+          "url": "https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-sql-introduction"
+        },
+        {
+          "title": "Configure Advanced Threat Protection",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/threat-detection-configure?view=azuresql"
+        }
+      ]
+    },
+    {
+      "id": "auditing-disabled",
+      "title": "Database Auditing Not Configured",
+      "cvssScore": 4.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "severity": "Medium",
+      "description": "SQL Database auditing is not enabled, preventing the tracking and logging of database activities. Without auditing, there is no record of who accessed what data, when changes were made, or what queries were executed, making forensic investigation impossible.\n\nLack of auditing severely impacts compliance with regulations like GDPR, HIPAA, and SOX, and prevents detection of unauthorized data access, privilege escalation, or data manipulation attempts.",
+      "checkSteps": "1. Navigate to SQL Database > Auditing\n2. Check if 'Enable Azure SQL Auditing' is OFF\n3. Verify no audit logs are being generated\n4. Check server-level auditing settings\n5. Review compliance requirements for audit logging\n6. Check blob storage configuration for audit logs\nPowerShell: Get-AzSqlDatabaseAuditing -ServerName [server] -DatabaseName [db] -ResourceGroupName [rg]\nT-SQL: SELECT * FROM sys.dm_server_audit_status",
+      "recommendation": "Enable SQL Database auditing with appropriate retention period and configure secure storage for audit logs.",
+      "verificationProcedure": "1. Navigate to SQL Database > Auditing\n2. Verify 'Enable Azure SQL Auditing' is ON\n3. Verify audit destination is configured (Storage Account/Log Analytics/Event Hub)\n4. Test audit logging by performing database operations\n5. Verify audit logs are generated and accessible\n6. Configure appropriate retention period\n7. Test log integrity and access controls\n8. Document audit log management procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "SQL Database auditing configuration showing disabled state",
+          "steps": "1. Navigate to SQL Database > Auditing\n2. Screenshot showing 'Enable Azure SQL Auditing' as OFF"
+        },
+        {
+          "caption": "Empty audit logs demonstrating no tracking",
+          "steps": "1. Attempt to view audit logs\n2. Screenshot showing no audit events recorded"
+        }
+      ],
+      "links": [
+        {
+          "title": "SQL Database Auditing Overview",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/auditing-overview?view=azuresql"
+        },
+        {
+          "title": "Get started with SQL Database auditing",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/auditing-setup?view=azuresql"
+        }
+      ]
+    },
+    {
+      "id": "dynamic-data-masking-not-configured",
+      "title": "Dynamic Data Masking Not Configured for Sensitive Data",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "Medium",
+      "description": "Dynamic Data Masking (DDM) is not configured to protect sensitive data fields, allowing unrestricted access to personally identifiable information (PII) and sensitive data for all database users. DDM helps prevent unauthorized access to sensitive data by masking it for non-privileged users.\n\nWithout DDM, developers, testers, and other non-production users may have unnecessary access to real customer data, credit card numbers, social security numbers, and other sensitive information.",
+      "checkSteps": "1. Navigate to SQL Database > Dynamic Data Masking\n2. Check 'Masking recommendations' for suggested fields\n3. Review existing masking rules (should be none/few)\n4. Identify sensitive data columns manually\n5. Test data access with different user roles\n6. Check for PII in development/test environments\nT-SQL: SELECT * FROM sys.masked_columns\nT-SQL: SELECT SCHEMA_NAME(schema_id) AS schema_name, name AS table_name FROM sys.tables",
+      "recommendation": "Implement Dynamic Data Masking for all sensitive data fields including PII, financial data, and health information.",
+      "verificationProcedure": "1. Navigate to SQL Database > Dynamic Data Masking\n2. Verify masking rules are configured for sensitive fields\n3. Test data access with privileged user - should see real data\n4. Test data access with non-privileged user - should see masked data\n5. Verify appropriate masking functions are used (default, email, random, custom)\n6. Test application functionality with masked data\n7. Document masking strategy and exemptions\n8. Review and update masking rules regularly",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Dynamic Data Masking showing no configured rules",
+          "steps": "1. Navigate to SQL Database > Dynamic Data Masking\n2. Screenshot showing empty masking rules list\n3. Show recommendations for sensitive fields"
+        },
+        {
+          "caption": "Sensitive data visible without masking",
+          "steps": "1. Query table with sensitive data (PII, credit cards, etc.)\n2. Screenshot showing unmasked sensitive information"
+        }
+      ],
+      "links": [
+        {
+          "title": "Dynamic Data Masking for Azure SQL Database",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/dynamic-data-masking-overview?view=azuresql"
+        },
+        {
+          "title": "Configure Dynamic Data Masking",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/dynamic-data-masking-configure-portal?view=azuresql"
+        }
+      ]
+    },
+    {
+      "id": "backup-encryption-not-configured",
+      "title": "Database Backups Not Encrypted with Customer-Managed Keys",
+      "cvssScore": 4.0,
+      "cvssVector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "Medium",
+      "description": "Database backups are encrypted with service-managed keys instead of customer-managed keys, limiting the organization's control over backup encryption and key lifecycle management. While backups are encrypted, the organization cannot control access to the encryption keys used for backup data.\n\nUsing service-managed keys for backups means that if there's a compliance requirement for complete control over data encryption, the current configuration may not meet those requirements.",
+      "checkSteps": "1. Navigate to SQL Server > Backups\n2. Check backup encryption configuration\n3. Review automatic backup settings\n4. Verify if customer-managed keys are used for backups\n5. Check backup restore capabilities\n6. Review backup retention policies\nPowerShell: Get-AzSqlDatabaseBackupShortTermRetentionPolicy -ServerName [server] -DatabaseName [db] -ResourceGroupName [rg]",
+      "recommendation": "Configure backup encryption to use customer-managed keys from Azure Key Vault for complete control over backup data protection.",
+      "verificationProcedure": "1. Navigate to SQL Server > Backups\n2. Verify backup encryption uses customer-managed keys\n3. Test backup and restore operations\n4. Verify backup encryption key rotation\n5. Test key access revocation impact on backup accessibility\n6. Document backup encryption key management\n7. Verify long-term retention backup encryption\n8. Test cross-region backup restore capabilities",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Backup configuration showing service-managed encryption",
+          "steps": "1. Navigate to SQL Server > Backups\n2. Screenshot showing service-managed keys for backup encryption"
+        }
+      ],
+      "links": [
+        {
+          "title": "Automated Backups in Azure SQL Database",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/automated-backups-overview?view=azuresql"
+        },
+        {
+          "title": "Backup encryption in Azure SQL",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-sql/database/transparent-data-encryption-tde-overview?view=azuresql"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure SQL Database Security Assessment Script\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$ServerName,\n    [Parameter(Mandatory=$true)]\n    [string]$DatabaseName,\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName\n)\n\nWrite-Host \"=== Azure SQL Database Security Assessment: $DatabaseName ===\" -ForegroundColor Cyan\n\n# Check Firewall Rules\nWrite-Host \"`n--- Firewall Configuration ---\" -ForegroundColor Yellow\n$firewallRules = Get-AzSqlServerFirewallRule -ServerName $ServerName -ResourceGroupName $ResourceGroupName\nforeach($rule in $firewallRules) {\n    if($rule.StartIpAddress -eq \"0.0.0.0\" -and $rule.EndIpAddress -eq \"255.255.255.255\") {\n        Write-Host \"❌ Dangerous firewall rule found: $($rule.FirewallRuleName)\" -ForegroundColor Red\n    }\n    Write-Host \"Rule: $($rule.FirewallRuleName) - $($rule.StartIpAddress) to $($rule.EndIpAddress)\" -ForegroundColor White\n}\n\n# Check TDE Configuration\nWrite-Host \"`n--- Transparent Data Encryption ---\" -ForegroundColor Yellow\ntry {\n    $tde = Get-AzSqlDatabaseTransparentDataEncryption -ServerName $ServerName -DatabaseName $DatabaseName -ResourceGroupName $ResourceGroupName\n    if($tde.State -eq \"Enabled\") {\n        Write-Host \"✅ TDE is enabled\" -ForegroundColor Green\n        # Note: Customer-managed key check requires additional permissions\n    } else {\n        Write-Host \"❌ TDE is not enabled\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"⚠️ Could not check TDE status: $($_.Exception.Message)\" -ForegroundColor Yellow\n}\n\n# Check Azure AD Admin\nWrite-Host \"`n--- Azure Active Directory Configuration ---\" -ForegroundColor Yellow\ntry {\n    $aadAdmin = Get-AzSqlServerActiveDirectoryAdministrator -ServerName $ServerName -ResourceGroupName $ResourceGroupName\n    if($aadAdmin) {\n        Write-Host \"✅ Azure AD admin configured: $($aadAdmin.DisplayName)\" -ForegroundColor Green\n    } else {\n        Write-Host \"❌ No Azure AD admin configured\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"❌ No Azure AD admin configured\" -ForegroundColor Red\n}\n\n# Check Advanced Threat Protection\nWrite-Host \"`n--- Advanced Threat Protection ---\" -ForegroundColor Yellow\ntry {\n    $atp = Get-AzSqlDatabaseAdvancedThreatProtection -ServerName $ServerName -DatabaseName $DatabaseName -ResourceGroupName $ResourceGroupName\n    if($atp.ThreatDetectionState -eq \"Enabled\") {\n        Write-Host \"✅ Advanced Threat Protection is enabled\" -ForegroundColor Green\n    } else {\n        Write-Host \"❌ Advanced Threat Protection is not enabled\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"❌ Advanced Threat Protection is not configured\" -ForegroundColor Red\n}\n\n# Check Auditing\nWrite-Host \"`n--- Database Auditing ---\" -ForegroundColor Yellow\ntry {\n    $auditing = Get-AzSqlDatabaseAuditing -ServerName $ServerName -DatabaseName $DatabaseName -ResourceGroupName $ResourceGroupName\n    if($auditing.State -eq \"Enabled\") {\n        Write-Host \"✅ Database auditing is enabled\" -ForegroundColor Green\n        Write-Host \"   Audit destination: $($auditing.StorageAccountName)\" -ForegroundColor White\n    } else {\n        Write-Host \"❌ Database auditing is not enabled\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"❌ Could not check auditing status\" -ForegroundColor Red\n}\n\n# Check Server Details\nWrite-Host \"`n--- Server Information ---\" -ForegroundColor Yellow\n$server = Get-AzSqlServer -ServerName $ServerName -ResourceGroupName $ResourceGroupName\nWrite-Host \"Server: $($server.ServerName)\" -ForegroundColor White\nWrite-Host \"Location: $($server.Location)\" -ForegroundColor White\nWrite-Host \"Version: $($server.ServerVersion)\" -ForegroundColor White\n\nWrite-Host \"`n=== Assessment Complete ===\" -ForegroundColor Cyan\nWrite-Host \"Note: Some checks require database connection and may need manual verification\" -ForegroundColor Yellow"
+}

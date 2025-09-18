@@ -1,0 +1,4153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Finding Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-section, .output-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .textarea-large {
+            min-height: 150px;
+        }
+
+        .output-text {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .button-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .copy-success {
+            color: #4caf50;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copy-success.show {
+            opacity: 1;
+        }
+
+        .severity-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .severity-critical { background: #f44336; color: white; }
+        .severity-high { background: #ff9800; color: white; }
+        .severity-medium { background: #ffc107; color: #333; }
+        .severity-low { background: #4caf50; color: white; }
+        .severity-info { background: #2196f3; color: white; }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        /* CVSS Calculator Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .cvss-section {
+            margin-bottom: 25px;
+        }
+
+        .cvss-section h4 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .cvss-metrics {
+            display: grid;
+            gap: 15px;
+        }
+
+        .cvss-metric {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cvss-metric label {
+            font-weight: 600;
+            color: #555;
+            margin: 0;
+        }
+
+        .cvss-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .cvss-btn {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .cvss-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .cvss-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .cvss-results {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .cvss-score-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .cvss-score-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .cvss-severity-badge {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .vector-input-group {
+            margin-bottom: 20px;
+        }
+
+        .vector-input-group input {
+            font-family: 'Courier New', monospace;
+        }
+
+        .calc-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .calc-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .cvss-vector-display {
+            background: #333;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        @media (max-width: 768px) {
+            .cvss-metric {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Links Section Styles */
+        .links-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 10px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .components-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 10px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .component-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .component-info {
+            flex: 1;
+        }
+
+        .component-type {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .component-details {
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .component-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .component-btn {
+            padding: 5px 8px;
+            border: none;
+            border-radius: 3px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .component-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .component-btn.delete {
+            background: #dc3545;
+        }
+
+        .component-btn.delete:hover {
+            background: #c82333;
+        }
+
+        .component-input-fields {
+            margin-top: 10px;
+        }
+
+        .component-input-fields input,
+        .component-input-fields select {
+            margin-bottom: 8px;
+        }
+
+        .no-components-message {
+            color: #999;
+            text-align: center;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .add-component-section {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px dashed #667eea;
+            margin-bottom: 10px;
+        }
+
+        .link-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 5px;
+            align-items: center;
+        }
+
+        .link-item:hover {
+            background: #f0f2ff;
+        }
+
+        .link-inputs {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
+
+        .link-inputs input {
+            padding: 5px;
+        }
+
+        .link-title-input {
+            flex: 1;
+        }
+
+        .link-url-input {
+            flex: 2;
+        }
+
+        .link-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .link-btn {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .link-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .link-btn.delete {
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .link-btn.delete:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .link-btn.save {
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .link-btn.save:hover {
+            background: #4caf50;
+            color: white;
+        }
+
+        .add-link-section {
+            margin-bottom: 10px;
+        }
+
+        .add-link-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .paste-area {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 5px;
+            background: #f8f9ff;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .paste-area:focus {
+            outline: none;
+            border-color: #764ba2;
+            background: white;
+        }
+
+        .link-display {
+            flex: 1;
+            padding: 5px 10px;
+        }
+
+        .link-display-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .link-display-url {
+            font-size: 0.85rem;
+            color: #667eea;
+            word-break: break-all;
+        }
+
+        .no-links-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* Template Selection Styles */
+        .template-section {
+            background: #f8f9ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .template-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .template-selector select {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .sub-findings-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .sub-finding-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .sub-finding-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .sub-finding-item.selected {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .sub-finding-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .sub-finding-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .sub-finding-title {
+            flex: 1;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sub-finding-score {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .score-critical { background: #f44336; }
+        .score-high { background: #ff9800; }
+        .score-medium { background: #ffc107; color: #333; }
+        .score-low { background: #4caf50; }
+
+        .sub-finding-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-left: 30px;
+            display: none;
+        }
+
+        .sub-finding-item.expanded .sub-finding-description {
+            display: block;
+        }
+
+        .template-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .template-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .template-modal {
+            display: none;
+        }
+
+        .template-modal.show {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+
+        .template-modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .expand-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-left: 5px;
+        }
+
+        /* Screenshot Management Styles */
+        .screenshots-section {
+            margin-bottom: 20px;
+        }
+
+        .screenshot-upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .screenshot-upload-area:hover,
+        .screenshot-upload-area.dragover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .screenshot-upload-area.dragover {
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upload-subtext {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .screenshots-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .screenshot-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .screenshot-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .screenshot-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .screenshot-info {
+            padding: 15px;
+        }
+
+        .screenshot-caption {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .screenshot-caption:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .screenshot-steps {
+            font-size: 0.85rem;
+            color: #666;
+            background: #f8f9ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+            border: 1px solid #e0e0e0;
+            min-height: 60px;
+        }
+
+        .screenshot-steps:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .screenshot-steps:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+            font-style: italic;
+        }
+
+        .screenshot-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .screenshot-meta {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .screenshot-btn {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .screenshot-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .screenshot-btn.delete {
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .screenshot-btn.delete:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .screenshot-btn.active {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .screenshot-btn.active:hover {
+            background: #45a049;
+        }
+
+        .no-screenshots {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* Modal for viewing screenshots */
+        .screenshot-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+
+        .screenshot-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screenshot-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+        .screenshot-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .paste-hint {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .screenshots-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Multi-Finding Management Styles */
+        .findings-header {
+            background: white;
+            border-radius: 10px 10px 0 0;
+            padding: 0;
+            margin-bottom: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .findings-tabs {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 10px 15px 0 15px;
+        }
+
+        .finding-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            white-space: nowrap;
+            margin-right: 5px;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .finding-tab.active {
+            background: white;
+            border-color: #667eea;
+            border-bottom: 2px solid white;
+            margin-bottom: -2px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .finding-tab:hover:not(.active) {
+            background: #f0f2ff;
+            border-color: #667eea;
+        }
+
+        .finding-tab-title {
+            flex: 1;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .finding-tab-close {
+            color: #999;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        .finding-tab-close:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .findings-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+            padding-left: 15px;
+        }
+
+        .new-finding-btn {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: transform 0.2s;
+        }
+
+        .new-finding-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .findings-management {
+            background: white;
+            padding: 15px;
+            border-radius: 0 0 10px 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .findings-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .finding-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .findings-export-import {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .export-import-btn {
+            padding: 6px 12px;
+            border: 1px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .export-import-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Update existing main-content grid to remove gap since we have rounded corners */
+        .container .main-content {
+            margin-top: 0;
+        }
+
+        /* Output Format Selector */
+        .output-format-selector {
+            display: flex;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .format-btn {
+            padding: 8px 16px;
+            border: none;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .format-btn:hover {
+            background: #f0f2ff;
+            color: #667eea;
+        }
+
+        .format-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .format-btn:not(:last-child) {
+            border-right: 1px solid #e0e0e0;
+        }
+
+        /* Tab Interface Styles */
+        .tab-container {
+            width: 100%;
+        }
+        
+        .tab-header {
+            display: flex;
+            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 20px;
+            gap: 0;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            margin-right: 2px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .tab-btn:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+            box-shadow: 0 -2px 0 #007bff;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #007bff;
+        }
+        
+        .tab-content {
+            min-height: 400px;
+        }
+        
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Finding Summary Styles */
+        .finding-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .summary-item label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-item span {
+            font-weight: 500;
+            color: #212529;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-description {
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+        
+        .summary-description label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        #summaryDescription {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Audit Guide Styles */
+        .audit-guide h3 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        
+        .audit-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .audit-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .audit-section h4 {
+            color: #495057;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+        }
+        
+        .audit-display, .script-display, .verification-display {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            line-height: 1.6;
+        }
+        
+        .script-display pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        /* Output Header Styles */
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .output-header h3 {
+            margin: 0;
+            color: #007bff;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+        }
+        
+        /* Improved Output Text Styles */
+        .output-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-height: 70vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Responsive tab design */
+        @media (max-width: 768px) {
+            .tab-header {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                font-size: 12px;
+                padding: 10px 12px;
+                min-width: 0;
+            }
+            
+            .audit-content {
+                gap: 20px;
+            }
+            
+            .output-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Security Finding Builder</h1>
+        
+        <!-- Findings Management Header -->
+        <div class="findings-header">
+            <div class="findings-tabs" id="findingsTabs">
+                <div class="finding-tab active" data-finding-id="0">
+                    <span class="finding-tab-title">Finding 1</span>
+                    <span class="finding-tab-close" onclick="closeFinding(0, event)" title="Close finding">&times;</span>
+                </div>
+                
+                <div class="findings-actions">
+                    <button class="new-finding-btn" onclick="createNewFinding()">
+                        ➕ New Finding
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Findings Stats & Export/Import -->
+        <div class="findings-management">
+            <div class="findings-stats">
+                <div class="finding-stat">
+                    <span>📊 Total Findings:</span>
+                    <strong id="totalFindings">1</strong>
+                </div>
+                <div class="finding-stat">
+                    <span>⚠️ Highest CVSS:</span>
+                    <strong id="highestCVSS">0.0</strong>
+                </div>
+                <div class="finding-stat">
+                    <span>📸 Screenshots:</span>
+                    <strong id="totalScreenshots">0</strong>
+                </div>
+                
+                <div class="findings-export-import">
+                    <button class="export-import-btn" onclick="exportAllFindings()">📤 Export All</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importFindings(event)">
+                    <button class="export-import-btn" onclick="document.getElementById('importFile').click()">📥 Import</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <h2>Finding Details</h2>
+
+                <!-- Template Section -->
+                <div class="template-section">
+                    <div class="template-header">
+                        <h3 style="margin: 0; color: #667eea;">📋 Templates</h3>
+                        <div class="template-info" id="templateInfo">Load a template to get started</div>
+                    </div>
+                    
+                    <div class="template-selector">
+                        <select id="templateSelect" onchange="loadTemplate()">
+                            <option value="">Select a template...</option>
+                        </select>
+                        <button class="calc-button" onclick="clearTemplate()">Clear</button>
+                    </div>
+
+                    <div class="template-file-input" style="margin-top: 10px;">
+                        <input type="file" id="templateFile" accept=".json" style="display: none;" onchange="loadTemplateFile(event)">
+                        <button class="calc-button" onclick="document.getElementById('templateFile').click()">📁 Load Template File</button>
+                        <span style="font-size: 0.85rem; color: #666; margin-left: 10px;">Or select a JSON template file</span>
+                    </div>
+
+                    <div class="sub-findings-container" id="subFindingsContainer" style="display: none;">
+                        <h4 style="margin-bottom: 10px;">Select Sub-Findings:</h4>
+                        <div id="subFindingsList"></div>
+                    </div>
+
+                    <div class="template-actions" id="templateActions" style="display: none;">
+                        <div class="template-info">
+                            <span id="selectedCount">0</span> findings selected | 
+                            Highest Score: <span id="highestScore">0.0</span> | 
+                            Avg Score: <span id="avgScore">0.0</span>
+                        </div>
+                        <button class="calc-button" onclick="applyTemplate()">Apply Selected Findings</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" placeholder="e.g., SQL Injection in Login Form">
+                </div>
+
+                <div class="form-group">
+                    <label for="cvss">CVSS Score</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="cvss" min="0" max="10" step="0.1" placeholder="e.g., 7.5" style="flex: 1;">
+                        <button class="calc-button" onclick="openCVSSCalculator()">📊 Calculator</button>
+                    </div>
+                    <input type="text" id="cvssVector" placeholder="CVSS Vector (e.g., CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)" style="margin-top: 10px; font-family: 'Courier New', monospace;">
+                    <span class="help-text">Score between 0.0 and 10.0 or use the calculator</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="severity">
+                        Severity
+                        <span id="severityIndicator" class="severity-indicator"></span>
+                    </label>
+                    <select id="severity">
+                        <option value="">Select Severity</option>
+                        <option value="Critical">Critical</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                        <option value="Informational">Informational</option>
+                    </select>
+                </div>
+
+                <div class="form-group audit-steps-prominent">
+                    <label for="auditSteps">🔍 Audit Steps</label>
+                    <textarea id="auditSteps" class="textarea-large" placeholder="Step-by-step instructions for identifying and auditing this issue. Include navigation paths, specific settings to check, and screenshots to take."></textarea>
+                    <span class="help-text">⭐ Detailed steps for security auditors to follow</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" class="textarea-large" placeholder="Describe the security issue in detail. You can use **markdown** formatting here."></textarea>
+                    <span class="help-text">Supports Markdown formatting</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="automatedScript">Automated Check Script</label>
+                    <textarea id="automatedScript" placeholder="PowerShell, bash, or other scripts to automatically check for this issue."></textarea>
+                    <span class="help-text">Scripts for automated security checks</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="furtherReading">Further Reading</label>
+                    <textarea id="furtherReading" placeholder="Additional information, remediation steps, or context. Supports markdown."></textarea>
+                    <span class="help-text">Supports Markdown formatting</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Affected Components</label>
+                    
+                    <div class="add-component-section">
+                        <div class="component-inputs">
+                            <select id="componentType" onchange="updateComponentInputs()">
+                                <option value="">Select Component Type</option>
+                                <option value="location">📍 Physical Location/Device</option>
+                                <option value="network">🌐 Hostname/IP Address</option>
+                                <option value="wireless">📶 Wireless Network (SSID)</option>
+                                <option value="url">🔗 URL/Web Resource</option>
+                                <option value="file">📁 File/Configuration</option>
+                                <option value="code">💻 Code File & Line Numbers</option>
+                                <option value="azure">☁️ Azure Resource</option>
+                                <option value="application">📱 Application</option>
+                                <option value="ad">👥 Active Directory Object</option>
+                                <option value="service">⚙️ Service/Process</option>
+                                <option value="database">🗄️ Database/Table</option>
+                                <option value="certificate">🔐 Certificate</option>
+                                <option value="other">❓ Other</option>
+                            </select>
+                            
+                            <div id="componentInputFields" class="component-input-fields">
+                                <!-- Dynamic input fields will be inserted here -->
+                            </div>
+                        </div>
+                        
+                        <div class="button-group" style="margin-top: 10px;">
+                            <button class="calc-button" onclick="addComponent()">➕ Add Component</button>
+                            <button class="calc-button" onclick="clearComponentInputs()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="components-container" id="componentsContainer">
+                        <div class="no-components-message">No affected components added yet</div>
+                    </div>
+                    <span class="help-text">Add components affected by this security finding</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="verificationProcedure">Remediation Verification Procedure</label>
+                    <textarea id="verificationProcedure" class="textarea-large" placeholder="Describe the steps to verify that the remediation has been successfully implemented.&#10;&#10;Example:&#10;1. Navigate to Azure Portal > Key Vaults > [vault-name]&#10;2. Go to 'Networking' tab&#10;3. Verify 'Selected networks' or 'Private endpoint' is selected&#10;4. Confirm no public access is allowed&#10;5. Test connectivity from authorized networks only&#10;6. Document configuration with screenshots"></textarea>
+                    <span class="help-text">Step-by-step verification process for confirming remediation success. Not included in output.</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="links">References & Links</label>
+                    
+                    <div class="add-link-section">
+                        <textarea class="paste-area" id="linksPaste" placeholder="Paste links here (one per line or formatted text)&#10;Examples:&#10;• https://example.com&#10;• Title - https://example.com&#10;• [Title](https://example.com)&#10;• Title: https://example.com"></textarea>
+                        <div class="button-group" style="margin-top: 10px;">
+                            <button class="calc-button" onclick="parseLinks()">➕ Add Links</button>
+                            <button class="calc-button" onclick="document.getElementById('linksPaste').value = ''">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="links-container" id="linksContainer">
+                        <div class="no-links-message">No links added yet</div>
+                    </div>
+                    <span class="help-text">Add links manually or paste multiple links to parse automatically</span>
+                </div>
+
+                <div class="form-group screenshots-section">
+                    <label>Screenshots & Evidence</label>
+                    
+                    <div class="paste-hint">
+                        💡 <strong>Pro tip:</strong> Copy screenshots to clipboard (Ctrl+C/Cmd+C) and paste here (Ctrl+V/Cmd+V), or drag & drop image files.
+                    </div>
+
+                    <input type="file" id="screenshotFile" accept="image/*" multiple style="display: none;" onchange="handleFileSelect(event)">
+                    
+                    <div class="screenshot-upload-area" 
+                         onclick="document.getElementById('screenshotFile').click()"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)">
+                        <div class="upload-icon">📸</div>
+                        <div class="upload-text">Click to upload or drag & drop screenshots</div>
+                        <div class="upload-subtext">Supports PNG, JPG, GIF • Multiple files supported • Paste from clipboard with Ctrl+V</div>
+                    </div>
+
+                    <div class="screenshots-container" id="screenshotsContainer">
+                        <div class="no-screenshots">No screenshots added yet</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="tab-container">
+                    <div class="tab-header">
+                        <button class="tab-btn active" onclick="switchTab('findingDetails')" id="findingDetailsTab">
+                            🔍 Finding Details
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('auditGuide')" id="auditGuideTab">
+                            📋 Audit Guide
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('markdownOutput')" id="markdownOutputTab">
+                            📝 Markdown Output
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('htmlOutput')" id="htmlOutputTab">
+                            🌐 HTML Output
+                        </button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <!-- Finding Details Tab -->
+                        <div class="tab-pane active" id="findingDetailsPane">
+                            <div class="finding-summary">
+                                <h3>Finding Summary</h3>
+                                <div class="summary-grid">
+                                    <div class="summary-item">
+                                        <label>Title:</label>
+                                        <span id="summaryTitle">-</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <label>CVSS Score:</label>
+                                        <span id="summaryCvss">-</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <label>Severity:</label>
+                                        <span id="summarySeverity">-</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <label>Components Affected:</label>
+                                        <span id="summaryComponents">-</span>
+                                    </div>
+                                </div>
+                                <div class="summary-description">
+                                    <label>Description:</label>
+                                    <div id="summaryDescription">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Audit Guide Tab -->
+                        <div class="tab-pane" id="auditGuidePane">
+                            <div class="audit-guide">
+                                <h3>Audit Steps & Verification</h3>
+                                <div class="audit-content">
+                                    <div class="audit-section">
+                                        <h4>🔍 Manual Audit Steps</h4>
+                                        <div id="auditStepsDisplay" class="audit-display">
+                                            Select a template or fill in audit steps to see guidance here.
+                                        </div>
+                                    </div>
+                                    <div class="audit-section">
+                                        <h4>⚙️ Automated Check Script</h4>
+                                        <div id="automatedScriptDisplay" class="script-display">
+                                            <pre><code>No automated script available.</code></pre>
+                                        </div>
+                                    </div>
+                                    <div class="audit-section">
+                                        <h4>✅ Verification Procedure</h4>
+                                        <div id="verificationDisplay" class="verification-display">
+                                            Complete the audit steps above to proceed with verification.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Markdown Output Tab -->
+                        <div class="tab-pane" id="markdownOutputPane">
+                            <div class="output-header">
+                                <h3>📝 Markdown Output</h3>
+                                <button onclick="copyToClipboard('markdown')" class="copy-btn">📋 Copy Markdown</button>
+                            </div>
+                            <div class="output-text" id="markdownOutput"></div>
+                        </div>
+                        
+                        <!-- HTML Output Tab -->
+                        <div class="tab-pane" id="htmlOutputPane">
+                            <div class="output-header">
+                                <h3>🌐 HTML Output</h3>
+                                <button onclick="copyToClipboard('html')" class="copy-btn">📋 Copy HTML</button>
+                            </div>
+                            <div class="output-text" id="htmlOutput"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="clearForm()">🗑️ Clear Form</button>
+                    <span class="copy-success" id="copySuccess">✓ Copied!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CVSS Calculator Modal -->
+    <div id="cvssModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>CVSS 3.1 Calculator</h3>
+                <button class="close-modal" onclick="closeCVSSCalculator()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Vector String Input -->
+                <div class="vector-input-group">
+                    <label for="vectorInput">Paste CVSS Vector String</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="vectorInput" placeholder="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" style="flex: 1;">
+                        <button class="calc-button" onclick="parseVector()">Parse Vector</button>
+                    </div>
+                </div>
+
+                <!-- Base Metrics -->
+                <div class="cvss-section">
+                    <h4>Base Metrics</h4>
+                    <div class="cvss-metrics">
+                        <div class="cvss-metric">
+                            <label>Attack Vector (AV)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="AV" data-value="N" onclick="selectMetric(this)">Network (N)</button>
+                                <button class="cvss-btn" data-metric="AV" data-value="A" onclick="selectMetric(this)">Adjacent (A)</button>
+                                <button class="cvss-btn" data-metric="AV" data-value="L" onclick="selectMetric(this)">Local (L)</button>
+                                <button class="cvss-btn" data-metric="AV" data-value="P" onclick="selectMetric(this)">Physical (P)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>Attack Complexity (AC)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="AC" data-value="L" onclick="selectMetric(this)">Low (L)</button>
+                                <button class="cvss-btn" data-metric="AC" data-value="H" onclick="selectMetric(this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>Privileges Required (PR)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="PR" data-value="N" onclick="selectMetric(this)">None (N)</button>
+                                <button class="cvss-btn" data-metric="PR" data-value="L" onclick="selectMetric(this)">Low (L)</button>
+                                <button class="cvss-btn" data-metric="PR" data-value="H" onclick="selectMetric(this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>User Interaction (UI)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="UI" data-value="N" onclick="selectMetric(this)">None (N)</button>
+                                <button class="cvss-btn" data-metric="UI" data-value="R" onclick="selectMetric(this)">Required (R)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>Scope (S)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="S" data-value="U" onclick="selectMetric(this)">Unchanged (U)</button>
+                                <button class="cvss-btn" data-metric="S" data-value="C" onclick="selectMetric(this)">Changed (C)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>Confidentiality Impact (C)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="C" data-value="N" onclick="selectMetric(this)">None (N)</button>
+                                <button class="cvss-btn" data-metric="C" data-value="L" onclick="selectMetric(this)">Low (L)</button>
+                                <button class="cvss-btn" data-metric="C" data-value="H" onclick="selectMetric(this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>Integrity Impact (I)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="I" data-value="N" onclick="selectMetric(this)">None (N)</button>
+                                <button class="cvss-btn" data-metric="I" data-value="L" onclick="selectMetric(this)">Low (L)</button>
+                                <button class="cvss-btn" data-metric="I" data-value="H" onclick="selectMetric(this)">High (H)</button>
+                            </div>
+                        </div>
+
+                        <div class="cvss-metric">
+                            <label>Availability Impact (A)</label>
+                            <div class="cvss-buttons">
+                                <button class="cvss-btn" data-metric="A" data-value="N" onclick="selectMetric(this)">None (N)</button>
+                                <button class="cvss-btn" data-metric="A" data-value="L" onclick="selectMetric(this)">Low (L)</button>
+                                <button class="cvss-btn" data-metric="A" data-value="H" onclick="selectMetric(this)">High (H)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="cvss-results">
+                    <div class="cvss-score-display">
+                        <div>
+                            <div class="cvss-score-value" id="calculatedScore">0.0</div>
+                            <div style="color: #666; font-size: 0.9rem;">Base Score</div>
+                        </div>
+                        <div class="cvss-severity-badge" id="calculatedSeverity" style="background: #4caf50; color: white;">
+                            None
+                        </div>
+                    </div>
+                    <div class="cvss-vector-display" id="vectorString">
+                        CVSS:3.1/AV:_/AC:_/PR:_/UI:_/S:_/C:_/I:_/A:_
+                    </div>
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button class="calc-button" onclick="applyCVSSScore()">Apply to Form</button>
+                        <button class="calc-button" onclick="resetCalculator()">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div id="screenshotModal" class="screenshot-modal" onclick="closeScreenshotModal()">
+        <span class="screenshot-modal-close">&times;</span>
+        <img id="screenshotModalImg" src="" alt="Screenshot">
+    </div>
+
+    <script>
+        // Links Management - declare early to avoid initialization errors
+        let linksList = [];
+        let editingLinkIndex = null;
+
+        // Screenshot Management
+        let screenshotsList = [];
+        let screenshotCounter = 0;
+        let activeScreenshotIndex = null; // Track which screenshot is "active" for replacement
+
+        // Component Management - declare early to avoid initialization errors
+        let componentsList = [];
+        let componentCounter = 0;
+
+        // Multi-Finding Management
+        let findings = [];
+        let currentFindingIndex = 0;
+        let findingIdCounter = 0;
+
+        // Output Format Management
+        let currentOutputFormat = 'markdown';
+
+        // Auto-update output when any input changes
+        document.querySelectorAll('input, textarea, select').forEach(element => {
+            element.addEventListener('input', updateOutput);
+        });
+
+        // Update severity indicator
+        document.getElementById('severity').addEventListener('change', function() {
+            const indicator = document.getElementById('severityIndicator');
+            const value = this.value;
+            
+            indicator.className = 'severity-indicator';
+            
+            if (value) {
+                indicator.textContent = value;
+                switch(value) {
+                    case 'Critical':
+                        indicator.classList.add('severity-critical');
+                        break;
+                    case 'High':
+                        indicator.classList.add('severity-high');
+                        break;
+                    case 'Medium':
+                        indicator.classList.add('severity-medium');
+                        break;
+                    case 'Low':
+                        indicator.classList.add('severity-low');
+                        break;
+                    case 'Informational':
+                        indicator.classList.add('severity-info');
+                        break;
+                }
+            } else {
+                indicator.textContent = '';
+            }
+        });
+
+        function updateOutput() {
+            if (currentOutputFormat === 'markdown') {
+                updateMarkdownOutput();
+            } else {
+                updateHTMLOutput();
+            }
+            
+            // Update tab content as well
+            updateFindingSummary();
+            updateAuditGuide();
+            
+            // Update individual tab outputs
+            const currentTab = document.querySelector('.tab-btn.active');
+            if (currentTab) {
+                const tabName = currentTab.id.replace('Tab', '');
+                updateTabContent(tabName);
+            }
+        }
+
+        function updateMarkdownOutput() {
+            const title = document.getElementById('title').value;
+            const cvss = document.getElementById('cvss').value;
+            const cvssVector = document.getElementById('cvssVector').value;
+            const severity = document.getElementById('severity').value;
+            const description = document.getElementById('description').value;
+            const auditSteps = document.getElementById('auditSteps').value;
+            const automatedScript = document.getElementById('automatedScript').value;
+            const furtherReading = document.getElementById('furtherReading').value;
+
+            let output = '';
+
+            if (title) {
+                output += `# ${title}\n\n`;
+            }
+
+            if (cvss || cvssVector || severity) {
+                output += `## Vulnerability Information\n\n`;
+                if (cvss) {
+                    output += `**CVSS Score:** ${cvss}/10\n`;
+                }
+                if (cvssVector) {
+                    output += `**CVSS Vector:** \`${cvssVector}\`\n`;
+                }
+                if (severity) {
+                    output += `**Severity:** ${severity}\n`;
+                }
+                output += '\n';
+            }
+
+            if (description) {
+                output += `## Description\n\n${description}\n\n`;
+            }
+
+            if (auditSteps) {
+                output += `${auditSteps}\n\n`;
+            }
+
+            if (automatedScript) {
+                output += `## Automated Check Script\n\n\`\`\`powershell\n${automatedScript}\n\`\`\`\n\n`;
+            }
+
+            if (furtherReading) {
+                output += `## Further Reading\n\n${furtherReading}\n\n`;
+            }
+
+            if (componentsList.length > 0) {
+                output += `## Affected Components\n\n`;
+                componentsList.forEach((component, index) => {
+                    output += `### ${component.typeName}\n\n`;
+                    Object.keys(component.data).forEach(key => {
+                        const value = component.data[key];
+                        if (value && value.trim()) {
+                            const config = componentTypes[component.type];
+                            const field = config.fields.find(f => f.name === key);
+                            const label = field ? field.label : key;
+                            output += `**${label}:** ${value}\n`;
+                        }
+                    });
+                    output += '\n';
+                });
+            }
+
+            if (screenshotsList.length > 0) {
+                output += `## Screenshots\n\n`;
+                screenshotsList.forEach((screenshot, index) => {
+                    output += `### Screenshot ${index + 1}: ${screenshot.caption}\n\n`;
+                    output += `![${screenshot.caption}](${screenshot.dataUrl})\n\n`;
+                    if (screenshot.steps && screenshot.steps !== 'No specific steps provided') {
+                        output += `**Steps to reproduce:**\n${screenshot.steps}\n\n`;
+                    }
+                });
+            }
+
+            if (linksList.length > 0) {
+                output += `## References\n\n`;
+                linksList.forEach(link => {
+                    if (link.url) {
+                        output += `- ${link.title} - ${link.url}\n`;
+                    } else {
+                        output += `- ${link.title}\n`;
+                    }
+                });
+                output += '\n';
+            }
+
+            document.getElementById('markdownOutput').textContent = output;
+        }
+
+        function updateHTMLOutput() {
+            const title = document.getElementById('title').value;
+            const cvss = document.getElementById('cvss').value;
+            const cvssVector = document.getElementById('cvssVector').value;
+            const severity = document.getElementById('severity').value;
+            const description = document.getElementById('description').value;
+            const auditSteps = document.getElementById('auditSteps').value;
+            const automatedScript = document.getElementById('automatedScript').value;
+            const furtherReading = document.getElementById('furtherReading').value;
+
+            let output = '';
+
+            if (description) {
+                output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">Description of the Issue</h3>\n`;
+                
+                // Parse description and insert screenshots in their relevant sub-finding sections
+                let htmlDescription = convertMarkdownToHTML(description);
+                
+                // Group screenshots by sub-finding
+                const screenshotsBySubFinding = {};
+                const generalScreenshots = [];
+                
+                screenshotsList.forEach(screenshot => {
+                    if (!screenshot.isPlaceholder) {
+                        if (screenshot.subFindingId && screenshot.subFindingTitle) {
+                            if (!screenshotsBySubFinding[screenshot.subFindingTitle]) {
+                                screenshotsBySubFinding[screenshot.subFindingTitle] = [];
+                            }
+                            screenshotsBySubFinding[screenshot.subFindingTitle].push(screenshot);
+                        } else {
+                            generalScreenshots.push(screenshot);
+                        }
+                    }
+                });
+                
+                // Insert screenshots after their corresponding sub-finding headers
+                Object.keys(screenshotsBySubFinding).forEach(subFindingTitle => {
+                    const screenshots = screenshotsBySubFinding[subFindingTitle];
+                    const headerRegex = new RegExp(`(<h4>${escapeHtml(subFindingTitle)}<\/h4>)`, 'g');
+                    
+                    let screenshotsHtml = '';
+                    screenshots.forEach(screenshot => {
+                        screenshotsHtml += `<p><strong>${escapeHtml(screenshot.caption)}</strong></p>\n`;
+                        screenshotsHtml += `<p><img style="max-width: 100%; height: auto;" src="${screenshot.dataUrl}" alt="${escapeHtml(screenshot.caption)}" title="${escapeHtml(screenshot.caption)}"></p>\n`;
+                    });
+                    
+                    htmlDescription = htmlDescription.replace(headerRegex, `$1\n${screenshotsHtml}`);
+                });
+                
+                output += `${htmlDescription}\n\n`;
+                
+                // Add any general screenshots that aren't associated with sub-findings
+                if (generalScreenshots.length > 0) {
+                    generalScreenshots.forEach(screenshot => {
+                        output += `<p><strong>${escapeHtml(screenshot.caption)}</strong></p>\n`;
+                        output += `<p><img style="max-width: 100%; height: auto;" src="${screenshot.dataUrl}" alt="${escapeHtml(screenshot.caption)}" title="${escapeHtml(screenshot.caption)}"></p>\n`;
+                    });
+                }
+            }
+
+            // Affected Components section
+            output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">Affected Components</h3>\n`;
+            if (componentsList.length > 0) {
+                output += `<ul>\n`;
+                componentsList.forEach((component) => {
+                    let componentDetails = [];
+                    Object.keys(component.data).forEach(key => {
+                        const value = component.data[key];
+                        if (value && value.trim()) {
+                            const config = componentTypes[component.type];
+                            const field = config.fields.find(f => f.name === key);
+                            const label = field ? field.label : key;
+                            componentDetails.push(`<strong>${label}:</strong> ${escapeHtml(value)}`);
+                        }
+                    });
+                    const detailsHtml = componentDetails.join(', ');
+                    output += `<li>${component.typeName} - ${detailsHtml}</li>\n`;
+                });
+                output += `</ul>\n\n`;
+                
+                // Add severity/CVSS info after components
+                if (cvss || cvssVector || severity) {
+                    output += `<p><strong>Risk Assessment:</strong></p>\n<ul>\n`;
+                    if (severity) {
+                        output += `<li><strong>Severity:</strong> ${escapeHtml(severity)}</li>\n`;
+                    }
+                    if (cvss) {
+                        output += `<li><strong>CVSS Score:</strong> ${escapeHtml(cvss)}/10</li>\n`;
+                    }
+                    if (cvssVector) {
+                        output += `<li><strong>CVSS Vector:</strong> <code>${escapeHtml(cvssVector)}</code></li>\n`;
+                    }
+                    output += `</ul>\n\n`;
+                }
+            } else {
+                // If no components, show CVSS info directly
+                if (cvss || cvssVector || severity) {
+                    output += `<ul>\n`;
+                    if (severity) {
+                        output += `<li><strong>Severity:</strong> ${escapeHtml(severity)}</li>\n`;
+                    }
+                    if (cvss) {
+                        output += `<li><strong>CVSS Score:</strong> ${escapeHtml(cvss)}/10</li>\n`;
+                    }
+                    if (cvssVector) {
+                        output += `<li><strong>CVSS Vector:</strong> <code>${escapeHtml(cvssVector)}</code></li>\n`;
+                    }
+                    output += `</ul>\n\n`;
+                } else {
+                    output += `<p>&nbsp;</p>\n\n`;
+                }
+            }
+
+            if (auditSteps) {
+                const htmlAuditSteps = convertMarkdownToHTML(auditSteps);
+                output += `${htmlAuditSteps}\n\n`;
+            }
+
+            if (automatedScript) {
+                output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">Automated Check Script</h3>\n`;
+                output += `<pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; font-family: monospace;"><code>${escapeHtml(automatedScript)}</code></pre>\n\n`;
+            }
+
+            if (furtherReading) {
+                output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">LRQA Recommends</h3>\n`;
+                const htmlFurtherReading = convertMarkdownToHTML(furtherReading);
+                output += `${htmlFurtherReading}\n\n`;
+            } else {
+                output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">LRQA Recommends</h3>\n`;
+                output += `<ol><li>&nbsp;</li></ol>\n\n`;
+            }
+
+            if (linksList.length > 0) {
+                output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">Further Reading</h3>\n`;
+                output += `<ul>\n`;
+                linksList.forEach(link => {
+                    if (link.url) {
+                        output += `<li>${escapeHtml(link.title)} - ${escapeHtml(link.url)}</li>\n`;
+                    } else {
+                        output += `<li>${escapeHtml(link.title)}</li>\n`;
+                    }
+                });
+                output += `</ul>\n\n`;
+            } else {
+                output += `<h3 style="color: #088c8a; font-family: Roboto-Regular;">Further Reading</h3>\n`;
+                output += `<ul><li>&nbsp;</li></ul>\n\n`;
+            }
+
+            // For HTML output, we want to show the actual HTML
+            document.getElementById('htmlOutput').textContent = output;
+        }
+
+        function convertMarkdownToHTML(markdown) {
+            if (!markdown) return '';
+            
+            let html = markdown
+                // Convert headers
+                .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                // Convert bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                // Convert italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/_(.*?)_/g, '<em>$1</em>')
+                // Convert code
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                // Convert code blocks
+                .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
+                // Convert numbered lists
+                .replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>')
+                // Convert bullet lists
+                .replace(/^[-*+]\s+(.*)$/gm, '<li>$1</li>')
+                // Convert line breaks
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+                
+            // Wrap lists
+            if (html.includes('<li>')) {
+                html = html.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+                html = html.replace(/<\/li><br><li>/g, '</li><li>');
+            }
+                
+            // Wrap in paragraphs if needed
+            if (html && !html.startsWith('<h') && !html.startsWith('<p') && !html.startsWith('<ul') && !html.startsWith('<ol')) {
+                html = '<p>' + html + '</p>';
+            }
+            
+            return html;
+        }
+
+        function switchOutputFormat(format) {
+            currentOutputFormat = format;
+            
+            // Update button states
+            document.getElementById('markdownBtn').classList.toggle('active', format === 'markdown');
+            document.getElementById('htmlBtn').classList.toggle('active', format === 'html');
+            
+            updateOutput();
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Remove active class from all tabs and panes
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to selected tab and pane
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.getElementById(tabName + 'Pane').classList.add('active');
+            
+            // Update content based on selected tab
+            updateTabContent(tabName);
+        }
+
+        function updateTabContent(tabName) {
+            switch(tabName) {
+                case 'findingDetails':
+                    updateFindingSummary();
+                    break;
+                case 'auditGuide':
+                    updateAuditGuide();
+                    break;
+                case 'markdownOutput':
+                    updateMarkdownOutput();
+                    break;
+                case 'htmlOutput':
+                    updateHTMLOutput();
+                    break;
+            }
+        }
+
+        function updateFindingSummary() {
+            const title = document.getElementById('title').value || '-';
+            const cvss = document.getElementById('cvss').value || '-';
+            const severity = document.getElementById('severity').value || '-';
+            const description = document.getElementById('description').value || '-';
+            
+            // Count affected components
+            const componentsCount = componentsList.length;
+            const componentsText = componentsCount > 0 ? `${componentsCount} components` : 'None specified';
+            
+            document.getElementById('summaryTitle').textContent = title;
+            document.getElementById('summaryCvss').textContent = cvss;
+            document.getElementById('summarySeverity').textContent = severity;
+            document.getElementById('summaryComponents').textContent = componentsText;
+            document.getElementById('summaryDescription').innerHTML = description.replace(/\n/g, '<br>');
+        }
+
+        function updateAuditGuide() {
+            const auditSteps = document.getElementById('auditSteps').value;
+            const automatedScript = document.getElementById('automatedScript').value;
+            const verification = document.getElementById('verificationProcedure').value;
+            
+            // Update audit steps display
+            if (auditSteps) {
+                document.getElementById('auditStepsDisplay').innerHTML = auditSteps.replace(/\n/g, '<br>');
+            } else {
+                document.getElementById('auditStepsDisplay').innerHTML = 'Select a template or fill in audit steps to see guidance here.';
+            }
+            
+            // Update automated script display
+            if (automatedScript) {
+                document.getElementById('automatedScriptDisplay').innerHTML = `<pre><code>${automatedScript}</code></pre>`;
+            } else {
+                document.getElementById('automatedScriptDisplay').innerHTML = '<pre><code>No automated script available.</code></pre>';
+            }
+            
+            // Update verification display
+            if (verification) {
+                document.getElementById('verificationDisplay').innerHTML = verification.replace(/\n/g, '<br>');
+            } else {
+                document.getElementById('verificationDisplay').innerHTML = 'Complete the audit steps above to proceed with verification.';
+            }
+        }
+
+        function copyToClipboard(format = null) {
+            let outputText = '';
+            
+            if (format === 'markdown') {
+                // Get markdown output
+                currentOutputFormat = 'markdown';
+                updateMarkdownOutput();
+                outputText = document.getElementById('markdownOutput').textContent;
+            } else if (format === 'html') {
+                // Get HTML output
+                currentOutputFormat = 'html';
+                updateHTMLOutput();
+                outputText = document.getElementById('htmlOutput').textContent;
+            } else {
+                // Get current active tab output
+                const activePane = document.querySelector('.tab-pane.active');
+                if (activePane.id === 'markdownOutputPane') {
+                    outputText = document.getElementById('markdownOutput').textContent;
+                } else if (activePane.id === 'htmlOutputPane') {
+                    outputText = document.getElementById('htmlOutput').textContent;
+                } else if (activePane.id === 'auditGuidePane') {
+                    outputText = document.getElementById('auditStepsDisplay').textContent;
+                } else {
+                    // For finding details pane, use the markdown output as fallback
+                    updateMarkdownOutput();
+                    outputText = document.getElementById('markdownOutput').textContent;
+                }
+            }
+            
+            if (!outputText.trim()) {
+                alert('Nothing to copy! Please fill in some fields first.');
+                return;
+            }
+
+            // Try modern Clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(outputText).then(() => {
+                    showCopySuccess();
+                }).catch(err => {
+                    console.error('Clipboard API failed:', err);
+                    fallbackCopyTextToClipboard(outputText);
+                });
+            } else {
+                // Fallback for older browsers or non-secure contexts
+                fallbackCopyTextToClipboard(outputText);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    alert('Copy failed. Please select the text manually and use Ctrl+C/Cmd+C.');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                alert('Copy failed. Please select the text manually and use Ctrl+C/Cmd+C.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            const successMsg = document.getElementById('copySuccess');
+            successMsg.classList.add('show');
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 2000);
+        }
+
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all fields?')) {
+                document.querySelectorAll('input, textarea, select').forEach(element => {
+                    element.value = '';
+                });
+                document.getElementById('severityIndicator').textContent = '';
+                document.getElementById('severityIndicator').className = 'severity-indicator';
+                linksList = [];
+                screenshotsList = [];
+                componentsList = [];
+                renderLinks();
+                renderScreenshots();
+                renderComponents();
+                updateOutput();
+            }
+        }
+
+        // Initialize findings system
+        initializeFindings();
+
+        // Multi-Finding Management Functions
+        function initializeFindings() {
+            // Create the first finding with current state
+            findings = [{
+                id: findingIdCounter++,
+                title: 'Finding 1',
+                data: getCurrentFindingData()
+            }];
+            updateFindingsUI();
+        }
+
+        function getCurrentFindingData() {
+            return {
+                title: document.getElementById('title').value || '',
+                cvss: document.getElementById('cvss').value || '',
+                cvssVector: document.getElementById('cvssVector').value || '',
+                severity: document.getElementById('severity').value || '',
+                description: document.getElementById('description').value || '',
+                auditSteps: document.getElementById('auditSteps').value || '',
+                automatedScript: document.getElementById('automatedScript').value || '',
+                furtherReading: document.getElementById('furtherReading').value || '',
+                verificationProcedure: document.getElementById('verificationProcedure').value || '',
+                linksList: [...linksList],
+                screenshotsList: [...screenshotsList],
+                componentsList: [...componentsList],
+                screenshotCounter: screenshotCounter,
+                componentCounter: componentCounter,
+                activeScreenshotIndex: activeScreenshotIndex
+            };
+        }
+
+        function loadFindingData(data) {
+            document.getElementById('title').value = data.title || '';
+            document.getElementById('cvss').value = data.cvss || '';
+            document.getElementById('cvssVector').value = data.cvssVector || '';
+            document.getElementById('severity').value = data.severity || '';
+            document.getElementById('description').value = data.description || '';
+            document.getElementById('auditSteps').value = data.auditSteps || '';
+            document.getElementById('automatedScript').value = data.automatedScript || '';
+            document.getElementById('furtherReading').value = data.furtherReading || '';
+            document.getElementById('verificationProcedure').value = data.verificationProcedure || '';
+            
+            // Update severity indicator
+            document.getElementById('severity').dispatchEvent(new Event('change'));
+            
+            linksList = data.linksList || [];
+            screenshotsList = data.screenshotsList || [];
+            componentsList = data.componentsList || [];
+            screenshotCounter = data.screenshotCounter || 0;
+            componentCounter = data.componentCounter || 0;
+            activeScreenshotIndex = data.activeScreenshotIndex || null;
+            
+            renderLinks();
+            renderScreenshots();
+            renderComponents();
+            updateOutput();
+        }
+
+        function createNewFinding() {
+            // Save current finding state
+            if (findings[currentFindingIndex]) {
+                findings[currentFindingIndex].data = getCurrentFindingData();
+            }
+            
+            // Create new finding
+            const newFinding = {
+                id: findingIdCounter++,
+                title: `Finding ${findings.length + 1}`,
+                data: {
+                    title: '',
+                    cvss: '',
+                    cvssVector: '',
+                    severity: '',
+                    description: '',
+                    furtherReading: '',
+                    linksList: [],
+                    screenshotsList: [],
+                    screenshotCounter: 0,
+                    activeScreenshotIndex: null
+                }
+            };
+            
+            findings.push(newFinding);
+            currentFindingIndex = findings.length - 1;
+            
+            // Load the new finding
+            loadFindingData(newFinding.data);
+            updateFindingsUI();
+            
+            showToast(`New finding created: ${newFinding.title}`);
+        }
+
+        function switchToFinding(index) {
+            if (index === currentFindingIndex) return;
+            
+            // Save current finding state
+            if (findings[currentFindingIndex]) {
+                findings[currentFindingIndex].data = getCurrentFindingData();
+            }
+            
+            // Switch to new finding
+            currentFindingIndex = index;
+            if (findings[index]) {
+                loadFindingData(findings[index].data);
+                updateFindingsUI();
+                showToast(`Switched to: ${findings[index].title}`);
+            }
+        }
+
+        function closeFinding(index, event) {
+            event.stopPropagation();
+            
+            if (findings.length === 1) {
+                showToast('Cannot close the last finding');
+                return;
+            }
+            
+            if (confirm(`Close "${findings[index].title}"?`)) {
+                findings.splice(index, 1);
+                
+                // Adjust current index if needed
+                if (currentFindingIndex >= index) {
+                    currentFindingIndex = Math.max(0, currentFindingIndex - 1);
+                }
+                
+                // Load the current finding
+                if (findings[currentFindingIndex]) {
+                    loadFindingData(findings[currentFindingIndex].data);
+                }
+                
+                updateFindingsUI();
+                showToast('Finding closed');
+            }
+        }
+
+        function renameFinding(index, newTitle) {
+            if (findings[index]) {
+                findings[index].title = newTitle || `Finding ${index + 1}`;
+                updateFindingsUI();
+            }
+        }
+
+        function updateFindingsUI() {
+            const tabsContainer = document.getElementById('findingsTabs');
+            const actionsContainer = tabsContainer.querySelector('.findings-actions');
+            
+            // Clear existing tabs but keep actions
+            tabsContainer.innerHTML = '';
+            
+            // Add finding tabs
+            findings.forEach((finding, index) => {
+                const tab = document.createElement('div');
+                tab.className = `finding-tab ${index === currentFindingIndex ? 'active' : ''}`;
+                tab.dataset.findingId = finding.id;
+                tab.onclick = () => switchToFinding(index);
+                
+                const title = finding.data.title || finding.title;
+                const displayTitle = title.length > 20 ? title.substring(0, 17) + '...' : title;
+                
+                tab.innerHTML = `
+                    <span class="finding-tab-title" ondblclick="editFindingTitle(${index})" title="${title}">${displayTitle}</span>
+                    <span class="finding-tab-close" onclick="closeFinding(${index}, event)" title="Close finding">&times;</span>
+                `;
+                
+                tabsContainer.appendChild(tab);
+            });
+            
+            // Re-add actions
+            tabsContainer.appendChild(actionsContainer);
+            
+            updateFindingsStats();
+        }
+
+        function editFindingTitle(index) {
+            const titleElement = document.querySelector(`[data-finding-id="${findings[index].id}"] .finding-tab-title`);
+            const currentTitle = findings[index].data.title || findings[index].title;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentTitle;
+            input.style.cssText = 'background: transparent; border: 1px solid #667eea; padding: 2px 5px; font-size: inherit; width: 100px;';
+            
+            input.onblur = input.onkeydown = function(e) {
+                if (e.type === 'blur' || e.key === 'Enter') {
+                    const newTitle = this.value.trim() || findings[index].title;
+                    findings[index].title = newTitle;
+                    if (index === currentFindingIndex) {
+                        document.getElementById('title').value = newTitle;
+                    }
+                    updateFindingsUI();
+                } else if (e.key === 'Escape') {
+                    updateFindingsUI();
+                }
+            };
+            
+            titleElement.innerHTML = '';
+            titleElement.appendChild(input);
+            input.focus();
+            input.select();
+        }
+
+        function updateFindingsStats() {
+            const totalFindings = findings.length;
+            let highestCVSS = 0;
+            let totalScreenshots = 0;
+            
+            findings.forEach(finding => {
+                const cvss = parseFloat(finding.data.cvss) || 0;
+                if (cvss > highestCVSS) highestCVSS = cvss;
+                totalScreenshots += (finding.data.screenshotsList || []).length;
+            });
+            
+            // Add current finding's screenshots if not saved yet
+            totalScreenshots += screenshotsList.length;
+            const currentCVSS = parseFloat(document.getElementById('cvss').value) || 0;
+            if (currentCVSS > highestCVSS) highestCVSS = currentCVSS;
+            
+            document.getElementById('totalFindings').textContent = totalFindings;
+            document.getElementById('highestCVSS').textContent = highestCVSS.toFixed(1);
+            document.getElementById('totalScreenshots').textContent = totalScreenshots;
+        }
+
+        // Export/Import Functions
+        function exportAllFindings() {
+            // Save current finding state first
+            if (findings[currentFindingIndex]) {
+                findings[currentFindingIndex].data = getCurrentFindingData();
+            }
+            
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                findings: findings,
+                metadata: {
+                    totalFindings: findings.length,
+                    highestCVSS: parseFloat(document.getElementById('highestCVSS').textContent) || 0,
+                    totalScreenshots: parseInt(document.getElementById('totalScreenshots').textContent) || 0
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `security-findings-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast(`Exported ${findings.length} findings successfully!`);
+        }
+
+        function importFindings(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    if (!importData.findings || !Array.isArray(importData.findings)) {
+                        throw new Error('Invalid findings format');
+                    }
+                    
+                    if (confirm(`Import ${importData.findings.length} findings? This will replace your current findings.`)) {
+                        findings = importData.findings;
+                        currentFindingIndex = 0;
+                        findingIdCounter = Math.max(...findings.map(f => f.id || 0)) + 1;
+                        
+                        // Load the first finding
+                        if (findings.length > 0) {
+                            loadFindingData(findings[0].data);
+                        }
+                        
+                        updateFindingsUI();
+                        showToast(`Successfully imported ${findings.length} findings!`);
+                    }
+                } catch (error) {
+                    alert('Error importing findings: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the input
+            event.target.value = '';
+        }
+
+        function exportSingleFinding(index = null) {
+            const findingIndex = index !== null ? index : currentFindingIndex;
+            const finding = findings[findingIndex];
+            
+            if (!finding) return;
+            
+            // Save current state if exporting current finding
+            if (findingIndex === currentFindingIndex) {
+                finding.data = getCurrentFindingData();
+            }
+            
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                finding: finding,
+                type: 'single-finding'
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const title = finding.data.title || finding.title;
+            const filename = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            a.href = url;
+            a.download = `finding-${filename}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast(`Exported: ${title}`);
+        }
+
+        // Auto-save current finding when switching tabs or making changes
+        function autoSaveFinding() {
+            if (findings[currentFindingIndex]) {
+                findings[currentFindingIndex].data = getCurrentFindingData();
+                updateFindingsStats();
+            }
+        }
+
+        // Add auto-save to form changes
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('input, textarea, select')) {
+                clearTimeout(window.autoSaveTimer);
+                window.autoSaveTimer = setTimeout(autoSaveFinding, 1000);
+            }
+        });
+
+        // Component Management Functions
+
+        const componentTypes = {
+            'location': { 
+                name: '📍 Physical Location/Device', 
+                fields: [
+                    { name: 'location', label: 'Location/Device Name', placeholder: 'e.g., Server Room A, Workstation-123', required: true },
+                    { name: 'details', label: 'Additional Details', placeholder: 'e.g., Floor 2, Network closet, IP range', required: false }
+                ]
+            },
+            'network': { 
+                name: '🌐 Hostname/IP Address', 
+                fields: [
+                    { name: 'hostname', label: 'Hostname/IP', placeholder: 'e.g., server01.domain.com, 192.168.1.100', required: true },
+                    { name: 'port', label: 'Port (optional)', placeholder: 'e.g., 443, 22, 3389', required: false },
+                    { name: 'service', label: 'Service', placeholder: 'e.g., HTTPS, SSH, RDP', required: false }
+                ]
+            },
+            'wireless': { 
+                name: '📶 Wireless Network (SSID)', 
+                fields: [
+                    { name: 'ssid', label: 'SSID Name', placeholder: 'e.g., Corporate-WiFi, Guest-Network', required: true },
+                    { name: 'security', label: 'Security Type', placeholder: 'e.g., WPA2, WPA3, Open', required: false },
+                    { name: 'location', label: 'Coverage Area', placeholder: 'e.g., Building A, Floor 3', required: false }
+                ]
+            },
+            'url': { 
+                name: '🔗 URL/Web Resource', 
+                fields: [
+                    { name: 'url', label: 'URL', placeholder: 'e.g., https://example.com/admin', required: true },
+                    { name: 'description', label: 'Page/Resource Description', placeholder: 'e.g., Admin panel, API endpoint', required: false }
+                ]
+            },
+            'file': { 
+                name: '📁 File/Configuration', 
+                fields: [
+                    { name: 'filepath', label: 'File Path', placeholder: 'e.g., /etc/nginx/nginx.conf, C:\\Windows\\System32\\config', required: true },
+                    { name: 'description', label: 'File Description', placeholder: 'e.g., Web server config, Registry hive', required: false }
+                ]
+            },
+            'code': { 
+                name: '💻 Code File & Line Numbers', 
+                fields: [
+                    { name: 'filepath', label: 'File Path', placeholder: 'e.g., src/auth/login.php, app/models/User.js', required: true },
+                    { name: 'lines', label: 'Line Numbers', placeholder: 'e.g., 45-52, 127, 200-215', required: false },
+                    { name: 'function', label: 'Function/Method', placeholder: 'e.g., validateUser(), processLogin()', required: false }
+                ]
+            },
+            'azure': { 
+                name: '☁️ Azure Resource', 
+                fields: [
+                    { name: 'resource', label: 'Resource Name', placeholder: 'e.g., webapp-prod-001, kv-secrets-uat', required: true },
+                    { name: 'type', label: 'Resource Type', placeholder: 'e.g., Web App, Key Vault, Storage Account', required: false },
+                    { name: 'resourcegroup', label: 'Resource Group', placeholder: 'e.g., rg-production-web, rg-security-tools', required: false }
+                ]
+            },
+            'application': { 
+                name: '📱 Application', 
+                fields: [
+                    { name: 'appname', label: 'Application Name', placeholder: 'e.g., Mobile Banking App, CRM Desktop Client', required: true },
+                    { name: 'version', label: 'Version', placeholder: 'e.g., v2.1.5, Build 1234', required: false },
+                    { name: 'platform', label: 'Platform', placeholder: 'e.g., iOS, Android, Windows, macOS', required: false }
+                ]
+            },
+            'ad': { 
+                name: '👥 Active Directory Object', 
+                fields: [
+                    { name: 'objectname', label: 'Object Name', placeholder: 'e.g., john.doe, Administrators, SQL-Servers', required: true },
+                    { name: 'objecttype', label: 'Object Type', placeholder: 'e.g., User, Group, Computer, OU', required: false },
+                    { name: 'domain', label: 'Domain', placeholder: 'e.g., corp.domain.com, WORKGROUP', required: false }
+                ]
+            },
+            'service': { 
+                name: '⚙️ Service/Process', 
+                fields: [
+                    { name: 'servicename', label: 'Service Name', placeholder: 'e.g., IIS, Apache, MySQL, Windows Update', required: true },
+                    { name: 'version', label: 'Version', placeholder: 'e.g., v10.0, 2.4.41, 8.0.25', required: false },
+                    { name: 'host', label: 'Host/Server', placeholder: 'e.g., webserver01, database-cluster', required: false }
+                ]
+            },
+            'database': { 
+                name: '🗄️ Database/Table', 
+                fields: [
+                    { name: 'database', label: 'Database Name', placeholder: 'e.g., UserManagement, ecommerce_prod', required: true },
+                    { name: 'table', label: 'Table/Collection', placeholder: 'e.g., users, customer_data, logs', required: false },
+                    { name: 'server', label: 'Database Server', placeholder: 'e.g., sql-server-01, mongo-cluster', required: false }
+                ]
+            },
+            'certificate': { 
+                name: '🔐 Certificate', 
+                fields: [
+                    { name: 'subject', label: 'Certificate Subject', placeholder: 'e.g., *.example.com, server01.domain.com', required: true },
+                    { name: 'issuer', label: 'Issuer', placeholder: 'e.g., Let\'s Encrypt, Internal CA', required: false },
+                    { name: 'expiry', label: 'Expiry Date', placeholder: 'e.g., 2024-12-31, Expired', required: false }
+                ]
+            },
+            'other': { 
+                name: '❓ Other', 
+                fields: [
+                    { name: 'name', label: 'Component Name', placeholder: 'Describe the affected component', required: true },
+                    { name: 'type', label: 'Component Type', placeholder: 'e.g., Hardware device, Third-party service', required: false },
+                    { name: 'details', label: 'Additional Details', placeholder: 'Any additional information', required: false }
+                ]
+            }
+        };
+
+        function updateComponentInputs() {
+            const type = document.getElementById('componentType').value;
+            const fieldsContainer = document.getElementById('componentInputFields');
+            
+            if (!type) {
+                fieldsContainer.innerHTML = '';
+                return;
+            }
+            
+            const config = componentTypes[type];
+            if (!config) {
+                fieldsContainer.innerHTML = '<p style="color: #999; font-style: italic;">Select a component type to continue</p>';
+                return;
+            }
+            
+            let html = '';
+            config.fields.forEach(field => {
+                const required = field.required ? ' *' : '';
+                html += `
+                    <input type="text" 
+                           id="comp_${field.name}" 
+                           placeholder="${field.placeholder}"
+                           title="${field.label}${required}"
+                           data-label="${field.label}${required}">
+                `;
+            });
+            
+            fieldsContainer.innerHTML = html;
+        }
+
+        function addComponent() {
+            const type = document.getElementById('componentType').value;
+            if (!type) {
+                alert('Please select a component type');
+                return;
+            }
+            
+            const config = componentTypes[type];
+            const component = {
+                id: ++componentCounter,
+                type: type,
+                typeName: config.name,
+                data: {}
+            };
+            
+            // Collect field data
+            let hasRequiredFields = true;
+            config.fields.forEach(field => {
+                const inputId = `comp_${field.name}`;
+                const value = document.getElementById(inputId)?.value || '';
+                component.data[field.name] = value;
+                
+                if (field.required && !value.trim()) {
+                    hasRequiredFields = false;
+                }
+            });
+            
+            if (!hasRequiredFields) {
+                alert('Please fill in all required fields (marked with *)');
+                return;
+            }
+            
+            componentsList.push(component);
+            renderComponents();
+            clearComponentInputs();
+            updateOutput();
+        }
+
+        function renderComponents() {
+            const container = document.getElementById('componentsContainer');
+            
+            if (componentsList.length === 0) {
+                container.innerHTML = '<div class="no-components-message">No affected components added yet</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            componentsList.forEach((component, index) => {
+                const item = document.createElement('div');
+                item.className = 'component-item';
+                
+                let detailsHtml = '';
+                Object.keys(component.data).forEach(key => {
+                    const value = component.data[key];
+                    if (value && value.trim()) {
+                        const config = componentTypes[component.type];
+                        const field = config.fields.find(f => f.name === key);
+                        const label = field ? field.label : key;
+                        detailsHtml += `<div><strong>${label}:</strong> ${escapeHtml(value)}</div>`;
+                    }
+                });
+                
+                item.innerHTML = `
+                    <div class="component-info">
+                        <div class="component-type">${component.typeName}</div>
+                        <div class="component-details">
+                            ${detailsHtml}
+                        </div>
+                    </div>
+                    <div class="component-actions">
+                        <button class="component-btn delete" onclick="deleteComponent(${index})">🗑️ Delete</button>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        function deleteComponent(index) {
+            if (confirm('Are you sure you want to delete this component?')) {
+                componentsList.splice(index, 1);
+                renderComponents();
+                updateOutput();
+            }
+        }
+
+        function clearComponentInputs() {
+            document.getElementById('componentType').value = '';
+            document.getElementById('componentInputFields').innerHTML = '';
+        }
+
+        // Initialize output on page load
+        updateOutput();
+
+        // Setup global paste listener for screenshots
+        document.addEventListener('paste', handlePaste);
+
+        // Screenshot Management Functions
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.target.closest('.screenshot-upload-area').classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.target.closest('.screenshot-upload-area').classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const uploadArea = event.target.closest('.screenshot-upload-area');
+            uploadArea.classList.remove('dragover');
+            
+            const files = Array.from(event.dataTransfer.files);
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            
+            if (imageFiles.length > 0) {
+                processImageFiles(imageFiles);
+            } else {
+                alert('Please drop image files only (PNG, JPG, GIF)');
+            }
+        }
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            processImageFiles(files);
+            // Clear the input so the same file can be selected again
+            event.target.value = '';
+        }
+
+        function handlePaste(event) {
+            const items = event.clipboardData?.items;
+            if (!items) return;
+            
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    event.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        // If there's an active screenshot selected, replace it
+                        if (activeScreenshotIndex !== null) {
+                            replaceScreenshotWithFile(activeScreenshotIndex, file);
+                        } else {
+                            // Otherwise, add as new screenshot
+                            processImageFiles([file], 'Pasted Screenshot');
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        function processImageFiles(files, defaultCaption = '') {
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addScreenshot({
+                        id: ++screenshotCounter,
+                        dataUrl: e.target.result,
+                        fileName: file.name,
+                        fileSize: file.size,
+                        caption: defaultCaption || `Screenshot: ${file.name}`,
+                        steps: 'No specific steps provided',
+                        timestamp: new Date().toISOString()
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addScreenshot(screenshot) {
+            screenshotsList.push(screenshot);
+            renderScreenshots();
+            updateOutput();
+        }
+
+        function addScreenshotPlaceholder(placeholder, subFindingId = null) {
+            // Create a simple SVG placeholder without special characters
+            const svgContent = `<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#f0f2ff"/>
+                <rect x="50" y="50" width="300" height="200" fill="none" stroke="#667eea" stroke-width="2" stroke-dasharray="5,5"/>
+                <text x="200" y="130" text-anchor="middle" fill="#667eea" font-family="Arial" font-size="16">Screenshot Placeholder</text>
+                <text x="200" y="150" text-anchor="middle" fill="#999" font-family="Arial" font-size="12">Replace with actual screenshot</text>
+                <text x="200" y="170" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">Template-generated placeholder</text>
+            </svg>`;
+            
+            const screenshotPlaceholder = {
+                id: ++screenshotCounter,
+                dataUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent),
+                fileName: 'placeholder.svg',
+                fileSize: 1024,
+                caption: placeholder.caption,
+                steps: placeholder.steps,
+                timestamp: new Date().toISOString(),
+                isPlaceholder: true,
+                subFindingId: subFindingId,
+                subFindingTitle: placeholder.subFindingTitle || ''
+            };
+            
+            screenshotsList.push(screenshotPlaceholder);
+            renderScreenshots();
+            updateOutput();
+        }
+
+        function renderScreenshots() {
+            const container = document.getElementById('screenshotsContainer');
+            
+            if (screenshotsList.length === 0) {
+                container.innerHTML = '<div class="no-screenshots">No screenshots added yet</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            screenshotsList.forEach((screenshot, index) => {
+                const item = document.createElement('div');
+                item.className = 'screenshot-item';
+                item.dataset.index = index;
+                
+                const fileSize = formatFileSize(screenshot.fileSize);
+                const isPlaceholder = screenshot.isPlaceholder;
+                const isActive = activeScreenshotIndex === index;
+                
+                let itemStyle = '';
+                if (isActive) {
+                    itemStyle = ' style="border-color: #4caf50; border-width: 3px; box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);"';
+                } else if (isPlaceholder) {
+                    itemStyle = ' style="border-color: #ffc107; background: #fff9c4;"';
+                }
+                
+                const placeholderIcon = isPlaceholder ? '🔖 ' : '';
+                const activeIcon = isActive ? '🎯 ' : '';
+                
+                const imageOnClick = isPlaceholder ? `setActiveScreenshot(${index})` : `viewScreenshot('${screenshot.dataUrl.replace(/'/g, "\\'")}')`;
+                const imageCursor = isPlaceholder ? 'pointer' : 'zoom-in';
+                const imageTitle = isPlaceholder ? 'Click to activate for pasting' : 'Click to view full size';
+                
+                item.innerHTML = `
+                    <img src="${screenshot.dataUrl}" 
+                         alt="Screenshot ${screenshot.id}" 
+                         class="screenshot-preview"
+                         onclick="${imageOnClick}"
+                         style="cursor: ${imageCursor};"
+                         title="${imageTitle}">
+                    <div class="screenshot-info"${itemStyle}>
+                        ${isPlaceholder ? '<div style="background: #ffc107; color: white; padding: 5px; margin: -15px -15px 10px -15px; font-size: 0.85rem; text-align: center;">📋 Template Placeholder - Click image to activate for pasting</div>' : ''}
+                        <textarea class="screenshot-caption" 
+                                  placeholder="Enter caption for this screenshot..."
+                                  oninput="updateScreenshotCaption(${index}, this.value)"
+                                  onchange="updateScreenshotCaption(${index}, this.value)">${escapeHtml(screenshot.caption)}</textarea>
+                        
+                        <div class="screenshot-steps" 
+                             contenteditable="true"
+                             onblur="updateScreenshotSteps(${index}, this.textContent)"
+                             oninput="updateScreenshotSteps(${index}, this.textContent)"
+                             data-placeholder="Steps to capture this screenshot...">${escapeHtml(screenshot.steps)}</div>
+                        
+                        <div class="screenshot-actions">
+                            <div class="screenshot-meta">
+                                ${activeIcon}${placeholderIcon}${screenshot.fileName} • ${fileSize}
+                                ${screenshot.subFindingTitle ? '<br><small style="color: #667eea;">📂 ' + escapeHtml(screenshot.subFindingTitle) + '</small>' : ''}
+                                ${isActive ? '<br><small style="color: #4caf50;">🎯 Active - Paste will replace this screenshot</small>' : ''}
+                            </div>
+                            <div>
+                                <button class="screenshot-btn" onclick="viewScreenshot('${screenshot.dataUrl}')">👁️ View</button>
+                                ${isPlaceholder ? '<button class="screenshot-btn" onclick="replaceScreenshot(' + index + ')">🔄 Replace</button>' : ''}
+                                <button class="screenshot-btn ${isActive ? 'active' : ''}" onclick="setActiveScreenshot(${isActive ? 'null' : index})">${isActive ? '✅ Active' : '🎯 Set Active'}</button>
+                                <button class="screenshot-btn delete" onclick="deleteScreenshot(${index})">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        function updateScreenshotCaption(index, caption) {
+            if (screenshotsList[index]) {
+                screenshotsList[index].caption = caption;
+                updateOutput();
+            }
+        }
+
+        function updateScreenshotSteps(index, steps) {
+            if (screenshotsList[index]) {
+                screenshotsList[index].steps = steps;
+            }
+        }
+
+        function replaceScreenshot(index) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    replaceScreenshotWithFile(index, file);
+                }
+            };
+            input.click();
+        }
+
+        function replaceScreenshotWithFile(index, file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Keep the existing caption and steps but replace the image
+                screenshotsList[index] = {
+                    ...screenshotsList[index],
+                    dataUrl: e.target.result,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    isPlaceholder: false
+                };
+                // Clear the active screenshot after replacement
+                activeScreenshotIndex = null;
+                renderScreenshots();
+                updateOutput();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setActiveScreenshot(index) {
+            if (index === null) {
+                activeScreenshotIndex = null;
+            } else {
+                activeScreenshotIndex = index;
+                // Show a brief toast message for feedback
+                showToast(`Screenshot ${index + 1} activated! Paste (Ctrl+V) will replace this screenshot.`);
+            }
+            renderScreenshots();
+        }
+
+        function showToast(message) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4caf50;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 4000;
+                font-size: 0.9rem;
+                opacity: 0;
+                transition: opacity 0.3s;
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Fade in
+            setTimeout(() => toast.style.opacity = '1', 10);
+            
+            // Fade out and remove
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function deleteScreenshot(index) {
+            if (confirm('Delete this screenshot?')) {
+                screenshotsList.splice(index, 1);
+                renderScreenshots();
+                updateOutput();
+            }
+        }
+
+        function viewScreenshot(dataUrl) {
+            const modal = document.getElementById('screenshotModal');
+            const img = document.getElementById('screenshotModalImg');
+            img.src = dataUrl;
+            modal.classList.add('show');
+        }
+
+        function closeScreenshotModal() {
+            document.getElementById('screenshotModal').classList.remove('show');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Template Management
+        let templatesData = null;
+        let selectedTemplate = null;
+        let selectedSubFindings = new Set();
+
+        // Load templates on page load
+        initializeTemplates();
+
+        async function initializeTemplates() {
+            try {
+                // Try to load templates from folder structure first (new method)
+                const response = await fetch('templates/index.json');
+                if (response.ok) {
+                    const templateIndex = await response.json();
+                    if (templateIndex.templates && Array.isArray(templateIndex.templates)) {
+                        // Load all templates from individual files
+                        const loadedTemplates = [];
+                        for (const templateInfo of templateIndex.templates) {
+                            try {
+                                const templateResponse = await fetch(`templates/${templateInfo.filename}`);
+                                if (templateResponse.ok) {
+                                    const template = await templateResponse.json();
+                                    loadedTemplates.push(template);
+                                } else {
+                                    console.warn(`Failed to load template: ${templateInfo.filename}`);
+                                }
+                            } catch (err) {
+                                console.warn(`Error loading template ${templateInfo.filename}:`, err.message);
+                            }
+                        }
+                        
+                        if (loadedTemplates.length > 0) {
+                            templatesData = { templates: loadedTemplates };
+                            populateTemplateSelect();
+                            document.getElementById('templateInfo').textContent = `Loaded ${loadedTemplates.length} templates from templates/ folder`;
+                            return; // Successfully loaded folder-based templates
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load folder-based templates, trying legacy templates.json:', error.message);
+            }
+
+            try {
+                // Fallback to legacy templates.json (backward compatibility)
+                const response = await fetch('templates.json');
+                if (response.ok) {
+                    const jsonData = await response.json();
+                    if (jsonData.templates && Array.isArray(jsonData.templates)) {
+                        templatesData = jsonData;
+                        populateTemplateSelect();
+                        document.getElementById('templateInfo').textContent = `Loaded ${jsonData.templates.length} templates from legacy templates.json`;
+                        return; // Successfully loaded legacy templates
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load legacy templates.json, using built-in templates:', error.message);
+            }
+
+            // Fallback to built-in templates
+            templatesData = {
+                templates: [
+                    {
+                        id: "azure-keyvault-misconfig",
+                        title: "Azure Key Vault Misconfiguration",
+                        category: "Cloud Security",
+                        baseDescription: "LRQA identified a Key Vault with a number of weak configuration settings.",
+                        subFindings: [
+                            {
+                                id: "public-network-access",
+                                title: "Public Network Access Enabled",
+                                cvssScore: 7.5,
+                                cvssVector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                                severity: "High",
+                                description: "LRQA identified an Azure Key Vault which was accessible to all public networks, meaning that if an attacker were to have a valid access token or user account credentials, it would be possible to exfiltrate key data over the internet to any location.\n\nKey Vaults are used to store sensitive information which are used within an organisations Azure environment such as application secret values, encryption keys and signing certificates.",
+                                checkSteps: "1. Navigate to Azure Portal > Key Vaults > [vault-name]\n2. Go to \"Networking\" tab\n3. Check \"Firewalls and virtual networks\" section\n4. Verify current setting (should be \"Private endpoint and selected networks\")\n5. Screenshot: Network configuration showing public access enabled\nPowerShell: Get-AzKeyVault -VaultName [name] | Select NetworkAcls",
+                                recommendation: "Limit key vaults to selected networks and utilise Private endpoint to further lock down Key Vault secret data.",
+                                links: [{ title: "Configure Azure Key Vault Networking", url: "https://docs.microsoft.com/en-us/azure/key-vault/general/network-security" }],
+                                screenshotPlaceholders: [
+                                    {
+                                        caption: "Azure Key Vault Networking configuration showing public access enabled",
+                                        steps: "1. Navigate to Azure Portal > Key Vaults > [vault-name]\n2. Click on 'Networking' in the left menu\n3. Ensure 'Firewalls and virtual networks' section is visible\n4. Highlight the 'All networks' option being selected\n5. Take screenshot showing the misconfiguration"
+                                    }
+                                ]
+                            },
+                            {
+                                id: "soft-delete-disabled",
+                                title: "Soft-Delete Disabled",
+                                cvssScore: 6.5,
+                                cvssVector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+                                severity: "Medium",
+                                description: "Accidental unavailability of a key vault can cause immediate data loss or loss of security functions (authentication, validation, verification, non-repudiation, etc.) supported by the key vault objects.",
+                                checkSteps: "1. Navigate to Key Vault > Properties\n2. Locate \"Soft-delete\" section\n3. Verify \"Enable soft delete\" is OFF\n4. Check \"Enable purge protection\" is OFF\n5. Screenshot: Properties page showing disabled protection settings",
+                                recommendation: "Enable \"Do Not Purge\" and \"Soft Delete\" for a Key Vault on the Azure Portal.",
+                                links: [{ title: "Key Vault Recovery", url: "https://docs.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview" }],
+                                screenshotPlaceholders: [
+                                    {
+                                        caption: "Key Vault Properties showing Soft-delete and Purge protection disabled",
+                                        steps: "1. Navigate to Key Vault > Properties\n2. Scroll to 'Soft-delete' section\n3. Show both 'Enable soft delete' and 'Enable purge protection' are OFF\n4. Take screenshot highlighting these disabled settings"
+                                    }
+                                ]
+                            },
+                            {
+                                id: "insufficient-logging",
+                                title: "Insufficient Diagnostic Logging",
+                                cvssScore: 4.0,
+                                cvssVector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+                                severity: "Medium",
+                                description: "LRQA identified that diagnostic logging was not properly configured for the Key Vault, limiting visibility into access patterns and potential security incidents.",
+                                checkSteps: "1. Navigate to Key Vault > Monitoring > Diagnostic settings\n2. Verify no diagnostic settings exist OR AuditEvent category disabled\n3. Check if logs are sent to appropriate destination",
+                                recommendation: "Configure diagnostic logging with AuditEvent category enabled.",
+                                links: [{ title: "Key Vault Monitoring", url: "https://docs.microsoft.com/en-us/azure/key-vault/general/logging" }],
+                                screenshotPlaceholders: [
+                                    {
+                                        caption: "Key Vault Diagnostic settings showing no configured logging",
+                                        steps: "1. Navigate to Key Vault > Monitoring > Diagnostic settings\n2. Show empty diagnostic settings list or missing AuditEvent category\n3. Highlight the lack of logging configuration\n4. Take screenshot showing the diagnostic settings page"
+                                    }
+                                ]
+                            }
+                        ],
+                        automatedScript: "# Quick Key Vault Security Check\nparam([string]$KeyVaultName)\n$kv = Get-AzKeyVault -VaultName $KeyVaultName\nif ($kv.NetworkAcls.DefaultAction -eq \"Allow\") { Write-Host \"❌ Public access enabled\" -ForegroundColor Red }"
+                    }
+                ]
+            };
+            populateTemplateSelect();
+            document.getElementById('templateInfo').textContent = 'Built-in templates loaded - Load custom JSON file for more options';
+        }
+
+        function loadTemplateFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    if (jsonData.templates && Array.isArray(jsonData.templates)) {
+                        templatesData = jsonData;
+                        populateTemplateSelect();
+                        document.getElementById('templateInfo').textContent = `Loaded ${jsonData.templates.length} templates from ${file.name}`;
+                    } else {
+                        throw new Error('Invalid template format');
+                    }
+                } catch (error) {
+                    alert('Error loading template file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function populateTemplateSelect() {
+            const select = document.getElementById('templateSelect');
+            select.innerHTML = '<option value="">Select a template...</option>';
+            
+            templatesData.templates.forEach((template, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${template.title} (${template.category})`;
+                select.appendChild(option);
+            });
+        }
+
+        function loadTemplate() {
+            const selectIndex = document.getElementById('templateSelect').value;
+            if (!selectIndex) return;
+
+            selectedTemplate = templatesData.templates[selectIndex];
+            selectedSubFindings.clear();
+            
+            // Clear all existing form data when loading new template
+            clearFormData();
+            
+            renderSubFindings();
+            updateTemplateInfo();
+            
+            document.getElementById('subFindingsContainer').style.display = 'block';
+            document.getElementById('templateActions').style.display = 'flex';
+        }
+        
+        function clearFormData() {
+            // Clear main form fields
+            document.getElementById('title').value = '';
+            document.getElementById('cvss').value = '';
+            document.getElementById('cvssVector').value = '';
+            document.getElementById('severity').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('auditSteps').value = '';
+            document.getElementById('automatedScript').value = '';
+            document.getElementById('furtherReading').value = '';
+            document.getElementById('verificationProcedure').value = '';
+            
+            // Clear affected systems
+            componentsList = [];
+            renderComponents();
+            
+            // Clear links
+            linksList = [];
+            renderLinks();
+            
+            // Clear screenshots
+            screenshotsList = [];
+            renderScreenshots();
+            
+            // Clear outputs
+            document.getElementById('markdownOutput').textContent = '';
+            document.getElementById('htmlOutput').textContent = '';
+            
+            // Clear finding summary elements
+            document.getElementById('summaryTitle').textContent = '-';
+            document.getElementById('summaryCvss').textContent = '-';
+            document.getElementById('summarySeverity').textContent = '-';
+            document.getElementById('summaryComponents').textContent = '-';
+            document.getElementById('summaryDescription').textContent = '-';
+            
+            // Clear audit guide display
+            document.getElementById('auditStepsDisplay').innerHTML = 'Select a template or fill in audit steps to see guidance here.';
+            
+            // Trigger severity change to reset color
+            document.getElementById('severity').dispatchEvent(new Event('change'));
+            
+            // Update all outputs
+            updateOutput();
+        }
+
+        function renderSubFindings() {
+            if (!selectedTemplate) return;
+            
+            const container = document.getElementById('subFindingsList');
+            container.innerHTML = '';
+            
+            selectedTemplate.subFindings.forEach((subFinding, index) => {
+                const item = document.createElement('div');
+                item.className = 'sub-finding-item';
+                item.dataset.index = index;
+                
+                const severityClass = getSeverityClass(subFinding.cvssScore);
+                
+                item.innerHTML = `
+                    <div class="sub-finding-header">
+                        <input type="checkbox" class="sub-finding-checkbox" 
+                               onchange="toggleSubFinding(${index})" id="sub-${index}">
+                        <label for="sub-${index}" class="sub-finding-title">${subFinding.title}</label>
+                        <span class="sub-finding-score ${severityClass}">${subFinding.cvssScore}</span>
+                        <span class="expand-toggle" onclick="toggleExpand(${index})">▼</span>
+                    </div>
+                    <div class="sub-finding-description">
+                        <p><strong>Description:</strong> ${subFinding.description.substring(0, 200)}...</p>
+                        <p><strong>Check Steps:</strong> ${subFinding.checkSteps.split('\n')[0]}...</p>
+                        <p><strong>Recommendation:</strong> ${subFinding.recommendation}</p>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        function getSeverityClass(score) {
+            if (score >= 9.0) return 'score-critical';
+            if (score >= 7.0) return 'score-high';
+            if (score >= 4.0) return 'score-medium';
+            return 'score-low';
+        }
+
+        function toggleSubFinding(index) {
+            const checkbox = document.getElementById(`sub-${index}`);
+            const item = checkbox.closest('.sub-finding-item');
+            
+            if (checkbox.checked) {
+                selectedSubFindings.add(index);
+                item.classList.add('selected');
+            } else {
+                selectedSubFindings.delete(index);
+                item.classList.remove('selected');
+            }
+            
+            updateTemplateStats();
+        }
+
+        function toggleExpand(index) {
+            const item = document.querySelector(`[data-index="${index}"]`);
+            const toggle = item.querySelector('.expand-toggle');
+            
+            item.classList.toggle('expanded');
+            toggle.textContent = item.classList.contains('expanded') ? '▲' : '▼';
+        }
+
+        function updateTemplateStats() {
+            const selectedArray = Array.from(selectedSubFindings);
+            const selectedCount = selectedArray.length;
+            
+            if (selectedCount === 0) {
+                document.getElementById('selectedCount').textContent = '0';
+                document.getElementById('highestScore').textContent = '0.0';
+                document.getElementById('avgScore').textContent = '0.0';
+                return;
+            }
+            
+            const scores = selectedArray.map(index => selectedTemplate.subFindings[index].cvssScore);
+            const highestScore = Math.max(...scores);
+            const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+            
+            document.getElementById('selectedCount').textContent = selectedCount;
+            document.getElementById('highestScore').textContent = highestScore.toFixed(1);
+            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
+        }
+
+        function updateTemplateInfo() {
+            if (!selectedTemplate) {
+                document.getElementById('templateInfo').textContent = 'Load a template to get started';
+                return;
+            }
+            
+            document.getElementById('templateInfo').textContent = 
+                `${selectedTemplate.title} - ${selectedTemplate.subFindings.length} sub-findings available`;
+        }
+
+        function clearTemplate() {
+            selectedTemplate = null;
+            selectedSubFindings.clear();
+            document.getElementById('templateSelect').value = '';
+            document.getElementById('subFindingsContainer').style.display = 'none';
+            document.getElementById('templateActions').style.display = 'none';
+            updateTemplateInfo();
+        }
+
+        function applyTemplate() {
+            if (!selectedTemplate || selectedSubFindings.size === 0) {
+                alert('Please select at least one sub-finding');
+                return;
+            }
+            
+            // Apply template to form
+            const selectedArray = Array.from(selectedSubFindings);
+            const selectedFindings = selectedArray.map(index => selectedTemplate.subFindings[index]);
+            
+            // Set title
+            document.getElementById('title').value = selectedTemplate.title;
+            
+            // Calculate overall CVSS score (use highest score)
+            const scores = selectedFindings.map(f => f.cvssScore);
+            const highestScore = Math.max(...scores);
+            const highestScoreFinding = selectedFindings.find(f => f.cvssScore === highestScore);
+            
+            document.getElementById('cvss').value = highestScore.toFixed(1);
+            document.getElementById('cvssVector').value = highestScoreFinding.cvssVector;
+            document.getElementById('severity').value = highestScoreFinding.severity;
+            document.getElementById('severity').dispatchEvent(new Event('change'));
+            
+            // Build description
+            let description = selectedTemplate.baseDescription + '\n\n';
+            selectedFindings.forEach(finding => {
+                description += `#### ${finding.title}\n\n`;
+                description += finding.description + '\n\n';
+            });
+            document.getElementById('description').value = description;
+            
+            // Build audit steps from all selected findings
+            let auditSteps = '## Audit Steps\n\n';
+            selectedFindings.forEach((finding, index) => {
+                if (finding.checkSteps) {
+                    auditSteps += `### ${index + 1}. ${finding.title}\n\n`;
+                    auditSteps += finding.checkSteps + '\n\n';
+                }
+            });
+            document.getElementById('auditSteps').value = auditSteps;
+            
+            // Build automated script from template
+            let automatedScript = '';
+            if (selectedTemplate.automatedScript) {
+                automatedScript = selectedTemplate.automatedScript;
+            }
+            document.getElementById('automatedScript').value = automatedScript;
+            
+            // Build recommendations
+            let recommendations = '## LRQA Recommends\n\n';
+            selectedFindings.forEach((finding, index) => {
+                recommendations += `${index + 1}. ${finding.recommendation}\n`;
+            });
+            
+            document.getElementById('furtherReading').value = recommendations;
+            
+            // Build verification procedures
+            let verificationProcedures = '';
+            selectedFindings.forEach((finding, index) => {
+                if (finding.verificationProcedure) {
+                    if (verificationProcedures) verificationProcedures += '\n\n';
+                    verificationProcedures += `## ${finding.title} - Verification Steps\n\n`;
+                    verificationProcedures += finding.verificationProcedure;
+                }
+            });
+            
+            document.getElementById('verificationProcedure').value = verificationProcedures;
+            
+            // Collect all links
+            linksList = [];
+            selectedFindings.forEach(finding => {
+                if (finding.links && finding.links.length > 0) {
+                    finding.links.forEach(link => {
+                        linksList.push(link);
+                    });
+                }
+            });
+            renderLinks();
+
+            // Add screenshot placeholders
+            selectedFindings.forEach(finding => {
+                if (finding.screenshotPlaceholders && finding.screenshotPlaceholders.length > 0) {
+                    finding.screenshotPlaceholders.forEach(placeholder => {
+                        addScreenshotPlaceholder({
+                            ...placeholder,
+                            subFindingTitle: finding.title
+                        }, finding.id);
+                    });
+                }
+            });
+            
+            // Update output
+            updateOutput();
+            
+            alert(`Template applied! ${selectedFindings.length} sub-findings merged with ${screenshotsList.length} screenshot placeholders.`);
+        }
+
+        function parseLinks() {
+            const pasteContent = document.getElementById('linksPaste').value.trim();
+            if (!pasteContent) return;
+
+            const lines = pasteContent.split('\n');
+            const parsedLinks = [];
+            
+            // Process lines, looking for title-URL pairs
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                // Skip empty lines
+                if (!line) continue;
+
+                let title = '';
+                let url = '';
+
+                // Pattern 1: [Title](URL) - Markdown format
+                const markdownMatch = line.match(/\[([^\]]+)\]\(([^)]+)\)/);
+                if (markdownMatch) {
+                    title = markdownMatch[1].trim();
+                    url = markdownMatch[2].trim();
+                }
+                // Pattern 2: Bullet point with title - URL (e.g., "- Key Vault Monitoring - https://...")
+                else if (line.match(/^[-•*]\s+.+\s+[-–—]\s+https?:\/\//)) {
+                    const bulletMatch = line.match(/^[-•*]\s+(.+)\s+[-–—]\s+(https?:\/\/.+)/);
+                    if (bulletMatch) {
+                        title = bulletMatch[1].trim();
+                        url = bulletMatch[2].trim();
+                    }
+                }
+                // Pattern 3: Title followed by URL with various separators
+                else if (line.match(/.+\s+https?:\/\//)) {
+                    // Find where the URL starts
+                    const urlStartIndex = line.search(/https?:\/\//);
+                    if (urlStartIndex > 0) {
+                        title = line.substring(0, urlStartIndex).trim();
+                        url = line.substring(urlStartIndex).trim();
+                        // Remove common separators from end of title
+                        title = title.replace(/[-–—:,]\s*$/, '').trim();
+                    }
+                }
+                // Pattern 4: Just a URL on its own line
+                else if (line.match(/^https?:\/\//)) {
+                    url = line;
+                    
+                    // Check if previous line might be the title
+                    if (i > 0) {
+                        const prevLine = lines[i - 1].trim();
+                        // If previous line doesn't contain a URL and isn't empty, it might be a title
+                        if (prevLine && !prevLine.match(/https?:\/\//)) {
+                            // Check if we already processed the previous line
+                            const lastParsedLink = parsedLinks[parsedLinks.length - 1];
+                            if (lastParsedLink && lastParsedLink.title === prevLine && !lastParsedLink.url) {
+                                // Update the previous entry with this URL
+                                parsedLinks[parsedLinks.length - 1].url = url;
+                                continue;
+                            }
+                        }
+                    }
+                    
+                    // Try to extract a meaningful title from the URL
+                    try {
+                        const urlObj = new URL(url);
+                        const hostname = urlObj.hostname.replace('www.', '');
+                        
+                        // Special handling for known documentation sites
+                        if (hostname.includes('docs.microsoft.com') || hostname.includes('learn.microsoft.com')) {
+                            // Extract from path segments
+                            const pathParts = urlObj.pathname.split('/').filter(p => p && p !== 'en-us');
+                            if (pathParts.length >= 2) {
+                                // Format: service/category/topic
+                                title = pathParts.slice(-2).map(p => 
+                                    p.split('-').map(word => 
+                                        word.charAt(0).toUpperCase() + word.slice(1)
+                                    ).join(' ')
+                                ).join(' - ');
+                            }
+                        } else {
+                            // Generic title extraction
+                            title = hostname;
+                            if (urlObj.pathname && urlObj.pathname !== '/') {
+                                const pathParts = urlObj.pathname.split('/').filter(p => p);
+                                if (pathParts.length > 0) {
+                                    const lastPart = pathParts[pathParts.length - 1]
+                                        .replace(/[-_]/g, ' ')
+                                        .replace(/\.\w+$/, ''); // Remove file extensions
+                                    if (lastPart) {
+                                        title = lastPart.split(' ').map(word => 
+                                            word.charAt(0).toUpperCase() + word.slice(1)
+                                        ).join(' ');
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        title = 'Link';
+                    }
+                }
+                // Pattern 5: Line without URL (might be a title for next line)
+                else {
+                    // This might be a title without URL, or a title where URL is on next line
+                    title = line;
+                    // Remove common bullet points and list markers
+                    title = title.replace(/^[-•*]\s*/, '').trim();
+                    
+                    // Look ahead to see if next line is a URL
+                    if (i + 1 < lines.length) {
+                        const nextLine = lines[i + 1].trim();
+                        if (nextLine.match(/^https?:\/\//)) {
+                            // Next line is a URL, so this is a title
+                            url = nextLine;
+                            i++; // Skip the next line since we've processed it
+                        }
+                    }
+                }
+
+                // Clean up title and URL
+                if (title) {
+                    title = title.replace(/^[-•*]\s*/, '').trim();
+                }
+                if (url) {
+                    url = url.replace(/[,;]$/, '').trim();
+                }
+
+                // Only add if we have at least a title or URL
+                if (title || url) {
+                    parsedLinks.push({ 
+                        title: title || (url ? 'Untitled Link' : 'Note'), 
+                        url: url || '' 
+                    });
+                }
+            }
+
+            // Add parsed links to the list
+            parsedLinks.forEach(link => {
+                linksList.push(link);
+            });
+
+            // Clear paste area
+            document.getElementById('linksPaste').value = '';
+
+            // Refresh display
+            renderLinks();
+            updateOutput();
+        }
+
+        function renderLinks() {
+            const container = document.getElementById('linksContainer');
+            
+            if (linksList.length === 0) {
+                container.innerHTML = '<div class="no-links-message">No links added yet</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            linksList.forEach((link, index) => {
+                const linkItem = document.createElement('div');
+                linkItem.className = 'link-item';
+                linkItem.dataset.index = index;
+
+                if (editingLinkIndex === index) {
+                    // Edit mode
+                    linkItem.innerHTML = `
+                        <div class="link-inputs">
+                            <input type="text" class="link-title-input" value="${escapeHtml(link.title)}" placeholder="Title">
+                            <input type="text" class="link-url-input" value="${escapeHtml(link.url)}" placeholder="URL">
+                        </div>
+                        <div class="link-actions">
+                            <button class="link-btn save" onclick="saveLink(${index})">✓</button>
+                            <button class="link-btn" onclick="cancelEdit()">✗</button>
+                        </div>
+                    `;
+                } else {
+                    // Display mode
+                    linkItem.innerHTML = `
+                        <div class="link-display">
+                            <div class="link-display-title">${escapeHtml(link.title)}</div>
+                            ${link.url ? `<div class="link-display-url">${escapeHtml(link.url)}</div>` : '<div class="link-display-url" style="color: #999;">No URL</div>'}
+                        </div>
+                        <div class="link-actions">
+                            <button class="link-btn" onclick="editLink(${index})">✏️</button>
+                            <button class="link-btn delete" onclick="deleteLink(${index})">🗑️</button>
+                        </div>
+                    `;
+                }
+
+                container.appendChild(linkItem);
+            });
+        }
+
+        function editLink(index) {
+            editingLinkIndex = index;
+            renderLinks();
+        }
+
+        function saveLink(index) {
+            const linkItem = document.querySelector(`[data-index="${index}"]`);
+            const titleInput = linkItem.querySelector('.link-title-input');
+            const urlInput = linkItem.querySelector('.link-url-input');
+
+            linksList[index] = {
+                title: titleInput.value.trim() || 'Untitled Link',
+                url: urlInput.value.trim()
+            };
+
+            editingLinkIndex = null;
+            renderLinks();
+            updateOutput();
+        }
+
+        function cancelEdit() {
+            editingLinkIndex = null;
+            renderLinks();
+        }
+
+        function deleteLink(index) {
+            if (confirm('Delete this link?')) {
+                linksList.splice(index, 1);
+                renderLinks();
+                updateOutput();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // CVSS Calculator Functions
+        let cvssMetrics = {
+            AV: null, AC: null, PR: null, UI: null,
+            S: null, C: null, I: null, A: null
+        };
+
+        function openCVSSCalculator() {
+            document.getElementById('cvssModal').classList.add('show');
+            // Try to parse existing vector if present
+            const existingVector = document.getElementById('cvssVector').value;
+            if (existingVector) {
+                document.getElementById('vectorInput').value = existingVector;
+                parseVector();
+            }
+        }
+
+        function closeCVSSCalculator() {
+            document.getElementById('cvssModal').classList.remove('show');
+        }
+
+        function selectMetric(button) {
+            const metric = button.dataset.metric;
+            const value = button.dataset.value;
+            
+            // Clear other selections for this metric
+            document.querySelectorAll(`[data-metric="${metric}"]`).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Select this button
+            button.classList.add('selected');
+            
+            // Update metrics
+            cvssMetrics[metric] = value;
+            
+            // Calculate score
+            calculateCVSS();
+        }
+
+        function parseVector() {
+            const vectorInput = document.getElementById('vectorInput').value.trim();
+            
+            if (!vectorInput.startsWith('CVSS:3.1/')) {
+                alert('Invalid CVSS vector format. Must start with CVSS:3.1/');
+                return;
+            }
+            
+            // Reset all selections
+            document.querySelectorAll('.cvss-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Parse vector
+            const parts = vectorInput.substring(9).split('/');
+            parts.forEach(part => {
+                const [metric, value] = part.split(':');
+                if (metric && value && cvssMetrics.hasOwnProperty(metric)) {
+                    cvssMetrics[metric] = value;
+                    // Select the button
+                    const button = document.querySelector(`[data-metric="${metric}"][data-value="${value}"]`);
+                    if (button) {
+                        button.classList.add('selected');
+                    }
+                }
+            });
+            
+            calculateCVSS();
+        }
+
+        function calculateCVSS() {
+            // Check if all metrics are selected
+            const allSelected = Object.values(cvssMetrics).every(v => v !== null);
+            
+            if (!allSelected) {
+                document.getElementById('calculatedScore').textContent = '0.0';
+                document.getElementById('calculatedSeverity').textContent = 'Incomplete';
+                document.getElementById('vectorString').textContent = generateVectorString();
+                return;
+            }
+            
+            // CVSS 3.1 calculation implementation
+            const weights = {
+                AV: { N: 0.85, A: 0.62, L: 0.55, P: 0.2 },
+                AC: { L: 0.77, H: 0.44 },
+                PR: { 
+                    U: { N: 0.85, L: 0.62, H: 0.27 },
+                    C: { N: 0.85, L: 0.68, H: 0.5 }
+                },
+                UI: { N: 0.85, R: 0.62 },
+                S: { U: 1.0, C: 1.0 },
+                C: { N: 0, L: 0.22, H: 0.56 },
+                I: { N: 0, L: 0.22, H: 0.56 },
+                A: { N: 0, L: 0.22, H: 0.56 }
+            };
+            
+            const scopeUnchanged = cvssMetrics.S === 'U';
+            const prWeight = scopeUnchanged ? weights.PR.U[cvssMetrics.PR] : weights.PR.C[cvssMetrics.PR];
+            
+            // Calculate ISS (Impact Sub Score)
+            const iss = 1 - ((1 - weights.C[cvssMetrics.C]) * (1 - weights.I[cvssMetrics.I]) * (1 - weights.A[cvssMetrics.A]));
+            
+            let impact;
+            if (scopeUnchanged) {
+                impact = 6.42 * iss;
+            } else {
+                impact = 7.52 * (iss - 0.029) - 3.25 * Math.pow(iss - 0.02, 15);
+            }
+            
+            // Calculate Exploitability
+            const exploitability = 8.22 * weights.AV[cvssMetrics.AV] * weights.AC[cvssMetrics.AC] * prWeight * weights.UI[cvssMetrics.UI];
+            
+            // Calculate Base Score
+            let score;
+            if (impact <= 0) {
+                score = 0;
+            } else {
+                if (scopeUnchanged) {
+                    score = Math.min(impact + exploitability, 10);
+                } else {
+                    score = Math.min(1.08 * (impact + exploitability), 10);
+                }
+            }
+            
+            // Round to 1 decimal place
+            score = Math.round(score * 10) / 10;
+            
+            // Determine severity
+            let severity;
+            let severityColor;
+            if (score === 0) {
+                severity = 'None';
+                severityColor = '#4caf50';
+            } else if (score <= 3.9) {
+                severity = 'Low';
+                severityColor = '#4caf50';
+            } else if (score <= 6.9) {
+                severity = 'Medium';
+                severityColor = '#ffc107';
+            } else if (score <= 8.9) {
+                severity = 'High';
+                severityColor = '#ff9800';
+            } else {
+                severity = 'Critical';
+                severityColor = '#f44336';
+            }
+            
+            // Update display
+            document.getElementById('calculatedScore').textContent = score.toFixed(1);
+            const severityBadge = document.getElementById('calculatedSeverity');
+            severityBadge.textContent = severity;
+            severityBadge.style.background = severityColor;
+            severityBadge.style.color = severity === 'Medium' ? '#333' : 'white';
+            
+            document.getElementById('vectorString').textContent = generateVectorString();
+        }
+
+        function generateVectorString() {
+            const metrics = ['AV', 'AC', 'PR', 'UI', 'S', 'C', 'I', 'A'];
+            const parts = metrics.map(m => `${m}:${cvssMetrics[m] || '_'}`);
+            return `CVSS:3.1/${parts.join('/')}`;
+        }
+
+        function applyCVSSScore() {
+            const score = document.getElementById('calculatedScore').textContent;
+            const vectorString = document.getElementById('vectorString').textContent;
+            const severity = document.getElementById('calculatedSeverity').textContent;
+            
+            // Only apply if complete
+            if (!vectorString.includes('_')) {
+                document.getElementById('cvss').value = score;
+                document.getElementById('cvssVector').value = vectorString;
+                
+                // Update severity dropdown if it matches
+                const severitySelect = document.getElementById('severity');
+                const severityMap = {
+                    'None': 'Informational',
+                    'Low': 'Low',
+                    'Medium': 'Medium',
+                    'High': 'High',
+                    'Critical': 'Critical'
+                };
+                
+                if (severityMap[severity]) {
+                    severitySelect.value = severityMap[severity];
+                    severitySelect.dispatchEvent(new Event('change'));
+                }
+                
+                closeCVSSCalculator();
+                updateOutput();
+            } else {
+                alert('Please complete all metrics before applying.');
+            }
+        }
+
+        function resetCalculator() {
+            cvssMetrics = {
+                AV: null, AC: null, PR: null, UI: null,
+                S: null, C: null, I: null, A: null
+            };
+            
+            document.querySelectorAll('.cvss-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            document.getElementById('vectorInput').value = '';
+            calculateCVSS();
+        }
+
+        // Parse CVSS vector when it changes in main form
+        document.getElementById('cvssVector').addEventListener('input', function() {
+            const vector = this.value.trim();
+            if (vector && vector.startsWith('CVSS:3.1/')) {
+                // Parse and calculate score
+                const tempMetrics = { ...cvssMetrics };
+                const parts = vector.substring(9).split('/');
+                let valid = true;
+                
+                parts.forEach(part => {
+                    const [metric, value] = part.split(':');
+                    if (metric && value && cvssMetrics.hasOwnProperty(metric)) {
+                        tempMetrics[metric] = value;
+                    } else {
+                        valid = false;
+                    }
+                });
+                
+                if (valid && Object.values(tempMetrics).every(v => v !== null)) {
+                    cvssMetrics = tempMetrics;
+                    calculateCVSS();
+                    const score = document.getElementById('calculatedScore').textContent;
+                    document.getElementById('cvss').value = score;
+                }
+            }
+            updateOutput();
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('cvssModal')) {
+                closeCVSSCalculator();
+            }
+        }
+    </script>
+</body>
+</html>

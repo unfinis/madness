@@ -1,0 +1,299 @@
+{
+  "id": "azure-storage-account-misconfig",
+  "title": "Azure Storage Account Security Misconfigurations",
+  "category": "Cloud Storage Security",
+  "baseDescription": "LRQA identified multiple security misconfigurations in Azure Storage Account that could lead to unauthorized data access, data exposure, and potential compromise of stored information.",
+  "subFindings": [
+    {
+      "id": "public-blob-access",
+      "title": "Blob Containers Allow Public Access",
+      "cvssScore": 8.6,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L",
+      "severity": "High",
+      "description": "Storage account blob containers are configured to allow public access, potentially exposing sensitive data to unauthorized users on the internet. Public blob access allows anyone with knowledge of the blob URL to access stored data without authentication.\n\nMisconfigured public access settings have resulted in numerous data breaches, including the October 2022 incident where a misconfiguration exposed personal data of over 548,000 users. Attackers actively scan for publicly accessible storage endpoints to steal credentials and sensitive information.",
+      "checkSteps": "1. Navigate to Storage Account > Data management > Containers\n2. Check each container's 'Public access level'\n3. Look for 'Blob (anonymous read access for blobs only)' or 'Container (anonymous read access for containers and blobs)'\n4. Test public access by opening blob URLs in incognito browser\n5. Check storage account level public access setting\n6. Review container naming conventions for predictability\nPowerShell: Get-AzStorageContainer -Context (Get-AzStorageAccount -ResourceGroupName [rg] -Name [name]).Context | Select Name, PublicAccess",
+      "recommendation": "Disable public blob access at the storage account level and use private endpoints or SAS tokens for controlled access.",
+      "verificationProcedure": "1. Navigate to Storage Account > Configuration\n2. Verify 'Allow Blob public access' is set to Disabled\n3. Check all containers show 'Private (no anonymous access)'\n4. Test that blob URLs return 404 or authentication required\n5. Verify SAS tokens or private endpoints are used for legitimate access\n6. Document access control strategy and approved public containers (if any)\n7. Implement monitoring for public access changes\n8. Test applications still function with private access",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage account containers showing public access enabled",
+          "steps": "1. Navigate to Storage Account > Containers\n2. Screenshot showing containers with 'Blob' or 'Container' public access level\n3. Highlight the public access configuration"
+        },
+        {
+          "caption": "Public blob accessible via direct URL without authentication",
+          "steps": "1. Copy blob URL from storage account\n2. Open in incognito browser window\n3. Screenshot showing successful access to sensitive data"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure anonymous public read access for containers and blobs",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure"
+        },
+        {
+          "title": "Prevent anonymous public read access to containers and blobs",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-prevent"
+        }
+      ]
+    },
+    {
+      "id": "no-customer-managed-keys",
+      "title": "Storage Encryption Uses Service-Managed Keys",
+      "cvssScore": 6.0,
+      "cvssVector": "CVSS:3.1/AV:P/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "Medium",
+      "description": "The Storage Account uses Microsoft-managed keys for encryption instead of customer-managed keys (CMK), limiting organizational control over encryption key lifecycle and access. While data is encrypted at rest, the organization cannot control key rotation, access revocation, or meet specific compliance requirements for key management.\n\nCustomer-managed keys provide enhanced security by allowing organizations to control encryption keys through Azure Key Vault, enabling key rotation policies, access controls, and the ability to revoke access to encrypted data.",
+      "checkSteps": "1. Navigate to Storage Account > Encryption\n2. Check 'Encryption type' - look for 'Microsoft-managed keys (MMK)'\n3. Verify if Key Vault integration is not configured\n4. Review compliance requirements for encryption key management\n5. Check if automatic key rotation is available\n6. Review data classification and encryption requirements\nPowerShell: Get-AzStorageAccount -ResourceGroupName [rg] -Name [name] | Select Name, @{N='EncryptionKeySource';E={$_.Encryption.KeySource}}",
+      "recommendation": "Configure customer-managed keys using Azure Key Vault for enhanced control over encryption key lifecycle and compliance requirements.",
+      "verificationProcedure": "1. Navigate to Storage Account > Encryption\n2. Verify 'Customer-managed keys (CMK)' is selected\n3. Verify Key Vault and managed identity are configured\n4. Test key rotation capability\n5. Verify backup and recovery procedures for keys\n6. Test that storage account becomes inaccessible if key access is revoked\n7. Document key management procedures\n8. Verify all storage services (Blob, File, Queue, Table) use CMK",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage Account encryption showing Microsoft-managed keys",
+          "steps": "1. Navigate to Storage Account > Encryption\n2. Screenshot showing 'Microsoft-managed keys (MMK)' selected\n3. Show empty Key Vault configuration"
+        },
+        {
+          "caption": "Key Vault not configured for storage encryption",
+          "steps": "1. Show encryption configuration without Key Vault integration\n2. Screenshot demonstrating no customer key management"
+        }
+      ],
+      "links": [
+        {
+          "title": "Customer-managed keys for Azure Storage encryption",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/customer-managed-keys-overview"
+        },
+        {
+          "title": "Configure customer-managed keys for a new storage account",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/customer-managed-keys-configure-new-account"
+        }
+      ]
+    },
+    {
+      "id": "no-network-restrictions",
+      "title": "Storage Account Accessible from All Networks",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "The Storage Account allows access from all networks without firewall restrictions or private endpoints, exposing data to potential unauthorized access from any internet location. Network-level controls are essential for preventing data exfiltration and unauthorized access attempts.\n\nWithout network restrictions, the storage account is accessible worldwide, making it vulnerable to brute force attacks, reconnaissance, and data theft if credentials are compromised or misconfigured.",
+      "checkSteps": "1. Navigate to Storage Account > Networking\n2. Check 'Firewalls and virtual networks' settings\n3. Verify if 'Enabled from all networks' is selected\n4. Check for absence of private endpoints\n5. Review IP address restrictions (should show 'Allow access from all networks')\n6. Test access from external networks\n7. Check service endpoints configuration\nPowerShell: Get-AzStorageAccountNetworkRuleSet -ResourceGroupName [rg] -Name [name] | Select DefaultAction, IpRules, VirtualNetworkRules",
+      "recommendation": "Configure storage account firewall to allow access only from trusted networks and implement private endpoints for secure connectivity.",
+      "verificationProcedure": "1. Navigate to Storage Account > Networking\n2. Verify 'Enabled from selected virtual networks and IP addresses' is selected\n3. Verify private endpoints are configured for critical access\n4. Test access from unauthorized networks - should be blocked\n5. Test access from authorized networks/VNets - should succeed\n6. Verify private endpoint DNS resolution\n7. Document network architecture and access patterns\n8. Test failover scenarios with network restrictions",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage Account networking showing access from all networks",
+          "steps": "1. Navigate to Storage Account > Networking\n2. Screenshot showing 'Enabled from all networks' selected\n3. Show empty firewall rules and no private endpoints"
+        },
+        {
+          "caption": "Successful external access to storage account",
+          "steps": "1. Access storage account from external network or public internet\n2. Screenshot showing successful connection without restrictions"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure Azure Storage firewalls and virtual networks",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security"
+        },
+        {
+          "title": "Use private endpoints for Azure Storage",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-private-endpoints"
+        }
+      ]
+    },
+    {
+      "id": "soft-delete-disabled",
+      "title": "Soft Delete Not Enabled for Blobs and Containers",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:L",
+      "severity": "Medium",
+      "description": "Soft delete protection is not enabled for blobs and containers, meaning deleted data is immediately and permanently removed without any recovery option. This configuration increases the risk of permanent data loss due to accidental deletion, malicious activity, or application errors.\n\nWithout soft delete, there is no protection against permanent data loss scenarios, and organizations cannot recover from accidental deletions, ransomware attacks, or malicious insider actions.",
+      "checkSteps": "1. Navigate to Storage Account > Data management > Data protection\n2. Check 'Soft delete for blobs' - verify if disabled\n3. Check 'Soft delete for containers' - verify if disabled\n4. Review retention period settings if enabled\n5. Check versioning and point-in-time restore settings\n6. Test blob deletion to verify immediate permanent removal\nPowerShell: Get-AzStorageBlobServiceProperty -ResourceGroupName [rg] -StorageAccountName [name] | Select DeleteRetentionPolicy",
+      "recommendation": "Enable soft delete for both blobs and containers with appropriate retention periods based on business requirements and compliance needs.",
+      "verificationProcedure": "1. Navigate to Storage Account > Data protection\n2. Verify 'Soft delete for blobs' is enabled with appropriate retention period\n3. Verify 'Soft delete for containers' is enabled\n4. Test blob deletion - should move to soft-deleted state\n5. Test blob recovery from soft-deleted state\n6. Verify retention period meets business and compliance requirements\n7. Test container deletion and recovery\n8. Document data protection and recovery procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Data protection settings showing soft delete disabled",
+          "steps": "1. Navigate to Storage Account > Data protection\n2. Screenshot showing 'Soft delete for blobs' and 'Soft delete for containers' as disabled"
+        },
+        {
+          "caption": "Blob permanently deleted without recovery option",
+          "steps": "1. Delete a test blob from storage\n2. Screenshot showing blob is permanently removed with no recovery option"
+        }
+      ],
+      "links": [
+        {
+          "title": "Soft delete for blobs",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/soft-delete-blob-overview"
+        },
+        {
+          "title": "Enable and manage soft delete for containers",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/soft-delete-container-enable"
+        }
+      ]
+    },
+    {
+      "id": "insecure-transfer-allowed",
+      "title": "Insecure Transfer (HTTP) Allowed",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "Medium",
+      "description": "The Storage Account allows insecure HTTP connections instead of requiring HTTPS for all data transfers. HTTP connections transmit data in plaintext, making it vulnerable to interception, man-in-the-middle attacks, and data theft during transit.\n\nUnencrypted HTTP traffic can expose sensitive data, authentication tokens, and storage keys to network sniffing and interception attacks, potentially leading to data breaches and unauthorized access.",
+      "checkSteps": "1. Navigate to Storage Account > Configuration\n2. Check 'Secure transfer required' setting\n3. Verify if set to 'Disabled'\n4. Test HTTP connections to storage endpoints\n5. Check minimum TLS version requirements\n6. Review application connections for HTTP usage\nPowerShell: Get-AzStorageAccount -ResourceGroupName [rg] -Name [name] | Select StorageAccountName, EnableHttpsTrafficOnly",
+      "recommendation": "Enable 'Secure transfer required' to enforce HTTPS for all connections and set minimum TLS version to 1.2 or higher.",
+      "verificationProcedure": "1. Navigate to Storage Account > Configuration\n2. Verify 'Secure transfer required' is set to Enabled\n3. Verify 'Minimum TLS version' is 1.2 or higher\n4. Test HTTP connections - should be rejected\n5. Test HTTPS connections - should succeed\n6. Verify all applications use HTTPS endpoints\n7. Update application configurations if needed\n8. Monitor for any HTTP connection attempts",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage Account configuration showing secure transfer disabled",
+          "steps": "1. Navigate to Storage Account > Configuration\n2. Screenshot showing 'Secure transfer required' set to Disabled"
+        },
+        {
+          "caption": "Successful HTTP connection to storage account",
+          "steps": "1. Test HTTP connection to storage endpoint\n2. Screenshot showing successful unencrypted connection"
+        }
+      ],
+      "links": [
+        {
+          "title": "Require secure transfer in Azure Storage",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer"
+        },
+        {
+          "title": "Configure Transport Layer Security (TLS) for Azure Storage",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version"
+        }
+      ]
+    },
+    {
+      "id": "blob-versioning-disabled",
+      "title": "Blob Versioning and Point-in-Time Restore Not Configured",
+      "cvssScore": 4.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L",
+      "severity": "Medium",
+      "description": "Blob versioning and point-in-time restore are not enabled, limiting the ability to recover from data corruption, accidental modifications, or ransomware attacks. These features provide comprehensive data protection by maintaining previous versions and enabling recovery to specific points in time.\n\nWithout versioning and point-in-time restore, organizations cannot recover from scenarios where data is modified or corrupted maliciously or accidentally, and may face significant data loss during security incidents.",
+      "checkSteps": "1. Navigate to Storage Account > Data protection\n2. Check 'Versioning for blobs' - verify if disabled\n3. Check 'Point-in-time restore for containers' - verify if disabled\n4. Review change feed settings\n5. Check backup and recovery capabilities\n6. Review data retention requirements\nPowerShell: Get-AzStorageBlobServiceProperty -ResourceGroupName [rg] -StorageAccountName [name] | Select IsVersioningEnabled, RestorePolicy",
+      "recommendation": "Enable blob versioning and configure point-in-time restore with appropriate retention periods to protect against data loss and corruption.",
+      "verificationProcedure": "1. Navigate to Storage Account > Data protection\n2. Verify 'Versioning for blobs' is enabled\n3. Verify 'Point-in-time restore for containers' is enabled with appropriate retention\n4. Test blob modification - verify previous versions are retained\n5. Test point-in-time restore functionality\n6. Verify change feed is enabled for audit trail\n7. Document recovery procedures and retention policies\n8. Test restore scenarios including ransomware recovery",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Data protection showing versioning and restore disabled",
+          "steps": "1. Navigate to Storage Account > Data protection\n2. Screenshot showing 'Versioning for blobs' and 'Point-in-time restore' disabled"
+        },
+        {
+          "caption": "Blob modification without version history",
+          "steps": "1. Modify a blob in storage account\n2. Screenshot showing no version history available for recovery"
+        }
+      ],
+      "links": [
+        {
+          "title": "Blob versioning",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/versioning-overview"
+        },
+        {
+          "title": "Point-in-time restore for block blobs",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/point-in-time-restore-overview"
+        }
+      ]
+    },
+    {
+      "id": "no-immutable-storage",
+      "title": "Immutable Storage (WORM) Not Configured for Compliance Data",
+      "cvssScore": 5.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+      "severity": "Medium",
+      "description": "Immutable storage policies (WORM - Write Once, Read Many) are not configured for containers storing compliance-critical data, preventing protection against data tampering and meeting regulatory requirements. Organizations subject to regulations like SEC 17a-4(f), FINRA, or CFTC may require immutable storage.\n\nWithout immutable storage, critical business and compliance data can be modified or deleted, potentially violating regulatory requirements and compromising data integrity for legal, financial, or audit purposes.",
+      "checkSteps": "1. Navigate to Storage Account > Containers\n2. Select containers with compliance data\n3. Check 'Access policy' for immutability policies\n4. Verify if time-based retention or legal hold policies exist\n5. Review regulatory compliance requirements\n6. Check for version-level WORM configuration\n7. Identify containers requiring immutable storage\nPowerShell: Get-AzStorageContainer -Context (Get-AzStorageAccount -ResourceGroupName [rg] -Name [name]).Context | Get-AzStorageContainerStoredAccessPolicy",
+      "recommendation": "Configure immutable storage policies for compliance-critical containers using time-based retention and legal hold policies as required.",
+      "verificationProcedure": "1. Identify containers requiring WORM compliance\n2. Navigate to container > Access policy\n3. Verify immutability policies are configured appropriately\n4. Test that data cannot be modified or deleted during retention period\n5. Verify legal hold functionality if required\n6. Test policy changes require appropriate permissions\n7. Document immutability strategy and retention periods\n8. Verify compliance with relevant regulations (SEC, FINRA, etc.)",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Container showing no immutability policies configured",
+          "steps": "1. Navigate to container > Access policy\n2. Screenshot showing empty immutability policy settings\n3. Show compliance data without WORM protection"
+        },
+        {
+          "caption": "Compliance data that can be modified without restrictions",
+          "steps": "1. Access container with compliance-critical data\n2. Screenshot showing data can be modified or deleted\n3. Demonstrate lack of immutable protection"
+        }
+      ],
+      "links": [
+        {
+          "title": "Overview of immutable storage for blob data",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-storage-overview"
+        },
+        {
+          "title": "Container-level WORM policies for immutable blob data",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-container-level-worm-policies"
+        }
+      ]
+    },
+    {
+      "id": "weak-tls-version",
+      "title": "Minimum TLS Version Below 1.2",
+      "cvssScore": 6.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "The Storage Account minimum TLS version is set below TLS 1.2, allowing clients to connect using older, less secure TLS versions such as TLS 1.0 or 1.1. These older protocols have known vulnerabilities and are deprecated by security standards.\n\nTLS 1.0 and 1.1 are vulnerable to various attacks including BEAST, CRIME, and BREACH. Modern security frameworks and compliance standards require TLS 1.2 as the minimum acceptable version for secure communications.",
+      "checkSteps": "1. Navigate to Storage Account > Configuration\n2. Check 'Minimum TLS version' setting\n3. Verify if it's set to TLS 1.0, TLS 1.1 (vulnerable) or TLS 1.2+ (secure)\n4. Test client connections with different TLS versions\n5. Review application compatibility with TLS 1.2\n6. Screenshot: Configuration showing weak TLS version\nPowerShell: Get-AzStorageAccount -ResourceGroupName [rg] -Name [name] | Select MinimumTlsVersion",
+      "recommendation": "Set the minimum TLS version to 1.2 or higher to ensure secure communications and prevent downgrade attacks.",
+      "verificationProcedure": "1. Navigate to Storage Account > Configuration\n2. Verify 'Minimum TLS version' is set to TLS 1.2 or higher\n3. Test that TLS 1.0/1.1 connections are rejected\n4. Verify applications can connect using TLS 1.2\n5. Monitor connection logs for TLS version usage\n6. Document any applications requiring TLS version upgrades\n7. Test failover scenarios with TLS 1.2 requirement",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage Account configuration showing weak TLS version",
+          "steps": "1. Navigate to Storage Account > Configuration\n2. Screenshot showing 'Minimum TLS version' set to TLS 1.0 or 1.1\n3. Highlight the security risk of weak TLS versions"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure Transport Layer Security (TLS) for Storage Account",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version"
+        }
+      ]
+    },
+    {
+      "id": "cross-tenant-replication-enabled",
+      "title": "Cross-Tenant Replication Enabled",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "Cross-tenant replication is enabled, allowing data to be replicated to storage accounts in different Azure Active Directory tenants. This capability increases the risk of unauthorized data access if external tenant credentials are compromised or if replication is misconfigured.\n\nCross-tenant replication can lead to data exfiltration scenarios where sensitive organizational data could be copied to storage accounts under the control of external entities, potentially violating data residency and compliance requirements.",
+      "checkSteps": "1. Navigate to Storage Account > Object replication\n2. Check for replication policies involving external tenants\n3. Review 'Allow cross-tenant replication' setting\n4. Identify any active cross-tenant replication policies\n5. Verify destination storage accounts belong to same organization\n6. Screenshot: Object replication showing cross-tenant policies\nPowerShell: Get-AzStorageAccount -ResourceGroupName [rg] -Name [name] | Select AllowCrossTenantReplication",
+      "recommendation": "Disable cross-tenant replication unless specifically required for legitimate business purposes, and implement strict governance controls for any cross-tenant data sharing.",
+      "verificationProcedure": "1. Navigate to Storage Account > Object replication\n2. Verify 'Allow cross-tenant replication' is disabled\n3. Confirm no active replication policies target external tenants\n4. Test that cross-tenant replication attempts are blocked\n5. Document legitimate cross-tenant requirements if any\n6. Implement monitoring for cross-tenant access attempts\n7. Review and approve any necessary cross-tenant policies",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage Account showing cross-tenant replication enabled",
+          "steps": "1. Navigate to Storage Account > Object replication\n2. Screenshot showing 'Allow cross-tenant replication' enabled\n3. Show any active cross-tenant replication policies"
+        }
+      ],
+      "links": [
+        {
+          "title": "Object replication for block blobs",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/blobs/object-replication-overview"
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-encryption-disabled",
+      "title": "Infrastructure Encryption Not Enabled",
+      "cvssScore": 4.5,
+      "cvssVector": "CVSS:3.1/AV:P/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "Infrastructure encryption (double encryption) is not enabled for the Storage Account, providing only single-layer encryption for data at rest. Infrastructure encryption adds a second layer of encryption at the infrastructure level using platform-managed keys, providing enhanced protection for highly sensitive data.\n\nWithout infrastructure encryption, data relies solely on service-level encryption, which may not meet the security requirements for highly regulated industries or organizations handling extremely sensitive data that require defense-in-depth encryption strategies.",
+      "checkSteps": "1. Navigate to Storage Account > Encryption\n2. Check 'Infrastructure encryption' status\n3. Verify if double encryption is enabled\n4. Review encryption scope configurations\n5. Check compliance requirements for infrastructure encryption\n6. Screenshot: Encryption settings showing infrastructure encryption disabled\nPowerShell: Get-AzStorageAccount -ResourceGroupName [rg] -Name [name] | Select RequireInfrastructureEncryption",
+      "recommendation": "Enable infrastructure encryption for Storage Accounts containing highly sensitive data to provide double encryption and enhanced data protection.",
+      "verificationProcedure": "1. Navigate to Storage Account > Encryption\n2. Verify 'Infrastructure encryption' shows as enabled\n3. Confirm double encryption is active for all data\n4. Test data upload and verify double encryption application\n5. Document infrastructure encryption strategy\n6. Verify compliance with regulatory requirements\n7. Note: Infrastructure encryption must be enabled at account creation time",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Storage Account encryption showing infrastructure encryption disabled",
+          "steps": "1. Navigate to Storage Account > Encryption\n2. Screenshot showing 'Infrastructure encryption' as disabled\n3. Show single-layer encryption configuration only"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Storage encryption for data at rest",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption"
+        },
+        {
+          "title": "Enable infrastructure encryption for double encryption",
+          "url": "https://learn.microsoft.com/en-us/azure/storage/common/infrastructure-encryption-enable"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure Storage Account Security Assessment Script (2024)\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$StorageAccountName,\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName\n)\n\nWrite-Host \"=== Azure Storage Account Security Assessment: $StorageAccountName ===\" -ForegroundColor Cyan\n\n# Get Storage Account details\n$storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName\n$context = $storageAccount.Context\n\n# Public Access Checks\nWrite-Host \"`n--- Public Access Security ---\" -ForegroundColor Yellow\nif ($storageAccount.AllowBlobPublicAccess -eq $false) {\n    Write-Host \"✅ Public blob access is disabled\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ Public blob access is enabled\" -ForegroundColor Red\n    # Check individual containers\n    try {\n        $containers = Get-AzStorageContainer -Context $context\n        $publicContainers = $containers | Where-Object { $_.PublicAccess -ne 'Off' }\n        if ($publicContainers.Count -gt 0) {\n            Write-Host \"❌ $($publicContainers.Count) containers have public access enabled\" -ForegroundColor Red\n            foreach($container in $publicContainers) {\n                Write-Host \"   Container: $($container.Name) - Access: $($container.PublicAccess)\" -ForegroundColor White\n            }\n        }\n    } catch {\n        Write-Host \"⚠️ Could not check container public access\" -ForegroundColor Yellow\n    }\n}\n\n# Encryption Checks\nWrite-Host \"`n--- Encryption Configuration ---\" -ForegroundColor Yellow\nif ($storageAccount.Encryption.KeySource -eq 'Microsoft.Storage') {\n    Write-Host \"⚠️ Using Microsoft-managed keys (consider customer-managed keys)\" -ForegroundColor Yellow\n} elseif ($storageAccount.Encryption.KeySource -eq 'Microsoft.Keyvault') {\n    Write-Host \"✅ Using customer-managed keys\" -ForegroundColor Green\n}\n\n# Network Security Checks\nWrite-Host \"`n--- Network Security ---\" -ForegroundColor Yellow\n$networkRules = Get-AzStorageAccountNetworkRuleSet -ResourceGroupName $ResourceGroupName -Name $StorageAccountName\nif ($networkRules.DefaultAction -eq 'Allow') {\n    Write-Host \"❌ Storage account allows access from all networks\" -ForegroundColor Red\n} else {\n    Write-Host \"✅ Storage account has network restrictions\" -ForegroundColor Green\n    Write-Host \"   IP Rules: $($networkRules.IpRules.Count)\" -ForegroundColor White\n    Write-Host \"   VNet Rules: $($networkRules.VirtualNetworkRules.Count)\" -ForegroundColor White\n}\n\n# Secure Transfer Checks\nWrite-Host \"`n--- Transport Security ---\" -ForegroundColor Yellow\nif ($storageAccount.EnableHttpsTrafficOnly) {\n    Write-Host \"✅ Secure transfer (HTTPS) is required\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ Insecure HTTP connections are allowed\" -ForegroundColor Red\n}\n\nif ($storageAccount.MinimumTlsVersion) {\n    Write-Host \"✅ Minimum TLS version: $($storageAccount.MinimumTlsVersion)\" -ForegroundColor Green\n    if ($storageAccount.MinimumTlsVersion -lt 'TLS1_2') {\n        Write-Host \"❌ TLS version below 1.2 (insecure)\" -ForegroundColor Red\n    }\n} else {\n    Write-Host \"❌ Minimum TLS version not configured\" -ForegroundColor Red\n}\n\n# Cross-tenant replication check\nif ($storageAccount.AllowCrossTenantReplication -eq $false) {\n    Write-Host \"✅ Cross-tenant replication is disabled\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ Cross-tenant replication is enabled\" -ForegroundColor Red\n}\n\n# Infrastructure encryption check\nif ($storageAccount.RequireInfrastructureEncryption) {\n    Write-Host \"✅ Infrastructure encryption (double encryption) is enabled\" -ForegroundColor Green\n} else {\n    Write-Host \"⚠️ Infrastructure encryption is not enabled\" -ForegroundColor Yellow\n}\n\n# Data Protection Checks\nWrite-Host \"`n--- Data Protection ---\" -ForegroundColor Yellow\ntry {\n    $blobServiceProps = Get-AzStorageBlobServiceProperty -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName\n    \n    if ($blobServiceProps.DeleteRetentionPolicy.Enabled) {\n        Write-Host \"✅ Soft delete for blobs enabled (retention: $($blobServiceProps.DeleteRetentionPolicy.Days) days)\" -ForegroundColor Green\n    } else {\n        Write-Host \"❌ Soft delete for blobs is disabled\" -ForegroundColor Red\n    }\n    \n    if ($blobServiceProps.ContainerDeleteRetentionPolicy.Enabled) {\n        Write-Host \"✅ Soft delete for containers enabled (retention: $($blobServiceProps.ContainerDeleteRetentionPolicy.Days) days)\" -ForegroundColor Green\n    } else {\n        Write-Host \"❌ Soft delete for containers is disabled\" -ForegroundColor Red\n    }\n    \n    if ($blobServiceProps.IsVersioningEnabled) {\n        Write-Host \"✅ Blob versioning is enabled\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ Blob versioning is disabled\" -ForegroundColor Yellow\n    }\n    \n    if ($blobServiceProps.RestorePolicy.Enabled) {\n        Write-Host \"✅ Point-in-time restore enabled (retention: $($blobServiceProps.RestorePolicy.Days) days)\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ Point-in-time restore is disabled\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"⚠️ Could not check data protection settings\" -ForegroundColor Yellow\n}\n\n# Check for Immutable Storage\nWrite-Host \"`n--- Compliance and Immutable Storage ---\" -ForegroundColor Yellow\ntry {\n    $containers = Get-AzStorageContainer -Context $context\n    $immutableContainers = 0\n    foreach($container in $containers) {\n        try {\n            $policies = Get-AzStorageContainerStoredAccessPolicy -Container $container.Name -Context $context\n            if ($policies) {\n                $immutableContainers++\n            }\n        } catch { }\n    }\n    \n    if ($immutableContainers -gt 0) {\n        Write-Host \"✅ $immutableContainers containers have access policies (check for immutability)\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ No immutable storage policies detected\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"⚠️ Could not check immutable storage configuration\" -ForegroundColor Yellow\n}\n\nWrite-Host \"`n=== Assessment Complete ===\" -ForegroundColor Cyan\nWrite-Host \"Storage Account: $($storageAccount.StorageAccountName) | Location: $($storageAccount.Location) | Kind: $($storageAccount.Kind)\" -ForegroundColor White"
+}

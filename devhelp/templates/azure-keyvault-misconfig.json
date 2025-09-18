@@ -1,0 +1,286 @@
+{
+  "id": "azure-keyvault-misconfig",
+  "title": "Azure Key Vault Misconfiguration",
+  "category": "Cloud Security",
+  "baseDescription": "LRQA identified a Key Vault with a number of weak configuration settings.",
+  "subFindings": [
+    {
+      "id": "public-network-access",
+      "title": "Public Network Access Enabled",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "LRQA identified an Azure Key Vault which was accessible to all public networks, meaning that if an attacker were to have a valid access token or user account credentials, it would be possible to exfiltrate key data over the internet to any location.\n\nKey Vaults are used to store sensitive information which are used within an organisations Azure environment such as application secret values, encryption keys and signing certificates. This type of information is usually not required to be accessible publicly and should be limited to select networks or restricted using Azure Private endpoint to ensure that key vault data can only be shared with intended resources and applications.",
+      "checkSteps": "1. Navigate to Azure Portal > Key Vaults > [vault-name]\n2. Go to \"Networking\" tab\n3. Check \"Firewalls and virtual networks\" section\n4. Verify current setting (should be \"Private endpoint and selected networks\")\n5. Screenshot: Network configuration showing public access enabled\nPowerShell: Get-AzKeyVault -VaultName [name] | Select NetworkAcls",
+      "recommendation": "Limit key vaults to selected networks and utilise Private endpoint to further lock down Key Vault secret data.",
+      "verificationProcedure": "1. Navigate to Azure Portal > Key Vaults > [vault-name]\n2. Go to 'Networking' tab\n3. Verify 'Selected networks' or 'Private endpoint' is selected\n4. Confirm 'All networks' is NOT selected\n5. Test connectivity from unauthorized networks (should fail)\n6. Test connectivity from authorized networks (should succeed)\n7. Run PowerShell: Get-AzKeyVault -VaultName [name] | Select NetworkAcls\n8. Verify DefaultAction is 'Deny' not 'Allow'\n9. Document final configuration with screenshots",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Azure Key Vault network configuration showing public access enabled",
+          "steps": "1. Navigate to Azure Portal > Key Vaults > [vault-name]\n2. Go to 'Networking' tab\n3. Screenshot the 'Firewalls and virtual networks' section showing 'All networks' selected"
+        },
+        {
+          "caption": "PowerShell command showing network access configuration",
+          "steps": "1. Open PowerShell\n2. Run: Get-AzKeyVault -VaultName [name] | Select NetworkAcls\n3. Screenshot the output showing public network access"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure Azure Key Vault Networking",
+          "url": "https://docs.microsoft.com/en-us/azure/key-vault/general/network-security"
+        }
+      ]
+    },
+    {
+      "id": "soft-delete-disabled",
+      "title": "Soft-Delete Disabled",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+      "severity": "Medium",
+      "description": "Accidental unavailability of a key vault can cause immediate data loss or loss of security functions (authentication, validation, verification, non-repudiation, etc.) supported by the key vault objects. It is recommended the key vault be made recoverable by enabling the \"Do Not Purge\" and \"Soft Delete\" functions.",
+      "checkSteps": "1. Navigate to Key Vault > Properties\n2. Locate \"Soft-delete\" section\n3. Verify \"Enable soft delete\" is OFF\n4. Check \"Enable purge protection\" is OFF\n5. Screenshot: Properties page showing disabled protection settings\nPowerShell: Get-AzKeyVault -VaultName [name] | Select EnableSoftDelete, EnablePurgeProtection",
+      "recommendation": "Enable \"Do Not Purge\" and \"Soft Delete\" for a Key Vault on the Azure Portal.",
+      "verificationProcedure": "1. Navigate to Key Vault > Properties\n2. Verify 'Enable soft delete' is turned ON\n3. Verify 'Enable purge protection' is turned ON\n4. Run PowerShell: Get-AzKeyVault -VaultName [name] | Select EnableSoftDelete, EnablePurgeProtection\n5. Confirm both properties show 'True'\n6. Test soft delete by deleting a test secret (should go to deleted items, not be permanently removed)\n7. Document the enabled protection settings",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault properties showing soft-delete and purge protection disabled",
+          "steps": "1. Navigate to Key Vault > Properties\n2. Locate the 'Soft-delete' section\n3. Screenshot showing 'Enable soft delete' is OFF and 'Enable purge protection' is OFF"
+        }
+      ],
+      "links": [
+        {
+          "title": "Key Vault Recovery",
+          "url": "https://docs.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview"
+        }
+      ]
+    },
+    {
+      "id": "vault-access-policies",
+      "title": "Vault Access Policies in Use",
+      "cvssScore": 5.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "During the security assessment, it was observed that the Key Vault was using legacy Vault access policy-based permission model as opposed to RBAC (Role-Based Access Control) based access control.\n\nWhile classic mode is the default access policy for Key Vault, it lacks granular control and the ability to provide a global view across the environment.",
+      "checkSteps": "1. Navigate to Key Vault > Access control (IAM)\n2. Check \"Permission model\" shows \"Vault access policy\" (legacy)\n3. Review number of access policies configured\n4. Verify overly broad permissions exist\n5. Screenshot: Access control showing vault access policy model\nPowerShell: Get-AzKeyVault -VaultName [name] | Select EnableRbacAuthorization",
+      "recommendation": "Use RBAC permission model in place of vault access policies.",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault access control showing vault access policy model in use",
+          "steps": "1. Navigate to Key Vault > Access control (IAM)\n2. Check 'Permission model' shows 'Vault access policy' (legacy)\n3. Screenshot the access control page showing legacy permission model"
+        }
+      ],
+      "links": [
+        {
+          "title": "RBAC Migration",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-migration"
+        }
+      ]
+    },
+    {
+      "id": "insufficient-logging",
+      "title": "Insufficient Diagnostic Logging",
+      "cvssScore": 4.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "severity": "Medium",
+      "description": "LRQA identified that diagnostic logging was not properly configured for the Key Vault, limiting visibility into access patterns and potential security incidents. Without proper audit logging, it becomes difficult to detect unauthorized access attempts or investigate security breaches.",
+      "checkSteps": "1. Navigate to Key Vault > Monitoring > Diagnostic settings\n2. Verify no diagnostic settings exist OR AuditEvent category disabled\n3. Check if logs are sent to appropriate destination\n4. Review log retention policies\n5. Screenshot: Diagnostic settings showing missing or incomplete logging\nPowerShell: Get-AzDiagnosticSetting -ResourceId [vault-resource-id]",
+      "recommendation": "Configure diagnostic logging with AuditEvent category enabled.",
+      "verificationProcedure": "1. Navigate to Key Vault > Monitoring > Diagnostic settings\n2. Verify diagnostic logging is configured with AuditEvent category\n3. Verify logs are sent to Log Analytics workspace or Storage Account\n4. Test by accessing Key Vault secrets/keys and verify logs are generated\n5. Check log retention policies meet compliance requirements\n6. Verify alert rules are configured for suspicious activities\n7. Test log queries in Log Analytics for audit events\n8. Document logging strategy and retention policies",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault diagnostic settings showing missing or incomplete logging",
+          "steps": "1. Navigate to Key Vault > Monitoring > Diagnostic settings\n2. Screenshot showing no diagnostic settings exist OR AuditEvent category disabled\n3. Verify log retention policies are not configured"
+        }
+      ],
+      "links": [
+        {
+          "title": "Key Vault Monitoring and Logging",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/logging"
+        },
+        {
+          "title": "Azure Key Vault logging",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/howto-logging"
+        }
+      ]
+    },
+    {
+      "id": "expired-keys",
+      "title": "Expired Keys and Secrets",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "During the assessment, LRQA identified expired or soon-to-expire keys, secrets, and certificates within the Key Vault. Expired cryptographic material can cause service disruptions and may force applications to use fallback authentication methods that could be less secure.",
+      "checkSteps": "1. Navigate to Key Vault > Keys/Secrets/Certificates\n2. Review expiration dates for all objects\n3. Identify any expired items (red indicators)\n4. Check items expiring within 30 days\n5. Screenshot: Keys/Secrets overview showing expired items\nPowerShell: Get-AzKeyVaultKey -VaultName [name] | Where {$_.Expires -lt (Get-Date)}",
+      "recommendation": "Implement key and secret rotation policies with appropriate expiration dates.",
+      "verificationProcedure": "1. Navigate to Key Vault > Keys/Secrets/Certificates\n2. Verify no items show expired status (red indicators)\n3. Check expiration dates are set appropriately (not too far in future)\n4. Verify rotation policies are configured for critical keys\n5. Test near-expiry notifications are working\n6. Run PowerShell commands to confirm no expired items\n7. Document key lifecycle management procedures\n8. Set up automated monitoring for upcoming expirations",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault showing expired keys and secrets with red indicators",
+          "steps": "1. Navigate to Key Vault > Keys/Secrets/Certificates\n2. Review expiration dates for all objects\n3. Screenshot showing expired items with red indicators"
+        },
+        {
+          "caption": "PowerShell output showing expired keys and secrets",
+          "steps": "1. Open PowerShell\n2. Run: Get-AzKeyVaultKey -VaultName [name] | Where {$_.Expires -lt (Get-Date)}\n3. Screenshot the output showing expired cryptographic material"
+        }
+      ],
+      "links": [
+        {
+          "title": "Key Vault notifications and Event Grid",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/event-grid-overview"
+        },
+        {
+          "title": "Configure Key Vault key rotation",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/keys/how-to-configure-key-rotation"
+        }
+      ]
+    },
+    {
+      "id": "no-resource-protection",
+      "title": "No Resource Protection",
+      "cvssScore": 4.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:L/A:L",
+      "severity": "Medium",
+      "description": "LRQA observed that the Key Vault lacked resource-level protection mechanisms such as resource locks, which could allow accidental deletion of the entire Key Vault and all contained cryptographic material.",
+      "checkSteps": "1. Navigate to Key Vault > Locks\n2. Verify no \"CanNotDelete\" or \"ReadOnly\" locks exist\n3. Check resource group level locks\n4. Review delete permissions on Key Vault\n5. Screenshot: Locks page showing no protection configured\nPowerShell: Get-AzResourceLock -ResourceName [name] -ResourceType \"Microsoft.KeyVault/vaults\"",
+      "recommendation": "Apply resource locks to prevent accidental deletion.",
+      "verificationProcedure": "1. Navigate to Key Vault > Locks\n2. Verify 'CanNotDelete' or 'ReadOnly' lock is applied\n3. Test deletion attempt - should be blocked\n4. Verify resource group level locks if applicable\n5. Document lock configuration and justification\n6. Test legitimate administrative operations still work\n7. Verify lock inheritance to child resources",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault locks page showing no protection configured",
+          "steps": "1. Navigate to Key Vault > Locks\n2. Screenshot showing no 'CanNotDelete' or 'ReadOnly' locks exist\n3. Verify the locks page is empty or shows no resource protection"
+        }
+      ],
+      "links": [
+        {
+          "title": "Lock resources to prevent changes",
+          "url": "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources"
+        }
+      ]
+    },
+    {
+      "id": "no-managed-identity-access",
+      "title": "Applications Using Service Principals Instead of Managed Identity",
+      "cvssScore": 6.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "LRQA identified that applications and services are accessing Key Vault using service principals with client secrets instead of managed identities. This approach requires storing and managing credentials, increasing the risk of credential exposure and compromise.\n\nService principal credentials can be exposed through code repositories, configuration files, or environment variables, while managed identities eliminate these risks by providing Azure-managed authentication without requiring stored secrets.",
+      "checkSteps": "1. Navigate to Key Vault > Access control (IAM)\n2. Review role assignments for service principals vs managed identities\n3. Check application configurations for stored client secrets\n4. Review Key Vault access policies for non-managed identity principals\n5. Identify applications using certificate-based authentication\n6. Check source code and configuration files for embedded credentials\nPowerShell: Get-AzRoleAssignment -Scope /subscriptions/[sub]/resourceGroups/[rg]/providers/Microsoft.KeyVault/vaults/[vault]",
+      "recommendation": "Migrate applications to use system-assigned or user-assigned managed identities for Key Vault access instead of service principals with secrets.",
+      "verificationProcedure": "1. Navigate to Key Vault > Access control (IAM)\n2. Verify role assignments use managed identities instead of service principals\n3. Test application access using managed identity\n4. Verify no client secrets are stored in application configuration\n5. Remove service principal credentials after successful migration\n6. Document managed identity implementation\n7. Test failover and recovery scenarios\n8. Monitor access logs for successful managed identity authentication",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault IAM showing service principal role assignments",
+          "steps": "1. Navigate to Key Vault > Access control (IAM)\n2. Screenshot showing service principals in role assignments\n3. Highlight non-managed identity principals"
+        },
+        {
+          "caption": "Application configuration showing stored client secrets",
+          "steps": "1. Review application settings or configuration files\n2. Screenshot showing client ID and secret configuration (partially obscured)\n3. Show Key Vault connection strings with credentials"
+        }
+      ],
+      "links": [
+        {
+          "title": "What are managed identities for Azure resources",
+          "url": "https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Authenticate to Azure Key Vault with managed identity",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/authentication"
+        }
+      ]
+    },
+    {
+      "id": "no-auto-rotation",
+      "title": "Automatic Key and Certificate Rotation Not Configured",
+      "cvssScore": 5.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "Key Vault does not have automatic key rotation policies configured, requiring manual intervention for cryptographic key lifecycle management. Manual key rotation increases operational overhead and the risk of using expired or compromised keys.\n\nWithout automated rotation, keys may remain in use longer than recommended, potentially allowing attackers more time to compromise them, and increases the likelihood of service disruptions due to expired certificates.",
+      "checkSteps": "1. Navigate to Key Vault > Keys\n2. Select individual keys and check 'Rotation policy'\n3. Verify if rotation policy is 'Not configured'\n4. Check certificate auto-renewal settings\n5. Review notification settings for key expiration\n6. Check Event Grid integration for rotation events\nPowerShell: Get-AzKeyVaultKey -VaultName [name] | Get-AzKeyVaultKeyRotationPolicy\nPowerShell: Get-AzKeyVaultCertificate -VaultName [name] | Select Name, @{N='AutoRenew';E={$_.Policy.AutoRenew}}",
+      "recommendation": "Configure automatic key rotation policies with appropriate rotation intervals and enable certificate auto-renewal where supported.",
+      "verificationProcedure": "1. Navigate to Key Vault > Keys\n2. Verify rotation policies are configured for critical keys\n3. Test on-demand key rotation functionality\n4. Verify certificate auto-renewal is enabled\n5. Check notification settings for near-expiry events\n6. Test Event Grid integration for rotation events\n7. Verify applications handle key rotation gracefully\n8. Document rotation policies and procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key rotation policy showing 'Not configured' status",
+          "steps": "1. Navigate to Key Vault > Keys > Select a key\n2. Screenshot showing 'Rotation policy: Not configured'\n3. Show empty rotation policy configuration"
+        },
+        {
+          "caption": "Certificate showing auto-renewal disabled",
+          "steps": "1. Navigate to Key Vault > Certificates > Select certificate\n2. Screenshot showing auto-renewal settings disabled\n3. Show certificate policy with manual renewal only"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure cryptographic key auto-rotation in Azure Key Vault",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/keys/how-to-configure-key-rotation"
+        },
+        {
+          "title": "Certificate auto-rotation in Key Vault",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/certificates/tutorial-rotate-certificates"
+        }
+      ]
+    },
+    {
+      "id": "hsm-not-used",
+      "title": "Hardware Security Modules Not Used for Critical Keys",
+      "cvssScore": 5.5,
+      "cvssVector": "CVSS:3.1/AV:P/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N",
+      "severity": "Medium",
+      "description": "Critical encryption keys are stored using software-based protection instead of Hardware Security Modules (HSMs). Software-protected keys do not provide the same level of security as HSM-protected keys, which use FIPS 140-3 Level 3 validated hardware.\n\nHSMs provide hardware-based key protection that prevents key extraction even with physical access to the hardware, offering superior protection for high-value cryptographic operations and compliance requirements.",
+      "checkSteps": "1. Navigate to Key Vault > Keys\n2. Review key types for critical encryption keys\n3. Check for 'RSA' vs 'RSA-HSM' key types\n4. Identify keys used for data encryption, signing, or authentication\n5. Review compliance requirements for HSM usage\n6. Check Key Vault pricing tier (Premium required for HSM)\nPowerShell: Get-AzKeyVaultKey -VaultName [name] | Select Name, KeyType, @{N='IsHsm';E={$_.KeyType -like '*HSM'}}",
+      "recommendation": "Use Premium Key Vault with HSM-backed keys (RSA-HSM, EC-HSM) for critical cryptographic operations and consider Managed HSM for dedicated HSM instances.",
+      "verificationProcedure": "1. Verify Key Vault is Premium tier\n2. Navigate to Key Vault > Keys\n3. Verify critical keys show 'RSA-HSM' or 'EC-HSM' type\n4. Test key operations using HSM-backed keys\n5. Verify compliance with regulatory requirements\n6. Consider Managed HSM for dedicated single-tenant HSM\n7. Document key classification and protection levels\n8. Test backup and recovery procedures for HSM keys",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault keys showing software-based protection",
+          "steps": "1. Navigate to Key Vault > Keys\n2. Screenshot showing keys with 'RSA' type (not 'RSA-HSM')\n3. Highlight lack of hardware-based protection"
+        },
+        {
+          "caption": "Key Vault pricing tier showing Standard instead of Premium",
+          "steps": "1. Navigate to Key Vault > Properties\n2. Screenshot showing 'Standard' pricing tier\n3. Show limitation preventing HSM key creation"
+        }
+      ],
+      "links": [
+        {
+          "title": "About Azure Key Vault Managed HSM",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/managed-hsm/overview"
+        },
+        {
+          "title": "Key types and protection methods",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/keys/about-keys"
+        }
+      ]
+    },
+    {
+      "id": "excessive-rbac-permissions",
+      "title": "Excessive RBAC Role Assignments",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "LRQA identified that the Key Vault has users or service principals assigned to overly permissive RBAC roles such as Owner or Contributor. These roles provide far more access than typically required for Key Vault operations and violate the principle of least privilege.\n\nExcessive permissions increase the risk of accidental or malicious actions that could compromise the security and availability of cryptographic material stored in the Key Vault.",
+      "checkSteps": "1. Navigate to Key Vault > Access control (IAM)\n2. Review role assignments tab\n3. Identify users/service principals with Owner, Contributor, or other broad roles\n4. Check for more than 3 users with Owner permissions\n5. Verify if assignments use built-in Key Vault specific roles instead\n6. Screenshot: IAM showing excessive role assignments\nPowerShell: Get-AzRoleAssignment -Scope \"/subscriptions/[sub-id]/resourceGroups/[rg]/providers/Microsoft.KeyVault/vaults/[vault-name]\" | Where-Object {$_.RoleDefinitionName -in @('Owner','Contributor')}",
+      "recommendation": "Replace broad RBAC roles (Owner, Contributor) with specific Key Vault roles such as 'Key Vault Administrator', 'Key Vault Secrets User', or 'Key Vault Reader' based on actual requirements. Limit Owner role assignments to maximum of 3 users.",
+      "verificationProcedure": "1. Navigate to Key Vault > Access control (IAM)\n2. Verify no users have Owner/Contributor roles unless justified\n3. Confirm Key Vault-specific roles are used instead\n4. Verify maximum 3 Owner assignments exist at subscription level\n5. Test that users can still perform required Key Vault operations\n6. Document role assignment justifications\n7. Run PowerShell commands to verify role assignments\n8. Set up periodic access reviews for role assignments",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault IAM showing users with excessive Owner/Contributor roles",
+          "steps": "1. Navigate to Key Vault > Access control (IAM)\n2. Click on 'Role assignments' tab\n3. Screenshot showing users assigned to Owner or Contributor roles\n4. Highlight the excessive permissions granted"
+        },
+        {
+          "caption": "PowerShell output showing role assignments with broad permissions",
+          "steps": "1. Run PowerShell command to list role assignments\n2. Screenshot output showing Owner/Contributor role assignments\n3. Highlight users with excessive permissions"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Key Vault RBAC roles",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide"
+        },
+        {
+          "title": "Azure built-in roles for Key Vault",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Enhanced Azure Key Vault Security Assessment Script (2024)\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$KeyVaultName,\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName\n)\n\nWrite-Host \"=== Key Vault Security Assessment: $KeyVaultName ===\" -ForegroundColor Cyan\n\n# Get Key Vault details\n$kv = Get-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroupName\n\n# Network Access Checks\nWrite-Host \"`n--- Network Security ---\" -ForegroundColor Yellow\nif ($kv.NetworkAcls.DefaultAction -eq \"Allow\") { \n    Write-Host \"❌ Public network access enabled\" -ForegroundColor Red \n} else { \n    Write-Host \"✅ Network access properly restricted\" -ForegroundColor Green \n}\n\n# Data Protection Checks\nWrite-Host \"`n--- Data Protection ---\" -ForegroundColor Yellow\nif (-not $kv.EnableSoftDelete) { \n    Write-Host \"❌ Soft delete disabled\" -ForegroundColor Red \n} else { \n    Write-Host \"✅ Soft delete enabled\" -ForegroundColor Green \n}\n\nif (-not $kv.EnablePurgeProtection) { \n    Write-Host \"❌ Purge protection disabled\" -ForegroundColor Red \n} else { \n    Write-Host \"✅ Purge protection enabled\" -ForegroundColor Green \n}\n\n# Access Control Checks\nWrite-Host \"`n--- Access Control ---\" -ForegroundColor Yellow\nif (-not $kv.EnableRbacAuthorization) { \n    Write-Host \"⚠️ Using legacy vault access policies\" -ForegroundColor Yellow \n} else { \n    Write-Host \"✅ Using RBAC authorization\" -ForegroundColor Green \n}\n\n# Check RBAC Role Assignments\ntry {\n    $scope = \"/subscriptions/\" + (Get-AzContext).Subscription.Id + \"/resourceGroups/$ResourceGroupName/providers/Microsoft.KeyVault/vaults/$KeyVaultName\"\n    $roleAssignments = Get-AzRoleAssignment -Scope $scope | Where-Object {$_.RoleDefinitionName -in @('Owner','Contributor')}\n    if ($roleAssignments.Count -gt 0) {\n        Write-Host \"⚠️ Found $($roleAssignments.Count) users with excessive RBAC permissions (Owner/Contributor)\" -ForegroundColor Yellow\n        foreach($assignment in $roleAssignments) {\n            Write-Host \"   $($assignment.DisplayName) - $($assignment.RoleDefinitionName)\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"✅ No excessive RBAC role assignments found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"⚠️ Could not check RBAC role assignments\" -ForegroundColor Yellow\n}\n\n# Check for expired items\nWrite-Host \"`n--- Cryptographic Material ---\" -ForegroundColor Yellow\n$expired = @()\ntry {\n    $expired += Get-AzKeyVaultKey -VaultName $KeyVaultName | Where {$_.Expires -lt (Get-Date)}\n    $expired += Get-AzKeyVaultSecret -VaultName $KeyVaultName | Where {$_.Expires -lt (Get-Date)}\n    $expired += Get-AzKeyVaultCertificate -VaultName $KeyVaultName | Where {$_.Expires -lt (Get-Date)}\n} catch {\n    Write-Host \"⚠️ Could not check expiration (insufficient permissions)\" -ForegroundColor Yellow\n}\n\nif ($expired.Count -gt 0) { \n    Write-Host \"❌ $($expired.Count) expired items found\" -ForegroundColor Red \n} else {\n    Write-Host \"✅ No expired cryptographic material found\" -ForegroundColor Green\n}\n\n# Check HSM Usage\nWrite-Host \"`n--- Hardware Security Modules ---\" -ForegroundColor Yellow\nif ($kv.Sku -eq \"Premium\") {\n    Write-Host \"✅ Premium tier supports HSM-backed keys\" -ForegroundColor Green\n    try {\n        $hsmKeys = Get-AzKeyVaultKey -VaultName $KeyVaultName | Where {$_.KeyType -like \"*HSM\"}\n        if ($hsmKeys.Count -gt 0) {\n            Write-Host \"✅ $($hsmKeys.Count) HSM-backed keys found\" -ForegroundColor Green\n        } else {\n            Write-Host \"⚠️ No HSM-backed keys found\" -ForegroundColor Yellow\n        }\n    } catch {\n        Write-Host \"⚠️ Could not check key types\" -ForegroundColor Yellow\n    }\n} else {\n    Write-Host \"⚠️ Standard tier - HSM keys not available\" -ForegroundColor Yellow\n}\n\n# Check Resource Locks\nWrite-Host \"`n--- Resource Protection ---\" -ForegroundColor Yellow\ntry {\n    $locks = Get-AzResourceLock -ResourceName $KeyVaultName -ResourceType \"Microsoft.KeyVault/vaults\" -ResourceGroupName $ResourceGroupName\n    if ($locks.Count -gt 0) {\n        Write-Host \"✅ Resource locks configured\" -ForegroundColor Green\n        foreach($lock in $locks) {\n            Write-Host \"   Lock: $($lock.Name) - Level: $($lock.Level)\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"❌ No resource locks configured\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"⚠️ Could not check resource locks\" -ForegroundColor Yellow\n}\n\n# Check Auto-Rotation\nWrite-Host \"`n--- Key Lifecycle Management ---\" -ForegroundColor Yellow\ntry {\n    $keysWithRotation = 0\n    $totalKeys = Get-AzKeyVaultKey -VaultName $KeyVaultName\n    foreach($key in $totalKeys) {\n        try {\n            $rotationPolicy = Get-AzKeyVaultKeyRotationPolicy -VaultName $KeyVaultName -KeyName $key.Name -ErrorAction SilentlyContinue\n            if ($rotationPolicy) { $keysWithRotation++ }\n        } catch { }\n    }\n    \n    if ($keysWithRotation -gt 0) {\n        Write-Host \"✅ $keysWithRotation/$($totalKeys.Count) keys have rotation policies\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ No automatic key rotation policies configured\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"⚠️ Could not check rotation policies\" -ForegroundColor Yellow\n}\n\nWrite-Host \"`n=== Assessment Complete ===\" -ForegroundColor Cyan\nWrite-Host \"Key Vault: $($kv.VaultName) | Region: $($kv.Location) | Tier: $($kv.Sku)\" -ForegroundColor White"
+}

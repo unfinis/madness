@@ -1,0 +1,109 @@
+id: "network_discovery"
+name: "Network Discovery and Enumeration"
+version: "1.0.0"
+category: "reconnaissance"
+description: "Discover and enumerate network hosts and services"
+rationale: "Understanding the network topology is fundamental for effective penetration testing"
+
+risk_level: "low"
+stealth_level: "passive"
+estimated_duration: "30m"
+
+triggers:
+  - type: "asset_discovered"
+    conditions:
+      asset_type: "network"
+      properties:
+        network_range: "*"
+    priority: 100
+    description: "Network range discovered"
+    deduplication:
+      strategy: "signature_based"
+      signature_fields: ["network_range"]
+      cooldown_period: "24h"
+
+steps:
+  - id: "ping_sweep"
+    name: "Ping Sweep Discovery"
+    description: "Perform ping sweep to discover live hosts"
+    type: "command"
+    order: 1
+    command: "nmap -sn {network_range}"
+    expected_outputs:
+      - type: "host_discovery"
+        parser: "nmap_ping_sweep"
+        success_indicators: ["Host is up"]
+        failure_indicators: ["No route to host"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "Nmap scan report for ([0-9.]+)"
+          asset_type: "host"
+          confidence: 0.9
+          metadata:
+            discovery_method: "ping_sweep"
+
+  - id: "port_scan"
+    name: "Port Scanning"
+    description: "Scan discovered hosts for open ports"
+    type: "command"
+    order: 2
+    command: "nmap -sS -O {discovered_hosts}"
+    expected_outputs:
+      - type: "port_scan"
+        parser: "nmap_port_scan"
+        success_indicators: ["open"]
+        failure_indicators: ["filtered", "closed"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "([0-9]+)/tcp\\s+open\\s+([^\\s]+)"
+          asset_type: "service"
+          confidence: 0.8
+          metadata:
+            protocol: "tcp"
+
+asset_discovery:
+  expected_assets:
+    - type: "host"
+      confidence: 0.9
+      conditions:
+        - network_reachable: true
+    - type: "service"
+      confidence: 0.8
+      conditions:
+        - port_open: true
+
+suppression_options:
+  available_scopes:
+    - scope: "this_network"
+      description: "Skip for this specific network range"
+      conditions: ["network_range"]
+    - scope: "global"
+      description: "Never run this methodology again"
+      conditions: []
+
+next_methodologies:
+  - conditions:
+      discovered_services.count: "> 0"
+    methodology: "service_enumeration"
+    trigger_data:
+      services: "{discovered_services}"
+      target_hosts: ["{discovered_hosts}"]
+
+documentation:
+  overview: |
+    This methodology performs basic network discovery to identify live hosts
+    and their open services. It uses passive techniques to minimize detection.
+  
+  prerequisites:
+    - "Network access to target range"
+    - "Nmap tool available"
+  
+  expected_findings:
+    - "List of live hosts"
+    - "Open ports and services"
+    - "Operating system fingerprints"
+
+compatibility:
+  min_engine_version: "2.0.0"
+  required_tools: ["nmap"]
+  required_parsers: ["nmap_ping_sweep", "nmap_port_scan"]

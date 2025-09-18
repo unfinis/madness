@@ -1,0 +1,349 @@
+{
+  "id": "azure-web-app-misconfig",
+  "title": "Azure Web App Security Misconfigurations",
+  "category": "Web Application Security",
+  "baseDescription": "LRQA identified multiple security misconfigurations in Azure Web Apps (App Services) that could lead to unauthorized access, data exposure, and compromise of the web application infrastructure. These misconfigurations violate security best practices and create potential attack vectors for malicious actors.",
+  "subFindings": [
+    {
+      "id": "authentication-bypass",
+      "title": "Azure AD Easy Authentication Bypass Vulnerabilities",
+      "cvssScore": 8.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "High",
+      "description": "The Azure Web App's Easy Authentication (EasyAuth) configuration contains vulnerabilities that could allow authentication bypass through OAuth misconfigurations and insufficient validation controls.\n\nThe application may be vulnerable to nOAuth authentication bypass where multitenant OAuth applications with mutable and unverified 'email' claims can be exploited. Additionally, insufficient Multi-Factor Authentication (MFA) controls and exposed SCM endpoints with basic authentication create additional attack vectors for unauthorized access.",
+      "checkSteps": "1. Navigate to Azure Portal > App Services > [App Name] > Authentication/Authorization\n2. Check if 'App Service Authentication' is On\n3. Review 'Action to take when request is not authenticated'\n4. Examine OAuth provider configurations\n5. Test SCM endpoint authentication (https://[app-name].scm.azurewebsites.net)\n6. Verify MFA requirements for administrative access\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [app] | Select-Object -ExpandProperty SiteAuthSettings",
+      "recommendation": "Configure proper email verification in Azure AD applications, implement enhanced MFA policies with rate limiting, disable SCM basic authentication where possible, and implement Conditional Access policies for administrative access.",
+      "verificationProcedure": "1. Verify Email verification is properly configured in Azure AD app registration\n2. Test authentication flow to ensure bypass conditions are eliminated\n3. Confirm MFA policies are enforced with proper rate limiting\n4. Verify SCM endpoints require proper authentication\n5. Test Conditional Access policies are functioning\n6. Run PowerShell verification commands\n7. Document final authentication configuration\n8. Perform penetration testing against authentication mechanisms",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Easy Authentication configuration showing potential bypass conditions",
+          "steps": "1. Navigate to App Services > Authentication/Authorization\n2. Screenshot showing OAuth provider settings\n3. Highlight any misconfigurations in authentication flow"
+        },
+        {
+          "caption": "SCM endpoint showing exposed basic authentication",
+          "steps": "1. Access https://[app-name].scm.azurewebsites.net\n2. Screenshot authentication prompt or access without proper controls\n3. Show deployment credentials or unauthorized access"
+        }
+      ],
+      "links": [
+        {
+          "title": "Authentication and authorization in Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/overview-authentication-authorization"
+        },
+        {
+          "title": "Configure your App Service app to use Azure AD login",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad"
+        }
+      ]
+    },
+    {
+      "id": "public-network-access",
+      "title": "Unrestricted Public Network Access",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:L",
+      "severity": "Medium",
+      "description": "The Azure Web App is configured to allow unrestricted access from all public networks without proper access restrictions, private endpoints, or Network Security Group (NSG) controls.\n\nThis configuration exposes the application to potential attacks from any internet location, increasing the attack surface and making it susceptible to automated attacks, reconnaissance, and unauthorized access attempts. Without proper network-level controls, the application relies solely on application-level security measures.",
+      "checkSteps": "1. Navigate to App Services > [App Name] > Networking\n2. Go to 'Access Restrictions' section\n3. Check if 'Allow public access' is enabled\n4. Review configured IP restrictions and VNet rules\n5. Verify Private Endpoint configuration status\n6. Check Network Security Group associations\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [app] | Select-Object -ExpandProperty SiteConfig | Select-Object IpSecurityRestrictions",
+      "recommendation": "Implement network access restrictions by configuring IP allow-lists for known sources, deploy private endpoints for internal access, integrate with Virtual Networks (VNet), and configure appropriate Network Security Groups to limit access to authorized networks only.",
+      "verificationProcedure": "1. Navigate to App Services Networking settings\n2. Verify access restrictions are configured appropriately\n3. Confirm private endpoints are deployed if required\n4. Test access from unauthorized IP ranges (should be blocked)\n5. Test access from authorized networks (should succeed)\n6. Verify VNet integration is properly configured\n7. Document network security configuration\n8. Test end-to-end connectivity through private endpoints",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service networking showing unrestricted public access",
+          "steps": "1. Navigate to App Services > Networking > Access Restrictions\n2. Screenshot showing 'Allow public access' enabled\n3. Highlight lack of IP restrictions or private endpoints"
+        },
+        {
+          "caption": "Missing private endpoint configuration",
+          "steps": "1. Navigate to Networking > Private endpoints\n2. Screenshot showing no private endpoints configured\n3. Show public accessibility from internet"
+        }
+      ],
+      "links": [
+        {
+          "title": "Set up Azure App Service access restrictions",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/app-service-ip-restrictions"
+        },
+        {
+          "title": "Using Private Endpoints for Azure Web Apps",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/overview-private-endpoint"
+        }
+      ]
+    },
+    {
+      "id": "weak-tls-configuration",
+      "title": "Weak TLS Configuration and Cipher Suites",
+      "cvssScore": 5.9,
+      "cvssVector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "Medium",
+      "description": "The Azure Web App is configured with weak Transport Layer Security (TLS) settings, including support for outdated TLS versions (1.0/1.1) and weak cipher suites that may be vulnerable to cryptographic attacks.\n\nOutdated TLS versions and weak cipher suites can be exploited through various attack methods including protocol downgrade attacks, cipher suite attacks, and man-in-the-middle attacks. This configuration fails to meet current security standards and compliance requirements for data in transit protection.",
+      "checkSteps": "1. Navigate to App Services > [App Name] > Configuration > General Settings\n2. Check 'Minimum TLS version' setting\n3. Verify 'HTTP version' and 'HTTPS Only' settings\n4. Use SSL Labs or similar tools to test cipher suites\n5. Check certificate configuration and validity\n6. Test for weak SSL/TLS configurations\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [app] | Select-Object -ExpandProperty SiteConfig | Select-Object MinTlsVersion, Http20Enabled, HttpsOnly",
+      "recommendation": "Enforce TLS 1.2 as the minimum version, disable weak cipher suites, enable HTTP/2.0, enforce HTTPS-only access, implement HTTP Strict Transport Security (HSTS), and ensure proper certificate management with strong key lengths.",
+      "verificationProcedure": "1. Verify TLS 1.2 minimum version is enforced\n2. Confirm weak cipher suites are disabled\n3. Test SSL configuration with SSL Labs or similar tools\n4. Verify HTTPS-only enforcement is working\n5. Test HTTP to HTTPS redirection\n6. Confirm HSTS headers are present\n7. Validate certificate strength and expiration\n8. Document TLS security configuration",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service configuration showing weak TLS version",
+          "steps": "1. Navigate to Configuration > General Settings\n2. Screenshot showing TLS version set to 1.0 or 1.1\n3. Highlight weak TLS and HTTP configuration"
+        },
+        {
+          "caption": "SSL Labs report showing weak cipher suites",
+          "steps": "1. Run SSL Labs test against the application\n2. Screenshot results showing weak configurations\n3. Highlight cipher suite vulnerabilities"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure TLS mutual authentication for Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth"
+        },
+        {
+          "title": "Secure a custom DNS name with a TLS/SSL binding",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-bindings"
+        }
+      ]
+    },
+    {
+      "id": "secrets-exposure",
+      "title": "Application Settings and Connection String Exposure",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "Sensitive information including database connection strings, API keys, and other secrets are stored as plain text in application settings instead of using Azure Key Vault references, making them vulnerable to unauthorized access through the SCM endpoint or compromised administrative accounts.\n\nApplication settings and connection strings stored in plain text can be accessed through various methods including SCM endpoints, deployment slots, and administrative interfaces. This creates a significant security risk as these credentials could provide access to backend databases, external APIs, and other sensitive systems.",
+      "checkSteps": "1. Navigate to App Services > [App Name] > Configuration\n2. Review 'Application settings' section for sensitive data\n3. Check 'Connection strings' for database credentials\n4. Look for plain text secrets, passwords, keys\n5. Verify if Key Vault references are used (@Microsoft.KeyVault format)\n6. Test SCM endpoint for settings exposure\nPowerShell: $app = Get-AzWebApp -ResourceGroupName [rg] -Name [app]; $app.SiteConfig.AppSettings | Where-Object {$_.Name -match \"password|secret|key|connection\" -and $_.Value -notlike \"@Microsoft.KeyVault*\"}",
+      "recommendation": "Replace all sensitive application settings and connection strings with Azure Key Vault references, implement proper secret rotation policies, restrict access to configuration settings, and audit configuration changes regularly.",
+      "verificationProcedure": "1. Identify all sensitive configuration values\n2. Create corresponding secrets in Azure Key Vault\n3. Replace plain text values with Key Vault references\n4. Verify applications can retrieve secrets successfully\n5. Test configuration through different deployment slots\n6. Confirm SCM endpoints don't expose sensitive data\n7. Implement monitoring for configuration changes\n8. Document secret management procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Application settings showing plain text sensitive data",
+          "steps": "1. Navigate to Configuration > Application settings\n2. Screenshot showing connection strings or secrets in plain text\n3. Highlight values that should be in Key Vault"
+        },
+        {
+          "caption": "Connection strings with exposed database credentials",
+          "steps": "1. Go to Configuration > Connection strings\n2. Screenshot showing database passwords in plain text\n3. Show lack of Key Vault integration"
+        }
+      ],
+      "links": [
+        {
+          "title": "Use Key Vault references for App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references"
+        },
+        {
+          "title": "Configure connection strings",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/configure-common"
+        }
+      ]
+    },
+    {
+      "id": "scm-endpoint-exposure",
+      "title": "Source Control Manager (SCM) Endpoint Security Issues",
+      "cvssScore": 8.1,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "The Source Control Manager (SCM) endpoint is accessible without proper authentication restrictions, deployment credentials are exposed or weak, and the Kudu console provides unrestricted administrative access to the application environment.\n\nSCM endpoints provide direct access to application files, configuration, deployment processes, and administrative functions. When improperly secured, these endpoints can be exploited to gain complete control over the web application, access sensitive files, modify application code, and pivot to other connected Azure resources.",
+      "checkSteps": "1. Access SCM endpoint: https://[app-name].scm.azurewebsites.net\n2. Check authentication requirements and methods\n3. Test Kudu console accessibility\n4. Review deployment credentials strength\n5. Check SCM access restrictions configuration\n6. Verify FTP/FTPS deployment settings\nPowerShell: Get-AzWebAppPublishingProfile -ResourceGroupName [rg] -Name [app] -OutputFile \"profile.xml\"; Get-Content \"profile.xml\"",
+      "recommendation": "Restrict SCM endpoint access through IP restrictions, disable basic authentication where possible, implement strong deployment credentials, disable unnecessary deployment methods (FTP), and monitor SCM access logs for unauthorized activities.",
+      "verificationProcedure": "1. Configure SCM access restrictions to authorized IPs only\n2. Verify strong deployment credentials are enforced\n3. Test SCM access from unauthorized locations (should be blocked)\n4. Disable FTP/FTPS if not required\n5. Monitor and audit SCM access logs\n6. Test deployment processes still function correctly\n7. Verify Kudu console access is properly controlled\n8. Document SCM security configuration",
+      "screenshotPlaceholders": [
+        {
+          "caption": "SCM endpoint accessible without proper restrictions",
+          "steps": "1. Navigate to https://[app-name].scm.azurewebsites.net\n2. Screenshot showing unrestricted access or weak authentication\n3. Show Kudu console or administrative functions"
+        },
+        {
+          "caption": "Deployment credentials showing weak or exposed settings",
+          "steps": "1. Navigate to Deployment Center > Deployment Credentials\n2. Screenshot showing weak password policies or exposed credentials\n3. Highlight FTP access if unnecessarily enabled"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure deployment credentials for Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-configure-credentials"
+        },
+        {
+          "title": "Advanced tools (Kudu) for Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/resources-kudu"
+        }
+      ]
+    },
+    {
+      "id": "insufficient-logging",
+      "title": "Insufficient Security Logging and Monitoring",
+      "cvssScore": 3.9,
+      "cvssVector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:L",
+      "severity": "Low",
+      "description": "The Azure Web App has insufficient logging configuration for security events, missing integration with Azure Monitor and Log Analytics, and inadequate log retention policies that prevent effective security monitoring and incident response.\n\nWithout comprehensive logging and monitoring, security incidents, unauthorized access attempts, application errors, and performance anomalies may go undetected. This limits the organization's ability to respond to security threats, investigate incidents, and maintain compliance with security regulations.",
+      "checkSteps": "1. Navigate to App Services > [App Name] > Monitoring > Diagnostic settings\n2. Check enabled log categories and destinations\n3. Review Application logging configuration\n4. Verify HTTP logging and Failed request tracing\n5. Check Log Analytics workspace integration\n6. Review log retention policies\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [app] | Select-Object -ExpandProperty SiteConfig | Select-Object HttpLoggingEnabled, DetailedErrorLoggingEnabled, RequestTracingEnabled",
+      "recommendation": "Enable comprehensive diagnostic logging including HTTP logs, application logs, and security events. Integrate with Azure Log Analytics and Azure Sentinel for centralized monitoring. Configure appropriate log retention policies and set up alerting for security-related events.",
+      "verificationProcedure": "1. Enable all relevant diagnostic log categories\n2. Configure Log Analytics workspace integration\n3. Set up appropriate log retention periods\n4. Configure alerting rules for security events\n5. Test log generation and collection\n6. Verify logs are accessible through Azure Monitor\n7. Set up dashboard for security monitoring\n8. Document logging and monitoring procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Diagnostic settings showing insufficient logging configuration",
+          "steps": "1. Navigate to Monitoring > Diagnostic settings\n2. Screenshot showing disabled log categories\n3. Highlight missing Log Analytics integration"
+        },
+        {
+          "caption": "Application logging configuration showing gaps",
+          "steps": "1. Navigate to Configuration > General Settings\n2. Screenshot showing disabled application logging\n3. Show lack of comprehensive monitoring setup"
+        }
+      ],
+      "links": [
+        {
+          "title": "Monitor Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/monitor-app-service"
+        },
+        {
+          "title": "Enable diagnostics logging for web apps",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/troubleshoot-diagnostic-logs"
+        }
+      ]
+    },
+    {
+      "id": "excessive-rbac-permissions",
+      "title": "Excessive RBAC Role Assignments",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "severity": "Medium",
+      "description": "LRQA identified that the Web App has users or service principals assigned to overly permissive RBAC roles such as Owner or Contributor. These roles provide far more access than typically required for App Service operations and violate the principle of least privilege.\n\nExcessive permissions increase the risk of accidental or malicious actions that could compromise the web application, modify critical configurations, or access sensitive deployment credentials.",
+      "checkSteps": "1. Navigate to App Service > Access control (IAM)\n2. Review role assignments tab\n3. Identify users/service principals with Owner, Contributor, or other broad roles\n4. Check for more than 3 users with Owner permissions\n5. Verify if assignments use App Service-specific roles instead\n6. Screenshot: IAM showing excessive role assignments\nPowerShell: Get-AzRoleAssignment -Scope \"/subscriptions/[sub-id]/resourceGroups/[rg]/providers/Microsoft.Web/sites/[app-name]\" | Where-Object {$_.RoleDefinitionName -in @('Owner','Contributor')}",
+      "recommendation": "Replace broad RBAC roles (Owner, Contributor) with specific App Service roles such as 'Website Contributor', 'Web Plan Contributor', or 'Reader' based on actual requirements. Limit Owner role assignments to maximum of 3 users.",
+      "verificationProcedure": "1. Navigate to App Service > Access control (IAM)\n2. Verify no users have Owner/Contributor roles unless justified\n3. Confirm App Service-specific roles are used instead\n4. Test that users can still perform required operations\n5. Document role assignment justifications\n6. Run PowerShell commands to verify role assignments\n7. Set up periodic access reviews for role assignments",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service IAM showing users with excessive Owner/Contributor roles",
+          "steps": "1. Navigate to App Service > Access control (IAM)\n2. Click on 'Role assignments' tab\n3. Screenshot showing users assigned to Owner or Contributor roles\n4. Highlight the excessive permissions granted"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure built-in roles for Web Apps",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#web"
+        }
+      ]
+    },
+    {
+      "id": "ftp-deployment-enabled",
+      "title": "FTP Deployment Enabled",
+      "cvssScore": 7.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "severity": "High",
+      "description": "FTP deployment is enabled for the App Service, allowing file transfers over unencrypted connections. FTP transmits credentials and data in plain text, making them vulnerable to interception and man-in-the-middle attacks.\n\nFTP access also bypasses many modern security controls and audit mechanisms, potentially allowing unauthorized code deployment or sensitive file access without proper logging or approval workflows.",
+      "checkSteps": "1. Navigate to App Service > Configuration > General settings\n2. Check 'FTP state' setting\n3. Verify if it's set to 'All allowed' (insecure), 'FTPS Only' (better), or 'Disabled' (secure)\n4. Test FTP connectivity if enabled\n5. Review deployment methods in use\n6. Screenshot: Configuration showing FTP state\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [name] | Select -ExpandProperty SiteConfig | Select FtpsState",
+      "recommendation": "Disable FTP deployment completely or at minimum configure 'FTPS Only' if FTP access is absolutely required. Use secure deployment methods like Git, ARM templates, or Azure DevOps pipelines instead.",
+      "verificationProcedure": "1. Navigate to App Service > Configuration > General settings\n2. Verify 'FTP state' is set to 'Disabled'\n3. Test that FTP connections are rejected\n4. Verify alternative secure deployment methods work\n5. Document approved deployment procedures\n6. Monitor for any FTP connection attempts\n7. Update deployment documentation and procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service configuration showing FTP deployment enabled",
+          "steps": "1. Navigate to App Service > Configuration > General settings\n2. Screenshot showing 'FTP state' set to 'All allowed' or 'FTPS Only'\n3. Highlight the security risk of FTP access"
+        }
+      ],
+      "links": [
+        {
+          "title": "Deploy your app to Azure App Service using FTP/S",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/deploy-ftp"
+        }
+      ]
+    },
+    {
+      "id": "https-not-enforced",
+      "title": "HTTPS Only Not Enforced",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "Medium",
+      "description": "The App Service is not configured to enforce HTTPS-only connections, allowing clients to connect via unencrypted HTTP. This exposes all communication between clients and the application to potential interception, including sensitive data, authentication tokens, and session cookies.\n\nHTTP traffic can be easily monitored, modified, or redirected by attackers positioned between the client and server, leading to credential theft, session hijacking, and data tampering attacks.",
+      "checkSteps": "1. Navigate to App Service > Configuration > General settings\n2. Check 'HTTPS Only' setting status\n3. Verify if it's set to 'On' (secure) or 'Off' (insecure)\n4. Test HTTP access to the application URL\n5. Check if HTTP requests are redirected to HTTPS\n6. Screenshot: Configuration showing HTTPS Only disabled\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [name] | Select HttpsOnly",
+      "recommendation": "Enable 'HTTPS Only' setting to force all HTTP requests to redirect to HTTPS, ensuring all communication is encrypted in transit.",
+      "verificationProcedure": "1. Navigate to App Service > Configuration > General settings\n2. Verify 'HTTPS Only' is set to 'On'\n3. Test that HTTP requests are automatically redirected to HTTPS\n4. Verify SSL certificate is properly configured\n5. Test application functionality over HTTPS\n6. Update any hardcoded HTTP links in application\n7. Monitor access logs to confirm HTTPS usage",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service configuration showing HTTPS Only disabled",
+          "steps": "1. Navigate to App Service > Configuration > General settings\n2. Screenshot showing 'HTTPS Only' set to 'Off'\n3. Highlight the security risk of allowing HTTP connections"
+        }
+      ],
+      "links": [
+        {
+          "title": "Secure a custom DNS name with TLS/SSL binding",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-bindings"
+        }
+      ]
+    },
+    {
+      "id": "remote-debugging-enabled",
+      "title": "Remote Debugging Enabled",
+      "cvssScore": 8.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "High",
+      "description": "Remote debugging is enabled for the App Service, providing powerful capabilities to inspect application memory, variables, and execution flow. If left enabled in production environments, this creates a significant security risk by potentially exposing sensitive application data, business logic, and system information to unauthorized users.\n\nRemote debugging access can allow attackers to extract secrets, manipulate application behavior, access database connections, and potentially execute arbitrary code within the application context.",
+      "checkSteps": "1. Navigate to App Service > Configuration > General settings\n2. Check 'Remote debugging' setting\n3. Verify if it's set to 'On' (dangerous) or 'Off' (secure)\n4. If enabled, check which Visual Studio version is configured\n5. Review who has access to debugging capabilities\n6. Screenshot: Configuration showing remote debugging enabled\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [name] | Select -ExpandProperty SiteConfig | Select RemoteDebuggingEnabled, RemoteDebuggingVersion",
+      "recommendation": "Disable remote debugging for all production environments. Only enable temporarily in development/staging environments when actively debugging, and ensure it's disabled immediately after use.",
+      "verificationProcedure": "1. Navigate to App Service > Configuration > General settings\n2. Verify 'Remote debugging' is set to 'Off'\n3. Test that debugging endpoints are inaccessible\n4. Verify application functions normally without debugging\n5. Implement policy to prevent debugging in production\n6. Set up alerts for debugging configuration changes\n7. Document debugging procedures for development environments",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service configuration showing remote debugging enabled",
+          "steps": "1. Navigate to App Service > Configuration > General settings\n2. Screenshot showing 'Remote debugging' set to 'On'\n3. Highlight the security risk and Visual Studio version configured"
+        }
+      ],
+      "links": [
+        {
+          "title": "Remote debugging Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/troubleshoot-dotnet-visual-studio#remotedebug"
+        }
+      ]
+    },
+    {
+      "id": "startup-command-secrets",
+      "title": "Secrets Exposed in Startup Command",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "Sensitive information such as passwords, API keys, connection strings, or tokens are exposed in the App Service startup command configuration. Startup commands are visible to anyone with read access to the App Service configuration and may be logged in various system logs.\n\nCredentials in startup commands bypass secure secret management practices and can be easily discovered by attackers who gain access to the Azure portal, deployment scripts, or system logs, leading to potential credential compromise and lateral movement.",
+      "checkSteps": "1. Navigate to App Service > Configuration > General settings\n2. Review 'Startup Command' field\n3. Look for patterns indicating secrets: passwords, keys, tokens, connection strings\n4. Check for hardcoded credentials in command parameters\n5. Review container settings if using custom containers\n6. Screenshot: Startup command containing sensitive information\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [name] | Select -ExpandProperty SiteConfig | Select AppCommandLine",
+      "recommendation": "Remove all sensitive information from startup commands. Use Key Vault references, environment variables, or managed identities for secure credential management. Store secrets in App Service configuration with Key Vault integration.",
+      "verificationProcedure": "1. Navigate to App Service > Configuration > General settings\n2. Verify startup command contains no sensitive information\n3. Confirm secrets are stored in Key Vault or secure app settings\n4. Test application startup with secure configuration\n5. Verify Key Vault references are working correctly\n6. Update deployment procedures to prevent secret exposure\n7. Implement automated scanning for secrets in configurations",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service startup command containing exposed secrets",
+          "steps": "1. Navigate to App Service > Configuration > General settings\n2. Screenshot showing 'Startup Command' with sensitive information (partially obscured)\n3. Highlight credentials, tokens, or connection strings in the command"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure a custom container for Azure App Service",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/configure-custom-container"
+        },
+        {
+          "title": "Use Key Vault references as app settings",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references"
+        }
+      ]
+    },
+    {
+      "id": "managed-identity-not-configured",
+      "title": "Managed Identity Not Configured for Azure Resource Access",
+      "cvssScore": 7.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N",
+      "severity": "High",
+      "description": "The App Service is not configured with a managed identity or is using service principals/connection strings instead of managed identities for Azure resource authentication. Managed identities eliminate the need for developers to store credentials in code or configuration and provide automatic credential management by Azure.\n\nWithout managed identity, applications typically rely on stored credentials, connection strings, or service principal secrets that can be exposed through configuration files, environment variables, or code repositories. This creates security risks and credential management overhead that managed identities are designed to eliminate.\n\nIf remote code execution is achieved on an App Service with managed identity, attackers may be able to request access tokens and gain a foothold in the Azure tenant, but this risk is preferable to exposed credentials.",
+      "checkSteps": "1. Navigate to App Service > Identity\n2. Check 'System assigned' identity status\n3. Review 'User assigned' identities if any\n4. Navigate to Configuration > Application settings\n5. Look for Azure service connection strings or service principal credentials\n6. Check application code for credential usage patterns\n7. Screenshot: Identity page showing no managed identity configured\nPowerShell: Get-AzWebApp -ResourceGroupName [rg] -Name [name] | Select -ExpandProperty Identity",
+      "recommendation": "Enable system-assigned managed identity for the App Service and update application code to use managed identity authentication for Azure resources instead of connection strings or service principals.",
+      "verificationProcedure": "1. Navigate to App Service > Identity\n2. Verify system-assigned identity is 'On' with Object ID populated\n3. Verify Azure resource access uses managed identity authentication\n4. Remove any service principal credentials from configuration\n5. Test application functionality with managed identity\n6. Grant necessary RBAC permissions to the managed identity\n7. Monitor authentication logs for successful managed identity usage\n8. Document identity-based authentication architecture",
+      "screenshotPlaceholders": [
+        {
+          "caption": "App Service Identity page showing no managed identity configured",
+          "steps": "1. Navigate to App Service > Identity\n2. Screenshot showing 'System assigned' status as 'Off'\n3. Show empty 'User assigned' identities section"
+        },
+        {
+          "caption": "Application settings showing service principal or connection string credentials",
+          "steps": "1. Navigate to App Service > Configuration > Application settings\n2. Screenshot showing settings with service principal IDs, secrets, or connection strings\n3. Highlight the credential exposure risk"
+        }
+      ],
+      "links": [
+        {
+          "title": "How to use managed identities for App Service and Azure Functions",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/overview-managed-identity"
+        },
+        {
+          "title": "What are managed identities for Azure resources?",
+          "url": "https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview"
+        },
+        {
+          "title": "Tutorial: Access Azure services from App Service using managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-msi-azure-database"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure Web App Security Assessment Script (2024)\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$AppName,\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName\n)\n\nWrite-Host \"=== Azure Web App Security Assessment: $AppName ===\" -ForegroundColor Cyan\n\n# Get Web App details\ntry {\n    $webapp = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName\n    Write-Host \"Web App: $($webapp.Name) | Location: $($webapp.Location)\" -ForegroundColor White\n    Write-Host \"State: $($webapp.State) | Tier: $($webapp.AppServicePlan)\" -ForegroundColor White\n} catch {\n    Write-Host \"❌ Error: Could not retrieve web app details\" -ForegroundColor Red\n    exit 1\n}\n\n# RBAC Checks\nWrite-Host \"`n--- RBAC and Access Control ---\" -ForegroundColor Yellow\ntry {\n    $scope = \"/subscriptions/\" + (Get-AzContext).Subscription.Id + \"/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$AppName\"\n    $roleAssignments = Get-AzRoleAssignment -Scope $scope | Where-Object {$_.RoleDefinitionName -in @('Owner','Contributor')}\n    if ($roleAssignments.Count -gt 0) {\n        Write-Host \"⚠️ Found $($roleAssignments.Count) users with excessive RBAC permissions (Owner/Contributor)\" -ForegroundColor Yellow\n        foreach($assignment in $roleAssignments) {\n            Write-Host \"   $($assignment.DisplayName) - $($assignment.RoleDefinitionName)\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"✅ No excessive RBAC role assignments found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"⚠️ Could not check RBAC role assignments\" -ForegroundColor Yellow\n}\n\n# Managed Identity Checks\nWrite-Host \"`n--- Managed Identity Configuration ---\" -ForegroundColor Yellow\nif ($webapp.Identity.Type) {\n    Write-Host \"✅ Managed Identity is configured: $($webapp.Identity.Type)\" -ForegroundColor Green\n    if ($webapp.Identity.Type -eq \"SystemAssigned\") {\n        Write-Host \"   Principal ID: $($webapp.Identity.PrincipalId)\" -ForegroundColor White\n    }\n    if ($webapp.Identity.UserAssignedIdentities) {\n        Write-Host \"   User Assigned Identities: $($webapp.Identity.UserAssignedIdentities.Count)\" -ForegroundColor White\n    }\n} else {\n    Write-Host \"❌ No Managed Identity configured\" -ForegroundColor Red\n    Write-Host \"   Recommendation: Enable system-assigned managed identity for secure Azure resource access\" -ForegroundColor White\n}\n\n# Authentication and Authorization Checks\nWrite-Host \"`n--- Authentication & Authorization ---\" -ForegroundColor Yellow\n$authSettings = $webapp.SiteAuthSettings\nif ($authSettings.Enabled) {\n    Write-Host \"✅ App Service Authentication is enabled\" -ForegroundColor Green\n    Write-Host \"   Provider: $($authSettings.DefaultProvider)\" -ForegroundColor White\n    Write-Host \"   Unauthenticated Action: $($authSettings.UnauthenticatedClientAction)\" -ForegroundColor White\n    \n    if ($authSettings.UnauthenticatedClientAction -eq \"AllowAnonymous\") {\n        Write-Host \"⚠️ Anonymous access is allowed\" -ForegroundColor Yellow\n    }\n    \n    # Check for potential OAuth issues\n    if ($authSettings.ClientId -and $authSettings.ClientSecret) {\n        Write-Host \"⚠️ OAuth configuration detected - verify email verification settings\" -ForegroundColor Yellow\n    }\n} else {\n    Write-Host \"❌ App Service Authentication is disabled\" -ForegroundColor Red\n}\n\n# Network Security Checks\nWrite-Host \"`n--- Network Security ---\" -ForegroundColor Yellow\n$siteConfig = $webapp.SiteConfig\nif ($siteConfig.IpSecurityRestrictions -and $siteConfig.IpSecurityRestrictions.Count -gt 0) {\n    Write-Host \"✅ IP security restrictions configured\" -ForegroundColor Green\n    Write-Host \"   Rules: $($siteConfig.IpSecurityRestrictions.Count)\" -ForegroundColor White\n    foreach($rule in $siteConfig.IpSecurityRestrictions) {\n        $action = if($rule.Action -eq 'Allow') {'✅'} else {'❌'}\n        Write-Host \"   $action $($rule.IpAddress) - $($rule.Name)\" -ForegroundColor White\n    }\n} else {\n    Write-Host \"❌ No IP security restrictions configured (public access allowed)\" -ForegroundColor Red\n}\n\n# Check for Private Endpoints\ntry {\n    $privateEndpoints = Get-AzPrivateEndpoint | Where-Object {\n        $_.PrivateLinkServiceConnections.PrivateLinkServiceId -like \"*$($webapp.Id)*\"\n    }\n    if ($privateEndpoints.Count -gt 0) {\n        Write-Host \"✅ $($privateEndpoints.Count) private endpoint(s) configured\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ No private endpoints configured\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"⚠️ Could not check private endpoint configuration\" -ForegroundColor Yellow\n}\n\n# TLS/SSL Configuration Checks\nWrite-Host \"`n--- TLS/SSL Configuration ---\" -ForegroundColor Yellow\nif ($siteConfig.MinTlsVersion) {\n    if ($siteConfig.MinTlsVersion -ge '1.2') {\n        Write-Host \"✅ Minimum TLS version: $($siteConfig.MinTlsVersion)\" -ForegroundColor Green\n    } else {\n        Write-Host \"❌ Weak TLS version: $($siteConfig.MinTlsVersion)\" -ForegroundColor Red\n    }\n} else {\n    Write-Host \"⚠️ TLS version not specified\" -ForegroundColor Yellow\n}\n\nif ($siteConfig.HttpsOnly) {\n    Write-Host \"✅ HTTPS Only is enabled\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ HTTPS Only is disabled\" -ForegroundColor Red\n}\n\nif ($siteConfig.Http20Enabled) {\n    Write-Host \"✅ HTTP/2.0 is enabled\" -ForegroundColor Green\n} else {\n    Write-Host \"⚠️ HTTP/2.0 is disabled\" -ForegroundColor Yellow\n}\n\n# Application Settings Security Check\nWrite-Host \"`n--- Application Settings Security ---\" -ForegroundColor Yellow\n$sensitiveKeywords = @('password', 'secret', 'key', 'connection', 'token', 'credential')\n$exposedSecrets = @()\nforeach ($setting in $siteConfig.AppSettings) {\n    foreach ($keyword in $sensitiveKeywords) {\n        if ($setting.Name -like \"*$keyword*\" -and $setting.Value -notlike \"@Microsoft.KeyVault*\") {\n            $exposedSecrets += $setting.Name\n        }\n    }\n}\n\nif ($exposedSecrets.Count -gt 0) {\n    Write-Host \"❌ $($exposedSecrets.Count) potentially sensitive settings not using Key Vault\" -ForegroundColor Red\n    foreach ($secret in $exposedSecrets) {\n        Write-Host \"   • $secret\" -ForegroundColor White\n    }\n    Write-Host \"   Consider using Key Vault references: @Microsoft.KeyVault(VaultName=vault;SecretName=secret)\" -ForegroundColor White\n} else {\n    Write-Host \"✅ No obvious exposed secrets in application settings\" -ForegroundColor Green\n}\n\n# Connection Strings Check\nif ($siteConfig.ConnectionStrings -and $siteConfig.ConnectionStrings.Count -gt 0) {\n    $exposedConnStrings = $siteConfig.ConnectionStrings | Where-Object { $_.ConnectionString -notlike \"@Microsoft.KeyVault*\" }\n    if ($exposedConnStrings.Count -gt 0) {\n        Write-Host \"❌ $($exposedConnStrings.Count) connection string(s) not using Key Vault\" -ForegroundColor Red\n        foreach ($conn in $exposedConnStrings) {\n            Write-Host \"   • $($conn.Name) ($($conn.Type))\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"✅ All connection strings use Key Vault references\" -ForegroundColor Green\n    }\n}\n\n# SCM and Deployment Security\nWrite-Host \"`n--- SCM and Deployment Security ---\" -ForegroundColor Yellow\nif ($siteConfig.FtpsState) {\n    if ($siteConfig.FtpsState -eq 'Disabled') {\n        Write-Host \"✅ FTP/FTPS is disabled\" -ForegroundColor Green\n    } elseif ($siteConfig.FtpsState -eq 'FtpsOnly') {\n        Write-Host \"⚠️ FTPS is enabled (consider disabling if not needed)\" -ForegroundColor Yellow\n    } else {\n        Write-Host \"❌ FTP is enabled (insecure)\" -ForegroundColor Red\n    }\n}\n\n# Check SCM IP restrictions\nif ($siteConfig.ScmIpSecurityRestrictions -and $siteConfig.ScmIpSecurityRestrictions.Count -gt 0) {\n    Write-Host \"✅ SCM IP security restrictions configured\" -ForegroundColor Green\n    Write-Host \"   SCM Rules: $($siteConfig.ScmIpSecurityRestrictions.Count)\" -ForegroundColor White\n} else {\n    Write-Host \"❌ No SCM IP restrictions (SCM site publicly accessible)\" -ForegroundColor Red\n}\n\n# Logging and Monitoring\nWrite-Host \"`n--- Logging and Monitoring ---\" -ForegroundColor Yellow\n$loggingEnabled = @()\nif ($siteConfig.HttpLoggingEnabled) { $loggingEnabled += \"HTTP Logging\" }\nif ($siteConfig.DetailedErrorLoggingEnabled) { $loggingEnabled += \"Detailed Error Logging\" }\nif ($siteConfig.RequestTracingEnabled) { $loggingEnabled += \"Request Tracing\" }\n\nif ($loggingEnabled.Count -gt 0) {\n    Write-Host \"✅ Logging enabled: $($loggingEnabled -join ', ')\" -ForegroundColor Green\n} else {\n    Write-Host \"❌ No application logging enabled\" -ForegroundColor Red\n}\n\n# Check Diagnostic Settings\ntry {\n    $diagnosticSettings = Get-AzDiagnosticSetting -ResourceId $webapp.Id\n    if ($diagnosticSettings.Count -gt 0) {\n        Write-Host \"✅ Diagnostic settings configured\" -ForegroundColor Green\n        foreach($setting in $diagnosticSettings) {\n            Write-Host \"   Setting: $($setting.Name) - Categories: $($setting.Logs.Count)\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"❌ No diagnostic settings configured\" -ForegroundColor Red\n    }\n} catch {\n    Write-Host \"⚠️ Could not check diagnostic settings\" -ForegroundColor Yellow\n}\n\n# Remote Debugging and Runtime Security\nWrite-Host \"`n--- Remote Debugging and Runtime Security ---\" -ForegroundColor Yellow\nif ($siteConfig.RemoteDebuggingEnabled) {\n    Write-Host \"❌ Remote debugging is enabled (security risk)\" -ForegroundColor Red\n    Write-Host \"   Version: $($siteConfig.RemoteDebuggingVersion)\" -ForegroundColor White\n} else {\n    Write-Host \"✅ Remote debugging is disabled\" -ForegroundColor Green\n}\n\n# Startup Command Security Check\nif ($siteConfig.AppCommandLine) {\n    $sensitivePatterns = @('password', 'secret', 'key', 'token', 'connection')\n    $commandHasSecrets = $false\n    foreach ($pattern in $sensitivePatterns) {\n        if ($siteConfig.AppCommandLine -like \"*$pattern*\") {\n            $commandHasSecrets = $true\n            break\n        }\n    }\n    if ($commandHasSecrets) {\n        Write-Host \"❌ Startup command may contain sensitive information\" -ForegroundColor Red\n        Write-Host \"   Command: $($siteConfig.AppCommandLine -replace '([a-zA-Z0-9+/]{20,})','***REDACTED***')\" -ForegroundColor White\n    } else {\n        Write-Host \"✅ Startup command appears secure\" -ForegroundColor Green\n    }\n} else {\n    Write-Host \"✅ No custom startup command configured\" -ForegroundColor Green\n}\n\n# Platform and Runtime Security\nWrite-Host \"`n--- Platform and Runtime Security ---\" -ForegroundColor Yellow\nif ($siteConfig.NetFrameworkVersion) {\n    Write-Host \"Platform: .NET Framework $($siteConfig.NetFrameworkVersion)\" -ForegroundColor White\n}\nif ($siteConfig.PhpVersion) {\n    Write-Host \"Platform: PHP $($siteConfig.PhpVersion)\" -ForegroundColor White\n    if ($siteConfig.PhpVersion -lt '8.0') {\n        Write-Host \"⚠️ PHP version may be outdated\" -ForegroundColor Yellow\n    }\n}\nif ($siteConfig.PythonVersion) {\n    Write-Host \"Platform: Python $($siteConfig.PythonVersion)\" -ForegroundColor White\n}\nif ($siteConfig.NodeVersion) {\n    Write-Host \"Platform: Node.js $($siteConfig.NodeVersion)\" -ForegroundColor White\n}\n\n# Certificate Check\nWrite-Host \"`n--- SSL Certificate Status ---\" -ForegroundColor Yellow\ntry {\n    $certificates = Get-AzWebAppCertificate -ResourceGroupName $ResourceGroupName\n    if ($certificates.Count -gt 0) {\n        Write-Host \"✅ $($certificates.Count) SSL certificate(s) found\" -ForegroundColor Green\n        foreach($cert in $certificates) {\n            $daysUntilExpiry = ($cert.ExpirationDate - (Get-Date)).Days\n            if ($daysUntilExpiry -lt 30) {\n                Write-Host \"⚠️ Certificate '$($cert.Name)' expires in $daysUntilExpiry days\" -ForegroundColor Yellow\n            } else {\n                Write-Host \"✅ Certificate '$($cert.Name)' valid for $daysUntilExpiry days\" -ForegroundColor Green\n            }\n        }\n    } else {\n        Write-Host \"⚠️ No SSL certificates found\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"⚠️ Could not check SSL certificates\" -ForegroundColor Yellow\n}\n\n# Summary\nWrite-Host \"`n=== Security Assessment Complete ===\" -ForegroundColor Cyan\nWrite-Host \"App: $($webapp.Name) | Resource Group: $ResourceGroupName\" -ForegroundColor White\nWrite-Host \"Review findings above and implement recommended security controls\" -ForegroundColor White\n\n# Optional: Test SCM endpoint accessibility\nWrite-Host \"`n--- SCM Endpoint Test ---\" -ForegroundColor Yellow\n$scmUrl = \"https://$($AppName).scm.azurewebsites.net\"\nWrite-Host \"SCM URL: $scmUrl\" -ForegroundColor White\nWrite-Host \"Manually test SCM access and authentication requirements\" -ForegroundColor White"
+}

@@ -1,0 +1,443 @@
+{
+  "id": "azure-data-factory-misconfig",
+  "title": "Azure Data Factory V2 Security Misconfigurations",
+  "category": "Data Processing Security",
+  "baseDescription": "LRQA identified multiple critical security misconfigurations in Azure Data Factory V2 that could lead to unauthorized data access, pipeline compromise, credential exposure, data exfiltration, and complete compromise of data processing workflows. These misconfigurations violate Azure security best practices and compliance requirements, creating significant attack vectors for malicious actors targeting enterprise data pipelines, ETL processes, and integration services. With 23.77 million secrets leaked on GitHub in 2024 and DDoS attacks increasing 50% year-over-year, Data Factory security is more critical than ever.",
+  "subFindings": [
+    {
+      "id": "integration-runtime-vulnerabilities",
+      "title": "Apache Airflow Integration Runtime Security Vulnerabilities",
+      "cvssScore": 8.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L",
+      "severity": "High",
+      "description": "Critical security flaws discovered in Azure Data Factory's Apache Airflow integration, including Kubernetes RBAC misconfigurations with cluster-admin permissions, exposed SAS tokens through Geneva service misconfiguration, and weak authentication controls enabling potential cluster takeover and persistent compromise.\n\nThe Integration Runtime contains three critical vulnerabilities: misconfigured service accounts with excessive Kubernetes privileges, exposed SAS tokens for data storage and event hubs through Azure's internal Geneva service, and insufficient authentication controls. These vulnerabilities can lead to full cluster compromise, unauthorized data access, and shadow administrator access.",
+      "checkSteps": "1. Navigate to Azure Data Factory → Integration runtimes\n2. Select Apache Airflow runtime configuration\n3. Review Kubernetes cluster configuration and RBAC settings\n4. Check Security tab for service account permissions\n5. Audit Geneva service configuration for exposed SAS tokens\n6. Verify authentication controls for runtime components\n7. Review port 3389 (RDP) configuration in Network Security Groups\nPowerShell: Get-AzDataFactoryV2IntegrationRuntime -DataFactoryName [factory] -ResourceGroupName [rg]",
+      "recommendation": "Review and restrict Kubernetes RBAC permissions to minimum required, implement proper secret management for Geneva service, enable strong authentication for all integration runtime components, disable unnecessary RDP access, and regularly rotate SAS tokens and access keys.",
+      "verificationProcedure": "1. Verify RBAC configuration restricts cluster-admin permissions\n2. Confirm proper secret management implementation\n3. Test authentication controls on all runtime components\n4. Verify RDP access is properly restricted or disabled\n5. Check SAS token rotation policies are implemented\n6. Review network isolation between SHIR and cloud resources\n7. Audit credential storage encryption on SHIR nodes\n8. Document security configuration changes",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Integration Runtime showing Apache Airflow with misconfigured RBAC",
+          "steps": "1. Navigate to Data Factory → Integration runtimes\n2. Screenshot showing Apache Airflow runtime configuration\n3. Highlight Kubernetes RBAC settings with excessive permissions"
+        },
+        {
+          "caption": "Network Security Group showing open RDP port 3389",
+          "steps": "1. Navigate to NSG associated with Integration Runtime\n2. Screenshot showing inbound security rules\n3. Highlight port 3389 open to all traffic"
+        }
+      ],
+      "links": [
+        {
+          "title": "Security considerations - Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-movement-security-considerations"
+        },
+        {
+          "title": "Azure Data Factory Apache Airflow",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/concept-airflow-in-azure-data-factory"
+        }
+      ]
+    },
+    {
+      "id": "key-vault-privilege-escalation",
+      "title": "Key Vault Contributor Role Privilege Escalation",
+      "cvssScore": 8.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "Users with Key Vault Contributor role can bypass access policies by adding themselves to Key Vault access policies, gaining unauthorized access to API keys, passwords, authentication certificates, Azure Storage SAS tokens, and other sensitive credentials used by Data Factory pipelines and linked services.\n\nThis privilege escalation vulnerability allows compromised accounts with Key Vault Contributor permissions to modify access policies, extract stored credentials, and perform lateral movement using the extracted secrets. The vulnerability is particularly dangerous in Data Factory environments where numerous sensitive credentials are stored in Key Vault for pipeline operations.",
+      "checkSteps": "1. Navigate to Key Vault → Access policies\n2. Review role assignments under Access control (IAM)\n3. Check for users with 'Key Vault Contributor' role\n4. Review diagnostic logs for recent policy modifications\n5. Audit Data Factory linked services using Key Vault\n6. Check for service principals with excessive Key Vault permissions\n7. Review Key Vault access policy modification history\nPowerShell: Get-AzRoleAssignment -RoleDefinitionName \"Key Vault Contributor\"",
+      "recommendation": "Implement Azure RBAC for Key Vault instead of access policies, use principle of least privilege for role assignments, enable Key Vault logging and monitoring, conduct regular access policy audits, and implement Privileged Identity Management (PIM) for sensitive roles.",
+      "verificationProcedure": "1. Migrate from Key Vault access policies to Azure RBAC model\n2. Remove unnecessary Key Vault Contributor role assignments\n3. Implement just-in-time access for administrative operations\n4. Enable comprehensive Key Vault audit logging\n5. Set up alerts for access policy modifications\n6. Verify Data Factory can access required secrets with reduced permissions\n7. Test pipeline functionality after permission changes\n8. Document new RBAC configuration and procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Key Vault showing users with Contributor role assignments",
+          "steps": "1. Navigate to Key Vault → Access control (IAM)\n2. Screenshot showing role assignments\n3. Highlight users with Key Vault Contributor role"
+        },
+        {
+          "caption": "Access policies showing unauthorized modifications",
+          "steps": "1. Navigate to Key Vault → Access policies\n2. Screenshot showing recent policy changes\n3. Highlight unauthorized or suspicious policy additions"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure Key Vault security",
+          "url": "https://learn.microsoft.com/en-us/azure/key-vault/general/security-features"
+        },
+        {
+          "title": "Store credentials in Azure Key Vault",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/store-credentials-in-key-vault"
+        }
+      ]
+    },
+    {
+      "id": "pipeline-parameter-injection",
+      "title": "Pipeline Parameter Injection Vulnerabilities",
+      "cvssScore": 8.1,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "Data Factory pipelines contain vulnerabilities allowing SQL injection and command injection attacks through inadequate input validation in pipeline parameters, dynamic SQL construction without parameterization, and insufficient data masking during transformation processes.\n\nBased on security research showing SQL injection comprising 6.7% of open-source vulnerabilities, these injection points can lead to unauthorized data access, data corruption, compliance violations, and potential supply chain attacks. Pipeline parameter injection can allow attackers to execute arbitrary SQL commands, access sensitive data, and manipulate data processing workflows.",
+      "checkSteps": "1. Navigate to Data Factory → Pipelines → Parameters\n2. Review parameter validation and sanitization implementation\n3. Check SQL activities for dynamic query construction\n4. Audit data transformation activities for input validation\n5. Review pipeline variable usage in script activities\n6. Check for user-controlled input in SQL queries\n7. Verify parameterized query usage in database connections\nPowerShell: Audit pipeline parameters for injection patterns using Get-AzDataFactoryV2Pipeline",
+      "recommendation": "Implement comprehensive input validation for all pipeline parameters, use parameterized queries for all SQL operations, implement proper data masking during transformations, validate all user-controlled inputs, and establish secure coding practices for pipeline development.",
+      "verificationProcedure": "1. Review all pipelines for parameter injection vulnerabilities\n2. Implement input validation and sanitization for all parameters\n3. Convert dynamic SQL to parameterized queries\n4. Test injection resistance with security testing tools\n5. Implement data masking for sensitive transformation processes\n6. Establish code review processes for pipeline changes\n7. Train development teams on secure pipeline coding practices\n8. Monitor pipeline execution for suspicious parameter patterns",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Pipeline parameter configuration showing potential injection risk",
+          "steps": "1. Navigate to Data Factory → Pipelines → [Pipeline]\n2. Screenshot showing parameter configuration\n3. Highlight parameters used in dynamic SQL or script activities"
+        },
+        {
+          "caption": "SQL activity showing dynamic query construction vulnerability",
+          "steps": "1. Navigate to pipeline SQL activity configuration\n2. Screenshot showing dynamic SQL construction\n3. Highlight concatenated user input in SQL queries"
+        }
+      ],
+      "links": [
+        {
+          "title": "Parameterizing linked services",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/parameterize-linked-services"
+        },
+        {
+          "title": "Pipeline security best practices",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-movement-security-considerations#pipeline-security"
+        }
+      ]
+    },
+    {
+      "id": "private-endpoint-misconfigurations",
+      "title": "Private Endpoint and Network Security Misconfigurations",
+      "cvssScore": 6.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N",
+      "severity": "Medium",
+      "description": "Azure Data Factory contains network security misconfigurations including improperly configured private endpoints, inadequate Network Security Group rules, missing DNS configuration causing fallback to public endpoints, and regional limitations in managed virtual network configurations.\n\nThese misconfigurations can lead to data exfiltration through unintended public endpoints, man-in-the-middle attacks on improperly configured connections, and bypass of corporate firewall rules. Private endpoints that are not properly approved before use create security gaps that attackers can exploit.",
+      "checkSteps": "1. Navigate to Data Factory → Managed virtual network\n2. Review private endpoints and their approval status\n3. Check Network Security Groups for subnet rules\n4. Verify private DNS zone configuration\n5. Test DNS resolution for storage accounts and services\n6. Review regional alignment between Data Factory and managed VNet\n7. Audit firewall rules for data movement\nPowerShell: Get-AzDataFactoryV2ManagedVirtualNetwork -DataFactoryName [factory] -ResourceGroupName [rg]",
+      "recommendation": "Ensure all private endpoints are properly approved before use, implement comprehensive NSG rules for private endpoint subnets, configure private DNS zones correctly, verify regional alignment for managed VNet, and regularly audit network configurations.",
+      "verificationProcedure": "1. Verify all private endpoints are in approved state\n2. Implement proper NSG rules for private endpoint subnets\n3. Test private DNS resolution for all connected services\n4. Verify no fallback to public endpoints occurs\n5. Check regional consistency between Data Factory and VNet\n6. Test data movement through private endpoints\n7. Monitor network traffic for unexpected public connections\n8. Document network security configuration",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Managed virtual network showing unapproved private endpoints",
+          "steps": "1. Navigate to Data Factory → Managed virtual network\n2. Screenshot showing private endpoints list\n3. Highlight endpoints in pending or unapproved state"
+        },
+        {
+          "caption": "DNS resolution showing fallback to public endpoints",
+          "steps": "1. Test DNS resolution for storage account or service\n2. Screenshot showing public IP resolution\n3. Highlight lack of private DNS configuration"
+        }
+      ],
+      "links": [
+        {
+          "title": "Managed virtual network and managed private endpoints",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/managed-virtual-network-private-endpoint"
+        },
+        {
+          "title": "Data access strategies",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-access-strategies"
+        }
+      ]
+    },
+    {
+      "id": "service-principal-credential-exposure",
+      "title": "Service Principal Credential Exposure and Authentication Issues",
+      "cvssScore": 7.7,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "Service principal credentials are exposed through hardcoded credentials in pipeline definitions, insecure storage of client secrets, inadequate rotation policies, and overprivileged service principal assignments, creating significant security risks for unauthorized Azure resource access.\n\nWith over 23 million secrets leaked on GitHub in 2024, service principal credential exposure is a critical vulnerability in Data Factory environments. These exposed credentials can provide unauthorized access to Azure resources, enable data exfiltration and manipulation, create compliance violations, and result in financial impact from unauthorized resource usage.",
+      "checkSteps": "1. Navigate to Microsoft Entra ID → App registrations → Service principals\n2. Review Certificates & secrets for expiration dates\n3. Audit API permissions granted to service principals\n4. Check Data Factory → Linked services for authentication methods\n5. Review service principal role assignments across subscriptions\n6. Audit pipeline definitions for hardcoded credentials\n7. Check Key Vault integration for credential storage\nPowerShell: Get-AzADServicePrincipal and Get-AzRoleAssignment for privilege audit",
+      "recommendation": "Migrate to managed identities where possible, implement credential rotation policies, use Azure Key Vault for secret management, apply principle of least privilege, implement Privileged Identity Management (PIM), and establish regular access reviews for service accounts.",
+      "verificationProcedure": "1. Audit all service principals for appropriate permissions\n2. Migrate from service principals to managed identities where possible\n3. Implement automated credential rotation\n4. Move all secrets to Azure Key Vault\n5. Remove overprivileged role assignments\n6. Test functionality after permission reductions\n7. Implement monitoring for credential usage\n8. Document service principal security policies",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Service principal with overprivileged Azure permissions",
+          "steps": "1. Navigate to Microsoft Entra ID → App registrations\n2. Screenshot showing service principal with excessive permissions\n3. Highlight Owner or Contributor roles at subscription level"
+        },
+        {
+          "caption": "Data Factory linked service using exposed credentials",
+          "steps": "1. Navigate to Data Factory → Linked services\n2. Screenshot showing authentication configuration\n3. Highlight hardcoded credentials or service principal usage"
+        }
+      ],
+      "links": [
+        {
+          "title": "Managed identity - Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-factory-service-identity"
+        },
+        {
+          "title": "Azure Data Factory security baseline",
+          "url": "https://learn.microsoft.com/en-us/security/benchmark/azure/baselines/data-factory-security-baseline"
+        }
+      ]
+    },
+    {
+      "id": "insufficient-monitoring-logging",
+      "title": "Insufficient Monitoring, Logging, and Audit Trail Configuration",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H",
+      "severity": "Medium",
+      "description": "Azure Data Factory has insufficient audit coverage and monitoring configuration, including up to 15-minute latency in Log Analytics, limited real-time alerting capabilities, incomplete audit trail for sensitive operations, and high storage costs leading to reduced log retention periods.\n\nThese monitoring gaps result in delayed incident response, compliance violations due to incomplete audit trails, inability to detect security incidents in real-time, and challenges during forensic investigations. Without proper monitoring, malicious activities and security breaches may go undetected for extended periods.",
+      "checkSteps": "1. Navigate to Data Factory → Monitor → Alerts and metrics\n2. Review diagnostic settings for enabled log categories\n3. Check Log Analytics workspace configuration and retention\n4. Verify Azure Security Center integration\n5. Review alert rules for security events\n6. Check audit log coverage for pipeline operations\n7. Verify monitoring for linked service access\nPowerShell: Get-AzDiagnosticSetting -ResourceId [DataFactoryId] to check logging configuration",
+      "recommendation": "Enable comprehensive diagnostic logging for all categories, configure real-time alerting for critical events, implement Azure Sentinel for advanced threat detection, establish appropriate log retention policies, and create security monitoring dashboards for Data Factory operations.",
+      "verificationProcedure": "1. Enable all available diagnostic log categories\n2. Configure Log Analytics workspace with appropriate retention\n3. Implement real-time alerts for suspicious activities\n4. Set up Azure Sentinel integration for threat detection\n5. Create monitoring dashboards for security events\n6. Test alert functionality with simulated events\n7. Establish log review and analysis procedures\n8. Train security team on Data Factory-specific monitoring",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Diagnostic settings showing insufficient log categories enabled",
+          "steps": "1. Navigate to Data Factory → Diagnostic settings\n2. Screenshot showing limited log category selection\n3. Highlight missing critical log categories"
+        },
+        {
+          "caption": "Monitoring dashboard showing gaps in security alerting",
+          "steps": "1. Navigate to Azure Monitor → Alerts\n2. Screenshot showing lack of Data Factory security alerts\n3. Highlight missing alert rules for critical operations"
+        }
+      ],
+      "links": [
+        {
+          "title": "Monitor Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/monitor-data-factory"
+        },
+        {
+          "title": "Azure Data Factory alerts and metrics",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/monitor-using-azure-monitor"
+        }
+      ]
+    },
+    {
+      "id": "excessive-rbac-permissions",
+      "title": "Excessive RBAC Permissions and Overprivileged Role Assignments",
+      "cvssScore": 8.6,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:L",
+      "severity": "High",
+      "description": "Data Factory has overprivileged role assignments including excessive Data Factory Contributor roles at subscription level, unnecessary Owner permissions for service accounts, broad Contributor access for support personnel, and missing custom role implementations, violating the principle of least privilege and creating significant insider threat risks.\n\nThe Data Factory Contributor role allows users to modify linked service configurations containing sensitive credentials, deploy Resource Manager templates, and make production changes. With Azure classic administrator roles retired in 2024, proper RBAC configuration is critical. These excessive permissions enable unauthorized configuration changes, credential theft, and potential data pipeline sabotage.",
+      "checkSteps": "1. Navigate to Data Factory → Access control (IAM)\n2. Review role assignments at Data Factory level\n3. Check parent resource group role assignments\n4. Verify subscription-level Data Factory permissions\n5. Identify users with Owner or Contributor roles\n6. Review service principal role assignments\n7. Check for role inheritance from parent scopes\nPowerShell: Get-AzRoleAssignment -Scope /subscriptions/[subId]/resourceGroups/[rg]/providers/Microsoft.DataFactory/factories/[factory]",
+      "recommendation": "Implement custom roles with minimal required permissions, remove Data Factory Contributor access from developers in production, use Privileged Identity Management (PIM) for just-in-time access, restrict publishing permissions to deployment pipelines, and conduct quarterly RBAC audits.",
+      "verificationProcedure": "1. Create custom roles for different user personas\n2. Remove excessive Owner and Contributor assignments\n3. Implement PIM for administrative access\n4. Configure deployment-only service principals\n5. Test functionality with reduced permissions\n6. Document role assignment procedures\n7. Set up alerts for privilege escalation\n8. Conduct quarterly access reviews",
+      "screenshotPlaceholders": [
+        {
+          "caption": "IAM showing excessive Data Factory Contributor assignments",
+          "steps": "1. Navigate to Data Factory → Access control (IAM)\n2. Screenshot showing role assignments\n3. Highlight users with Data Factory Contributor at subscription level"
+        },
+        {
+          "caption": "Service principals with Owner permissions",
+          "steps": "1. Navigate to IAM → Filter by Service principals\n2. Screenshot showing service principal permissions\n3. Highlight Owner role assignments for automation accounts"
+        }
+      ],
+      "links": [
+        {
+          "title": "Roles and permissions for Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/concepts-roles-permissions"
+        },
+        {
+          "title": "Azure custom roles for Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles"
+        }
+      ]
+    },
+    {
+      "id": "missing-conditional-access-policies",
+      "title": "Missing Conditional Access and MFA Requirements",
+      "cvssScore": 7.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "High",
+      "description": "Data Factory access lacks Conditional Access policies including missing multi-factor authentication (MFA) requirements for administrators, absent trusted location restrictions, no device compliance requirements, and missing risk-based access controls, enabling unauthorized access from compromised accounts or untrusted locations.\n\nWithout Conditional Access policies, attackers with stolen credentials can access Data Factory from any location or device, bypass organizational security controls, and perform administrative actions without additional verification. The December 2024 Kubernetes RBAC vulnerabilities in Azure environments highlight the critical nature of access control misconfigurations.",
+      "checkSteps": "1. Navigate to Microsoft Entra ID → Conditional Access\n2. Review policies applying to Data Factory users\n3. Check for MFA requirements on administrative roles\n4. Verify trusted location configurations\n5. Review device compliance requirements\n6. Check risk-based conditional access policies\n7. Audit sign-in logs for Data Factory access\nPowerShell: Get-AzureADMSConditionalAccessPolicy | Where-Object {$_.Conditions.Applications.IncludeApplications -contains 'DataFactory'}",
+      "recommendation": "Enforce MFA for all Data Factory administrative access, implement trusted location requirements for production changes, require compliant devices for sensitive operations, configure risk-based conditional access policies, and monitor for anomalous sign-in activities.",
+      "verificationProcedure": "1. Create Conditional Access policy for Data Factory\n2. Enable MFA for all administrative roles\n3. Configure trusted location requirements\n4. Implement device compliance checks\n5. Test access from various scenarios\n6. Monitor policy effectiveness\n7. Review sign-in logs regularly\n8. Document access requirements",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Conditional Access showing no Data Factory policies",
+          "steps": "1. Navigate to Microsoft Entra ID → Conditional Access\n2. Screenshot showing policy list\n3. Highlight absence of Data Factory-specific policies"
+        },
+        {
+          "caption": "Sign-in logs showing access without MFA",
+          "steps": "1. Navigate to Sign-in logs → Filter by Data Factory\n2. Screenshot showing authentication details\n3. Highlight sign-ins without MFA requirement"
+        }
+      ],
+      "links": [
+        {
+          "title": "Conditional Access for Azure services",
+          "url": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview"
+        },
+        {
+          "title": "Securing Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-factory-security"
+        }
+      ]
+    },
+    {
+      "id": "orphaned-role-assignments",
+      "title": "Orphaned and Stale Role Assignments",
+      "cvssScore": 6.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "Medium",
+      "description": "Data Factory contains orphaned role assignments from deleted users, service principals from decommissioned applications, expired guest accounts with active permissions, and role assignments for employees who changed roles, creating unauthorized access risks and compliance violations.\n\nWith Azure classic administrator roles retired in August 2024, many organizations have orphaned assignments that still retain access. These stale permissions enable former employees or contractors to access sensitive data pipelines, violate compliance requirements for access reviews, and create shadow IT risks from forgotten service accounts.",
+      "checkSteps": "1. Navigate to Data Factory → Access control (IAM)\n2. Look for role assignments with 'Unknown' object type\n3. Check for deleted user or service principal GUIDs\n4. Review guest user assignments and expiration\n5. Audit role assignments against HR records\n6. Check last sign-in dates for assigned users\n7. Review service principal last authentication\nPowerShell: Get-AzRoleAssignment | Where-Object {$_.ObjectType -eq 'Unknown'}",
+      "recommendation": "Implement quarterly access reviews, automate orphaned permission removal, integrate with HR systems for employee lifecycle management, establish guest access governance procedures, and maintain service principal inventory with ownership tracking.",
+      "verificationProcedure": "1. Identify all orphaned role assignments\n2. Remove assignments for deleted identities\n3. Review and validate active assignments\n4. Implement automated access reviews\n5. Configure alerts for new assignments\n6. Document access review procedures\n7. Test removal automation\n8. Establish regular audit schedule",
+      "screenshotPlaceholders": [
+        {
+          "caption": "IAM showing orphaned role assignments with Unknown type",
+          "steps": "1. Navigate to Data Factory → Access control (IAM)\n2. Screenshot showing role assignment list\n3. Highlight entries with 'Unknown' object type"
+        },
+        {
+          "caption": "Guest users with expired access still having permissions",
+          "steps": "1. Navigate to IAM → Filter by Guest users\n2. Screenshot showing guest assignments\n3. Highlight expired guests with active roles"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure AD access reviews",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/access-reviews-overview"
+        },
+        {
+          "title": "Remove orphaned role assignments",
+          "url": "https://learn.microsoft.com/en-us/azure/role-based-access-control/troubleshoot-rbac"
+        }
+      ]
+    },
+    {
+      "id": "customer-managed-encryption-disabled",
+      "title": "Customer-Managed Encryption Keys Not Configured",
+      "cvssScore": 7.2,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "Azure Data Factory is using Microsoft-managed encryption keys instead of customer-managed keys (CMK), reducing control over data encryption and key lifecycle management. This configuration prevents organizations from implementing their own key rotation policies, HSM protection, and compliance requirements for data sovereignty.\n\nWithout CMK, organizations cannot revoke access immediately in case of compromise, cannot meet certain regulatory requirements, and have limited control over encryption key operations. This is particularly critical for organizations handling sensitive data or subject to strict compliance requirements.",
+      "checkSteps": "1. Navigate to Data Factory → Properties\n2. Check Encryption section for key configuration\n3. Verify if customer-managed key is configured\n4. Review Key Vault configuration if CMK is enabled\n5. Check key rotation policies and HSM protection\n6. Verify regional compliance for key storage\n7. Review access policies for encryption keys\nPowerShell: (Get-AzDataFactoryV2 -ResourceGroupName [rg] -Name [factory]).Encryption",
+      "recommendation": "Configure customer-managed encryption keys using Azure Key Vault, enable HSM protection for encryption keys, implement automated key rotation policies, establish key lifecycle management procedures, and ensure compliance with data sovereignty requirements.",
+      "verificationProcedure": "1. Configure Azure Key Vault for encryption key management\n2. Enable customer-managed keys in Data Factory\n3. Test key rotation procedures\n4. Verify encryption operations with CMK\n5. Document key management procedures\n6. Implement monitoring for key usage\n7. Test emergency key revocation procedures\n8. Verify compliance with regulatory requirements",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Data Factory showing Microsoft-managed encryption keys in use",
+          "steps": "1. Navigate to Data Factory → Properties\n2. Screenshot showing Encryption section\n3. Highlight lack of customer-managed key configuration"
+        },
+        {
+          "caption": "Key Vault configuration for customer-managed keys",
+          "steps": "1. Navigate to Key Vault → Keys\n2. Screenshot showing encryption key configuration\n3. Highlight key rotation and HSM protection settings"
+        }
+      ],
+      "links": [
+        {
+          "title": "Enable customer-managed key - Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/enable-customer-managed-key"
+        },
+        {
+          "title": "Azure Data Factory encryption",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-factory-encryption"
+        }
+      ]
+    },
+    {
+      "id": "git-integration-security-gaps",
+      "title": "Git Repository Integration Security Misconfigurations",
+      "cvssScore": 6.9,
+      "cvssVector": "CVSS:3.1/AV:N/AC:M/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "Medium",
+      "description": "Data Factory Git integration lacks proper security controls including missing branch protection policies, unrestricted repository access permissions, exposed service connection credentials, and absent code review requirements, creating risks for unauthorized pipeline modifications and intellectual property theft.\n\nWithout proper Git security controls, malicious actors can inject malicious pipeline code, exfiltrate sensitive business logic, bypass change management processes, and introduce backdoors into data processing workflows. The 2024 GitHub security report showed 23.77 million exposed secrets, highlighting the critical nature of repository security.",
+      "checkSteps": "1. Navigate to Data Factory → Git configuration\n2. Review repository integration settings\n3. Check branch protection policies in Git provider\n4. Verify service connection security\n5. Review access permissions for repository\n6. Check for exposed credentials in commit history\n7. Audit pull request and code review requirements\nPowerShell: Review $dataFactory.RepoConfiguration for Git settings",
+      "recommendation": "Implement branch protection policies requiring code reviews, enable signed commits for authentication, restrict repository access to authorized personnel, implement secret scanning in CI/CD pipelines, and establish automated security testing for pipeline changes.",
+      "verificationProcedure": "1. Configure branch protection rules in Git provider\n2. Enable mandatory code reviews for pipeline changes\n3. Implement signed commit requirements\n4. Set up secret scanning in CI/CD\n5. Test branch protection enforcement\n6. Verify service connection security\n7. Audit repository access permissions\n8. Document Git security procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Git configuration showing missing branch protection",
+          "steps": "1. Navigate to Git provider branch settings\n2. Screenshot showing unprotected main branch\n3. Highlight missing review requirements"
+        },
+        {
+          "caption": "Repository access showing excessive permissions",
+          "steps": "1. Navigate to repository access settings\n2. Screenshot showing user permissions\n3. Highlight users with write access to protected branches"
+        }
+      ],
+      "links": [
+        {
+          "title": "Source control in Azure Data Factory",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/source-control"
+        },
+        {
+          "title": "Best practices for Git integration",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/best-practices-git-integration"
+        }
+      ]
+    },
+    {
+      "id": "data-exfiltration-controls-missing",
+      "title": "Insufficient Data Exfiltration Prevention Controls",
+      "cvssScore": 8.2,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N",
+      "severity": "High",
+      "description": "Data Factory lacks comprehensive data exfiltration prevention controls including missing data loss prevention policies, unrestricted cross-region data movement, absent anomaly detection for unusual data transfers, and insufficient monitoring of data volume thresholds, enabling potential large-scale data theft.\n\nAttackers can exploit these gaps to exfiltrate sensitive data to unauthorized destinations, perform gradual data theft to avoid detection, bypass geographic data residency requirements, and monetize stolen data on dark web markets. With DDoS attacks increasing 50% year-over-year in 2024, data exfiltration remains a critical threat.",
+      "checkSteps": "1. Review Data Factory data movement activities\n2. Check for cross-region transfer restrictions\n3. Verify data volume monitoring thresholds\n4. Review destination validation for copy activities\n5. Check for anomaly detection configuration\n6. Audit data movement logs for unusual patterns\n7. Verify DLP policy implementation\nPowerShell: Analyze pipeline activities for unrestricted data movement patterns",
+      "recommendation": "Implement data loss prevention policies, restrict cross-region data transfers, configure anomaly detection for unusual data movement patterns, establish data volume thresholds and alerts, and implement destination validation for all copy activities.",
+      "verificationProcedure": "1. Configure DLP policies for sensitive data\n2. Implement geo-restriction for data movement\n3. Set up anomaly detection rules\n4. Configure volume threshold alerts\n5. Test data exfiltration prevention\n6. Verify destination validation works\n7. Monitor for policy violations\n8. Document data movement policies",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Copy activity showing unrestricted destination configuration",
+          "steps": "1. Navigate to Pipeline → Copy activity settings\n2. Screenshot showing destination configuration\n3. Highlight lack of destination restrictions"
+        },
+        {
+          "caption": "Monitoring showing no data volume alerts configured",
+          "steps": "1. Navigate to Monitor → Alerts\n2. Screenshot showing alert configuration\n3. Highlight missing data volume threshold alerts"
+        }
+      ],
+      "links": [
+        {
+          "title": "Data movement security considerations",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/data-movement-security-considerations"
+        },
+        {
+          "title": "Copy activity security",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-security-considerations"
+        }
+      ]
+    },
+    {
+      "id": "trigger-security-vulnerabilities",
+      "title": "Pipeline Trigger Security Vulnerabilities",
+      "cvssScore": 7.4,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:L",
+      "severity": "High",
+      "description": "Data Factory triggers contain security vulnerabilities including unauthenticated webhook triggers, missing input validation for event-based triggers, excessive trigger permissions, and absent rate limiting controls, enabling unauthorized pipeline execution and potential denial of service attacks.\n\nThese vulnerabilities allow attackers to trigger expensive compute operations, inject malicious payloads through event data, cause resource exhaustion through trigger flooding, and manipulate data processing schedules for business disruption.",
+      "checkSteps": "1. Navigate to Data Factory → Triggers\n2. Review webhook trigger authentication settings\n3. Check event trigger input validation\n4. Verify trigger permission configurations\n5. Review rate limiting and throttling settings\n6. Audit trigger execution history for anomalies\n7. Check for unused or orphaned triggers\nPowerShell: Get-AzDataFactoryV2Trigger -DataFactoryName [factory] -ResourceGroupName [rg]",
+      "recommendation": "Implement authentication for all webhook triggers, validate all event trigger inputs, apply principle of least privilege for trigger permissions, configure rate limiting and throttling, and monitor trigger execution patterns for anomalies.",
+      "verificationProcedure": "1. Enable authentication on webhook triggers\n2. Implement input validation for event data\n3. Review and restrict trigger permissions\n4. Configure rate limiting controls\n5. Test trigger security controls\n6. Monitor for unauthorized trigger attempts\n7. Document trigger security policies\n8. Regular audit of trigger configurations",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Webhook trigger showing missing authentication",
+          "steps": "1. Navigate to Triggers → Webhook trigger settings\n2. Screenshot showing authentication configuration\n3. Highlight lack of authentication requirements"
+        },
+        {
+          "caption": "Event trigger without input validation",
+          "steps": "1. Navigate to Event trigger configuration\n2. Screenshot showing trigger settings\n3. Highlight missing validation rules"
+        }
+      ],
+      "links": [
+        {
+          "title": "Pipeline execution and triggers",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipeline-execution-triggers"
+        },
+        {
+          "title": "Trigger security considerations",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/trigger-security-considerations"
+        }
+      ]
+    },
+    {
+      "id": "data-flow-debug-exposure",
+      "title": "Data Flow Debug Session Security Exposure",
+      "cvssScore": 6.7,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:L/A:L",
+      "severity": "Medium",
+      "description": "Data Flow debug sessions expose sensitive data through persistent debug clusters, unencrypted debug data storage, excessive debug session timeouts, and missing access controls for debug endpoints, creating risks for data leakage and unauthorized access to production data samples.\n\nDebug sessions that remain active unnecessarily consume resources and expose data, while debug data stored without encryption can be accessed by unauthorized users. The default 60-minute timeout for debug sessions creates extended exposure windows for sensitive data.",
+      "checkSteps": "1. Navigate to Data Factory → Data flows → Debug settings\n2. Check for active debug sessions\n3. Review debug cluster configurations\n4. Verify debug data storage encryption\n5. Check debug session timeout settings\n6. Review access controls for debug endpoints\n7. Audit debug session history and usage\nPowerShell: Check for active debug sessions and their configurations",
+      "recommendation": "Minimize debug session durations, encrypt debug data storage, implement strict access controls for debug sessions, use data sampling instead of full datasets, and automatically terminate idle debug sessions.",
+      "verificationProcedure": "1. Configure minimum debug session timeouts\n2. Enable encryption for debug data\n3. Implement access controls for debug\n4. Configure data sampling for debug\n5. Test automatic session termination\n6. Monitor debug session usage\n7. Audit debug data access\n8. Document debug security procedures",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Active debug sessions showing extended runtime",
+          "steps": "1. Navigate to Data flows → Debug\n2. Screenshot showing active debug sessions\n3. Highlight sessions running for extended periods"
+        },
+        {
+          "caption": "Debug settings showing insecure configuration",
+          "steps": "1. Navigate to Debug session settings\n2. Screenshot showing configuration options\n3. Highlight missing encryption and excessive timeout"
+        }
+      ],
+      "links": [
+        {
+          "title": "Data flow debug mode",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/concepts-data-flow-debug-mode"
+        },
+        {
+          "title": "Data flow monitoring",
+          "url": "https://learn.microsoft.com/en-us/azure/data-factory/concepts-data-flow-monitoring"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure Data Factory V2 Security Assessment Script (2024)\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$ResourceGroupName,\n    [Parameter(Mandatory=$true)]\n    [string]$DataFactoryName\n)\n\nWrite-Host \"=== Azure Data Factory V2 Security Assessment ===\" -ForegroundColor Cyan\nWrite-Host \"Resource Group: $ResourceGroupName\" -ForegroundColor White\nWrite-Host \"Data Factory: $DataFactoryName\" -ForegroundColor White\n\n# Get Data Factory details\ntry {\n    $dataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName\n    Write-Host \"Data Factory Location: $($dataFactory.Location)\" -ForegroundColor White\n    Write-Host \"Provisioning State: $($dataFactory.ProvisioningState)\" -ForegroundColor White\n} catch {\n    Write-Host \"❌ Error: Could not retrieve Data Factory details\" -ForegroundColor Red\n    exit 1\n}\n\n# Check Integration Runtime Security\nWrite-Host \"`n--- Integration Runtime Security ---\" -ForegroundColor Yellow\ntry {\n    $integrationRuntimes = Get-AzDataFactoryV2IntegrationRuntime -DataFactoryName $DataFactoryName -ResourceGroupName $ResourceGroupName\n    if ($integrationRuntimes.Count -gt 0) {\n        Write-Host \"Found $($integrationRuntimes.Count) Integration Runtime(s)\" -ForegroundColor White\n        foreach ($ir in $integrationRuntimes) {\n            Write-Host \"   IR Name: $($ir.Name)\" -ForegroundColor White\n            Write-Host \"   Type: $($ir.Type)\" -ForegroundColor White\n            Write-Host \"   State: $($ir.State)\" -ForegroundColor White\n            \n            if ($ir.Type -eq \"SelfHosted\") {\n                Write-Host \"   ⚠️ Self-Hosted Integration Runtime - Review network security\" -ForegroundColor Yellow\n                # Check for additional security configurations\n                if ($ir.Properties.NodeCount -gt 0) {\n                    Write-Host \"   Nodes: $($ir.Properties.NodeCount)\" -ForegroundColor White\n                }\n            } elseif ($ir.Type -eq \"Managed\" -and $ir.Properties.TypeProperties.ComputeProperties) {\n                Write-Host \"   Compute Type: $($ir.Properties.TypeProperties.ComputeProperties.Location)\" -ForegroundColor White\n                if ($ir.Name -like \"*airflow*\" -or $ir.Properties -like \"*airflow*\") {\n                    Write-Host \"   ❌ Apache Airflow runtime detected - Review RBAC configuration\" -ForegroundColor Red\n                }\n            }\n        }\n    } else {\n        Write-Host \"✅ No custom Integration Runtimes found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking Integration Runtimes: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Check Encryption Configuration\nWrite-Host \"`n--- Encryption Configuration ---\" -ForegroundColor Yellow\nif ($dataFactory.Encryption) {\n    if ($dataFactory.Encryption.KeyName) {\n        Write-Host \"✅ Customer-managed encryption key configured\" -ForegroundColor Green\n        Write-Host \"   Key Vault: $($dataFactory.Encryption.VaultBaseUrl)\" -ForegroundColor White\n        Write-Host \"   Key Name: $($dataFactory.Encryption.KeyName)\" -ForegroundColor White\n        Write-Host \"   Key Version: $($dataFactory.Encryption.KeyVersion)\" -ForegroundColor White\n    } else {\n        Write-Host \"⚠️ Encryption configured but using service-managed keys\" -ForegroundColor Yellow\n    }\n} else {\n    Write-Host \"❌ No customer-managed encryption configured\" -ForegroundColor Red\n    Write-Host \"   Recommendation: Enable customer-managed keys for sensitive data\" -ForegroundColor White\n}\n\n# Check Managed Virtual Network Configuration\nWrite-Host \"`n--- Network Security Configuration ---\" -ForegroundColor Yellow\ntry {\n    $managedVNet = Get-AzDataFactoryV2ManagedVirtualNetwork -DataFactoryName $DataFactoryName -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue\n    if ($managedVNet) {\n        Write-Host \"✅ Managed Virtual Network configured\" -ForegroundColor Green\n        Write-Host \"   VNet Name: $($managedVNet.Name)\" -ForegroundColor White\n        \n        # Check for private endpoints\n        try {\n            $privateEndpoints = Get-AzDataFactoryV2ManagedPrivateEndpoint -DataFactoryName $DataFactoryName -ResourceGroupName $ResourceGroupName -ManagedVirtualNetworkName $managedVNet.Name\n            if ($privateEndpoints.Count -gt 0) {\n                Write-Host \"   Private Endpoints: $($privateEndpoints.Count)\" -ForegroundColor White\n                foreach ($pe in $privateEndpoints) {\n                    Write-Host \"      • $($pe.Name) - State: $($pe.Properties.ConnectionState.Status)\" -ForegroundColor White\n                    if ($pe.Properties.ConnectionState.Status -ne \"Approved\") {\n                        Write-Host \"      ❌ Private endpoint not approved\" -ForegroundColor Red\n                    }\n                }\n            } else {\n                Write-Host \"   ⚠️ No private endpoints configured\" -ForegroundColor Yellow\n            }\n        } catch {\n            Write-Host \"   ⚠️ Could not check private endpoints\" -ForegroundColor Yellow\n        }\n    } else {\n        Write-Host \"❌ No Managed Virtual Network configured\" -ForegroundColor Red\n        Write-Host \"   Recommendation: Configure Managed VNet for network isolation\" -ForegroundColor White\n    }\n} catch {\n    Write-Host \"❌ Error checking Managed VNet: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Check Linked Services Security\nWrite-Host \"`n--- Linked Services Security ---\" -ForegroundColor Yellow\ntry {\n    $linkedServices = Get-AzDataFactoryV2LinkedService -DataFactoryName $DataFactoryName -ResourceGroupName $ResourceGroupName\n    if ($linkedServices.Count -gt 0) {\n        Write-Host \"Found $($linkedServices.Count) Linked Service(s)\" -ForegroundColor White\n        $keyVaultServices = 0\n        $managedIdentityServices = 0\n        $servicePrincipalServices = 0\n        \n        foreach ($ls in $linkedServices) {\n            $authType = \"Unknown\"\n            if ($ls.Properties.Type -eq \"AzureKeyVault\") {\n                $keyVaultServices++\n                $authType = \"Key Vault\"\n            } elseif ($ls.Properties.TypeProperties) {\n                if ($ls.Properties.TypeProperties.servicePrincipalId) {\n                    $servicePrincipalServices++\n                    $authType = \"Service Principal\"\n                } elseif ($ls.Properties.TypeProperties.useSystemAssignedManagedIdentity -or $ls.Properties.TypeProperties.useManagedIdentity) {\n                    $managedIdentityServices++\n                    $authType = \"Managed Identity\"\n                }\n            }\n            \n            Write-Host \"   Service: $($ls.Name) - Type: $($ls.Properties.Type) - Auth: $authType\" -ForegroundColor White\n        }\n        \n        Write-Host \"   Summary:\" -ForegroundColor White\n        Write-Host \"      Key Vault Services: $keyVaultServices\" -ForegroundColor White\n        Write-Host \"      Managed Identity: $managedIdentityServices\" -ForegroundColor Green\n        Write-Host \"      Service Principal: $servicePrincipalServices\" -ForegroundColor $(if ($servicePrincipalServices -gt 0) { \"Yellow\" } else { \"Green\" })\n        \n        if ($servicePrincipalServices -gt 0) {\n            Write-Host \"   ⚠️ Consider migrating service principals to managed identities\" -ForegroundColor Yellow\n        }\n    } else {\n        Write-Host \"✅ No linked services configured\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking Linked Services: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Check Pipeline Security\nWrite-Host \"`n--- Pipeline Security ---\" -ForegroundColor Yellow\ntry {\n    $pipelines = Get-AzDataFactoryV2Pipeline -DataFactoryName $DataFactoryName -ResourceGroupName $ResourceGroupName\n    if ($pipelines.Count -gt 0) {\n        Write-Host \"Found $($pipelines.Count) Pipeline(s)\" -ForegroundColor White\n        $pipelinesWithParameters = 0\n        $suspiciousPatterns = 0\n        \n        foreach ($pipeline in $pipelines) {\n            if ($pipeline.Parameters -and $pipeline.Parameters.Count -gt 0) {\n                $pipelinesWithParameters++\n                Write-Host \"   Pipeline: $($pipeline.Name) - Parameters: $($pipeline.Parameters.Count)\" -ForegroundColor White\n                \n                # Check for potential injection patterns in pipeline definition\n                $definition = $pipeline.Definition | ConvertTo-Json -Depth 10\n                if ($definition -match \"(?i)(exec|execute|select.*from|union|drop|delete|insert|update).*@\") {\n                    $suspiciousPatterns++\n                    Write-Host \"      ❌ Potential injection risk detected\" -ForegroundColor Red\n                }\n            }\n        }\n        \n        Write-Host \"   Pipelines with parameters: $pipelinesWithParameters\" -ForegroundColor White\n        if ($suspiciousPatterns -gt 0) {\n            Write-Host \"   ❌ $suspiciousPatterns pipeline(s) with potential injection risks\" -ForegroundColor Red\n        } else {\n            Write-Host \"   ✅ No obvious injection patterns detected\" -ForegroundColor Green\n        }\n    } else {\n        Write-Host \"✅ No pipelines configured\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking Pipelines: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Check RBAC Configuration\nWrite-Host \"`n--- RBAC and Access Control ---\" -ForegroundColor Yellow\ntry {\n    $roleAssignments = Get-AzRoleAssignment -ResourceId $dataFactory.DataFactoryId\n    if ($roleAssignments.Count -gt 0) {\n        Write-Host \"Found $($roleAssignments.Count) role assignment(s)\" -ForegroundColor White\n        $highPrivilegeRoles = @(\"Owner\", \"Contributor\", \"Data Factory Contributor\")\n        $highPrivilegeCount = 0\n        \n        foreach ($assignment in $roleAssignments) {\n            Write-Host \"   User: $($assignment.DisplayName)\" -ForegroundColor White\n            Write-Host \"   Role: $($assignment.RoleDefinitionName)\" -ForegroundColor White\n            Write-Host \"   Type: $($assignment.ObjectType)\" -ForegroundColor White\n            \n            if ($assignment.RoleDefinitionName -in $highPrivilegeRoles) {\n                $highPrivilegeCount++\n                Write-Host \"      ⚠️ High-privilege role assignment\" -ForegroundColor Yellow\n            }\n        }\n        \n        if ($highPrivilegeCount -gt 0) {\n            Write-Host \"   ⚠️ $highPrivilegeCount high-privilege assignment(s) found\" -ForegroundColor Yellow\n            Write-Host \"   Recommendation: Review and apply principle of least privilege\" -ForegroundColor White\n        }\n    } else {\n        Write-Host \"✅ No additional role assignments found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking RBAC: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Check Diagnostic Settings and Monitoring\nWrite-Host \"`n--- Monitoring and Logging ---\" -ForegroundColor Yellow\ntry {\n    $diagnosticSettings = Get-AzDiagnosticSetting -ResourceId $dataFactory.DataFactoryId\n    if ($diagnosticSettings.Count -gt 0) {\n        Write-Host \"✅ Diagnostic settings configured\" -ForegroundColor Green\n        foreach ($setting in $diagnosticSettings) {\n            Write-Host \"   Setting: $($setting.Name)\" -ForegroundColor White\n            Write-Host \"   Log Categories: $($setting.Logs.Count)\" -ForegroundColor White\n            Write-Host \"   Metric Categories: $($setting.Metrics.Count)\" -ForegroundColor White\n            \n            if ($setting.WorkspaceId) {\n                Write-Host \"   ✅ Log Analytics workspace configured\" -ForegroundColor Green\n            }\n            if ($setting.StorageAccountId) {\n                Write-Host \"   ✅ Storage account configured\" -ForegroundColor Green\n            }\n        }\n    } else {\n        Write-Host \"❌ No diagnostic settings configured\" -ForegroundColor Red\n        Write-Host \"   Recommendation: Enable comprehensive logging for security monitoring\" -ForegroundColor White\n    }\n} catch {\n    Write-Host \"❌ Error checking diagnostic settings: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Check for Key Vault Integration\nWrite-Host \"`n--- Key Vault Integration ---\" -ForegroundColor Yellow\ntry {\n    # Check if any linked services use Key Vault\n    $keyVaultLinkedServices = Get-AzDataFactoryV2LinkedService -DataFactoryName $DataFactoryName -ResourceGroupName $ResourceGroupName | Where-Object { $_.Properties.Type -eq \"AzureKeyVault\" }\n    \n    if ($keyVaultLinkedServices.Count -gt 0) {\n        Write-Host \"✅ $($keyVaultLinkedServices.Count) Key Vault linked service(s) found\" -ForegroundColor Green\n        foreach ($kvls in $keyVaultLinkedServices) {\n            Write-Host \"   Key Vault: $($kvls.Properties.TypeProperties.baseUrl)\" -ForegroundColor White\n            \n            # Extract Key Vault name from URL\n            if ($kvls.Properties.TypeProperties.baseUrl -match \"https://([^.]+)\\.vault\") {\n                $kvName = $matches[1]\n                try {\n                    $keyVault = Get-AzKeyVault -VaultName $kvName\n                    if ($keyVault) {\n                        Write-Host \"      Soft Delete: $($keyVault.EnableSoftDelete)\" -ForegroundColor $(if ($keyVault.EnableSoftDelete) { \"Green\" } else { \"Red\" })\n                        Write-Host \"      Purge Protection: $($keyVault.EnablePurgeProtection)\" -ForegroundColor $(if ($keyVault.EnablePurgeProtection) { \"Green\" } else { \"Red\" })\n                        \n                        if (-not $keyVault.EnableSoftDelete -or -not $keyVault.EnablePurgeProtection) {\n                            Write-Host \"      ❌ Key Vault missing critical protection settings\" -ForegroundColor Red\n                        }\n                    }\n                } catch {\n                    Write-Host \"      ⚠️ Could not access Key Vault details\" -ForegroundColor Yellow\n                }\n            }\n        }\n    } else {\n        Write-Host \"⚠️ No Key Vault integration found\" -ForegroundColor Yellow\n        Write-Host \"   Recommendation: Use Key Vault for credential management\" -ForegroundColor White\n    }\n} catch {\n    Write-Host \"❌ Error checking Key Vault integration: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Git Repository Integration Check\nWrite-Host \"`n--- Git Integration Security ---\" -ForegroundColor Yellow\nif ($dataFactory.RepoConfiguration) {\n    Write-Host \"✅ Git integration configured\" -ForegroundColor Green\n    Write-Host \"   Type: $($dataFactory.RepoConfiguration.Type)\" -ForegroundColor White\n    Write-Host \"   Repository: $($dataFactory.RepoConfiguration.RepositoryName)\" -ForegroundColor White\n    Write-Host \"   Branch: $($dataFactory.RepoConfiguration.CollaborationBranch)\" -ForegroundColor White\n    \n    Write-Host \"   📋 Manual verification required:\" -ForegroundColor Cyan\n    Write-Host \"      • Verify repository access permissions\" -ForegroundColor White\n    Write-Host \"      • Check branch protection policies\" -ForegroundColor White\n    Write-Host \"      • Review service connection security\" -ForegroundColor White\n} else {\n    Write-Host \"⚠️ No Git integration configured\" -ForegroundColor Yellow\n    Write-Host \"   Consider using Git integration for version control\" -ForegroundColor White\n}\n\n# Summary and Recommendations\nWrite-Host \"`n=== Security Assessment Summary ===\" -ForegroundColor Cyan\nWrite-Host \"Data Factory: $DataFactoryName\" -ForegroundColor White\nWrite-Host \"Resource Group: $ResourceGroupName\" -ForegroundColor White\nWrite-Host \"Location: $($dataFactory.Location)\" -ForegroundColor White\n\nWrite-Host \"`nKey Security Areas Assessed:\" -ForegroundColor White\nWrite-Host \"✅ Integration Runtime Security\" -ForegroundColor White\nWrite-Host \"✅ Encryption Configuration\" -ForegroundColor White\nWrite-Host \"✅ Network Security (Managed VNet, Private Endpoints)\" -ForegroundColor White\nWrite-Host \"✅ Linked Services Authentication\" -ForegroundColor White\nWrite-Host \"✅ Pipeline Security and Injection Risks\" -ForegroundColor White\nWrite-Host \"✅ RBAC and Access Control\" -ForegroundColor White\nWrite-Host \"✅ Monitoring and Logging Configuration\" -ForegroundColor White\nWrite-Host \"✅ Key Vault Integration\" -ForegroundColor White\n\nWrite-Host \"`nCritical Recommendations:\" -ForegroundColor Yellow\nWrite-Host \"1. Enable customer-managed encryption keys\" -ForegroundColor White\nWrite-Host \"2. Configure Managed Virtual Network with private endpoints\" -ForegroundColor White\nWrite-Host \"3. Migrate from service principals to managed identities\" -ForegroundColor White\nWrite-Host \"4. Enable comprehensive diagnostic logging\" -ForegroundColor White\nWrite-Host \"5. Review and implement principle of least privilege\" -ForegroundColor White\nWrite-Host \"6. Implement input validation for pipeline parameters\" -ForegroundColor White\nWrite-Host \"7. Enable Key Vault protection features (Soft Delete, Purge Protection)\" -ForegroundColor White\n\nWrite-Host \"`n=== Assessment Complete ===\" -ForegroundColor Cyan"
+}

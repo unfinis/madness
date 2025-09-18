@@ -1,0 +1,381 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/editor_layer.dart';
+import '../../models/screenshot.dart';
+
+class LayersPanel extends ConsumerStatefulWidget {
+  final String screenshotId;
+  final String projectId;
+  final String? selectedLayerId;
+  final ValueChanged<String?> onLayerSelected;
+
+  const LayersPanel({
+    super.key,
+    required this.screenshotId,
+    required this.projectId,
+    required this.selectedLayerId,
+    required this.onLayerSelected,
+  });
+
+  @override
+  ConsumerState<LayersPanel> createState() => _LayersPanelState();
+}
+
+class _LayersPanelState extends ConsumerState<LayersPanel> {
+  bool _showOnlyVisible = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Text(
+                  'Layers',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showOnlyVisible = !_showOnlyVisible;
+                    });
+                  },
+                  icon: Icon(_showOnlyVisible ? Icons.visibility : Icons.visibility_off),
+                  iconSize: 18,
+                  tooltip: _showOnlyVisible ? 'Show all layers' : 'Show visible only',
+                  style: IconButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(24, 24),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Layer List
+          Expanded(
+            child: _buildLayersList(theme),
+          ),
+          
+          // Layer Actions
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _duplicateSelectedLayer,
+                    icon: const Icon(Icons.content_copy, size: 16),
+                    label: const Text('Duplicate'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _deleteSelectedLayer,
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Delete'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      foregroundColor: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLayersList(ThemeData theme) {
+    // TODO: Replace with actual provider data
+    final mockLayers = _getMockLayers();
+    final filteredLayers = _showOnlyVisible 
+        ? mockLayers.where((layer) => layer.visible).toList()
+        : mockLayers;
+
+    if (filteredLayers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.layers,
+              size: 48,
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No layers yet',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ReorderableListView.builder(
+      itemCount: filteredLayers.length,
+      onReorder: _onLayerReorder,
+      buildDefaultDragHandles: false,
+      itemBuilder: (context, index) {
+        final layer = filteredLayers[index];
+        final isSelected = layer.id == widget.selectedLayerId;
+        
+        return _buildLayerItem(theme, layer, index, isSelected);
+      },
+    );
+  }
+
+  Widget _buildLayerItem(
+    ThemeData theme,
+    EditorLayer layer,
+    int index,
+    bool isSelected,
+  ) {
+    return ReorderableDragStartListener(
+      key: ValueKey(layer.id),
+      index: index,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(4),
+          border: isSelected 
+              ? Border.all(color: theme.colorScheme.primary, width: 1)
+              : null,
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          dense: true,
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.drag_handle,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                _getLayerIcon(layer.layerType),
+                size: 16,
+                color: theme.colorScheme.onSurface,
+              ),
+            ],
+          ),
+          title: Text(
+            layer.name,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          subtitle: Text(
+            _getLayerTypeDisplayName(layer.layerType),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 10,
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => _toggleLayerVisibility(layer),
+                icon: Icon(
+                  layer.visible ? Icons.visibility : Icons.visibility_off,
+                  size: 16,
+                ),
+                iconSize: 16,
+                style: IconButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(24, 24),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _toggleLayerLock(layer),
+                icon: Icon(
+                  layer.locked ? Icons.lock : Icons.lock_open,
+                  size: 16,
+                ),
+                iconSize: 16,
+                style: IconButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(24, 24),
+                ),
+              ),
+            ],
+          ),
+          onTap: () => widget.onLayerSelected(layer.id),
+        ),
+      ),
+    );
+  }
+
+  IconData _getLayerIcon(LayerType type) {
+    switch (type) {
+      case LayerType.vector:
+        return Icons.timeline;
+      case LayerType.text:
+        return Icons.text_fields;
+      case LayerType.redaction:
+        return Icons.block;
+      case LayerType.bitmap:
+        return Icons.image;
+    }
+  }
+
+  String _getLayerTypeDisplayName(LayerType type) {
+    switch (type) {
+      case LayerType.vector:
+        return 'Vector';
+      case LayerType.text:
+        return 'Text';
+      case LayerType.redaction:
+        return 'Redaction';
+      case LayerType.bitmap:
+        return 'Bitmap';
+    }
+  }
+
+  void _onLayerReorder(int oldIndex, int newIndex) {
+    // TODO: Implement layer reordering
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Layer reordering coming soon'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _toggleLayerVisibility(EditorLayer layer) {
+    // TODO: Implement layer visibility toggle
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Toggled visibility for ${layer.name}'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _toggleLayerLock(EditorLayer layer) {
+    // TODO: Implement layer lock toggle
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Toggled lock for ${layer.name}'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _duplicateSelectedLayer() {
+    if (widget.selectedLayerId != null) {
+      // TODO: Implement layer duplication
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Layer duplication coming soon'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _deleteSelectedLayer() {
+    if (widget.selectedLayerId != null) {
+      // TODO: Implement layer deletion
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Layer deletion coming soon'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  List<EditorLayer> _getMockLayers() {
+    // Mock data for development - will be replaced with provider data
+    return [
+      VectorLayer(
+        id: '1',
+        name: 'Highlight 1',
+        visible: true,
+        locked: false,
+        opacity: 0.7,
+        blendMode: BlendMode.multiply,
+        createdAt: DateTime.now(),
+        modifiedAt: DateTime.now(),
+        points: const [Offset(100, 100), Offset(200, 150)],
+        strokeWidth: 2.0,
+        strokeColor: Colors.red,
+        fillColor: Colors.red.withOpacity(0.3),
+        vectorType: VectorType.rectangle,
+      ),
+      TextLayer(
+        id: '2',
+        name: 'Label 1',
+        visible: true,
+        locked: false,
+        opacity: 1.0,
+        blendMode: BlendMode.srcOver,
+        createdAt: DateTime.now(),
+        modifiedAt: DateTime.now(),
+        text: 'Sample Text',
+        position: const Offset(150, 200),
+        fontSize: 16.0,
+        fontFamily: 'Arial',
+        fontWeight: FontWeight.normal,
+        fontStyle: FontStyle.normal,
+        color: Colors.black,
+        backgroundColor: Colors.white,
+        alignment: TextAlign.left,
+      ),
+      RedactionLayer(
+        id: '3',
+        name: 'Blur 1',
+        visible: false,
+        locked: false,
+        opacity: 1.0,
+        blendMode: BlendMode.srcOver,
+        createdAt: DateTime.now(),
+        modifiedAt: DateTime.now(),
+        bounds: const Rect.fromLTWH(250, 100, 100, 50),
+        redactionType: RedactionType.blur,
+        blurRadius: 10.0,
+      ),
+    ];
+  }
+}

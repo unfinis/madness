@@ -1,0 +1,378 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:drift/drift.dart';
+import '../models/screenshot.dart';
+import '../models/editor_layer.dart';
+import '../database/database.dart';
+import '../utils/demo_data.dart';
+import 'database_provider.dart';
+
+// Screenshots repository provider
+final screenshotsRepositoryProvider = Provider<ScreenshotsRepository>((ref) {
+  final database = ref.watch(databaseProvider);
+  return ScreenshotsRepository(database);
+});
+
+// Single screenshot provider
+final screenshotProvider = FutureProvider.family<Screenshot?, String>((ref, screenshotId) {
+  final repository = ref.watch(screenshotsRepositoryProvider);
+  return repository.getScreenshot(screenshotId);
+});
+
+// Screenshots list provider for a project
+final projectScreenshotsProvider = FutureProvider.family<List<Screenshot>, String>((ref, projectId) {
+  final repository = ref.watch(screenshotsRepositoryProvider);
+  return repository.getProjectScreenshots(projectId);
+});
+
+// Screenshot editor state provider
+final screenshotEditorProvider = StateNotifierProvider.family<ScreenshotEditorNotifier, AsyncValue<Screenshot?>, String>(
+  (ref, screenshotId) {
+    final repository = ref.watch(screenshotsRepositoryProvider);
+    return ScreenshotEditorNotifier(repository, screenshotId);
+  },
+);
+
+// Screenshot layers provider
+final screenshotLayersProvider = FutureProvider.family<List<EditorLayer>, String>((ref, screenshotId) {
+  final repository = ref.watch(screenshotsRepositoryProvider);
+  return repository.getScreenshotLayers(screenshotId);
+});
+
+class ScreenshotEditorNotifier extends StateNotifier<AsyncValue<Screenshot?>> {
+  final ScreenshotsRepository _repository;
+  final String _screenshotId;
+  
+  ScreenshotEditorNotifier(this._repository, this._screenshotId) 
+      : super(const AsyncValue.loading()) {
+    _loadScreenshot();
+  }
+
+  Future<void> _loadScreenshot() async {
+    try {
+      state = const AsyncValue.loading();
+      final screenshot = await _repository.getScreenshot(_screenshotId);
+      state = AsyncValue.data(screenshot);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> addLayer(EditorLayer layer) async {
+    final currentScreenshot = state.value;
+    if (currentScreenshot == null) return;
+
+    try {
+      await _repository.addLayer(_screenshotId, layer);
+      final updatedScreenshot = currentScreenshot.addLayer(layer);
+      state = AsyncValue.data(updatedScreenshot);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> updateLayer(EditorLayer layer) async {
+    final currentScreenshot = state.value;
+    if (currentScreenshot == null) return;
+
+    try {
+      await _repository.updateLayer(layer);
+      final updatedScreenshot = currentScreenshot.updateLayer(layer);
+      state = AsyncValue.data(updatedScreenshot);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> removeLayer(String layerId) async {
+    final currentScreenshot = state.value;
+    if (currentScreenshot == null) return;
+
+    try {
+      await _repository.removeLayer(layerId);
+      final updatedScreenshot = currentScreenshot.removeLayer(layerId);
+      state = AsyncValue.data(updatedScreenshot);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> reorderLayers(List<String> layerIds) async {
+    final currentScreenshot = state.value;
+    if (currentScreenshot == null) return;
+
+    try {
+      await _repository.reorderLayers(_screenshotId, layerIds);
+      final updatedScreenshot = currentScreenshot.reorderLayers(layerIds);
+      state = AsyncValue.data(updatedScreenshot);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> toggleLayerVisibility(String layerId) async {
+    final currentScreenshot = state.value;
+    if (currentScreenshot == null) return;
+
+    try {
+      final layer = currentScreenshot.layers.firstWhere((l) => l.id == layerId);
+      final updatedLayer = layer.copyWith(visible: !layer.visible);
+      await updateLayer(updatedLayer);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> toggleLayerLock(String layerId) async {
+    final currentScreenshot = state.value;
+    if (currentScreenshot == null) return;
+
+    try {
+      final layer = currentScreenshot.layers.firstWhere((l) => l.id == layerId);
+      final updatedLayer = layer.copyWith(locked: !layer.locked);
+      await updateLayer(updatedLayer);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+}
+
+class ScreenshotsRepository {
+  final MadnessDatabase _database;
+
+  ScreenshotsRepository(this._database);
+
+  Future<Screenshot?> getScreenshot(String screenshotId) async {
+    final query = _database.select(_database.screenshotsTable)
+      ..where((tbl) => tbl.id.equals(screenshotId));
+    
+    final screenshotData = await query.getSingleOrNull();
+    if (screenshotData == null) return null;
+
+    final layers = await getScreenshotLayers(screenshotId);
+    
+    return Screenshot(
+      id: screenshotData.id,
+      projectId: screenshotData.projectId,
+      name: screenshotData.name,
+      description: screenshotData.description,
+      originalPath: screenshotData.originalPath,
+      editedPath: screenshotData.editedPath,
+      thumbnailPath: screenshotData.thumbnailPath,
+      width: screenshotData.width,
+      height: screenshotData.height,
+      fileSize: screenshotData.fileSize,
+      fileFormat: screenshotData.fileFormat,
+      captureDate: screenshotData.captureDate,
+      createdDate: screenshotData.createdDate,
+      modifiedDate: screenshotData.modifiedDate,
+      tags: Set<String>.from(screenshotData.tags?.split(',') ?? []),
+      hasRedactions: screenshotData.hasRedactions,
+      isProcessed: screenshotData.isProcessed,
+      metadata: screenshotData.metadata ?? {},
+      layers: layers,
+    );
+  }
+
+  Future<List<Screenshot>> getProjectScreenshots(String projectId) async {
+    final query = _database.select(_database.screenshotsTable)
+      ..where((tbl) => tbl.projectId.equals(projectId))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.modifiedDate)]);
+    
+    final screenshotsData = await query.get();
+    
+    final screenshots = <Screenshot>[];
+    for (final data in screenshotsData) {
+      final layers = await getScreenshotLayers(data.id);
+      
+      screenshots.add(Screenshot(
+        id: data.id,
+        projectId: data.projectId,
+        name: data.name,
+        description: data.description,
+        originalPath: data.originalPath,
+        editedPath: data.editedPath,
+        thumbnailPath: data.thumbnailPath,
+        width: data.width,
+        height: data.height,
+        fileSize: data.fileSize,
+        fileFormat: data.fileFormat,
+        captureDate: data.captureDate,
+        createdDate: data.createdDate,
+        modifiedDate: data.modifiedDate,
+        tags: Set<String>.from(data.tags?.split(',') ?? []),
+        hasRedactions: data.hasRedactions,
+        isProcessed: data.isProcessed,
+        metadata: data.metadata ?? {},
+        layers: layers,
+      ));
+    }
+    
+    // If no screenshots in database, return demo data for testing
+    if (screenshots.isEmpty && projectId.isNotEmpty) {
+      return DemoData.createDemoScreenshots(projectId);
+    }
+    
+    return screenshots;
+  }
+
+  Future<List<EditorLayer>> getScreenshotLayers(String screenshotId) async {
+    final query = _database.select(_database.editorLayersTable)
+      ..where((tbl) => tbl.screenshotId.equals(screenshotId))
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.zIndex)]);
+    
+    final layersData = await query.get();
+    
+    return layersData.map((data) => _layerFromData(data)).toList();
+  }
+
+  Future<void> addLayer(String screenshotId, EditorLayer layer) async {
+    final maxZIndex = await _getMaxZIndex(screenshotId);
+    
+    await _database.into(_database.editorLayersTable).insert(
+      EditorLayersTableCompanion.insert(
+        id: layer.id,
+        screenshotId: screenshotId,
+        layerType: _layerTypeToString(layer.layerType),
+        name: layer.name,
+        visible: layer.visible,
+        locked: layer.locked,
+        opacity: layer.opacity,
+        blendMode: layer.blendMode.toString(),
+        zIndex: maxZIndex + 1,
+        bounds: _rectToString(layer.bounds),
+        layerData: layer.layerDataToJson(),
+        createdAt: layer.createdAt,
+        modifiedAt: layer.modifiedAt,
+      ),
+    );
+  }
+
+  Future<void> updateLayer(EditorLayer layer) async {
+    await (_database.update(_database.editorLayersTable)
+          ..where((tbl) => tbl.id.equals(layer.id)))
+        .write(
+      EditorLayersTableCompanion(
+        name: Value(layer.name),
+        visible: Value(layer.visible),
+        locked: Value(layer.locked),
+        opacity: Value(layer.opacity),
+        blendMode: Value(layer.blendMode.toString()),
+        bounds: Value(_rectToString(layer.bounds)),
+        layerData: Value(layer.layerDataToJson()),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> removeLayer(String layerId) async {
+    await (_database.delete(_database.editorLayersTable)
+          ..where((tbl) => tbl.id.equals(layerId)))
+        .go();
+  }
+
+  Future<void> reorderLayers(String screenshotId, List<String> layerIds) async {
+    for (int i = 0; i < layerIds.length; i++) {
+      await (_database.update(_database.editorLayersTable)
+            ..where((tbl) => tbl.id.equals(layerIds[i])))
+          .write(EditorLayersTableCompanion(zIndex: Value(i)));
+    }
+  }
+
+  Future<int> _getMaxZIndex(String screenshotId) async {
+    final query = _database.selectOnly(_database.editorLayersTable)
+      ..addColumns([_database.editorLayersTable.zIndex.max()])
+      ..where(_database.editorLayersTable.screenshotId.equals(screenshotId));
+    
+    final result = await query.getSingleOrNull();
+    return result?.read(_database.editorLayersTable.zIndex.max()) ?? -1;
+  }
+
+  EditorLayer _layerFromData(EditorLayerRow data) {
+    final layerType = _stringToLayerType(data.layerType);
+    
+    switch (layerType) {
+      case LayerType.vector:
+        return VectorLayer.fromJson({
+          'id': data.id,
+          'name': data.name,
+          'visible': data.visible,
+          'locked': data.locked,
+          'opacity': data.opacity,
+          'blendMode': data.blendMode,
+          'createdAt': data.createdAt.toIso8601String(),
+          'modifiedAt': data.modifiedAt.toIso8601String(),
+          ...data.layerData,
+        });
+      
+      case LayerType.text:
+        return TextLayer.fromJson({
+          'id': data.id,
+          'name': data.name,
+          'visible': data.visible,
+          'locked': data.locked,
+          'opacity': data.opacity,
+          'blendMode': data.blendMode,
+          'createdAt': data.createdAt.toIso8601String(),
+          'modifiedAt': data.modifiedAt.toIso8601String(),
+          ...data.layerData,
+        });
+      
+      case LayerType.redaction:
+        return RedactionLayer.fromJson({
+          'id': data.id,
+          'name': data.name,
+          'visible': data.visible,
+          'locked': data.locked,
+          'opacity': data.opacity,
+          'blendMode': data.blendMode,
+          'createdAt': data.createdAt.toIso8601String(),
+          'modifiedAt': data.modifiedAt.toIso8601String(),
+          'bounds': data.bounds,
+          ...data.layerData,
+        });
+      
+      case LayerType.bitmap:
+        return BitmapLayer.fromJson({
+          'id': data.id,
+          'name': data.name,
+          'visible': data.visible,
+          'locked': data.locked,
+          'opacity': data.opacity,
+          'blendMode': data.blendMode,
+          'createdAt': data.createdAt.toIso8601String(),
+          'modifiedAt': data.modifiedAt.toIso8601String(),
+          'bounds': data.bounds,
+          ...data.layerData,
+        });
+    }
+  }
+
+  String _layerTypeToString(LayerType type) {
+    return type.toString().split('.').last;
+  }
+
+  LayerType _stringToLayerType(String typeString) {
+    return LayerType.values.firstWhere(
+      (type) => type.toString().split('.').last == typeString,
+    );
+  }
+
+  String _rectToString(Rect? rect) {
+    if (rect == null) return '';
+    return '${rect.left},${rect.top},${rect.width},${rect.height}';
+  }
+
+  Rect? _stringToRect(String? rectString) {
+    if (rectString == null || rectString.isEmpty) return null;
+    final parts = rectString.split(',');
+    if (parts.length != 4) return null;
+    
+    return Rect.fromLTWH(
+      double.parse(parts[0]),
+      double.parse(parts[1]),
+      double.parse(parts[2]),
+      double.parse(parts[3]),
+    );
+  }
+}

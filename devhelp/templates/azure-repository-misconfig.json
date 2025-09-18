@@ -1,0 +1,195 @@
+{
+  "id": "azure-repository-misconfig",
+  "title": "Azure Repository Security Misconfigurations",
+  "category": "DevOps Security",
+  "baseDescription": "LRQA identified multiple security misconfigurations in Azure DevOps repositories and GitHub integrations that could lead to supply chain attacks, unauthorized code modifications, credential exposure, and compromise of the CI/CD pipeline infrastructure. These misconfigurations violate security best practices and create potential attack vectors for malicious actors targeting the software development lifecycle.",
+  "subFindings": [
+    {
+      "id": "insufficient-branch-protection",
+      "title": "Insufficient Branch Protection Policies",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "High",
+      "description": "The repository lacks adequate branch protection policies on default branches, allowing unauthorized code modifications, bypassing code review processes, and enabling potential supply chain attacks through malicious commits.\n\nWithout proper branch protection, authenticated users can directly push code to production branches, approve their own pull requests, and bypass required status checks from CI/CD pipelines. This creates significant risks for code integrity and enables attackers with repository access to inject malicious code directly into the main codebase.",
+      "checkSteps": "1. Navigate to Azure DevOps Project Settings > Repositories > [Repository] > Policies\n2. Check Default Branch > Branch Policies configuration\n3. Verify 'Require a minimum number of reviewers' (should be 2+)\n4. Confirm 'Prohibit the most recent pusher from approving' is enabled\n5. Check 'Required status checks' for CI/CD pipeline validation\n6. Review 'Restrict pushes that create files over specified size limit'\nPowerShell: Get branch policies via REST API to verify minimum reviewer requirements and status check enforcement",
+      "recommendation": "Enable comprehensive branch protection policies requiring minimum 2 reviewers, prohibit self-approval, enforce status checks from CI/CD pipelines, and implement administrator enforcement to prevent bypass of protection rules.",
+      "verificationProcedure": "1. Verify branch protection policies are active on all critical branches\n2. Test that direct pushes to protected branches are blocked\n3. Confirm pull requests require minimum reviewers before merge\n4. Verify status checks must pass before merge is allowed\n5. Test that policy bypass attempts by administrators are logged\n6. Review branch protection coverage across all repositories\n7. Document branch protection policy compliance\n8. Monitor branch protection violations through audit logs",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Azure DevOps branch policies showing insufficient protection",
+          "steps": "1. Navigate to Project Settings > Repositories > Policies\n2. Screenshot showing missing or weak branch protection rules\n3. Highlight lack of reviewer requirements or status checks"
+        },
+        {
+          "caption": "GitHub branch protection rules showing security gaps",
+          "steps": "1. Go to Repository Settings > Branches\n2. Screenshot showing inadequate protection rules\n3. Show missing required reviews or status checks configuration"
+        }
+      ],
+      "links": [
+        {
+          "title": "Branch policies and settings in Azure Repos",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops"
+        },
+        {
+          "title": "Managing a branch protection rule",
+          "url": "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule"
+        }
+      ]
+    },
+    {
+      "id": "overprivileged-access-tokens",
+      "title": "Overprivileged Personal Access Tokens and Service Principals",
+      "cvssScore": 8.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "High",
+      "description": "Personal Access Tokens (PATs) and service principals are configured with excessive permissions and extended expiration periods, violating the principle of least privilege and creating significant security risks for unauthorized access to repositories, pipelines, and Azure resources.\n\nLong-lived PATs with broad scopes (such as 'Full Access' or 'Code (read and write)') create persistent attack vectors that can be exploited if compromised. Service principals with excessive permissions can be used to access resources beyond their intended scope, potentially leading to privilege escalation and lateral movement within the Azure environment.",
+      "checkSteps": "1. Navigate to Azure DevOps User Settings > Personal Access Tokens\n2. Review token expiration dates and scopes for each active PAT\n3. Check Azure Portal > Azure Active Directory > App Registrations for service principals\n4. Review API permissions and consent status for registered applications\n5. Audit Azure DevOps Organization Settings > Users for permission levels\n6. Check Service Connections for overprivileged Azure resource access\nPowerShell: Use Azure DevOps REST API to enumerate PAT tokens and their scopes, audit service principal permissions",
+      "recommendation": "Implement time-bound PATs with minimum required scopes, rotate tokens regularly, use service principals with least-privilege permissions, implement Conditional Access policies for token usage, and monitor token activity through audit logs.",
+      "verificationProcedure": "1. Audit all active PATs for appropriate scopes and expiration dates\n2. Verify service principals have minimum required permissions\n3. Implement automated PAT rotation policies\n4. Configure monitoring alerts for suspicious token usage\n5. Test that reduced permissions still allow required functionality\n6. Document token and service principal access policies\n7. Implement regular access reviews for tokens and service accounts\n8. Verify Conditional Access policies apply to programmatic access",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Personal Access Token with excessive permissions and long expiration",
+          "steps": "1. Navigate to User Settings > Personal Access Tokens\n2. Screenshot showing PAT with 'Full Access' or broad scopes\n3. Highlight long expiration dates (>90 days)"
+        },
+        {
+          "caption": "Service principal with overprivileged Azure permissions",
+          "steps": "1. Azure Portal > App Registrations > [Service Principal]\n2. Screenshot showing excessive API permissions\n3. Highlight unnecessary permissions like 'User.Read.All' or broad scopes"
+        }
+      ],
+      "links": [
+        {
+          "title": "Use personal access tokens",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops"
+        },
+        {
+          "title": "Service principals and managed identities",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity?view=azure-devops"
+        }
+      ]
+    },
+    {
+      "id": "hardcoded-secrets-exposure",
+      "title": "Hardcoded Secrets and Credential Exposure in Source Code",
+      "cvssScore": 9.8,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "Critical",
+      "description": "Sensitive credentials including API keys, database passwords, service account tokens, and encryption keys are hardcoded directly in source code, configuration files, and commit history, making them accessible to anyone with repository access and creating significant security risks.\n\nHardcoded secrets in repositories can be easily discovered through repository scans, git history analysis, or automated secret scanning tools. Once exposed, these credentials can provide unauthorized access to backend systems, databases, cloud resources, and third-party services, potentially leading to data breaches and system compromises.",
+      "checkSteps": "1. Navigate to Azure DevOps Project Settings > Repositories > [Repository] > Security\n2. Check GitHub Advanced Security settings if available\n3. Review secret scanning alerts and findings\n4. Manually search for common secret patterns in code\n5. Check git history for previously committed secrets\n6. Review configuration files, environment files, and deployment scripts\n7. Verify push protection for secrets is enabled\nPowerShell: Use git commands and secret scanning tools to identify exposed credentials in repository history",
+      "recommendation": "Implement automated secret scanning with push protection, use Azure Key Vault or GitHub Secrets for credential storage, enable secret scanning alerts, rotate any discovered hardcoded credentials, and establish secure coding practices with developer training.",
+      "verificationProcedure": "1. Enable GitHub Advanced Security secret scanning features\n2. Configure push protection to block commits containing secrets\n3. Rotate all discovered hardcoded credentials immediately\n4. Implement automated secret scanning in CI/CD pipelines\n5. Verify all configuration uses secure secret references\n6. Clean sensitive data from git history where possible\n7. Train developers on secure coding practices\n8. Monitor for new secret exposure through automated scanning",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Secret scanning alerts showing exposed credentials",
+          "steps": "1. Navigate to Repository > Security > Secret scanning\n2. Screenshot showing active secret alerts\n3. Highlight different types of exposed secrets (API keys, tokens)"
+        },
+        {
+          "caption": "Source code showing hardcoded database connection string",
+          "steps": "1. Navigate to repository files containing configuration\n2. Screenshot showing connection strings or API keys in plain text\n3. Highlight specific lines with sensitive data"
+        }
+      ],
+      "links": [
+        {
+          "title": "Configure GitHub Advanced Security for Azure DevOps",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/repos/security/configure-github-advanced-security-features?view=azure-devops"
+        },
+        {
+          "title": "About secret scanning",
+          "url": "https://docs.github.com/en/code-security/secret-scanning/about-secret-scanning"
+        }
+      ]
+    },
+    {
+      "id": "pipeline-injection-vulnerabilities",
+      "title": "YAML Pipeline Injection and Privilege Escalation Vulnerabilities",
+      "cvssScore": 10.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+      "severity": "Critical",
+      "description": "Build pipelines contain vulnerabilities that allow YAML injection attacks, enabling attackers to execute arbitrary code, escalate privileges, and access sensitive resources through pipeline execution contexts. These vulnerabilities can lead to complete compromise of the CI/CD infrastructure.\n\nPipeline injection attacks occur when user-controlled input is improperly validated before being used in pipeline YAML, allowing attackers to inject malicious commands, access secrets, modify build processes, and potentially compromise the entire build infrastructure and connected Azure resources.",
+      "checkSteps": "1. Navigate to Azure DevOps Pipelines > [Pipeline] > Edit\n2. Review YAML pipeline for user input validation\n3. Check for dynamic variable usage in script blocks\n4. Verify agent pool restrictions and permissions\n5. Review service connection permissions and scope\n6. Check for unrestricted checkout permissions\n7. Audit pipeline variable usage and secret handling\nPowerShell: Use Azure DevOps REST API to analyze pipeline configurations and identify potential injection points",
+      "recommendation": "Implement input validation for all user-controlled variables, restrict agent pool access, use secure service connections with minimal permissions, validate checkout sources, implement pipeline approval gates, and monitor pipeline execution for anomalies.",
+      "verificationProcedure": "1. Review all pipelines for input validation gaps\n2. Implement restricted agent pools with limited permissions\n3. Configure service connections with least-privilege access\n4. Enable pipeline approval requirements for sensitive operations\n5. Test pipeline security with controlled injection attempts\n6. Monitor pipeline logs for suspicious activities\n7. Implement automated security scanning of pipeline YAML\n8. Document secure pipeline development practices",
+      "screenshotPlaceholders": [
+        {
+          "caption": "YAML pipeline showing potential injection vulnerability",
+          "steps": "1. Navigate to Pipelines > [Pipeline] > Edit\n2. Screenshot showing user input directly used in script blocks\n3. Highlight variables used without proper validation"
+        },
+        {
+          "caption": "Pipeline service connection with excessive permissions",
+          "steps": "1. Go to Project Settings > Service connections\n2. Screenshot showing service connection with broad access\n3. Highlight overprivileged Azure resource permissions"
+        }
+      ],
+      "links": [
+        {
+          "title": "Pipeline security resources",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/security/resources?view=azure-devops"
+        },
+        {
+          "title": "Other security considerations",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/security/misc?view=azure-devops"
+        }
+      ]
+    },
+    {
+      "id": "vulnerable-dependencies",
+      "title": "Vulnerable Dependencies and Supply Chain Security Gaps",
+      "cvssScore": 8.6,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "The repository contains dependencies with known security vulnerabilities, lacks automated dependency scanning, and has insufficient supply chain security controls, potentially exposing the application to known exploits and supply chain attacks.\n\nOutdated dependencies with published CVEs create direct attack vectors for exploiting known vulnerabilities. Without automated dependency scanning and updates, applications remain vulnerable to publicly disclosed security issues, and lack of supply chain verification enables potential compromise through malicious packages or compromised upstream dependencies.",
+      "checkSteps": "1. Navigate to Azure DevOps Repos > [Repository] > Security\n2. Check dependency scanning results and alerts\n3. Review package.json, requirements.txt, or other dependency files\n4. Verify Dependabot or similar automated update tools are enabled\n5. Check for Software Bill of Materials (SBOM) generation\n6. Review dependency approval processes for new packages\n7. Audit third-party package sources and registries\nPowerShell: Use dependency scanning tools and APIs to identify vulnerable packages and their severity levels",
+      "recommendation": "Enable automated dependency scanning with GitHub Advanced Security, implement Dependabot for automated updates, establish dependency approval processes, generate and monitor SBOMs, and implement security policies for package management.",
+      "verificationProcedure": "1. Enable comprehensive dependency scanning across all repositories\n2. Configure automated dependency updates with testing\n3. Implement dependency approval workflows for new packages\n4. Generate and review Software Bill of Materials regularly\n5. Verify dependency scanning covers all package managers used\n6. Test dependency update processes don't break functionality\n7. Monitor and respond to new vulnerability alerts promptly\n8. Establish secure development practices for dependency management",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Dependency scanning showing vulnerable packages",
+          "steps": "1. Navigate to Repository > Security > Dependency graph\n2. Screenshot showing vulnerable dependencies with CVE details\n3. Highlight high-severity vulnerabilities and their impact"
+        },
+        {
+          "caption": "Missing Dependabot configuration",
+          "steps": "1. Check repository settings for dependency updates\n2. Screenshot showing lack of automated update configuration\n3. Show gap in dependency management automation"
+        }
+      ],
+      "links": [
+        {
+          "title": "Dependency scanning in Azure DevOps",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/repos/security/configure-github-advanced-security-features?view=azure-devops#dependency-scanning"
+        },
+        {
+          "title": "About Dependabot security updates",
+          "url": "https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates"
+        }
+      ]
+    },
+    {
+      "id": "insufficient-audit-logging",
+      "title": "Insufficient Repository Audit Logging and Monitoring",
+      "cvssScore": 6.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+      "severity": "Medium",
+      "description": "The repository and Azure DevOps organization lack comprehensive audit logging and monitoring configuration, preventing effective detection of unauthorized activities, security incidents, and compliance violations in the development environment.\n\nWithout proper audit logging and SIEM integration, malicious activities such as unauthorized code changes, permission escalations, secret access, and policy violations may go undetected. This limits incident response capabilities and creates compliance gaps for regulatory requirements.",
+      "checkSteps": "1. Navigate to Azure DevOps Organization Settings > Audit\n2. Check audit log retention settings and coverage\n3. Review audit streaming configuration to SIEM systems\n4. Verify GitHub audit log settings if applicable\n5. Check integration with Azure Monitor and Log Analytics\n6. Review alerting configuration for security events\n7. Audit log export and backup procedures\nPowerShell: Configure audit streaming and verify audit event collection through Azure DevOps REST APIs",
+      "recommendation": "Enable comprehensive audit logging with extended retention, configure audit streaming to SIEM systems, implement automated alerting for security events, establish regular audit log reviews, and ensure compliance with regulatory requirements for log retention and monitoring.",
+      "verificationProcedure": "1. Configure audit logging with appropriate retention periods\n2. Set up audit streaming to centralized SIEM or Azure Sentinel\n3. Implement automated alerts for high-risk activities\n4. Test audit log collection and streaming functionality\n5. Establish regular audit log review procedures\n6. Verify audit coverage includes all security-relevant events\n7. Document audit logging policies and procedures\n8. Train security team on audit log analysis and response",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Azure DevOps audit settings showing insufficient coverage",
+          "steps": "1. Navigate to Organization Settings > Audit\n2. Screenshot showing limited audit retention or missing streaming\n3. Highlight gaps in audit configuration"
+        },
+        {
+          "caption": "Missing SIEM integration for audit logs",
+          "steps": "1. Check Azure Monitor or Log Analytics integration\n2. Screenshot showing lack of centralized logging setup\n3. Show missing audit streaming configuration"
+        }
+      ],
+      "links": [
+        {
+          "title": "Azure DevOps auditing",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/organizations/audit/azure-devops-auditing?view=azure-devops"
+        },
+        {
+          "title": "Streaming Azure DevOps auditing events",
+          "url": "https://learn.microsoft.com/en-us/azure/devops/organizations/audit/auditing-streaming?view=azure-devops"
+        }
+      ]
+    }
+  ],
+  "automatedScript": "# Azure Repository Security Assessment Script (2024)\nparam(\n    [Parameter(Mandatory=$true)]\n    [string]$Organization,\n    [Parameter(Mandatory=$true)]\n    [string]$Project,\n    [Parameter(Mandatory=$false)]\n    [string]$Repository,\n    [Parameter(Mandatory=$true)]\n    [string]$PersonalAccessToken\n)\n\nWrite-Host \"=== Azure Repository Security Assessment ===\" -ForegroundColor Cyan\nWrite-Host \"Organization: $Organization\" -ForegroundColor White\nWrite-Host \"Project: $Project\" -ForegroundColor White\nif ($Repository) { Write-Host \"Repository: $Repository\" -ForegroundColor White }\n\n# Setup authentication headers\n$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(\":$PersonalAccessToken\"))\n$headers = @{\n    Authorization = \"Basic $base64AuthInfo\"\n    'Content-Type' = 'application/json'\n}\n\n# Branch Protection Policy Checks\nWrite-Host \"`n--- Branch Protection Policies ---\" -ForegroundColor Yellow\ntry {\n    $policiesUri = \"https://dev.azure.com/$Organization/$Project/_apis/policy/configurations?api-version=7.1-preview.1\"\n    $policies = Invoke-RestMethod -Uri $policiesUri -Headers $headers -Method Get\n    \n    $reviewerPolicies = $policies.value | Where-Object { $_.type.displayName -eq \"Minimum number of reviewers\" }\n    $statusCheckPolicies = $policies.value | Where-Object { $_.type.displayName -eq \"Build\" }\n    \n    if ($reviewerPolicies.Count -gt 0) {\n        Write-Host \"✅ Branch protection policies found\" -ForegroundColor Green\n        foreach ($policy in $reviewerPolicies) {\n            $repoId = $policy.settings.scope[0].repositoryId\n            $minReviewers = $policy.settings.minimumApproverCount\n            $resetOnPush = $policy.settings.resetOnSourcePush\n            \n            Write-Host \"   Repository ID: $repoId\" -ForegroundColor White\n            Write-Host \"   Minimum Reviewers: $minReviewers\" -ForegroundColor White\n            Write-Host \"   Reset on Source Push: $resetOnPush\" -ForegroundColor White\n            \n            if ($minReviewers -lt 2) {\n                Write-Host \"   ❌ Insufficient reviewer requirement (should be 2+)\" -ForegroundColor Red\n            } else {\n                Write-Host \"   ✅ Adequate reviewer requirement\" -ForegroundColor Green\n            }\n        }\n    } else {\n        Write-Host \"❌ No minimum reviewer policies found\" -ForegroundColor Red\n    }\n    \n    if ($statusCheckPolicies.Count -gt 0) {\n        Write-Host \"✅ Build validation policies found: $($statusCheckPolicies.Count)\" -ForegroundColor Green\n    } else {\n        Write-Host \"⚠️ No build validation policies found\" -ForegroundColor Yellow\n    }\n} catch {\n    Write-Host \"❌ Error checking branch policies: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Repository Security Features Check\nWrite-Host \"`n--- Repository Security Features ---\" -ForegroundColor Yellow\nif ($Repository) {\n    try {\n        # Check if GitHub Advanced Security is enabled\n        $repoUri = \"https://dev.azure.com/$Organization/$Project/_apis/git/repositories/$Repository?api-version=7.1-preview.1\"\n        $repoDetails = Invoke-RestMethod -Uri $repoUri -Headers $headers -Method Get\n        \n        # Check Advanced Security enablement (requires specific API)\n        $advSecUri = \"https://dev.azure.com/$Organization/$Project/_apis/management/repositories/$Repository/enablement?api-version=7.1-preview.1\"\n        try {\n            $advSecurity = Invoke-RestMethod -Uri $advSecUri -Headers $headers -Method Get\n            if ($advSecurity.advancedSecurity.isEnabled) {\n                Write-Host \"✅ GitHub Advanced Security is enabled\" -ForegroundColor Green\n                \n                # Check secret scanning alerts\n                $secretAlertsUri = \"https://dev.azure.com/$Organization/$Project/_apis/management/repositories/$Repository/alerts?alertType=secret&api-version=7.1-preview.1\"\n                try {\n                    $secretAlerts = Invoke-RestMethod -Uri $secretAlertsUri -Headers $headers -Method Get\n                    if ($secretAlerts.value.Count -gt 0) {\n                        Write-Host \"❌ $($secretAlerts.value.Count) secret scanning alert(s) found\" -ForegroundColor Red\n                        foreach ($alert in $secretAlerts.value | Select-Object -First 5) {\n                            Write-Host \"   • $($alert.rule.name) in $($alert.physicalLocations[0].artifactLocation.uri)\" -ForegroundColor White\n                        }\n                    } else {\n                        Write-Host \"✅ No secret scanning alerts\" -ForegroundColor Green\n                    }\n                } catch {\n                    Write-Host \"⚠️ Could not check secret scanning alerts\" -ForegroundColor Yellow\n                }\n                \n                # Check dependency scanning alerts\n                $depAlertsUri = \"https://dev.azure.com/$Organization/$Project/_apis/management/repositories/$Repository/alerts?alertType=dependency&api-version=7.1-preview.1\"\n                try {\n                    $depAlerts = Invoke-RestMethod -Uri $depAlertsUri -Headers $headers -Method Get\n                    if ($depAlerts.value.Count -gt 0) {\n                        Write-Host \"❌ $($depAlerts.value.Count) dependency vulnerability alert(s) found\" -ForegroundColor Red\n                        foreach ($alert in $depAlerts.value | Select-Object -First 5) {\n                            Write-Host \"   • $($alert.rule.name) - Severity: $($alert.rule.properties.severity)\" -ForegroundColor White\n                        }\n                    } else {\n                        Write-Host \"✅ No dependency vulnerability alerts\" -ForegroundColor Green\n                    }\n                } catch {\n                    Write-Host \"⚠️ Could not check dependency scanning alerts\" -ForegroundColor Yellow\n                }\n            } else {\n                Write-Host \"❌ GitHub Advanced Security is not enabled\" -ForegroundColor Red\n            }\n        } catch {\n            Write-Host \"⚠️ Could not check Advanced Security status\" -ForegroundColor Yellow\n        }\n    } catch {\n        Write-Host \"❌ Error checking repository security: $($_.Exception.Message)\" -ForegroundColor Red\n    }\n} else {\n    Write-Host \"⚠️ No specific repository provided - skipping repository-specific checks\" -ForegroundColor Yellow\n}\n\n# Service Connections Security Check\nWrite-Host \"`n--- Service Connections Security ---\" -ForegroundColor Yellow\ntry {\n    $serviceConnectionsUri = \"https://dev.azure.com/$Organization/$Project/_apis/serviceendpoint/endpoints?api-version=7.1-preview.4\"\n    $serviceConnections = Invoke-RestMethod -Uri $serviceConnectionsUri -Headers $headers -Method Get\n    \n    if ($serviceConnections.value.Count -gt 0) {\n        Write-Host \"Found $($serviceConnections.value.Count) service connection(s)\" -ForegroundColor White\n        foreach ($connection in $serviceConnections.value) {\n            Write-Host \"   Connection: $($connection.name) (Type: $($connection.type))\" -ForegroundColor White\n            \n            # Check for overprivileged connections\n            if ($connection.type -eq \"azurerm\") {\n                if ($connection.data.subscriptionId) {\n                    Write-Host \"   Azure Subscription: $($connection.data.subscriptionId)\" -ForegroundColor White\n                    if ($connection.data.scopeLevel -eq \"Subscription\") {\n                        Write-Host \"   ⚠️ Subscription-level access (consider resource group scope)\" -ForegroundColor Yellow\n                    }\n                }\n            }\n        }\n    } else {\n        Write-Host \"✅ No service connections found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking service connections: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Pipeline Security Check\nWrite-Host \"`n--- Pipeline Security ---\" -ForegroundColor Yellow\ntry {\n    $pipelinesUri = \"https://dev.azure.com/$Organization/$Project/_apis/pipelines?api-version=7.1-preview.1\"\n    $pipelines = Invoke-RestMethod -Uri $pipelinesUri -Headers $headers -Method Get\n    \n    if ($pipelines.value.Count -gt 0) {\n        Write-Host \"Found $($pipelines.value.Count) pipeline(s)\" -ForegroundColor White\n        $yamlPipelines = $pipelines.value | Where-Object { $_.configuration.type -eq \"yaml\" }\n        $classicPipelines = $pipelines.value | Where-Object { $_.configuration.type -ne \"yaml\" }\n        \n        Write-Host \"   YAML Pipelines: $($yamlPipelines.Count)\" -ForegroundColor White\n        Write-Host \"   Classic Pipelines: $($classicPipelines.Count)\" -ForegroundColor White\n        \n        if ($classicPipelines.Count -gt 0) {\n            Write-Host \"   ⚠️ Classic pipelines found (consider migrating to YAML)\" -ForegroundColor Yellow\n        }\n        \n        # Check for pipeline approvals\n        foreach ($pipeline in $pipelines.value | Select-Object -First 3) {\n            $pipelineDetailUri = \"https://dev.azure.com/$Organization/$Project/_apis/pipelines/$($pipeline.id)?api-version=7.1-preview.1\"\n            try {\n                $pipelineDetail = Invoke-RestMethod -Uri $pipelineDetailUri -Headers $headers -Method Get\n                Write-Host \"   Pipeline: $($pipeline.name)\" -ForegroundColor White\n                Write-Host \"     Path: $($pipelineDetail.configuration.path)\" -ForegroundColor White\n            } catch {\n                Write-Host \"   ⚠️ Could not get details for pipeline: $($pipeline.name)\" -ForegroundColor Yellow\n            }\n        }\n    } else {\n        Write-Host \"✅ No pipelines found\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking pipelines: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Organization Security Settings\nWrite-Host \"`n--- Organization Security Settings ---\" -ForegroundColor Yellow\ntry {\n    # Check organization policies\n    $orgPoliciesUri = \"https://dev.azure.com/$Organization/_apis/policy/configurations?api-version=7.1-preview.1\"\n    try {\n        $orgPolicies = Invoke-RestMethod -Uri $orgPoliciesUri -Headers $headers -Method Get\n        Write-Host \"Organization-level policies: $($orgPolicies.value.Count)\" -ForegroundColor White\n    } catch {\n        Write-Host \"⚠️ Could not access organization-level policies\" -ForegroundColor Yellow\n    }\n    \n    # Check audit settings\n    Write-Host \"📋 Manual check required:\" -ForegroundColor Cyan\n    Write-Host \"   • Navigate to Organization Settings > Audit\" -ForegroundColor White\n    Write-Host \"   • Verify audit log retention (default: 90 days)\" -ForegroundColor White\n    Write-Host \"   • Check audit streaming configuration\" -ForegroundColor White\n    Write-Host \"   • Review security group memberships\" -ForegroundColor White\n    \n} catch {\n    Write-Host \"❌ Error checking organization settings: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Extensions Security Check\nWrite-Host \"`n--- Installed Extensions Security ---\" -ForegroundColor Yellow\ntry {\n    $extensionsUri = \"https://extmgmt.dev.azure.com/$Organization/_apis/extensionmanagement/installedextensions?api-version=7.1-preview.1\"\n    $extensions = Invoke-RestMethod -Uri $extensionsUri -Headers $headers -Method Get\n    \n    if ($extensions.value.Count -gt 0) {\n        Write-Host \"Found $($extensions.value.Count) installed extension(s)\" -ForegroundColor White\n        $riskyScopes = @(\"vso.code_full\", \"vso.build_execute\", \"vso.release_execute\", \"vso.project_manage\")\n        \n        foreach ($extension in $extensions.value | Select-Object -First 10) {\n            Write-Host \"   Extension: $($extension.extensionName) by $($extension.publisherName)\" -ForegroundColor White\n            Write-Host \"     Version: $($extension.version)\" -ForegroundColor White\n            \n            $hasRiskyScope = $false\n            foreach ($scope in $extension.scopes) {\n                if ($scope -in $riskyScopes) {\n                    $hasRiskyScope = $true\n                    break\n                }\n            }\n            \n            if ($hasRiskyScope) {\n                Write-Host \"     ⚠️ Has high-risk permissions\" -ForegroundColor Yellow\n            } else {\n                Write-Host \"     ✅ Standard permissions\" -ForegroundColor Green\n            }\n        }\n    } else {\n        Write-Host \"✅ No third-party extensions installed\" -ForegroundColor Green\n    }\n} catch {\n    Write-Host \"❌ Error checking extensions: $($_.Exception.Message)\" -ForegroundColor Red\n}\n\n# Summary and Recommendations\nWrite-Host \"`n=== Security Assessment Summary ===\" -ForegroundColor Cyan\nWrite-Host \"Organization: $Organization | Project: $Project\" -ForegroundColor White\nWrite-Host \"`nKey Security Checks:\" -ForegroundColor White\nWrite-Host \"✅ Branch Protection Policies\" -ForegroundColor White\nWrite-Host \"✅ Repository Security Features (Advanced Security)\" -ForegroundColor White\nWrite-Host \"✅ Service Connections Configuration\" -ForegroundColor White\nWrite-Host \"✅ Pipeline Security Review\" -ForegroundColor White\nWrite-Host \"✅ Extensions Security Assessment\" -ForegroundColor White\nWrite-Host \"`nManual Reviews Required:\" -ForegroundColor Yellow\nWrite-Host \"• Personal Access Token audit\" -ForegroundColor White\nWrite-Host \"• Service Principal permissions review\" -ForegroundColor White\nWrite-Host \"• Audit logging configuration\" -ForegroundColor White\nWrite-Host \"• User access and permission reviews\" -ForegroundColor White\nWrite-Host \"`nNext Steps:\" -ForegroundColor Cyan\nWrite-Host \"1. Address any security findings identified above\" -ForegroundColor White\nWrite-Host \"2. Enable GitHub Advanced Security if not already active\" -ForegroundColor White\nWrite-Host \"3. Implement branch protection policies on all critical repositories\" -ForegroundColor White\nWrite-Host \"4. Configure audit streaming to SIEM/Log Analytics\" -ForegroundColor White\nWrite-Host \"5. Regular security assessments and policy reviews\" -ForegroundColor White"
+}

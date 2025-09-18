@@ -1,0 +1,55 @@
+{
+  "id": "sql-injection",
+  "title": "SQL Injection Vulnerability",
+  "category": "Web Application",
+  "baseDescription": "SQL injection vulnerability was identified allowing potential database compromise.",
+  "subFindings": [
+    {
+      "id": "auth-bypass",
+      "title": "Authentication Bypass",
+      "cvssScore": 9.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "Critical",
+      "description": "SQL injection in login form allows authentication bypass using classic payload ' OR '1'='1.",
+      "checkSteps": "1. Navigate to login page\n2. Enter payload in username field\n3. Submit with any password",
+      "recommendation": "Implement parameterized queries and input validation.",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Login form with SQL injection payload in username field",
+          "steps": "1. Navigate to the login page\n2. Enter payload ' OR '1'='1 in username field\n3. Screenshot showing the malicious input before submission"
+        },
+        {
+          "caption": "Successful authentication bypass after SQL injection",
+          "steps": "1. After submitting the SQL injection payload\n2. Screenshot showing successful login without valid credentials\n3. Show the authenticated user dashboard or welcome page"
+        }
+      ],
+      "links": [
+        {
+          "title": "OWASP SQL Injection",
+          "url": "https://owasp.org/www-community/attacks/SQL_Injection"
+        }
+      ]
+    },
+    {
+      "id": "data-extraction",
+      "title": "Database Information Disclosure",
+      "cvssScore": 7.5,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "severity": "High",
+      "description": "Union-based SQL injection allows extraction of sensitive database information.",
+      "checkSteps": "1. Identify vulnerable parameter\n2. Determine number of columns\n3. Extract database schema",
+      "recommendation": "Use stored procedures and least privilege database accounts.",
+      "screenshotPlaceholders": [
+        {
+          "caption": "Database schema extraction using UNION-based SQL injection",
+          "steps": "1. Identify vulnerable parameter in the application\n2. Use UNION SELECT to extract schema information\n3. Screenshot showing database tables and column names retrieved"
+        },
+        {
+          "caption": "Sensitive data extraction from database tables",
+          "steps": "1. Use UNION SELECT to extract data from sensitive tables\n2. Screenshot showing extracted user data, passwords, or other sensitive information\n3. Demonstrate the impact of data disclosure"
+        }
+      ],
+      "links": []
+    }
+  ]
+}
