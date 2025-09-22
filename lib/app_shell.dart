@@ -22,7 +22,6 @@ import 'screens/findings_screen.dart';
 import 'screens/credentials_screen.dart';
 import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
-import 'screens/assets_screen.dart';
 import 'screens/comprehensive_assets_screen.dart';
 import 'screens/trigger_evaluation_dashboard_screen.dart';
 import 'screens/attack_plan_screen.dart';
@@ -61,7 +60,7 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.methodologyDashboard:
         return const AttackPlanScreen();
       case NavigationSection.assets:
-        return const AssetsScreen();
+        return const ComprehensiveAssetsScreen();
       case NavigationSection.comprehensiveAssets:
         return const ComprehensiveAssetsScreen();
       case NavigationSection.triggerEvaluation:

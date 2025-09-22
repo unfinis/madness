@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/assets.dart';
+import '../models/asset.dart';
 import '../providers/projects_provider.dart';
 import '../providers/asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
@@ -1121,15 +1121,21 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
 
   void _showAddAssetDialog(BuildContext context, String projectId) async {
     // First, let user select the asset type
-    final selectedType = await showDialog<AssetType>(
+    AssetType? selectedType;
+    await showDialog(
       context: context,
-      builder: (context) => const AssetTypeSelectorDialog(),
+      builder: (context) => AssetTypeSelectorDialog(
+        onAssetTypeSelected: (AssetType assetType) {
+          selectedType = assetType;
+          Navigator.of(context).pop();
+        },
+      ),
     );
 
     if (selectedType == null || !mounted) return;
 
     // Create a new blank asset based on the selected type
-    final newAsset = _createAssetOfType(selectedType, projectId);
+    final newAsset = _createAssetOfType(selectedType!, projectId);
 
     if (!mounted) return;
 

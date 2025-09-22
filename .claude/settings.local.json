@@ -115,7 +115,9 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/trigger_evaluation_dashboard_screen.dart lib/screens/comprehensive_assets_screen.dart lib/dialogs/trigger_evaluation_detail_dialog.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/asset_trigger_integration_service.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/comprehensive_assets_screen.dart lib/dialogs/asset_relationship_dialog.dart)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/comprehensive_asset_provider.dart lib/screens/comprehensive_assets_screen.dart lib/screens/trigger_evaluation_dashboard_screen.dart lib/services/asset_trigger_integration_service.dart lib/dialogs/asset_relationship_dialog.dart --fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/comprehensive_asset_provider.dart lib/screens/comprehensive_assets_screen.dart lib/screens/trigger_evaluation_dashboard_screen.dart lib/services/asset_trigger_integration_service.dart lib/dialogs/asset_relationship_dialog.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/assets_screen.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/app_shell.dart)"
     ],
     "deny": [],
     "ask": []
