@@ -60,14 +60,41 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
     switch (type) {
       case AssetType.networkSegment:
         return {
+          // Basic network properties
           'subnet': const PropertyValue.string(''),
           'gateway': const PropertyValue.string(''),
           'dns_servers': const PropertyValue.stringList([]),
+
+          // NAC Configuration
           'nac_enabled': const PropertyValue.boolean(false),
-          'access_level': const PropertyValue.string('blocked'),
+          'nac_type': const PropertyValue.string(''),  // '802.1x', 'web_auth', 'mac_auth'
+          'access_level': const PropertyValue.string('blocked'),  // 'blocked', 'limited', 'partial', 'full'
+
+          // Physical Access Properties
+          'physical_access': const PropertyValue.boolean(false),
+          'authenticated_device_present': const PropertyValue.boolean(false),
+
+          // Security Configuration
+          'vlan_segmentation': const PropertyValue.boolean(false),
+          'macsec_enabled': const PropertyValue.boolean(false),
+          'multiple_macs_allowed': const PropertyValue.boolean(false),
+          'port_security_enabled': const PropertyValue.boolean(false),
+
+          // Discovered Assets Lists
+          'authorized_macs_discovered': const PropertyValue.stringList([]),
+          'vlans_discovered': const PropertyValue.objectList([]),
+          'credentials_available': const PropertyValue.objectList([]),
+
+          // Network Discovery
           'live_hosts': const PropertyValue.stringList([]),
           'web_services': const PropertyValue.objectList([]),
-          'credentials_available': const PropertyValue.objectList([]),
+          'network_range': const PropertyValue.string(''),
+
+          // Assessment State
+          'bypass_methods_attempted': const PropertyValue.stringList([]),
+          'bypass_methods_successful': const PropertyValue.stringList([]),
+          'nac_bypassed': const PropertyValue.boolean(false),
+          'internal_subnet_discovered': const PropertyValue.string(''),
         };
       case AssetType.host:
         return {

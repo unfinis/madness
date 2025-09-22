@@ -18,14 +18,13 @@ import 'screens/agents_screen.dart';
 import 'screens/plugins_screen.dart';
 import 'screens/ingestors_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/findings_screen.dart';
-import 'screens/credentials_screen.dart';
+import 'screens/findings_visual_screen.dart';
 import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
-import 'screens/comprehensive_assets_screen.dart';
-import 'screens/trigger_evaluation_dashboard_screen.dart';
+import 'screens/assets_screen_classic.dart';
+import 'screens/methodology_library_screen_classic.dart';
+import 'screens/run_dashboard_simple.dart';
 import 'screens/attack_plan_screen.dart';
-import 'screens/methodology_library_screen.dart';
 import 'screens/questionnaire_screen.dart';
 import 'dialogs/project_transfer_link_dialog.dart';
 import 'constants/responsive_breakpoints.dart';
@@ -56,21 +55,17 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.travel:
         return const TravelScreen();
       case NavigationSection.methodology:
-        return const MethodologyLibraryScreen();
+        return const MethodologyLibraryScreenClassic();
       case NavigationSection.methodologyDashboard:
         return const AttackPlanScreen();
       case NavigationSection.assets:
-        return const ComprehensiveAssetsScreen();
-      case NavigationSection.comprehensiveAssets:
-        return const ComprehensiveAssetsScreen();
+        return const AssetsScreenClassic();
       case NavigationSection.triggerEvaluation:
-        return const TriggerEvaluationDashboardScreen();
-      case NavigationSection.credentials:
-        return const CredentialsScreen();
+        return const RunDashboardSimple();
       case NavigationSection.history:
         return const HistoryScreen();
       case NavigationSection.findings:
-        return const FindingsScreen();
+        return const FindingsVisualScreen();
       case NavigationSection.attackChains:
         return const AttackPlanScreen();
       case NavigationSection.screenshots:
@@ -115,13 +110,9 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.methodologyDashboard:
         return 'Attack Plan';
       case NavigationSection.assets:
-        return 'Assets';
-      case NavigationSection.comprehensiveAssets:
         return 'Asset Management';
       case NavigationSection.triggerEvaluation:
         return 'Trigger Monitoring';
-      case NavigationSection.credentials:
-        return 'Credentials';
       case NavigationSection.history:
         return 'History';
       case NavigationSection.findings:

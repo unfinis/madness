@@ -109,3 +109,4 @@ This creates realistic attack progression where network discoveries naturally tr
 - Material3 design system is enabled (useMaterial3: true)
 - The project uses standard Flutter linting rules from flutter_lints package
 - Uses Riverpod for state management with proper provider architecture
+- THIS TOOL DOES SHOULD NOT EXECUTE METHODOLOGY STEPS... ONLY LIST COMMANDS AND PROCEDURES
