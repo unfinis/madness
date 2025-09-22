@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_shell.dart';
 import 'constants/responsive_breakpoints.dart';
+import 'widgets/dynamic_title_app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,50 +14,52 @@ void main() async {
   );
 }
 
-class MadnessApp extends StatelessWidget {
+class MadnessApp extends ConsumerWidget {
   const MadnessApp({super.key});
 
   // Use responsive breakpoints constants
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Madness - Penetration Testing Platform',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Inter',
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: false,
-        ),
-        dividerTheme: const DividerThemeData(
-          thickness: 1,
-          space: 1,
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lightTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue,
+        brightness: Brightness.light,
       ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Inter',
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: false,
-        ),
-        dividerTheme: const DividerThemeData(
-          thickness: 1,
-          space: 1,
-        ),
+      useMaterial3: true,
+      fontFamily: 'Inter',
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        centerTitle: false,
       ),
+      dividerTheme: const DividerThemeData(
+        thickness: 1,
+        space: 1,
+      ),
+    );
+
+    final darkTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue,
+        brightness: Brightness.dark,
+      ),
+      useMaterial3: true,
+      fontFamily: 'Inter',
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        centerTitle: false,
+      ),
+      dividerTheme: const DividerThemeData(
+        thickness: 1,
+        space: 1,
+      ),
+    );
+
+    return DynamicTitleApp(
+      theme: lightTheme,
+      darkTheme: darkTheme,
       themeMode: ThemeMode.system,
-      home: const MinimumSizeWrapper(child: AppShell()),
+      child: const MinimumSizeWrapper(child: AppShell()),
     );
   }
 }

@@ -365,6 +365,18 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(width: AppSpacing.md),
+                  if (action.triggerEvents.length > 1) ...[
+                    Icon(Icons.merge_type, size: 16, color: Colors.blue[600]),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      '${action.triggerEvents.length} triggers',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.blue[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                  ],
                   Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: AppSpacing.xs),
                   Text(

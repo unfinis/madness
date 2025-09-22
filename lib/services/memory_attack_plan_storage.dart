@@ -48,6 +48,11 @@ class MemoryAttackPlanStorage {
     _storage.remove(projectId);
   }
 
+  /// Clear all stored actions (for debugging)
+  static void clearAllActions() {
+    _storage.clear();
+  }
+
   /// Get actions count by status
   static Map<ActionStatus, int> getActionCountByStatus(String projectId) {
     final actions = _storage[projectId] ?? [];

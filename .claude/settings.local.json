@@ -147,7 +147,10 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/providers/attack_plan_provider.dart lib/screens/attack_plan_screen.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/attack_plan_screen.dart lib/providers/attack_plan_provider.dart lib/services/attack_plan_generator.dart)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/screens/attack_plan_screen.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/screens/attack_plan_screen.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/screens/attack_plan_screen.dart lib/dialogs/attack_plan_action_detail_dialog.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/widgets/dynamic_title_app.dart)"
     ],
     "deny": [],
     "ask": []

@@ -716,17 +716,41 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Trigger Events',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-            ),
+          Row(
+            children: [
+              Text(
+                'Trigger Events',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              if (widget.action.triggerEvents.length > 1) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Consolidated (${widget.action.triggerEvents.length} triggers)',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'This action was generated based on the following trigger events and asset conditions:',
+            widget.action.triggerEvents.length > 1
+                ? 'This action consolidates ${widget.action.triggerEvents.length} trigger events from different assets or conditions:'
+                : 'This action was generated based on the following trigger event and asset conditions:',
             style: TextStyle(color: Colors.grey[600]),
           ),
           const SizedBox(height: AppSpacing.lg),

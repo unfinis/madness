@@ -4,6 +4,7 @@ import '../models/attack_plan_action.dart';
 import '../models/asset.dart';
 import '../services/methodology_loader.dart';
 import '../services/drift_storage_service.dart';
+import '../services/memory_attack_plan_storage.dart';
 
 /// Service for generating attack plan actions from methodology triggers and asset properties
 class AttackPlanGenerator {
@@ -19,12 +20,23 @@ class AttackPlanGenerator {
   Future<List<AttackPlanAction>> generateActionsFromAssets(List<Asset> assets) async {
     print('AttackPlanGenerator: Starting generation with ${assets.length} assets');
 
+    // Clear any previously stored actions to avoid type conflicts
+    try {
+      // Clear storage for this project to avoid casting issues with old data
+      print('AttackPlanGenerator: Clearing existing actions for project $_projectId');
+      MemoryAttackPlanStorage.clearActions(_projectId);
+    } catch (e) {
+      print('AttackPlanGenerator: Warning - could not clear existing actions: $e');
+    }
+
     // Load all methodologies from all subdirectories
     await MethodologyLoader.loadAllMethodologies();
     final allMethodologies = MethodologyLoader.getAllMethodologies();
     print('AttackPlanGenerator: Loaded ${allMethodologies.length} methodologies');
 
-    final generatedActions = <AttackPlanAction>[];
+    // Track trigger events by methodology and procedure, plus asset mapping
+    final Map<String, Map<int, List<TriggerEvent>>> triggerEventsByMethodology = {};
+    final Map<String, Asset> assetMap = {for (final asset in assets) asset.id: asset};
 
     for (final asset in assets) {
       print('AttackPlanGenerator: Processing asset ${asset.name} (${asset.type.name}) with ${asset.properties.length} properties');
@@ -35,15 +47,63 @@ class AttackPlanGenerator {
           final matches = await _doesTriggerMatch(trigger, asset, methodology);
           if (matches) {
             print('AttackPlanGenerator: MATCH! Trigger ${trigger.name} in methodology ${methodology.name} matches asset ${asset.name}');
-            // Generate attack plan actions from methodology procedures
-            final actions = await _generateActionsFromMethodology(
-              methodology,
-              trigger,
-              asset,
+
+            // Create trigger event data
+            final triggerEvent = TriggerEvent(
+              triggerId: trigger.name,
+              assetId: asset.id,
+              assetName: asset.name,
+              assetType: asset.type.name,
+              matchedConditions: trigger.conditions ?? {},
+              extractedValues: _extractValuesFromAsset(asset),
+              evaluatedAt: DateTime.now(),
+              confidence: 0.9, // High confidence for direct property matches
             );
-            generatedActions.addAll(actions);
-            print('AttackPlanGenerator: Generated ${actions.length} actions from methodology ${methodology.name}');
+
+            // Group trigger events by methodology and procedure
+            final methodologyKey = methodology.id;
+            triggerEventsByMethodology[methodologyKey] ??= {};
+
+            // Each procedure gets the same trigger events for this methodology
+            for (int i = 0; i < methodology.procedures.length; i++) {
+              triggerEventsByMethodology[methodologyKey]![i] ??= [];
+              triggerEventsByMethodology[methodologyKey]![i]!.add(triggerEvent);
+            }
           }
+        }
+      }
+    }
+
+    // Generate consolidated actions from collected trigger events
+    final generatedActions = <AttackPlanAction>[];
+
+    for (final methodologyEntry in triggerEventsByMethodology.entries) {
+      final methodologyId = methodologyEntry.key;
+      final procedureTriggers = methodologyEntry.value;
+
+      // Find the methodology
+      final methodology = allMethodologies.firstWhere((m) => m.id == methodologyId);
+
+      for (final procedureEntry in procedureTriggers.entries) {
+        final procedureIndex = procedureEntry.key;
+        final triggerEvents = procedureEntry.value;
+
+        // Generate consolidated action for this procedure with all trigger events
+        try {
+          print('AttackPlanGenerator: Generating action for ${methodology.name}:${methodology.procedures[procedureIndex].name}');
+          final action = await _generateConsolidatedAction(
+            methodology,
+            methodology.procedures[procedureIndex],
+            procedureIndex,
+            triggerEvents,
+            assetMap,
+          );
+
+          generatedActions.add(action);
+          print('AttackPlanGenerator: Generated consolidated action for ${methodology.name}:${methodology.procedures[procedureIndex].name} with ${triggerEvents.length} trigger events');
+        } catch (e, stackTrace) {
+          print('AttackPlanGenerator: ERROR generating action for ${methodology.name}:${methodology.procedures[procedureIndex].name}: $e');
+          print('AttackPlanGenerator: Stack trace: $stackTrace');
         }
       }
     }
@@ -138,100 +198,70 @@ class AttackPlanGenerator {
     return true;
   }
 
-  /// Generate attack plan actions from a methodology's procedures
-  Future<List<AttackPlanAction>> _generateActionsFromMethodology(
+  /// Generate consolidated action for a procedure with multiple trigger events
+  Future<AttackPlanAction> _generateConsolidatedAction(
     MethodologyTemplate methodology,
-    MethodologyTrigger trigger,
-    Asset asset,
+    dynamic procedure,
+    int procedureIndex,
+    List<TriggerEvent> triggerEvents,
+    Map<String, Asset> assetMap,
   ) async {
-    final actions = <AttackPlanAction>[];
     final now = DateTime.now();
 
-    // Create trigger event data
-    final triggerEvent = TriggerEvent(
-      triggerId: trigger.name,
-      assetId: asset.id,
-      assetName: asset.name,
-      assetType: asset.type.name,
-      matchedConditions: trigger.conditions ?? {},
-      extractedValues: _extractValuesFromAsset(asset),
-      evaluatedAt: now,
-      confidence: 0.9, // High confidence for direct property matches
+    // Use the first trigger event's asset for command substitution
+    final firstTriggerEvent = triggerEvents.first;
+    final firstAsset = assetMap[firstTriggerEvent.assetId]!;
+
+    // Consolidate tags from all trigger events
+    final allTags = <String>{'auto_generated', 'methodology_${methodology.workstream}'};
+    for (final trigger in triggerEvents) {
+      allTags.add('asset_${trigger.assetType}');
+      allTags.add('trigger_${trigger.triggerId}');
+    }
+    allTags.addAll(methodology.tags);
+
+    // Create title with trigger count if multiple
+    final titleSuffix = triggerEvents.length > 1 ? ' (${triggerEvents.length} triggers)' : '';
+
+    print('AttackPlanGenerator: Creating ActionRisk objects from ${procedure.risks.length} methodology risks');
+    final actionRisks = _createActionRisks(procedure.risks, procedure.riskLevel);
+    print('AttackPlanGenerator: Created ${actionRisks.length} ActionRisk objects');
+
+    print('AttackPlanGenerator: Creating AttackPlanAction object');
+    final action = AttackPlanAction(
+      id: _generateActionId(),
+      projectId: _projectId,
+      title: '${methodology.name}: ${procedure.name}$titleSuffix',
+      objective: procedure.description,
+      status: ActionStatus.pending,
+      priority: _mapPriorityFromRisk(procedure.riskLevel),
+      riskLevel: _mapRiskLevel(procedure.riskLevel),
+      triggerEvents: triggerEvents, // All trigger events consolidated here
+      risks: actionRisks,
+      procedure: _createProcedureSteps(procedure.commands, firstAsset),
+      tools: _createActionTools(procedure.commands),
+      equipment: _createActionEquipment(methodology.equipment),
+      references: [], // TODO: Map from methodology references if available
+      suggestedFindings: _createSuggestedFindings(methodology.findings),
+      cleanupSteps: methodology.cleanup.map((cleanup) =>
+        '${cleanup.description}: ${cleanup.command}'
+      ).toList(),
+      tags: allTags.toList(),
+      createdAt: now,
+      templateId: methodology.id,
+      metadata: {
+        'methodologyId': methodology.id,
+        'methodologyName': methodology.name,
+        'methodologyWorkstream': methodology.workstream,
+        'procedureIndex': procedureIndex,
+        'procedureId': procedure.id,
+        'triggerCount': triggerEvents.length,
+        'consolidatedTriggers': triggerEvents.map((t) => t.triggerId).toList(),
+        'affectedAssets': triggerEvents.map((t) => '${t.assetName} (${t.assetId})').toList(),
+      },
     );
 
-    // Convert each procedure to an attack plan action
-    for (int i = 0; i < methodology.procedures.length; i++) {
-      final procedure = methodology.procedures[i];
-
-      final action = AttackPlanAction(
-        id: _generateActionId(),
-        projectId: _projectId,
-        title: '${methodology.name}: ${procedure.name}',
-        objective: procedure.description,
-        status: ActionStatus.pending,
-        priority: _mapPriorityFromRisk(procedure.riskLevel),
-        riskLevel: _mapRiskLevel(procedure.riskLevel),
-        triggerEvents: [triggerEvent],
-        risks: procedure.risks.map((risk) => ActionRisk(
-          risk: risk.risk,
-          mitigation: risk.mitigation,
-          severity: _mapRiskLevel(procedure.riskLevel),
-        )).toList(),
-        procedure: procedure.commands.asMap().entries.map((entry) {
-          final index = entry.key;
-          final command = entry.value;
-          return ProcedureStep(
-            stepNumber: index + 1,
-            description: command.description,
-            command: _substituteCommandParameters(command.command, asset),
-            expectedOutput: 'Command execution output',
-            mandatory: true,
-          );
-        }).toList(),
-        tools: procedure.commands.map((cmd) => ActionTool(
-          name: cmd.tool,
-          description: cmd.description,
-          required: true,
-        )).toList(),
-        equipment: methodology.equipment.map((eq) => ActionEquipment(
-          name: eq,
-          description: eq,
-          required: true,
-        )).toList(),
-        references: [], // TODO: Map from methodology references if available
-        suggestedFindings: methodology.findings.map((finding) => SuggestedFinding(
-          title: finding.title,
-          description: finding.description,
-          severity: _mapSeverity(finding.severity),
-        )).toList(),
-        cleanupSteps: methodology.cleanup.map((cleanup) =>
-          '${cleanup.description}: ${cleanup.command}'
-        ).toList(),
-        tags: [
-          'auto_generated',
-          'methodology_${methodology.workstream}',
-          'asset_${asset.type.name}',
-          'trigger_${trigger.name}',
-          ...methodology.tags,
-        ],
-        createdAt: now,
-        templateId: methodology.id,
-        metadata: {
-          'methodologyId': methodology.id,
-          'methodologyName': methodology.name,
-          'methodologyWorkstream': methodology.workstream,
-          'triggerId': trigger.name,
-          'assetId': asset.id,
-          'assetName': asset.name,
-          'procedureIndex': i,
-          'procedureId': procedure.id,
-        },
-      );
-
-      actions.add(action);
-    }
-
-    return actions;
+    return action;
   }
 
   /// Extract values from asset properties for trigger event
@@ -333,6 +363,91 @@ class AttackPlanGenerator {
         return ActionRiskLevel.minimal;
       default:
         return ActionRiskLevel.medium;
+    }
+  }
+
+  /// Create ActionRisk objects safely from MethodologyRisk objects
+  List<ActionRisk> _createActionRisks(List<MethodologyRisk> methodologyRisks, String procedureRiskLevel) {
+    try {
+      print('AttackPlanGenerator: Converting ${methodologyRisks.length} MethodologyRisk objects to ActionRisk');
+      return methodologyRisks.map((risk) => ActionRisk(
+        risk: risk.risk,
+        mitigation: risk.mitigation,
+        severity: _mapRiskLevel(procedureRiskLevel),
+      )).toList();
+    } catch (e) {
+      print('AttackPlanGenerator: Error creating ActionRisk list: $e');
+      return [ActionRisk(
+        risk: 'Error parsing risks from methodology',
+        mitigation: 'Review methodology configuration',
+        severity: _mapRiskLevel(procedureRiskLevel),
+      )];
+    }
+  }
+
+  /// Create ProcedureStep objects safely
+  List<ProcedureStep> _createProcedureSteps(List<dynamic> commands, Asset firstAsset) {
+    try {
+      print('AttackPlanGenerator: Creating ProcedureStep objects from ${commands.length} commands');
+      return commands.asMap().entries.map((entry) {
+        final index = entry.key;
+        final command = entry.value;
+        return ProcedureStep(
+          stepNumber: index + 1,
+          description: (command as dynamic).description?.toString() ?? 'Command step',
+          command: _substituteCommandParameters((command as dynamic).command?.toString() ?? '', firstAsset),
+          expectedOutput: 'Command execution output',
+          mandatory: true,
+        );
+      }).toList();
+    } catch (e) {
+      print('AttackPlanGenerator: Error creating ProcedureStep list: $e');
+      return [];
+    }
+  }
+
+  /// Create ActionTool objects safely
+  List<ActionTool> _createActionTools(List<dynamic> commands) {
+    try {
+      print('AttackPlanGenerator: Creating ActionTool objects from ${commands.length} commands');
+      return commands.map((cmd) => ActionTool(
+        name: (cmd as dynamic).tool?.toString() ?? 'Unknown tool',
+        description: (cmd as dynamic).description?.toString() ?? 'Tool description',
+        required: true,
+      )).toList();
+    } catch (e) {
+      print('AttackPlanGenerator: Error creating ActionTool list: $e');
+      return [];
+    }
+  }
+
+  /// Create ActionEquipment objects safely
+  List<ActionEquipment> _createActionEquipment(List<dynamic> equipment) {
+    try {
+      print('AttackPlanGenerator: Creating ActionEquipment objects from ${equipment.length} equipment items');
+      return equipment.map((eq) => ActionEquipment(
+        name: eq?.toString() ?? 'Unknown equipment',
+        description: eq?.toString() ?? 'Equipment description',
+        required: true,
+      )).toList();
+    } catch (e) {
+      print('AttackPlanGenerator: Error creating ActionEquipment list: $e');
+      return [];
+    }
+  }
+
+  /// Create SuggestedFinding objects safely
+  List<SuggestedFinding> _createSuggestedFindings(List<dynamic> findings) {
+    try {
+      print('AttackPlanGenerator: Creating SuggestedFinding objects from ${findings.length} findings');
+      return findings.map((finding) => SuggestedFinding(
+        title: (finding as dynamic).title?.toString() ?? 'Finding',
+        description: (finding as dynamic).description?.toString() ?? 'Finding description',
+        severity: _mapSeverity((finding as dynamic).severity?.toString() ?? 'medium'),
+      )).toList();
+    } catch (e) {
+      print('AttackPlanGenerator: Error creating SuggestedFinding list: $e');
+      return [];
     }
   }
 

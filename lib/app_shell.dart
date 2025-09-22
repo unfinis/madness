@@ -83,54 +83,12 @@ class AppShell extends ConsumerWidget {
     }
   }
 
-  String _getTitleForSection(NavigationSection section) {
-    switch (section) {
-      case NavigationSection.home:
-        return 'Home';
-      case NavigationSection.dashboard:
-        return 'Dashboard';
-      case NavigationSection.tasks:
-        return 'Tasks';
-      case NavigationSection.comms:
-        return 'Communications';
-      case NavigationSection.checklist:
-        return 'Pre-Engagement';
-      case NavigationSection.expenses:
-        return 'Expenses';
-      case NavigationSection.contacts:
-        return 'Contacts';
-      case NavigationSection.scope:
-        return 'Scope';
-      case NavigationSection.documents:
-        return 'Documents';
-      case NavigationSection.travel:
-        return 'Travel & Hotels';
-      case NavigationSection.methodology:
-        return 'Methodology Library';
-      case NavigationSection.methodologyDashboard:
-        return 'Attack Plan';
-      case NavigationSection.assets:
-        return 'Asset Management';
-      case NavigationSection.triggerEvaluation:
-        return 'Trigger Monitoring';
-      case NavigationSection.history:
-        return 'History';
-      case NavigationSection.findings:
-        return 'Findings';
-      case NavigationSection.attackChains:
-        return 'Attack Plan';
-      case NavigationSection.screenshots:
-        return 'Screenshots';
-      case NavigationSection.reports:
-        return 'Reports';
-      case NavigationSection.agents:
-        return 'Agents';
-      case NavigationSection.plugins:
-        return 'Plugins';
-      case NavigationSection.ingestors:
-        return 'Ingestors';
-      case NavigationSection.settings:
-        return 'Settings';
+  String _getTitleForSection(NavigationSection section, {String? projectName}) {
+    // Build the title with project name if available
+    if (projectName != null && projectName.isNotEmpty) {
+      return 'Madness - $projectName';
+    } else {
+      return 'Madness';
     }
   }
 
@@ -167,10 +125,15 @@ class AppShell extends ConsumerWidget {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    _getTitleForSection(navigationState.currentSection),
-                                    style: Theme.of(context).textTheme.headlineSmall,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Consumer(
+                                    builder: (context, ref, child) {
+                                      final project = ref.watch(currentProjectProvider);
+                                      return Text(
+                                        _getTitleForSection(navigationState.currentSection, projectName: project?.name),
+                                        style: Theme.of(context).textTheme.headlineSmall,
+                                        overflow: TextOverflow.ellipsis,
+                                      );
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 24),
@@ -313,7 +276,12 @@ class AppShell extends ConsumerWidget {
     } else {
       return Scaffold(
         appBar: AppBar(
-          title: Text(_getTitleForSection(navigationState.currentSection)),
+          title: Consumer(
+            builder: (context, ref, child) {
+              final project = ref.watch(currentProjectProvider);
+              return Text(_getTitleForSection(navigationState.currentSection, projectName: project?.name));
+            },
+          ),
           backgroundColor: Theme.of(context).primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
