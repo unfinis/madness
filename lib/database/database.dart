@@ -41,12 +41,18 @@ part 'database.g.dart';
   AssetsTable,
   AssetRelationshipsTable,
   AssetPropertyIndexTable,
+  // Phase 1.1: Methodology Engine Tables
+  RunInstancesTable,
+  HistoryEntriesTable,
+  TriggerMatchesTable,
+  ParameterResolutionsTable,
+  MethodologyTemplatesTable,
 ])
 class MadnessDatabase extends _$MadnessDatabase {
   MadnessDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration {

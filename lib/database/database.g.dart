@@ -13471,6 +13471,3336 @@ class AssetPropertyIndexTableCompanion
   }
 }
 
+class $RunInstancesTableTable extends RunInstancesTable
+    with TableInfo<$RunInstancesTableTable, RunInstanceRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RunInstancesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  @override
+  late final GeneratedColumn<String> runId = GeneratedColumn<String>(
+      'run_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects (id)'));
+  static const VerificationMeta _templateIdMeta =
+      const VerificationMeta('templateId');
+  @override
+  late final GeneratedColumn<String> templateId = GeneratedColumn<String>(
+      'template_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _templateVersionMeta =
+      const VerificationMeta('templateVersion');
+  @override
+  late final GeneratedColumn<String> templateVersion = GeneratedColumn<String>(
+      'template_version', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _triggerIdMeta =
+      const VerificationMeta('triggerId');
+  @override
+  late final GeneratedColumn<String> triggerId = GeneratedColumn<String>(
+      'trigger_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _assetIdMeta =
+      const VerificationMeta('assetId');
+  @override
+  late final GeneratedColumn<String> assetId = GeneratedColumn<String>(
+      'asset_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+  static const VerificationMeta _matchedValuesMeta =
+      const VerificationMeta('matchedValues');
+  @override
+  late final GeneratedColumn<String> matchedValues = GeneratedColumn<String>(
+      'matched_values', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _parametersMeta =
+      const VerificationMeta('parameters');
+  @override
+  late final GeneratedColumn<String> parameters = GeneratedColumn<String>(
+      'parameters', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _createdByMeta =
+      const VerificationMeta('createdBy');
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+      'created_by', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _evidenceIdsMeta =
+      const VerificationMeta('evidenceIds');
+  @override
+  late final GeneratedColumn<String> evidenceIds = GeneratedColumn<String>(
+      'evidence_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _findingIdsMeta =
+      const VerificationMeta('findingIds');
+  @override
+  late final GeneratedColumn<String> findingIds = GeneratedColumn<String>(
+      'finding_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+      'notes', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _priorityMeta =
+      const VerificationMeta('priority');
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+      'priority', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(5));
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+      'tags', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        runId,
+        projectId,
+        templateId,
+        templateVersion,
+        triggerId,
+        assetId,
+        matchedValues,
+        parameters,
+        status,
+        createdAt,
+        createdBy,
+        updatedAt,
+        evidenceIds,
+        findingIds,
+        notes,
+        priority,
+        tags
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'run_instances';
+  @override
+  VerificationContext validateIntegrity(Insertable<RunInstanceRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('run_id')) {
+      context.handle(
+          _runIdMeta, runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta));
+    } else if (isInserting) {
+      context.missing(_runIdMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('template_id')) {
+      context.handle(
+          _templateIdMeta,
+          templateId.isAcceptableOrUnknown(
+              data['template_id']!, _templateIdMeta));
+    } else if (isInserting) {
+      context.missing(_templateIdMeta);
+    }
+    if (data.containsKey('template_version')) {
+      context.handle(
+          _templateVersionMeta,
+          templateVersion.isAcceptableOrUnknown(
+              data['template_version']!, _templateVersionMeta));
+    } else if (isInserting) {
+      context.missing(_templateVersionMeta);
+    }
+    if (data.containsKey('trigger_id')) {
+      context.handle(_triggerIdMeta,
+          triggerId.isAcceptableOrUnknown(data['trigger_id']!, _triggerIdMeta));
+    } else if (isInserting) {
+      context.missing(_triggerIdMeta);
+    }
+    if (data.containsKey('asset_id')) {
+      context.handle(_assetIdMeta,
+          assetId.isAcceptableOrUnknown(data['asset_id']!, _assetIdMeta));
+    } else if (isInserting) {
+      context.missing(_assetIdMeta);
+    }
+    if (data.containsKey('matched_values')) {
+      context.handle(
+          _matchedValuesMeta,
+          matchedValues.isAcceptableOrUnknown(
+              data['matched_values']!, _matchedValuesMeta));
+    } else if (isInserting) {
+      context.missing(_matchedValuesMeta);
+    }
+    if (data.containsKey('parameters')) {
+      context.handle(
+          _parametersMeta,
+          parameters.isAcceptableOrUnknown(
+              data['parameters']!, _parametersMeta));
+    } else if (isInserting) {
+      context.missing(_parametersMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(_createdByMeta,
+          createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta));
+    } else if (isInserting) {
+      context.missing(_createdByMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('evidence_ids')) {
+      context.handle(
+          _evidenceIdsMeta,
+          evidenceIds.isAcceptableOrUnknown(
+              data['evidence_ids']!, _evidenceIdsMeta));
+    } else if (isInserting) {
+      context.missing(_evidenceIdsMeta);
+    }
+    if (data.containsKey('finding_ids')) {
+      context.handle(
+          _findingIdsMeta,
+          findingIds.isAcceptableOrUnknown(
+              data['finding_ids']!, _findingIdsMeta));
+    } else if (isInserting) {
+      context.missing(_findingIdsMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+          _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
+    }
+    if (data.containsKey('priority')) {
+      context.handle(_priorityMeta,
+          priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta));
+    }
+    if (data.containsKey('tags')) {
+      context.handle(
+          _tagsMeta, tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {runId};
+  @override
+  RunInstanceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RunInstanceRow(
+      runId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}run_id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      templateId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}template_id'])!,
+      templateVersion: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}template_version'])!,
+      triggerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}trigger_id'])!,
+      assetId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}asset_id'])!,
+      matchedValues: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}matched_values'])!,
+      parameters: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}parameters'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      createdBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}created_by'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
+      evidenceIds: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}evidence_ids'])!,
+      findingIds: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}finding_ids'])!,
+      notes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      priority: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}priority'])!,
+      tags: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tags'])!,
+    );
+  }
+
+  @override
+  $RunInstancesTableTable createAlias(String alias) {
+    return $RunInstancesTableTable(attachedDatabase, alias);
+  }
+}
+
+class RunInstanceRow extends DataClass implements Insertable<RunInstanceRow> {
+  final String runId;
+  final String projectId;
+  final String templateId;
+  final String templateVersion;
+  final String triggerId;
+  final String assetId;
+  final String matchedValues;
+  final String parameters;
+  final String status;
+  final DateTime createdAt;
+  final String createdBy;
+  final DateTime? updatedAt;
+  final String evidenceIds;
+  final String findingIds;
+  final String? notes;
+  final int priority;
+  final String tags;
+  const RunInstanceRow(
+      {required this.runId,
+      required this.projectId,
+      required this.templateId,
+      required this.templateVersion,
+      required this.triggerId,
+      required this.assetId,
+      required this.matchedValues,
+      required this.parameters,
+      required this.status,
+      required this.createdAt,
+      required this.createdBy,
+      this.updatedAt,
+      required this.evidenceIds,
+      required this.findingIds,
+      this.notes,
+      required this.priority,
+      required this.tags});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['run_id'] = Variable<String>(runId);
+    map['project_id'] = Variable<String>(projectId);
+    map['template_id'] = Variable<String>(templateId);
+    map['template_version'] = Variable<String>(templateVersion);
+    map['trigger_id'] = Variable<String>(triggerId);
+    map['asset_id'] = Variable<String>(assetId);
+    map['matched_values'] = Variable<String>(matchedValues);
+    map['parameters'] = Variable<String>(parameters);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['created_by'] = Variable<String>(createdBy);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    map['evidence_ids'] = Variable<String>(evidenceIds);
+    map['finding_ids'] = Variable<String>(findingIds);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['priority'] = Variable<int>(priority);
+    map['tags'] = Variable<String>(tags);
+    return map;
+  }
+
+  RunInstancesTableCompanion toCompanion(bool nullToAbsent) {
+    return RunInstancesTableCompanion(
+      runId: Value(runId),
+      projectId: Value(projectId),
+      templateId: Value(templateId),
+      templateVersion: Value(templateVersion),
+      triggerId: Value(triggerId),
+      assetId: Value(assetId),
+      matchedValues: Value(matchedValues),
+      parameters: Value(parameters),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      createdBy: Value(createdBy),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      evidenceIds: Value(evidenceIds),
+      findingIds: Value(findingIds),
+      notes:
+          notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      priority: Value(priority),
+      tags: Value(tags),
+    );
+  }
+
+  factory RunInstanceRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RunInstanceRow(
+      runId: serializer.fromJson<String>(json['runId']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      templateId: serializer.fromJson<String>(json['templateId']),
+      templateVersion: serializer.fromJson<String>(json['templateVersion']),
+      triggerId: serializer.fromJson<String>(json['triggerId']),
+      assetId: serializer.fromJson<String>(json['assetId']),
+      matchedValues: serializer.fromJson<String>(json['matchedValues']),
+      parameters: serializer.fromJson<String>(json['parameters']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      createdBy: serializer.fromJson<String>(json['createdBy']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      evidenceIds: serializer.fromJson<String>(json['evidenceIds']),
+      findingIds: serializer.fromJson<String>(json['findingIds']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      priority: serializer.fromJson<int>(json['priority']),
+      tags: serializer.fromJson<String>(json['tags']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'runId': serializer.toJson<String>(runId),
+      'projectId': serializer.toJson<String>(projectId),
+      'templateId': serializer.toJson<String>(templateId),
+      'templateVersion': serializer.toJson<String>(templateVersion),
+      'triggerId': serializer.toJson<String>(triggerId),
+      'assetId': serializer.toJson<String>(assetId),
+      'matchedValues': serializer.toJson<String>(matchedValues),
+      'parameters': serializer.toJson<String>(parameters),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'createdBy': serializer.toJson<String>(createdBy),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'evidenceIds': serializer.toJson<String>(evidenceIds),
+      'findingIds': serializer.toJson<String>(findingIds),
+      'notes': serializer.toJson<String?>(notes),
+      'priority': serializer.toJson<int>(priority),
+      'tags': serializer.toJson<String>(tags),
+    };
+  }
+
+  RunInstanceRow copyWith(
+          {String? runId,
+          String? projectId,
+          String? templateId,
+          String? templateVersion,
+          String? triggerId,
+          String? assetId,
+          String? matchedValues,
+          String? parameters,
+          String? status,
+          DateTime? createdAt,
+          String? createdBy,
+          Value<DateTime?> updatedAt = const Value.absent(),
+          String? evidenceIds,
+          String? findingIds,
+          Value<String?> notes = const Value.absent(),
+          int? priority,
+          String? tags}) =>
+      RunInstanceRow(
+        runId: runId ?? this.runId,
+        projectId: projectId ?? this.projectId,
+        templateId: templateId ?? this.templateId,
+        templateVersion: templateVersion ?? this.templateVersion,
+        triggerId: triggerId ?? this.triggerId,
+        assetId: assetId ?? this.assetId,
+        matchedValues: matchedValues ?? this.matchedValues,
+        parameters: parameters ?? this.parameters,
+        status: status ?? this.status,
+        createdAt: createdAt ?? this.createdAt,
+        createdBy: createdBy ?? this.createdBy,
+        updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+        evidenceIds: evidenceIds ?? this.evidenceIds,
+        findingIds: findingIds ?? this.findingIds,
+        notes: notes.present ? notes.value : this.notes,
+        priority: priority ?? this.priority,
+        tags: tags ?? this.tags,
+      );
+  RunInstanceRow copyWithCompanion(RunInstancesTableCompanion data) {
+    return RunInstanceRow(
+      runId: data.runId.present ? data.runId.value : this.runId,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      templateId:
+          data.templateId.present ? data.templateId.value : this.templateId,
+      templateVersion: data.templateVersion.present
+          ? data.templateVersion.value
+          : this.templateVersion,
+      triggerId: data.triggerId.present ? data.triggerId.value : this.triggerId,
+      assetId: data.assetId.present ? data.assetId.value : this.assetId,
+      matchedValues: data.matchedValues.present
+          ? data.matchedValues.value
+          : this.matchedValues,
+      parameters:
+          data.parameters.present ? data.parameters.value : this.parameters,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      evidenceIds:
+          data.evidenceIds.present ? data.evidenceIds.value : this.evidenceIds,
+      findingIds:
+          data.findingIds.present ? data.findingIds.value : this.findingIds,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      tags: data.tags.present ? data.tags.value : this.tags,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RunInstanceRow(')
+          ..write('runId: $runId, ')
+          ..write('projectId: $projectId, ')
+          ..write('templateId: $templateId, ')
+          ..write('templateVersion: $templateVersion, ')
+          ..write('triggerId: $triggerId, ')
+          ..write('assetId: $assetId, ')
+          ..write('matchedValues: $matchedValues, ')
+          ..write('parameters: $parameters, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('evidenceIds: $evidenceIds, ')
+          ..write('findingIds: $findingIds, ')
+          ..write('notes: $notes, ')
+          ..write('priority: $priority, ')
+          ..write('tags: $tags')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runId,
+      projectId,
+      templateId,
+      templateVersion,
+      triggerId,
+      assetId,
+      matchedValues,
+      parameters,
+      status,
+      createdAt,
+      createdBy,
+      updatedAt,
+      evidenceIds,
+      findingIds,
+      notes,
+      priority,
+      tags);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RunInstanceRow &&
+          other.runId == this.runId &&
+          other.projectId == this.projectId &&
+          other.templateId == this.templateId &&
+          other.templateVersion == this.templateVersion &&
+          other.triggerId == this.triggerId &&
+          other.assetId == this.assetId &&
+          other.matchedValues == this.matchedValues &&
+          other.parameters == this.parameters &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.createdBy == this.createdBy &&
+          other.updatedAt == this.updatedAt &&
+          other.evidenceIds == this.evidenceIds &&
+          other.findingIds == this.findingIds &&
+          other.notes == this.notes &&
+          other.priority == this.priority &&
+          other.tags == this.tags);
+}
+
+class RunInstancesTableCompanion extends UpdateCompanion<RunInstanceRow> {
+  final Value<String> runId;
+  final Value<String> projectId;
+  final Value<String> templateId;
+  final Value<String> templateVersion;
+  final Value<String> triggerId;
+  final Value<String> assetId;
+  final Value<String> matchedValues;
+  final Value<String> parameters;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<String> createdBy;
+  final Value<DateTime?> updatedAt;
+  final Value<String> evidenceIds;
+  final Value<String> findingIds;
+  final Value<String?> notes;
+  final Value<int> priority;
+  final Value<String> tags;
+  final Value<int> rowid;
+  const RunInstancesTableCompanion({
+    this.runId = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.templateId = const Value.absent(),
+    this.templateVersion = const Value.absent(),
+    this.triggerId = const Value.absent(),
+    this.assetId = const Value.absent(),
+    this.matchedValues = const Value.absent(),
+    this.parameters = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.evidenceIds = const Value.absent(),
+    this.findingIds = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RunInstancesTableCompanion.insert({
+    required String runId,
+    required String projectId,
+    required String templateId,
+    required String templateVersion,
+    required String triggerId,
+    required String assetId,
+    required String matchedValues,
+    required String parameters,
+    required String status,
+    required DateTime createdAt,
+    required String createdBy,
+    this.updatedAt = const Value.absent(),
+    required String evidenceIds,
+    required String findingIds,
+    this.notes = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : runId = Value(runId),
+        projectId = Value(projectId),
+        templateId = Value(templateId),
+        templateVersion = Value(templateVersion),
+        triggerId = Value(triggerId),
+        assetId = Value(assetId),
+        matchedValues = Value(matchedValues),
+        parameters = Value(parameters),
+        status = Value(status),
+        createdAt = Value(createdAt),
+        createdBy = Value(createdBy),
+        evidenceIds = Value(evidenceIds),
+        findingIds = Value(findingIds);
+  static Insertable<RunInstanceRow> custom({
+    Expression<String>? runId,
+    Expression<String>? projectId,
+    Expression<String>? templateId,
+    Expression<String>? templateVersion,
+    Expression<String>? triggerId,
+    Expression<String>? assetId,
+    Expression<String>? matchedValues,
+    Expression<String>? parameters,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<String>? createdBy,
+    Expression<DateTime>? updatedAt,
+    Expression<String>? evidenceIds,
+    Expression<String>? findingIds,
+    Expression<String>? notes,
+    Expression<int>? priority,
+    Expression<String>? tags,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (runId != null) 'run_id': runId,
+      if (projectId != null) 'project_id': projectId,
+      if (templateId != null) 'template_id': templateId,
+      if (templateVersion != null) 'template_version': templateVersion,
+      if (triggerId != null) 'trigger_id': triggerId,
+      if (assetId != null) 'asset_id': assetId,
+      if (matchedValues != null) 'matched_values': matchedValues,
+      if (parameters != null) 'parameters': parameters,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (createdBy != null) 'created_by': createdBy,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (evidenceIds != null) 'evidence_ids': evidenceIds,
+      if (findingIds != null) 'finding_ids': findingIds,
+      if (notes != null) 'notes': notes,
+      if (priority != null) 'priority': priority,
+      if (tags != null) 'tags': tags,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RunInstancesTableCompanion copyWith(
+      {Value<String>? runId,
+      Value<String>? projectId,
+      Value<String>? templateId,
+      Value<String>? templateVersion,
+      Value<String>? triggerId,
+      Value<String>? assetId,
+      Value<String>? matchedValues,
+      Value<String>? parameters,
+      Value<String>? status,
+      Value<DateTime>? createdAt,
+      Value<String>? createdBy,
+      Value<DateTime?>? updatedAt,
+      Value<String>? evidenceIds,
+      Value<String>? findingIds,
+      Value<String?>? notes,
+      Value<int>? priority,
+      Value<String>? tags,
+      Value<int>? rowid}) {
+    return RunInstancesTableCompanion(
+      runId: runId ?? this.runId,
+      projectId: projectId ?? this.projectId,
+      templateId: templateId ?? this.templateId,
+      templateVersion: templateVersion ?? this.templateVersion,
+      triggerId: triggerId ?? this.triggerId,
+      assetId: assetId ?? this.assetId,
+      matchedValues: matchedValues ?? this.matchedValues,
+      parameters: parameters ?? this.parameters,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      createdBy: createdBy ?? this.createdBy,
+      updatedAt: updatedAt ?? this.updatedAt,
+      evidenceIds: evidenceIds ?? this.evidenceIds,
+      findingIds: findingIds ?? this.findingIds,
+      notes: notes ?? this.notes,
+      priority: priority ?? this.priority,
+      tags: tags ?? this.tags,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (runId.present) {
+      map['run_id'] = Variable<String>(runId.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (templateId.present) {
+      map['template_id'] = Variable<String>(templateId.value);
+    }
+    if (templateVersion.present) {
+      map['template_version'] = Variable<String>(templateVersion.value);
+    }
+    if (triggerId.present) {
+      map['trigger_id'] = Variable<String>(triggerId.value);
+    }
+    if (assetId.present) {
+      map['asset_id'] = Variable<String>(assetId.value);
+    }
+    if (matchedValues.present) {
+      map['matched_values'] = Variable<String>(matchedValues.value);
+    }
+    if (parameters.present) {
+      map['parameters'] = Variable<String>(parameters.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (evidenceIds.present) {
+      map['evidence_ids'] = Variable<String>(evidenceIds.value);
+    }
+    if (findingIds.present) {
+      map['finding_ids'] = Variable<String>(findingIds.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RunInstancesTableCompanion(')
+          ..write('runId: $runId, ')
+          ..write('projectId: $projectId, ')
+          ..write('templateId: $templateId, ')
+          ..write('templateVersion: $templateVersion, ')
+          ..write('triggerId: $triggerId, ')
+          ..write('assetId: $assetId, ')
+          ..write('matchedValues: $matchedValues, ')
+          ..write('parameters: $parameters, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('evidenceIds: $evidenceIds, ')
+          ..write('findingIds: $findingIds, ')
+          ..write('notes: $notes, ')
+          ..write('priority: $priority, ')
+          ..write('tags: $tags, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HistoryEntriesTableTable extends HistoryEntriesTable
+    with TableInfo<$HistoryEntriesTableTable, HistoryEntryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HistoryEntriesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  @override
+  late final GeneratedColumn<String> runId = GeneratedColumn<String>(
+      'run_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES run_instances (run_id)'));
+  static const VerificationMeta _timestampMeta =
+      const VerificationMeta('timestamp');
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+      'timestamp', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _performedByMeta =
+      const VerificationMeta('performedBy');
+  @override
+  late final GeneratedColumn<String> performedBy = GeneratedColumn<String>(
+      'performed_by', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+      'action', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _previousValueMeta =
+      const VerificationMeta('previousValue');
+  @override
+  late final GeneratedColumn<String> previousValue = GeneratedColumn<String>(
+      'previous_value', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _newValueMeta =
+      const VerificationMeta('newValue');
+  @override
+  late final GeneratedColumn<String> newValue = GeneratedColumn<String>(
+      'new_value', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _metadataMeta =
+      const VerificationMeta('metadata');
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+      'metadata', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        runId,
+        timestamp,
+        performedBy,
+        action,
+        description,
+        previousValue,
+        newValue,
+        metadata
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'history_entries';
+  @override
+  VerificationContext validateIntegrity(Insertable<HistoryEntryRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('run_id')) {
+      context.handle(
+          _runIdMeta, runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta));
+    } else if (isInserting) {
+      context.missing(_runIdMeta);
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(_timestampMeta,
+          timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta));
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('performed_by')) {
+      context.handle(
+          _performedByMeta,
+          performedBy.isAcceptableOrUnknown(
+              data['performed_by']!, _performedByMeta));
+    } else if (isInserting) {
+      context.missing(_performedByMeta);
+    }
+    if (data.containsKey('action')) {
+      context.handle(_actionMeta,
+          action.isAcceptableOrUnknown(data['action']!, _actionMeta));
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('previous_value')) {
+      context.handle(
+          _previousValueMeta,
+          previousValue.isAcceptableOrUnknown(
+              data['previous_value']!, _previousValueMeta));
+    }
+    if (data.containsKey('new_value')) {
+      context.handle(_newValueMeta,
+          newValue.isAcceptableOrUnknown(data['new_value']!, _newValueMeta));
+    }
+    if (data.containsKey('metadata')) {
+      context.handle(_metadataMeta,
+          metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HistoryEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HistoryEntryRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      runId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}run_id'])!,
+      timestamp: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}timestamp'])!,
+      performedBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}performed_by'])!,
+      action: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      previousValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}previous_value']),
+      newValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}new_value']),
+      metadata: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata'])!,
+    );
+  }
+
+  @override
+  $HistoryEntriesTableTable createAlias(String alias) {
+    return $HistoryEntriesTableTable(attachedDatabase, alias);
+  }
+}
+
+class HistoryEntryRow extends DataClass implements Insertable<HistoryEntryRow> {
+  final String id;
+  final String runId;
+  final DateTime timestamp;
+  final String performedBy;
+  final String action;
+  final String description;
+  final String? previousValue;
+  final String? newValue;
+  final String metadata;
+  const HistoryEntryRow(
+      {required this.id,
+      required this.runId,
+      required this.timestamp,
+      required this.performedBy,
+      required this.action,
+      required this.description,
+      this.previousValue,
+      this.newValue,
+      required this.metadata});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['run_id'] = Variable<String>(runId);
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    map['performed_by'] = Variable<String>(performedBy);
+    map['action'] = Variable<String>(action);
+    map['description'] = Variable<String>(description);
+    if (!nullToAbsent || previousValue != null) {
+      map['previous_value'] = Variable<String>(previousValue);
+    }
+    if (!nullToAbsent || newValue != null) {
+      map['new_value'] = Variable<String>(newValue);
+    }
+    map['metadata'] = Variable<String>(metadata);
+    return map;
+  }
+
+  HistoryEntriesTableCompanion toCompanion(bool nullToAbsent) {
+    return HistoryEntriesTableCompanion(
+      id: Value(id),
+      runId: Value(runId),
+      timestamp: Value(timestamp),
+      performedBy: Value(performedBy),
+      action: Value(action),
+      description: Value(description),
+      previousValue: previousValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previousValue),
+      newValue: newValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newValue),
+      metadata: Value(metadata),
+    );
+  }
+
+  factory HistoryEntryRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HistoryEntryRow(
+      id: serializer.fromJson<String>(json['id']),
+      runId: serializer.fromJson<String>(json['runId']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      performedBy: serializer.fromJson<String>(json['performedBy']),
+      action: serializer.fromJson<String>(json['action']),
+      description: serializer.fromJson<String>(json['description']),
+      previousValue: serializer.fromJson<String?>(json['previousValue']),
+      newValue: serializer.fromJson<String?>(json['newValue']),
+      metadata: serializer.fromJson<String>(json['metadata']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'runId': serializer.toJson<String>(runId),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'performedBy': serializer.toJson<String>(performedBy),
+      'action': serializer.toJson<String>(action),
+      'description': serializer.toJson<String>(description),
+      'previousValue': serializer.toJson<String?>(previousValue),
+      'newValue': serializer.toJson<String?>(newValue),
+      'metadata': serializer.toJson<String>(metadata),
+    };
+  }
+
+  HistoryEntryRow copyWith(
+          {String? id,
+          String? runId,
+          DateTime? timestamp,
+          String? performedBy,
+          String? action,
+          String? description,
+          Value<String?> previousValue = const Value.absent(),
+          Value<String?> newValue = const Value.absent(),
+          String? metadata}) =>
+      HistoryEntryRow(
+        id: id ?? this.id,
+        runId: runId ?? this.runId,
+        timestamp: timestamp ?? this.timestamp,
+        performedBy: performedBy ?? this.performedBy,
+        action: action ?? this.action,
+        description: description ?? this.description,
+        previousValue:
+            previousValue.present ? previousValue.value : this.previousValue,
+        newValue: newValue.present ? newValue.value : this.newValue,
+        metadata: metadata ?? this.metadata,
+      );
+  HistoryEntryRow copyWithCompanion(HistoryEntriesTableCompanion data) {
+    return HistoryEntryRow(
+      id: data.id.present ? data.id.value : this.id,
+      runId: data.runId.present ? data.runId.value : this.runId,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      performedBy:
+          data.performedBy.present ? data.performedBy.value : this.performedBy,
+      action: data.action.present ? data.action.value : this.action,
+      description:
+          data.description.present ? data.description.value : this.description,
+      previousValue: data.previousValue.present
+          ? data.previousValue.value
+          : this.previousValue,
+      newValue: data.newValue.present ? data.newValue.value : this.newValue,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HistoryEntryRow(')
+          ..write('id: $id, ')
+          ..write('runId: $runId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('performedBy: $performedBy, ')
+          ..write('action: $action, ')
+          ..write('description: $description, ')
+          ..write('previousValue: $previousValue, ')
+          ..write('newValue: $newValue, ')
+          ..write('metadata: $metadata')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, runId, timestamp, performedBy, action,
+      description, previousValue, newValue, metadata);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HistoryEntryRow &&
+          other.id == this.id &&
+          other.runId == this.runId &&
+          other.timestamp == this.timestamp &&
+          other.performedBy == this.performedBy &&
+          other.action == this.action &&
+          other.description == this.description &&
+          other.previousValue == this.previousValue &&
+          other.newValue == this.newValue &&
+          other.metadata == this.metadata);
+}
+
+class HistoryEntriesTableCompanion extends UpdateCompanion<HistoryEntryRow> {
+  final Value<String> id;
+  final Value<String> runId;
+  final Value<DateTime> timestamp;
+  final Value<String> performedBy;
+  final Value<String> action;
+  final Value<String> description;
+  final Value<String?> previousValue;
+  final Value<String?> newValue;
+  final Value<String> metadata;
+  final Value<int> rowid;
+  const HistoryEntriesTableCompanion({
+    this.id = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.performedBy = const Value.absent(),
+    this.action = const Value.absent(),
+    this.description = const Value.absent(),
+    this.previousValue = const Value.absent(),
+    this.newValue = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HistoryEntriesTableCompanion.insert({
+    required String id,
+    required String runId,
+    required DateTime timestamp,
+    required String performedBy,
+    required String action,
+    required String description,
+    this.previousValue = const Value.absent(),
+    this.newValue = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        runId = Value(runId),
+        timestamp = Value(timestamp),
+        performedBy = Value(performedBy),
+        action = Value(action),
+        description = Value(description);
+  static Insertable<HistoryEntryRow> custom({
+    Expression<String>? id,
+    Expression<String>? runId,
+    Expression<DateTime>? timestamp,
+    Expression<String>? performedBy,
+    Expression<String>? action,
+    Expression<String>? description,
+    Expression<String>? previousValue,
+    Expression<String>? newValue,
+    Expression<String>? metadata,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (runId != null) 'run_id': runId,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (performedBy != null) 'performed_by': performedBy,
+      if (action != null) 'action': action,
+      if (description != null) 'description': description,
+      if (previousValue != null) 'previous_value': previousValue,
+      if (newValue != null) 'new_value': newValue,
+      if (metadata != null) 'metadata': metadata,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HistoryEntriesTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? runId,
+      Value<DateTime>? timestamp,
+      Value<String>? performedBy,
+      Value<String>? action,
+      Value<String>? description,
+      Value<String?>? previousValue,
+      Value<String?>? newValue,
+      Value<String>? metadata,
+      Value<int>? rowid}) {
+    return HistoryEntriesTableCompanion(
+      id: id ?? this.id,
+      runId: runId ?? this.runId,
+      timestamp: timestamp ?? this.timestamp,
+      performedBy: performedBy ?? this.performedBy,
+      action: action ?? this.action,
+      description: description ?? this.description,
+      previousValue: previousValue ?? this.previousValue,
+      newValue: newValue ?? this.newValue,
+      metadata: metadata ?? this.metadata,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (runId.present) {
+      map['run_id'] = Variable<String>(runId.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (performedBy.present) {
+      map['performed_by'] = Variable<String>(performedBy.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (previousValue.present) {
+      map['previous_value'] = Variable<String>(previousValue.value);
+    }
+    if (newValue.present) {
+      map['new_value'] = Variable<String>(newValue.value);
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HistoryEntriesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('runId: $runId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('performedBy: $performedBy, ')
+          ..write('action: $action, ')
+          ..write('description: $description, ')
+          ..write('previousValue: $previousValue, ')
+          ..write('newValue: $newValue, ')
+          ..write('metadata: $metadata, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TriggerMatchesTableTable extends TriggerMatchesTable
+    with TableInfo<$TriggerMatchesTableTable, TriggerMatchRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TriggerMatchesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _triggerIdMeta =
+      const VerificationMeta('triggerId');
+  @override
+  late final GeneratedColumn<String> triggerId = GeneratedColumn<String>(
+      'trigger_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _templateIdMeta =
+      const VerificationMeta('templateId');
+  @override
+  late final GeneratedColumn<String> templateId = GeneratedColumn<String>(
+      'template_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _assetIdMeta =
+      const VerificationMeta('assetId');
+  @override
+  late final GeneratedColumn<String> assetId = GeneratedColumn<String>(
+      'asset_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects (id)'));
+  static const VerificationMeta _matchedMeta =
+      const VerificationMeta('matched');
+  @override
+  late final GeneratedColumn<bool> matched = GeneratedColumn<bool>(
+      'matched', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("matched" IN (0, 1))'));
+  static const VerificationMeta _extractedValuesMeta =
+      const VerificationMeta('extractedValues');
+  @override
+  late final GeneratedColumn<String> extractedValues = GeneratedColumn<String>(
+      'extracted_values', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _confidenceMeta =
+      const VerificationMeta('confidence');
+  @override
+  late final GeneratedColumn<double> confidence = GeneratedColumn<double>(
+      'confidence', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1.0));
+  static const VerificationMeta _evaluatedAtMeta =
+      const VerificationMeta('evaluatedAt');
+  @override
+  late final GeneratedColumn<DateTime> evaluatedAt = GeneratedColumn<DateTime>(
+      'evaluated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _priorityMeta =
+      const VerificationMeta('priority');
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+      'priority', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(5));
+  static const VerificationMeta _errorMeta = const VerificationMeta('error');
+  @override
+  late final GeneratedColumn<String> error = GeneratedColumn<String>(
+      'error', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _debugInfoMeta =
+      const VerificationMeta('debugInfo');
+  @override
+  late final GeneratedColumn<String> debugInfo = GeneratedColumn<String>(
+      'debug_info', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        triggerId,
+        templateId,
+        assetId,
+        projectId,
+        matched,
+        extractedValues,
+        confidence,
+        evaluatedAt,
+        priority,
+        error,
+        debugInfo
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'trigger_matches';
+  @override
+  VerificationContext validateIntegrity(Insertable<TriggerMatchRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('trigger_id')) {
+      context.handle(_triggerIdMeta,
+          triggerId.isAcceptableOrUnknown(data['trigger_id']!, _triggerIdMeta));
+    } else if (isInserting) {
+      context.missing(_triggerIdMeta);
+    }
+    if (data.containsKey('template_id')) {
+      context.handle(
+          _templateIdMeta,
+          templateId.isAcceptableOrUnknown(
+              data['template_id']!, _templateIdMeta));
+    } else if (isInserting) {
+      context.missing(_templateIdMeta);
+    }
+    if (data.containsKey('asset_id')) {
+      context.handle(_assetIdMeta,
+          assetId.isAcceptableOrUnknown(data['asset_id']!, _assetIdMeta));
+    } else if (isInserting) {
+      context.missing(_assetIdMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('matched')) {
+      context.handle(_matchedMeta,
+          matched.isAcceptableOrUnknown(data['matched']!, _matchedMeta));
+    } else if (isInserting) {
+      context.missing(_matchedMeta);
+    }
+    if (data.containsKey('extracted_values')) {
+      context.handle(
+          _extractedValuesMeta,
+          extractedValues.isAcceptableOrUnknown(
+              data['extracted_values']!, _extractedValuesMeta));
+    } else if (isInserting) {
+      context.missing(_extractedValuesMeta);
+    }
+    if (data.containsKey('confidence')) {
+      context.handle(
+          _confidenceMeta,
+          confidence.isAcceptableOrUnknown(
+              data['confidence']!, _confidenceMeta));
+    }
+    if (data.containsKey('evaluated_at')) {
+      context.handle(
+          _evaluatedAtMeta,
+          evaluatedAt.isAcceptableOrUnknown(
+              data['evaluated_at']!, _evaluatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_evaluatedAtMeta);
+    }
+    if (data.containsKey('priority')) {
+      context.handle(_priorityMeta,
+          priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta));
+    }
+    if (data.containsKey('error')) {
+      context.handle(
+          _errorMeta, error.isAcceptableOrUnknown(data['error']!, _errorMeta));
+    }
+    if (data.containsKey('debug_info')) {
+      context.handle(_debugInfoMeta,
+          debugInfo.isAcceptableOrUnknown(data['debug_info']!, _debugInfoMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TriggerMatchRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TriggerMatchRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      triggerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}trigger_id'])!,
+      templateId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}template_id'])!,
+      assetId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}asset_id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      matched: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}matched'])!,
+      extractedValues: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}extracted_values'])!,
+      confidence: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}confidence'])!,
+      evaluatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}evaluated_at'])!,
+      priority: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}priority'])!,
+      error: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}error']),
+      debugInfo: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}debug_info'])!,
+    );
+  }
+
+  @override
+  $TriggerMatchesTableTable createAlias(String alias) {
+    return $TriggerMatchesTableTable(attachedDatabase, alias);
+  }
+}
+
+class TriggerMatchRow extends DataClass implements Insertable<TriggerMatchRow> {
+  final String id;
+  final String triggerId;
+  final String templateId;
+  final String assetId;
+  final String projectId;
+  final bool matched;
+  final String extractedValues;
+  final double confidence;
+  final DateTime evaluatedAt;
+  final int priority;
+  final String? error;
+  final String debugInfo;
+  const TriggerMatchRow(
+      {required this.id,
+      required this.triggerId,
+      required this.templateId,
+      required this.assetId,
+      required this.projectId,
+      required this.matched,
+      required this.extractedValues,
+      required this.confidence,
+      required this.evaluatedAt,
+      required this.priority,
+      this.error,
+      required this.debugInfo});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['trigger_id'] = Variable<String>(triggerId);
+    map['template_id'] = Variable<String>(templateId);
+    map['asset_id'] = Variable<String>(assetId);
+    map['project_id'] = Variable<String>(projectId);
+    map['matched'] = Variable<bool>(matched);
+    map['extracted_values'] = Variable<String>(extractedValues);
+    map['confidence'] = Variable<double>(confidence);
+    map['evaluated_at'] = Variable<DateTime>(evaluatedAt);
+    map['priority'] = Variable<int>(priority);
+    if (!nullToAbsent || error != null) {
+      map['error'] = Variable<String>(error);
+    }
+    map['debug_info'] = Variable<String>(debugInfo);
+    return map;
+  }
+
+  TriggerMatchesTableCompanion toCompanion(bool nullToAbsent) {
+    return TriggerMatchesTableCompanion(
+      id: Value(id),
+      triggerId: Value(triggerId),
+      templateId: Value(templateId),
+      assetId: Value(assetId),
+      projectId: Value(projectId),
+      matched: Value(matched),
+      extractedValues: Value(extractedValues),
+      confidence: Value(confidence),
+      evaluatedAt: Value(evaluatedAt),
+      priority: Value(priority),
+      error:
+          error == null && nullToAbsent ? const Value.absent() : Value(error),
+      debugInfo: Value(debugInfo),
+    );
+  }
+
+  factory TriggerMatchRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TriggerMatchRow(
+      id: serializer.fromJson<String>(json['id']),
+      triggerId: serializer.fromJson<String>(json['triggerId']),
+      templateId: serializer.fromJson<String>(json['templateId']),
+      assetId: serializer.fromJson<String>(json['assetId']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      matched: serializer.fromJson<bool>(json['matched']),
+      extractedValues: serializer.fromJson<String>(json['extractedValues']),
+      confidence: serializer.fromJson<double>(json['confidence']),
+      evaluatedAt: serializer.fromJson<DateTime>(json['evaluatedAt']),
+      priority: serializer.fromJson<int>(json['priority']),
+      error: serializer.fromJson<String?>(json['error']),
+      debugInfo: serializer.fromJson<String>(json['debugInfo']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'triggerId': serializer.toJson<String>(triggerId),
+      'templateId': serializer.toJson<String>(templateId),
+      'assetId': serializer.toJson<String>(assetId),
+      'projectId': serializer.toJson<String>(projectId),
+      'matched': serializer.toJson<bool>(matched),
+      'extractedValues': serializer.toJson<String>(extractedValues),
+      'confidence': serializer.toJson<double>(confidence),
+      'evaluatedAt': serializer.toJson<DateTime>(evaluatedAt),
+      'priority': serializer.toJson<int>(priority),
+      'error': serializer.toJson<String?>(error),
+      'debugInfo': serializer.toJson<String>(debugInfo),
+    };
+  }
+
+  TriggerMatchRow copyWith(
+          {String? id,
+          String? triggerId,
+          String? templateId,
+          String? assetId,
+          String? projectId,
+          bool? matched,
+          String? extractedValues,
+          double? confidence,
+          DateTime? evaluatedAt,
+          int? priority,
+          Value<String?> error = const Value.absent(),
+          String? debugInfo}) =>
+      TriggerMatchRow(
+        id: id ?? this.id,
+        triggerId: triggerId ?? this.triggerId,
+        templateId: templateId ?? this.templateId,
+        assetId: assetId ?? this.assetId,
+        projectId: projectId ?? this.projectId,
+        matched: matched ?? this.matched,
+        extractedValues: extractedValues ?? this.extractedValues,
+        confidence: confidence ?? this.confidence,
+        evaluatedAt: evaluatedAt ?? this.evaluatedAt,
+        priority: priority ?? this.priority,
+        error: error.present ? error.value : this.error,
+        debugInfo: debugInfo ?? this.debugInfo,
+      );
+  TriggerMatchRow copyWithCompanion(TriggerMatchesTableCompanion data) {
+    return TriggerMatchRow(
+      id: data.id.present ? data.id.value : this.id,
+      triggerId: data.triggerId.present ? data.triggerId.value : this.triggerId,
+      templateId:
+          data.templateId.present ? data.templateId.value : this.templateId,
+      assetId: data.assetId.present ? data.assetId.value : this.assetId,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      matched: data.matched.present ? data.matched.value : this.matched,
+      extractedValues: data.extractedValues.present
+          ? data.extractedValues.value
+          : this.extractedValues,
+      confidence:
+          data.confidence.present ? data.confidence.value : this.confidence,
+      evaluatedAt:
+          data.evaluatedAt.present ? data.evaluatedAt.value : this.evaluatedAt,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      error: data.error.present ? data.error.value : this.error,
+      debugInfo: data.debugInfo.present ? data.debugInfo.value : this.debugInfo,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TriggerMatchRow(')
+          ..write('id: $id, ')
+          ..write('triggerId: $triggerId, ')
+          ..write('templateId: $templateId, ')
+          ..write('assetId: $assetId, ')
+          ..write('projectId: $projectId, ')
+          ..write('matched: $matched, ')
+          ..write('extractedValues: $extractedValues, ')
+          ..write('confidence: $confidence, ')
+          ..write('evaluatedAt: $evaluatedAt, ')
+          ..write('priority: $priority, ')
+          ..write('error: $error, ')
+          ..write('debugInfo: $debugInfo')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      triggerId,
+      templateId,
+      assetId,
+      projectId,
+      matched,
+      extractedValues,
+      confidence,
+      evaluatedAt,
+      priority,
+      error,
+      debugInfo);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TriggerMatchRow &&
+          other.id == this.id &&
+          other.triggerId == this.triggerId &&
+          other.templateId == this.templateId &&
+          other.assetId == this.assetId &&
+          other.projectId == this.projectId &&
+          other.matched == this.matched &&
+          other.extractedValues == this.extractedValues &&
+          other.confidence == this.confidence &&
+          other.evaluatedAt == this.evaluatedAt &&
+          other.priority == this.priority &&
+          other.error == this.error &&
+          other.debugInfo == this.debugInfo);
+}
+
+class TriggerMatchesTableCompanion extends UpdateCompanion<TriggerMatchRow> {
+  final Value<String> id;
+  final Value<String> triggerId;
+  final Value<String> templateId;
+  final Value<String> assetId;
+  final Value<String> projectId;
+  final Value<bool> matched;
+  final Value<String> extractedValues;
+  final Value<double> confidence;
+  final Value<DateTime> evaluatedAt;
+  final Value<int> priority;
+  final Value<String?> error;
+  final Value<String> debugInfo;
+  final Value<int> rowid;
+  const TriggerMatchesTableCompanion({
+    this.id = const Value.absent(),
+    this.triggerId = const Value.absent(),
+    this.templateId = const Value.absent(),
+    this.assetId = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.matched = const Value.absent(),
+    this.extractedValues = const Value.absent(),
+    this.confidence = const Value.absent(),
+    this.evaluatedAt = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.error = const Value.absent(),
+    this.debugInfo = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TriggerMatchesTableCompanion.insert({
+    required String id,
+    required String triggerId,
+    required String templateId,
+    required String assetId,
+    required String projectId,
+    required bool matched,
+    required String extractedValues,
+    this.confidence = const Value.absent(),
+    required DateTime evaluatedAt,
+    this.priority = const Value.absent(),
+    this.error = const Value.absent(),
+    this.debugInfo = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        triggerId = Value(triggerId),
+        templateId = Value(templateId),
+        assetId = Value(assetId),
+        projectId = Value(projectId),
+        matched = Value(matched),
+        extractedValues = Value(extractedValues),
+        evaluatedAt = Value(evaluatedAt);
+  static Insertable<TriggerMatchRow> custom({
+    Expression<String>? id,
+    Expression<String>? triggerId,
+    Expression<String>? templateId,
+    Expression<String>? assetId,
+    Expression<String>? projectId,
+    Expression<bool>? matched,
+    Expression<String>? extractedValues,
+    Expression<double>? confidence,
+    Expression<DateTime>? evaluatedAt,
+    Expression<int>? priority,
+    Expression<String>? error,
+    Expression<String>? debugInfo,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (triggerId != null) 'trigger_id': triggerId,
+      if (templateId != null) 'template_id': templateId,
+      if (assetId != null) 'asset_id': assetId,
+      if (projectId != null) 'project_id': projectId,
+      if (matched != null) 'matched': matched,
+      if (extractedValues != null) 'extracted_values': extractedValues,
+      if (confidence != null) 'confidence': confidence,
+      if (evaluatedAt != null) 'evaluated_at': evaluatedAt,
+      if (priority != null) 'priority': priority,
+      if (error != null) 'error': error,
+      if (debugInfo != null) 'debug_info': debugInfo,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TriggerMatchesTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? triggerId,
+      Value<String>? templateId,
+      Value<String>? assetId,
+      Value<String>? projectId,
+      Value<bool>? matched,
+      Value<String>? extractedValues,
+      Value<double>? confidence,
+      Value<DateTime>? evaluatedAt,
+      Value<int>? priority,
+      Value<String?>? error,
+      Value<String>? debugInfo,
+      Value<int>? rowid}) {
+    return TriggerMatchesTableCompanion(
+      id: id ?? this.id,
+      triggerId: triggerId ?? this.triggerId,
+      templateId: templateId ?? this.templateId,
+      assetId: assetId ?? this.assetId,
+      projectId: projectId ?? this.projectId,
+      matched: matched ?? this.matched,
+      extractedValues: extractedValues ?? this.extractedValues,
+      confidence: confidence ?? this.confidence,
+      evaluatedAt: evaluatedAt ?? this.evaluatedAt,
+      priority: priority ?? this.priority,
+      error: error ?? this.error,
+      debugInfo: debugInfo ?? this.debugInfo,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (triggerId.present) {
+      map['trigger_id'] = Variable<String>(triggerId.value);
+    }
+    if (templateId.present) {
+      map['template_id'] = Variable<String>(templateId.value);
+    }
+    if (assetId.present) {
+      map['asset_id'] = Variable<String>(assetId.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (matched.present) {
+      map['matched'] = Variable<bool>(matched.value);
+    }
+    if (extractedValues.present) {
+      map['extracted_values'] = Variable<String>(extractedValues.value);
+    }
+    if (confidence.present) {
+      map['confidence'] = Variable<double>(confidence.value);
+    }
+    if (evaluatedAt.present) {
+      map['evaluated_at'] = Variable<DateTime>(evaluatedAt.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (error.present) {
+      map['error'] = Variable<String>(error.value);
+    }
+    if (debugInfo.present) {
+      map['debug_info'] = Variable<String>(debugInfo.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TriggerMatchesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('triggerId: $triggerId, ')
+          ..write('templateId: $templateId, ')
+          ..write('assetId: $assetId, ')
+          ..write('projectId: $projectId, ')
+          ..write('matched: $matched, ')
+          ..write('extractedValues: $extractedValues, ')
+          ..write('confidence: $confidence, ')
+          ..write('evaluatedAt: $evaluatedAt, ')
+          ..write('priority: $priority, ')
+          ..write('error: $error, ')
+          ..write('debugInfo: $debugInfo, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ParameterResolutionsTableTable extends ParameterResolutionsTable
+    with TableInfo<$ParameterResolutionsTableTable, ParameterResolutionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ParameterResolutionsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  @override
+  late final GeneratedColumn<String> runId = GeneratedColumn<String>(
+      'run_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES run_instances (run_id)'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+      'value', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+      'source', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _requiredMeta =
+      const VerificationMeta('required');
+  @override
+  late final GeneratedColumn<bool> required = GeneratedColumn<bool>(
+      'required', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("required" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _resolvedMeta =
+      const VerificationMeta('resolved');
+  @override
+  late final GeneratedColumn<bool> resolved = GeneratedColumn<bool>(
+      'resolved', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("resolved" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _errorMeta = const VerificationMeta('error');
+  @override
+  late final GeneratedColumn<String> error = GeneratedColumn<String>(
+      'error', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _resolvedAtMeta =
+      const VerificationMeta('resolvedAt');
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+      'resolved_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _metadataMeta =
+      const VerificationMeta('metadata');
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+      'metadata', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        runId,
+        name,
+        type,
+        value,
+        source,
+        required,
+        resolved,
+        error,
+        resolvedAt,
+        metadata
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'parameter_resolutions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ParameterResolutionRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('run_id')) {
+      context.handle(
+          _runIdMeta, runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta));
+    } else if (isInserting) {
+      context.missing(_runIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+          _valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta,
+          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('required')) {
+      context.handle(_requiredMeta,
+          required.isAcceptableOrUnknown(data['required']!, _requiredMeta));
+    }
+    if (data.containsKey('resolved')) {
+      context.handle(_resolvedMeta,
+          resolved.isAcceptableOrUnknown(data['resolved']!, _resolvedMeta));
+    }
+    if (data.containsKey('error')) {
+      context.handle(
+          _errorMeta, error.isAcceptableOrUnknown(data['error']!, _errorMeta));
+    }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+          _resolvedAtMeta,
+          resolvedAt.isAcceptableOrUnknown(
+              data['resolved_at']!, _resolvedAtMeta));
+    } else if (isInserting) {
+      context.missing(_resolvedAtMeta);
+    }
+    if (data.containsKey('metadata')) {
+      context.handle(_metadataMeta,
+          metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ParameterResolutionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ParameterResolutionRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      runId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}run_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      value: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}value'])!,
+      source: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      required: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}required'])!,
+      resolved: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}resolved'])!,
+      error: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}error']),
+      resolvedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}resolved_at'])!,
+      metadata: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata'])!,
+    );
+  }
+
+  @override
+  $ParameterResolutionsTableTable createAlias(String alias) {
+    return $ParameterResolutionsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ParameterResolutionRow extends DataClass
+    implements Insertable<ParameterResolutionRow> {
+  final String id;
+  final String runId;
+  final String name;
+  final String type;
+  final String value;
+  final String source;
+  final bool required;
+  final bool resolved;
+  final String? error;
+  final DateTime resolvedAt;
+  final String metadata;
+  const ParameterResolutionRow(
+      {required this.id,
+      required this.runId,
+      required this.name,
+      required this.type,
+      required this.value,
+      required this.source,
+      required this.required,
+      required this.resolved,
+      this.error,
+      required this.resolvedAt,
+      required this.metadata});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['run_id'] = Variable<String>(runId);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    map['value'] = Variable<String>(value);
+    map['source'] = Variable<String>(source);
+    map['required'] = Variable<bool>(required);
+    map['resolved'] = Variable<bool>(resolved);
+    if (!nullToAbsent || error != null) {
+      map['error'] = Variable<String>(error);
+    }
+    map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    map['metadata'] = Variable<String>(metadata);
+    return map;
+  }
+
+  ParameterResolutionsTableCompanion toCompanion(bool nullToAbsent) {
+    return ParameterResolutionsTableCompanion(
+      id: Value(id),
+      runId: Value(runId),
+      name: Value(name),
+      type: Value(type),
+      value: Value(value),
+      source: Value(source),
+      required: Value(required),
+      resolved: Value(resolved),
+      error:
+          error == null && nullToAbsent ? const Value.absent() : Value(error),
+      resolvedAt: Value(resolvedAt),
+      metadata: Value(metadata),
+    );
+  }
+
+  factory ParameterResolutionRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ParameterResolutionRow(
+      id: serializer.fromJson<String>(json['id']),
+      runId: serializer.fromJson<String>(json['runId']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      value: serializer.fromJson<String>(json['value']),
+      source: serializer.fromJson<String>(json['source']),
+      required: serializer.fromJson<bool>(json['required']),
+      resolved: serializer.fromJson<bool>(json['resolved']),
+      error: serializer.fromJson<String?>(json['error']),
+      resolvedAt: serializer.fromJson<DateTime>(json['resolvedAt']),
+      metadata: serializer.fromJson<String>(json['metadata']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'runId': serializer.toJson<String>(runId),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'value': serializer.toJson<String>(value),
+      'source': serializer.toJson<String>(source),
+      'required': serializer.toJson<bool>(required),
+      'resolved': serializer.toJson<bool>(resolved),
+      'error': serializer.toJson<String?>(error),
+      'resolvedAt': serializer.toJson<DateTime>(resolvedAt),
+      'metadata': serializer.toJson<String>(metadata),
+    };
+  }
+
+  ParameterResolutionRow copyWith(
+          {String? id,
+          String? runId,
+          String? name,
+          String? type,
+          String? value,
+          String? source,
+          bool? required,
+          bool? resolved,
+          Value<String?> error = const Value.absent(),
+          DateTime? resolvedAt,
+          String? metadata}) =>
+      ParameterResolutionRow(
+        id: id ?? this.id,
+        runId: runId ?? this.runId,
+        name: name ?? this.name,
+        type: type ?? this.type,
+        value: value ?? this.value,
+        source: source ?? this.source,
+        required: required ?? this.required,
+        resolved: resolved ?? this.resolved,
+        error: error.present ? error.value : this.error,
+        resolvedAt: resolvedAt ?? this.resolvedAt,
+        metadata: metadata ?? this.metadata,
+      );
+  ParameterResolutionRow copyWithCompanion(
+      ParameterResolutionsTableCompanion data) {
+    return ParameterResolutionRow(
+      id: data.id.present ? data.id.value : this.id,
+      runId: data.runId.present ? data.runId.value : this.runId,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      value: data.value.present ? data.value.value : this.value,
+      source: data.source.present ? data.source.value : this.source,
+      required: data.required.present ? data.required.value : this.required,
+      resolved: data.resolved.present ? data.resolved.value : this.resolved,
+      error: data.error.present ? data.error.value : this.error,
+      resolvedAt:
+          data.resolvedAt.present ? data.resolvedAt.value : this.resolvedAt,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ParameterResolutionRow(')
+          ..write('id: $id, ')
+          ..write('runId: $runId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('value: $value, ')
+          ..write('source: $source, ')
+          ..write('required: $required, ')
+          ..write('resolved: $resolved, ')
+          ..write('error: $error, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('metadata: $metadata')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, runId, name, type, value, source,
+      required, resolved, error, resolvedAt, metadata);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ParameterResolutionRow &&
+          other.id == this.id &&
+          other.runId == this.runId &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.value == this.value &&
+          other.source == this.source &&
+          other.required == this.required &&
+          other.resolved == this.resolved &&
+          other.error == this.error &&
+          other.resolvedAt == this.resolvedAt &&
+          other.metadata == this.metadata);
+}
+
+class ParameterResolutionsTableCompanion
+    extends UpdateCompanion<ParameterResolutionRow> {
+  final Value<String> id;
+  final Value<String> runId;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<String> value;
+  final Value<String> source;
+  final Value<bool> required;
+  final Value<bool> resolved;
+  final Value<String?> error;
+  final Value<DateTime> resolvedAt;
+  final Value<String> metadata;
+  final Value<int> rowid;
+  const ParameterResolutionsTableCompanion({
+    this.id = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.value = const Value.absent(),
+    this.source = const Value.absent(),
+    this.required = const Value.absent(),
+    this.resolved = const Value.absent(),
+    this.error = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ParameterResolutionsTableCompanion.insert({
+    required String id,
+    required String runId,
+    required String name,
+    required String type,
+    required String value,
+    required String source,
+    this.required = const Value.absent(),
+    this.resolved = const Value.absent(),
+    this.error = const Value.absent(),
+    required DateTime resolvedAt,
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        runId = Value(runId),
+        name = Value(name),
+        type = Value(type),
+        value = Value(value),
+        source = Value(source),
+        resolvedAt = Value(resolvedAt);
+  static Insertable<ParameterResolutionRow> custom({
+    Expression<String>? id,
+    Expression<String>? runId,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<String>? value,
+    Expression<String>? source,
+    Expression<bool>? required,
+    Expression<bool>? resolved,
+    Expression<String>? error,
+    Expression<DateTime>? resolvedAt,
+    Expression<String>? metadata,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (runId != null) 'run_id': runId,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (value != null) 'value': value,
+      if (source != null) 'source': source,
+      if (required != null) 'required': required,
+      if (resolved != null) 'resolved': resolved,
+      if (error != null) 'error': error,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+      if (metadata != null) 'metadata': metadata,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ParameterResolutionsTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? runId,
+      Value<String>? name,
+      Value<String>? type,
+      Value<String>? value,
+      Value<String>? source,
+      Value<bool>? required,
+      Value<bool>? resolved,
+      Value<String?>? error,
+      Value<DateTime>? resolvedAt,
+      Value<String>? metadata,
+      Value<int>? rowid}) {
+    return ParameterResolutionsTableCompanion(
+      id: id ?? this.id,
+      runId: runId ?? this.runId,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      value: value ?? this.value,
+      source: source ?? this.source,
+      required: required ?? this.required,
+      resolved: resolved ?? this.resolved,
+      error: error ?? this.error,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      metadata: metadata ?? this.metadata,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (runId.present) {
+      map['run_id'] = Variable<String>(runId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (required.present) {
+      map['required'] = Variable<bool>(required.value);
+    }
+    if (resolved.present) {
+      map['resolved'] = Variable<bool>(resolved.value);
+    }
+    if (error.present) {
+      map['error'] = Variable<String>(error.value);
+    }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ParameterResolutionsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('runId: $runId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('value: $value, ')
+          ..write('source: $source, ')
+          ..write('required: $required, ')
+          ..write('resolved: $resolved, ')
+          ..write('error: $error, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('metadata: $metadata, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MethodologyTemplatesTableTable extends MethodologyTemplatesTable
+    with TableInfo<$MethodologyTemplatesTableTable, MethodologyTemplateRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MethodologyTemplatesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<String> version = GeneratedColumn<String>(
+      'version', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _templateVersionMeta =
+      const VerificationMeta('templateVersion');
+  @override
+  late final GeneratedColumn<String> templateVersion = GeneratedColumn<String>(
+      'template_version', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _workstreamMeta =
+      const VerificationMeta('workstream');
+  @override
+  late final GeneratedColumn<String> workstream = GeneratedColumn<String>(
+      'workstream', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _authorMeta = const VerificationMeta('author');
+  @override
+  late final GeneratedColumn<String> author = GeneratedColumn<String>(
+      'author', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdMeta =
+      const VerificationMeta('created');
+  @override
+  late final GeneratedColumn<DateTime> created = GeneratedColumn<DateTime>(
+      'created', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _modifiedMeta =
+      const VerificationMeta('modified');
+  @override
+  late final GeneratedColumn<DateTime> modified = GeneratedColumn<DateTime>(
+      'modified', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+      'tags', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _riskLevelMeta =
+      const VerificationMeta('riskLevel');
+  @override
+  late final GeneratedColumn<String> riskLevel = GeneratedColumn<String>(
+      'risk_level', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _overviewMeta =
+      const VerificationMeta('overview');
+  @override
+  late final GeneratedColumn<String> overview = GeneratedColumn<String>(
+      'overview', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _triggersMeta =
+      const VerificationMeta('triggers');
+  @override
+  late final GeneratedColumn<String> triggers = GeneratedColumn<String>(
+      'triggers', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _equipmentMeta =
+      const VerificationMeta('equipment');
+  @override
+  late final GeneratedColumn<String> equipment = GeneratedColumn<String>(
+      'equipment', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _proceduresMeta =
+      const VerificationMeta('procedures');
+  @override
+  late final GeneratedColumn<String> procedures = GeneratedColumn<String>(
+      'procedures', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _findingsMeta =
+      const VerificationMeta('findings');
+  @override
+  late final GeneratedColumn<String> findings = GeneratedColumn<String>(
+      'findings', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _cleanupMeta =
+      const VerificationMeta('cleanup');
+  @override
+  late final GeneratedColumn<String> cleanup = GeneratedColumn<String>(
+      'cleanup', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _troubleshootingMeta =
+      const VerificationMeta('troubleshooting');
+  @override
+  late final GeneratedColumn<String> troubleshooting = GeneratedColumn<String>(
+      'troubleshooting', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        version,
+        templateVersion,
+        name,
+        workstream,
+        author,
+        created,
+        modified,
+        status,
+        description,
+        tags,
+        riskLevel,
+        overview,
+        triggers,
+        equipment,
+        procedures,
+        findings,
+        cleanup,
+        troubleshooting
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'methodology_templates';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<MethodologyTemplateRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(_versionMeta,
+          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('template_version')) {
+      context.handle(
+          _templateVersionMeta,
+          templateVersion.isAcceptableOrUnknown(
+              data['template_version']!, _templateVersionMeta));
+    } else if (isInserting) {
+      context.missing(_templateVersionMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('workstream')) {
+      context.handle(
+          _workstreamMeta,
+          workstream.isAcceptableOrUnknown(
+              data['workstream']!, _workstreamMeta));
+    } else if (isInserting) {
+      context.missing(_workstreamMeta);
+    }
+    if (data.containsKey('author')) {
+      context.handle(_authorMeta,
+          author.isAcceptableOrUnknown(data['author']!, _authorMeta));
+    } else if (isInserting) {
+      context.missing(_authorMeta);
+    }
+    if (data.containsKey('created')) {
+      context.handle(_createdMeta,
+          created.isAcceptableOrUnknown(data['created']!, _createdMeta));
+    } else if (isInserting) {
+      context.missing(_createdMeta);
+    }
+    if (data.containsKey('modified')) {
+      context.handle(_modifiedMeta,
+          modified.isAcceptableOrUnknown(data['modified']!, _modifiedMeta));
+    } else if (isInserting) {
+      context.missing(_modifiedMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('tags')) {
+      context.handle(
+          _tagsMeta, tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta));
+    } else if (isInserting) {
+      context.missing(_tagsMeta);
+    }
+    if (data.containsKey('risk_level')) {
+      context.handle(_riskLevelMeta,
+          riskLevel.isAcceptableOrUnknown(data['risk_level']!, _riskLevelMeta));
+    } else if (isInserting) {
+      context.missing(_riskLevelMeta);
+    }
+    if (data.containsKey('overview')) {
+      context.handle(_overviewMeta,
+          overview.isAcceptableOrUnknown(data['overview']!, _overviewMeta));
+    } else if (isInserting) {
+      context.missing(_overviewMeta);
+    }
+    if (data.containsKey('triggers')) {
+      context.handle(_triggersMeta,
+          triggers.isAcceptableOrUnknown(data['triggers']!, _triggersMeta));
+    } else if (isInserting) {
+      context.missing(_triggersMeta);
+    }
+    if (data.containsKey('equipment')) {
+      context.handle(_equipmentMeta,
+          equipment.isAcceptableOrUnknown(data['equipment']!, _equipmentMeta));
+    } else if (isInserting) {
+      context.missing(_equipmentMeta);
+    }
+    if (data.containsKey('procedures')) {
+      context.handle(
+          _proceduresMeta,
+          procedures.isAcceptableOrUnknown(
+              data['procedures']!, _proceduresMeta));
+    } else if (isInserting) {
+      context.missing(_proceduresMeta);
+    }
+    if (data.containsKey('findings')) {
+      context.handle(_findingsMeta,
+          findings.isAcceptableOrUnknown(data['findings']!, _findingsMeta));
+    } else if (isInserting) {
+      context.missing(_findingsMeta);
+    }
+    if (data.containsKey('cleanup')) {
+      context.handle(_cleanupMeta,
+          cleanup.isAcceptableOrUnknown(data['cleanup']!, _cleanupMeta));
+    } else if (isInserting) {
+      context.missing(_cleanupMeta);
+    }
+    if (data.containsKey('troubleshooting')) {
+      context.handle(
+          _troubleshootingMeta,
+          troubleshooting.isAcceptableOrUnknown(
+              data['troubleshooting']!, _troubleshootingMeta));
+    } else if (isInserting) {
+      context.missing(_troubleshootingMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MethodologyTemplateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MethodologyTemplateRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}version'])!,
+      templateVersion: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}template_version'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      workstream: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}workstream'])!,
+      author: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}author'])!,
+      created: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created'])!,
+      modified: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}modified'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      tags: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tags'])!,
+      riskLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}risk_level'])!,
+      overview: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}overview'])!,
+      triggers: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}triggers'])!,
+      equipment: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}equipment'])!,
+      procedures: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}procedures'])!,
+      findings: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}findings'])!,
+      cleanup: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}cleanup'])!,
+      troubleshooting: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}troubleshooting'])!,
+    );
+  }
+
+  @override
+  $MethodologyTemplatesTableTable createAlias(String alias) {
+    return $MethodologyTemplatesTableTable(attachedDatabase, alias);
+  }
+}
+
+class MethodologyTemplateRow extends DataClass
+    implements Insertable<MethodologyTemplateRow> {
+  final String id;
+  final String version;
+  final String templateVersion;
+  final String name;
+  final String workstream;
+  final String author;
+  final DateTime created;
+  final DateTime modified;
+  final String status;
+  final String description;
+  final String tags;
+  final String riskLevel;
+  final String overview;
+  final String triggers;
+  final String equipment;
+  final String procedures;
+  final String findings;
+  final String cleanup;
+  final String troubleshooting;
+  const MethodologyTemplateRow(
+      {required this.id,
+      required this.version,
+      required this.templateVersion,
+      required this.name,
+      required this.workstream,
+      required this.author,
+      required this.created,
+      required this.modified,
+      required this.status,
+      required this.description,
+      required this.tags,
+      required this.riskLevel,
+      required this.overview,
+      required this.triggers,
+      required this.equipment,
+      required this.procedures,
+      required this.findings,
+      required this.cleanup,
+      required this.troubleshooting});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['version'] = Variable<String>(version);
+    map['template_version'] = Variable<String>(templateVersion);
+    map['name'] = Variable<String>(name);
+    map['workstream'] = Variable<String>(workstream);
+    map['author'] = Variable<String>(author);
+    map['created'] = Variable<DateTime>(created);
+    map['modified'] = Variable<DateTime>(modified);
+    map['status'] = Variable<String>(status);
+    map['description'] = Variable<String>(description);
+    map['tags'] = Variable<String>(tags);
+    map['risk_level'] = Variable<String>(riskLevel);
+    map['overview'] = Variable<String>(overview);
+    map['triggers'] = Variable<String>(triggers);
+    map['equipment'] = Variable<String>(equipment);
+    map['procedures'] = Variable<String>(procedures);
+    map['findings'] = Variable<String>(findings);
+    map['cleanup'] = Variable<String>(cleanup);
+    map['troubleshooting'] = Variable<String>(troubleshooting);
+    return map;
+  }
+
+  MethodologyTemplatesTableCompanion toCompanion(bool nullToAbsent) {
+    return MethodologyTemplatesTableCompanion(
+      id: Value(id),
+      version: Value(version),
+      templateVersion: Value(templateVersion),
+      name: Value(name),
+      workstream: Value(workstream),
+      author: Value(author),
+      created: Value(created),
+      modified: Value(modified),
+      status: Value(status),
+      description: Value(description),
+      tags: Value(tags),
+      riskLevel: Value(riskLevel),
+      overview: Value(overview),
+      triggers: Value(triggers),
+      equipment: Value(equipment),
+      procedures: Value(procedures),
+      findings: Value(findings),
+      cleanup: Value(cleanup),
+      troubleshooting: Value(troubleshooting),
+    );
+  }
+
+  factory MethodologyTemplateRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MethodologyTemplateRow(
+      id: serializer.fromJson<String>(json['id']),
+      version: serializer.fromJson<String>(json['version']),
+      templateVersion: serializer.fromJson<String>(json['templateVersion']),
+      name: serializer.fromJson<String>(json['name']),
+      workstream: serializer.fromJson<String>(json['workstream']),
+      author: serializer.fromJson<String>(json['author']),
+      created: serializer.fromJson<DateTime>(json['created']),
+      modified: serializer.fromJson<DateTime>(json['modified']),
+      status: serializer.fromJson<String>(json['status']),
+      description: serializer.fromJson<String>(json['description']),
+      tags: serializer.fromJson<String>(json['tags']),
+      riskLevel: serializer.fromJson<String>(json['riskLevel']),
+      overview: serializer.fromJson<String>(json['overview']),
+      triggers: serializer.fromJson<String>(json['triggers']),
+      equipment: serializer.fromJson<String>(json['equipment']),
+      procedures: serializer.fromJson<String>(json['procedures']),
+      findings: serializer.fromJson<String>(json['findings']),
+      cleanup: serializer.fromJson<String>(json['cleanup']),
+      troubleshooting: serializer.fromJson<String>(json['troubleshooting']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'version': serializer.toJson<String>(version),
+      'templateVersion': serializer.toJson<String>(templateVersion),
+      'name': serializer.toJson<String>(name),
+      'workstream': serializer.toJson<String>(workstream),
+      'author': serializer.toJson<String>(author),
+      'created': serializer.toJson<DateTime>(created),
+      'modified': serializer.toJson<DateTime>(modified),
+      'status': serializer.toJson<String>(status),
+      'description': serializer.toJson<String>(description),
+      'tags': serializer.toJson<String>(tags),
+      'riskLevel': serializer.toJson<String>(riskLevel),
+      'overview': serializer.toJson<String>(overview),
+      'triggers': serializer.toJson<String>(triggers),
+      'equipment': serializer.toJson<String>(equipment),
+      'procedures': serializer.toJson<String>(procedures),
+      'findings': serializer.toJson<String>(findings),
+      'cleanup': serializer.toJson<String>(cleanup),
+      'troubleshooting': serializer.toJson<String>(troubleshooting),
+    };
+  }
+
+  MethodologyTemplateRow copyWith(
+          {String? id,
+          String? version,
+          String? templateVersion,
+          String? name,
+          String? workstream,
+          String? author,
+          DateTime? created,
+          DateTime? modified,
+          String? status,
+          String? description,
+          String? tags,
+          String? riskLevel,
+          String? overview,
+          String? triggers,
+          String? equipment,
+          String? procedures,
+          String? findings,
+          String? cleanup,
+          String? troubleshooting}) =>
+      MethodologyTemplateRow(
+        id: id ?? this.id,
+        version: version ?? this.version,
+        templateVersion: templateVersion ?? this.templateVersion,
+        name: name ?? this.name,
+        workstream: workstream ?? this.workstream,
+        author: author ?? this.author,
+        created: created ?? this.created,
+        modified: modified ?? this.modified,
+        status: status ?? this.status,
+        description: description ?? this.description,
+        tags: tags ?? this.tags,
+        riskLevel: riskLevel ?? this.riskLevel,
+        overview: overview ?? this.overview,
+        triggers: triggers ?? this.triggers,
+        equipment: equipment ?? this.equipment,
+        procedures: procedures ?? this.procedures,
+        findings: findings ?? this.findings,
+        cleanup: cleanup ?? this.cleanup,
+        troubleshooting: troubleshooting ?? this.troubleshooting,
+      );
+  MethodologyTemplateRow copyWithCompanion(
+      MethodologyTemplatesTableCompanion data) {
+    return MethodologyTemplateRow(
+      id: data.id.present ? data.id.value : this.id,
+      version: data.version.present ? data.version.value : this.version,
+      templateVersion: data.templateVersion.present
+          ? data.templateVersion.value
+          : this.templateVersion,
+      name: data.name.present ? data.name.value : this.name,
+      workstream:
+          data.workstream.present ? data.workstream.value : this.workstream,
+      author: data.author.present ? data.author.value : this.author,
+      created: data.created.present ? data.created.value : this.created,
+      modified: data.modified.present ? data.modified.value : this.modified,
+      status: data.status.present ? data.status.value : this.status,
+      description:
+          data.description.present ? data.description.value : this.description,
+      tags: data.tags.present ? data.tags.value : this.tags,
+      riskLevel: data.riskLevel.present ? data.riskLevel.value : this.riskLevel,
+      overview: data.overview.present ? data.overview.value : this.overview,
+      triggers: data.triggers.present ? data.triggers.value : this.triggers,
+      equipment: data.equipment.present ? data.equipment.value : this.equipment,
+      procedures:
+          data.procedures.present ? data.procedures.value : this.procedures,
+      findings: data.findings.present ? data.findings.value : this.findings,
+      cleanup: data.cleanup.present ? data.cleanup.value : this.cleanup,
+      troubleshooting: data.troubleshooting.present
+          ? data.troubleshooting.value
+          : this.troubleshooting,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MethodologyTemplateRow(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('templateVersion: $templateVersion, ')
+          ..write('name: $name, ')
+          ..write('workstream: $workstream, ')
+          ..write('author: $author, ')
+          ..write('created: $created, ')
+          ..write('modified: $modified, ')
+          ..write('status: $status, ')
+          ..write('description: $description, ')
+          ..write('tags: $tags, ')
+          ..write('riskLevel: $riskLevel, ')
+          ..write('overview: $overview, ')
+          ..write('triggers: $triggers, ')
+          ..write('equipment: $equipment, ')
+          ..write('procedures: $procedures, ')
+          ..write('findings: $findings, ')
+          ..write('cleanup: $cleanup, ')
+          ..write('troubleshooting: $troubleshooting')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      version,
+      templateVersion,
+      name,
+      workstream,
+      author,
+      created,
+      modified,
+      status,
+      description,
+      tags,
+      riskLevel,
+      overview,
+      triggers,
+      equipment,
+      procedures,
+      findings,
+      cleanup,
+      troubleshooting);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MethodologyTemplateRow &&
+          other.id == this.id &&
+          other.version == this.version &&
+          other.templateVersion == this.templateVersion &&
+          other.name == this.name &&
+          other.workstream == this.workstream &&
+          other.author == this.author &&
+          other.created == this.created &&
+          other.modified == this.modified &&
+          other.status == this.status &&
+          other.description == this.description &&
+          other.tags == this.tags &&
+          other.riskLevel == this.riskLevel &&
+          other.overview == this.overview &&
+          other.triggers == this.triggers &&
+          other.equipment == this.equipment &&
+          other.procedures == this.procedures &&
+          other.findings == this.findings &&
+          other.cleanup == this.cleanup &&
+          other.troubleshooting == this.troubleshooting);
+}
+
+class MethodologyTemplatesTableCompanion
+    extends UpdateCompanion<MethodologyTemplateRow> {
+  final Value<String> id;
+  final Value<String> version;
+  final Value<String> templateVersion;
+  final Value<String> name;
+  final Value<String> workstream;
+  final Value<String> author;
+  final Value<DateTime> created;
+  final Value<DateTime> modified;
+  final Value<String> status;
+  final Value<String> description;
+  final Value<String> tags;
+  final Value<String> riskLevel;
+  final Value<String> overview;
+  final Value<String> triggers;
+  final Value<String> equipment;
+  final Value<String> procedures;
+  final Value<String> findings;
+  final Value<String> cleanup;
+  final Value<String> troubleshooting;
+  final Value<int> rowid;
+  const MethodologyTemplatesTableCompanion({
+    this.id = const Value.absent(),
+    this.version = const Value.absent(),
+    this.templateVersion = const Value.absent(),
+    this.name = const Value.absent(),
+    this.workstream = const Value.absent(),
+    this.author = const Value.absent(),
+    this.created = const Value.absent(),
+    this.modified = const Value.absent(),
+    this.status = const Value.absent(),
+    this.description = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.riskLevel = const Value.absent(),
+    this.overview = const Value.absent(),
+    this.triggers = const Value.absent(),
+    this.equipment = const Value.absent(),
+    this.procedures = const Value.absent(),
+    this.findings = const Value.absent(),
+    this.cleanup = const Value.absent(),
+    this.troubleshooting = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MethodologyTemplatesTableCompanion.insert({
+    required String id,
+    required String version,
+    required String templateVersion,
+    required String name,
+    required String workstream,
+    required String author,
+    required DateTime created,
+    required DateTime modified,
+    required String status,
+    required String description,
+    required String tags,
+    required String riskLevel,
+    required String overview,
+    required String triggers,
+    required String equipment,
+    required String procedures,
+    required String findings,
+    required String cleanup,
+    required String troubleshooting,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        version = Value(version),
+        templateVersion = Value(templateVersion),
+        name = Value(name),
+        workstream = Value(workstream),
+        author = Value(author),
+        created = Value(created),
+        modified = Value(modified),
+        status = Value(status),
+        description = Value(description),
+        tags = Value(tags),
+        riskLevel = Value(riskLevel),
+        overview = Value(overview),
+        triggers = Value(triggers),
+        equipment = Value(equipment),
+        procedures = Value(procedures),
+        findings = Value(findings),
+        cleanup = Value(cleanup),
+        troubleshooting = Value(troubleshooting);
+  static Insertable<MethodologyTemplateRow> custom({
+    Expression<String>? id,
+    Expression<String>? version,
+    Expression<String>? templateVersion,
+    Expression<String>? name,
+    Expression<String>? workstream,
+    Expression<String>? author,
+    Expression<DateTime>? created,
+    Expression<DateTime>? modified,
+    Expression<String>? status,
+    Expression<String>? description,
+    Expression<String>? tags,
+    Expression<String>? riskLevel,
+    Expression<String>? overview,
+    Expression<String>? triggers,
+    Expression<String>? equipment,
+    Expression<String>? procedures,
+    Expression<String>? findings,
+    Expression<String>? cleanup,
+    Expression<String>? troubleshooting,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (version != null) 'version': version,
+      if (templateVersion != null) 'template_version': templateVersion,
+      if (name != null) 'name': name,
+      if (workstream != null) 'workstream': workstream,
+      if (author != null) 'author': author,
+      if (created != null) 'created': created,
+      if (modified != null) 'modified': modified,
+      if (status != null) 'status': status,
+      if (description != null) 'description': description,
+      if (tags != null) 'tags': tags,
+      if (riskLevel != null) 'risk_level': riskLevel,
+      if (overview != null) 'overview': overview,
+      if (triggers != null) 'triggers': triggers,
+      if (equipment != null) 'equipment': equipment,
+      if (procedures != null) 'procedures': procedures,
+      if (findings != null) 'findings': findings,
+      if (cleanup != null) 'cleanup': cleanup,
+      if (troubleshooting != null) 'troubleshooting': troubleshooting,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MethodologyTemplatesTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? version,
+      Value<String>? templateVersion,
+      Value<String>? name,
+      Value<String>? workstream,
+      Value<String>? author,
+      Value<DateTime>? created,
+      Value<DateTime>? modified,
+      Value<String>? status,
+      Value<String>? description,
+      Value<String>? tags,
+      Value<String>? riskLevel,
+      Value<String>? overview,
+      Value<String>? triggers,
+      Value<String>? equipment,
+      Value<String>? procedures,
+      Value<String>? findings,
+      Value<String>? cleanup,
+      Value<String>? troubleshooting,
+      Value<int>? rowid}) {
+    return MethodologyTemplatesTableCompanion(
+      id: id ?? this.id,
+      version: version ?? this.version,
+      templateVersion: templateVersion ?? this.templateVersion,
+      name: name ?? this.name,
+      workstream: workstream ?? this.workstream,
+      author: author ?? this.author,
+      created: created ?? this.created,
+      modified: modified ?? this.modified,
+      status: status ?? this.status,
+      description: description ?? this.description,
+      tags: tags ?? this.tags,
+      riskLevel: riskLevel ?? this.riskLevel,
+      overview: overview ?? this.overview,
+      triggers: triggers ?? this.triggers,
+      equipment: equipment ?? this.equipment,
+      procedures: procedures ?? this.procedures,
+      findings: findings ?? this.findings,
+      cleanup: cleanup ?? this.cleanup,
+      troubleshooting: troubleshooting ?? this.troubleshooting,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<String>(version.value);
+    }
+    if (templateVersion.present) {
+      map['template_version'] = Variable<String>(templateVersion.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (workstream.present) {
+      map['workstream'] = Variable<String>(workstream.value);
+    }
+    if (author.present) {
+      map['author'] = Variable<String>(author.value);
+    }
+    if (created.present) {
+      map['created'] = Variable<DateTime>(created.value);
+    }
+    if (modified.present) {
+      map['modified'] = Variable<DateTime>(modified.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
+    if (riskLevel.present) {
+      map['risk_level'] = Variable<String>(riskLevel.value);
+    }
+    if (overview.present) {
+      map['overview'] = Variable<String>(overview.value);
+    }
+    if (triggers.present) {
+      map['triggers'] = Variable<String>(triggers.value);
+    }
+    if (equipment.present) {
+      map['equipment'] = Variable<String>(equipment.value);
+    }
+    if (procedures.present) {
+      map['procedures'] = Variable<String>(procedures.value);
+    }
+    if (findings.present) {
+      map['findings'] = Variable<String>(findings.value);
+    }
+    if (cleanup.present) {
+      map['cleanup'] = Variable<String>(cleanup.value);
+    }
+    if (troubleshooting.present) {
+      map['troubleshooting'] = Variable<String>(troubleshooting.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MethodologyTemplatesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('templateVersion: $templateVersion, ')
+          ..write('name: $name, ')
+          ..write('workstream: $workstream, ')
+          ..write('author: $author, ')
+          ..write('created: $created, ')
+          ..write('modified: $modified, ')
+          ..write('status: $status, ')
+          ..write('description: $description, ')
+          ..write('tags: $tags, ')
+          ..write('riskLevel: $riskLevel, ')
+          ..write('overview: $overview, ')
+          ..write('triggers: $triggers, ')
+          ..write('equipment: $equipment, ')
+          ..write('procedures: $procedures, ')
+          ..write('findings: $findings, ')
+          ..write('cleanup: $cleanup, ')
+          ..write('troubleshooting: $troubleshooting, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MadnessDatabase extends GeneratedDatabase {
   _$MadnessDatabase(QueryExecutor e) : super(e);
   $MadnessDatabaseManager get managers => $MadnessDatabaseManager(this);
@@ -13514,6 +16844,16 @@ abstract class _$MadnessDatabase extends GeneratedDatabase {
       $AssetRelationshipsTableTable(this);
   late final $AssetPropertyIndexTableTable assetPropertyIndexTable =
       $AssetPropertyIndexTableTable(this);
+  late final $RunInstancesTableTable runInstancesTable =
+      $RunInstancesTableTable(this);
+  late final $HistoryEntriesTableTable historyEntriesTable =
+      $HistoryEntriesTableTable(this);
+  late final $TriggerMatchesTableTable triggerMatchesTable =
+      $TriggerMatchesTableTable(this);
+  late final $ParameterResolutionsTableTable parameterResolutionsTable =
+      $ParameterResolutionsTableTable(this);
+  late final $MethodologyTemplatesTableTable methodologyTemplatesTable =
+      $MethodologyTemplatesTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -13541,7 +16881,12 @@ abstract class _$MadnessDatabase extends GeneratedDatabase {
         methodologyRecommendationsTable,
         assetsTable,
         assetRelationshipsTable,
-        assetPropertyIndexTable
+        assetPropertyIndexTable,
+        runInstancesTable,
+        historyEntriesTable,
+        triggerMatchesTable,
+        parameterResolutionsTable,
+        methodologyTemplatesTable
       ];
 }
 
@@ -13805,6 +17150,40 @@ final class $$ProjectsTableTableReferences
         .filter((f) => f.projectId.id($_item.id));
 
     final cache = $_typedResult.readTableOrNull(_assetsTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$RunInstancesTableTable, List<RunInstanceRow>>
+      _runInstancesTableRefsTable(_$MadnessDatabase db) =>
+          MultiTypedResultKey.fromTable(db.runInstancesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.projectsTable.id, db.runInstancesTable.projectId));
+
+  $$RunInstancesTableTableProcessedTableManager get runInstancesTableRefs {
+    final manager =
+        $$RunInstancesTableTableTableManager($_db, $_db.runInstancesTable)
+            .filter((f) => f.projectId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_runInstancesTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$TriggerMatchesTableTable, List<TriggerMatchRow>>
+      _triggerMatchesTableRefsTable(_$MadnessDatabase db) =>
+          MultiTypedResultKey.fromTable(db.triggerMatchesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.projectsTable.id, db.triggerMatchesTable.projectId));
+
+  $$TriggerMatchesTableTableProcessedTableManager get triggerMatchesTableRefs {
+    final manager =
+        $$TriggerMatchesTableTableTableManager($_db, $_db.triggerMatchesTable)
+            .filter((f) => f.projectId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_triggerMatchesTableRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -14144,6 +17523,48 @@ class $$ProjectsTableTableFilterComposer
             $$AssetsTableTableFilterComposer(
               $db: $db,
               $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> runInstancesTableRefs(
+      Expression<bool> Function($$RunInstancesTableTableFilterComposer f) f) {
+    final $$RunInstancesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.runInstancesTable,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RunInstancesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.runInstancesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> triggerMatchesTableRefs(
+      Expression<bool> Function($$TriggerMatchesTableTableFilterComposer f) f) {
+    final $$TriggerMatchesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.triggerMatchesTable,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TriggerMatchesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.triggerMatchesTable,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -14559,6 +17980,51 @@ class $$ProjectsTableTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> runInstancesTableRefs<T extends Object>(
+      Expression<T> Function($$RunInstancesTableTableAnnotationComposer a) f) {
+    final $$RunInstancesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.runInstancesTable,
+            getReferencedColumn: (t) => t.projectId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$RunInstancesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.runInstancesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> triggerMatchesTableRefs<T extends Object>(
+      Expression<T> Function($$TriggerMatchesTableTableAnnotationComposer a)
+          f) {
+    final $$TriggerMatchesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.triggerMatchesTable,
+            getReferencedColumn: (t) => t.projectId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$TriggerMatchesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.triggerMatchesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$ProjectsTableTableTableManager extends RootTableManager<
@@ -14585,7 +18051,9 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
         bool methodologyExecutionsTableRefs,
         bool discoveredAssetsTableRefs,
         bool methodologyRecommendationsTableRefs,
-        bool assetsTableRefs})> {
+        bool assetsTableRefs,
+        bool runInstancesTableRefs,
+        bool triggerMatchesTableRefs})> {
   $$ProjectsTableTableTableManager(
       _$MadnessDatabase db, $ProjectsTableTable table)
       : super(TableManagerState(
@@ -14696,7 +18164,9 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
               methodologyExecutionsTableRefs = false,
               discoveredAssetsTableRefs = false,
               methodologyRecommendationsTableRefs = false,
-              assetsTableRefs = false}) {
+              assetsTableRefs = false,
+              runInstancesTableRefs = false,
+              triggerMatchesTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -14714,7 +18184,9 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
                 if (discoveredAssetsTableRefs) db.discoveredAssetsTable,
                 if (methodologyRecommendationsTableRefs)
                   db.methodologyRecommendationsTable,
-                if (assetsTableRefs) db.assetsTable
+                if (assetsTableRefs) db.assetsTable,
+                if (runInstancesTableRefs) db.runInstancesTable,
+                if (triggerMatchesTableRefs) db.triggerMatchesTable
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -14874,6 +18346,30 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.projectId == item.id),
+                        typedResults: items),
+                  if (runInstancesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableTableReferences
+                            ._runInstancesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableTableReferences(db, table, p0)
+                                .runInstancesTableRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
+                        typedResults: items),
+                  if (triggerMatchesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableTableReferences
+                            ._triggerMatchesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableTableReferences(db, table, p0)
+                                .triggerMatchesTableRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
                         typedResults: items)
                 ];
               },
@@ -14906,7 +18402,9 @@ typedef $$ProjectsTableTableProcessedTableManager = ProcessedTableManager<
         bool methodologyExecutionsTableRefs,
         bool discoveredAssetsTableRefs,
         bool methodologyRecommendationsTableRefs,
-        bool assetsTableRefs})>;
+        bool assetsTableRefs,
+        bool runInstancesTableRefs,
+        bool triggerMatchesTableRefs})>;
 typedef $$ProjectStatsTableTableCreateCompanionBuilder
     = ProjectStatsTableCompanion Function({
   required String projectId,
@@ -23045,6 +26543,40 @@ final class $$AssetsTableTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$RunInstancesTableTable, List<RunInstanceRow>>
+      _runInstancesTableRefsTable(_$MadnessDatabase db) =>
+          MultiTypedResultKey.fromTable(db.runInstancesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.assetsTable.id, db.runInstancesTable.assetId));
+
+  $$RunInstancesTableTableProcessedTableManager get runInstancesTableRefs {
+    final manager =
+        $$RunInstancesTableTableTableManager($_db, $_db.runInstancesTable)
+            .filter((f) => f.assetId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_runInstancesTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$TriggerMatchesTableTable, List<TriggerMatchRow>>
+      _triggerMatchesTableRefsTable(_$MadnessDatabase db) =>
+          MultiTypedResultKey.fromTable(db.triggerMatchesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.assetsTable.id, db.triggerMatchesTable.assetId));
+
+  $$TriggerMatchesTableTableProcessedTableManager get triggerMatchesTableRefs {
+    final manager =
+        $$TriggerMatchesTableTableTableManager($_db, $_db.triggerMatchesTable)
+            .filter((f) => f.assetId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_triggerMatchesTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$AssetsTableTableFilterComposer
@@ -23160,6 +26692,48 @@ class $$AssetsTableTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> runInstancesTableRefs(
+      Expression<bool> Function($$RunInstancesTableTableFilterComposer f) f) {
+    final $$RunInstancesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.runInstancesTable,
+        getReferencedColumn: (t) => t.assetId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RunInstancesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.runInstancesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> triggerMatchesTableRefs(
+      Expression<bool> Function($$TriggerMatchesTableTableFilterComposer f) f) {
+    final $$TriggerMatchesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.triggerMatchesTable,
+        getReferencedColumn: (t) => t.assetId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TriggerMatchesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.triggerMatchesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -23368,6 +26942,51 @@ class $$AssetsTableTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> runInstancesTableRefs<T extends Object>(
+      Expression<T> Function($$RunInstancesTableTableAnnotationComposer a) f) {
+    final $$RunInstancesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.runInstancesTable,
+            getReferencedColumn: (t) => t.assetId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$RunInstancesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.runInstancesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> triggerMatchesTableRefs<T extends Object>(
+      Expression<T> Function($$TriggerMatchesTableTableAnnotationComposer a)
+          f) {
+    final $$TriggerMatchesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.triggerMatchesTable,
+            getReferencedColumn: (t) => t.assetId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$TriggerMatchesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.triggerMatchesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$AssetsTableTableTableManager extends RootTableManager<
@@ -23382,7 +27001,10 @@ class $$AssetsTableTableTableManager extends RootTableManager<
     (AssetRow, $$AssetsTableTableReferences),
     AssetRow,
     PrefetchHooks Function(
-        {bool projectId, bool assetPropertyIndexTableRefs})> {
+        {bool projectId,
+        bool assetPropertyIndexTableRefs,
+        bool runInstancesTableRefs,
+        bool triggerMatchesTableRefs})> {
   $$AssetsTableTableTableManager(_$MadnessDatabase db, $AssetsTableTable table)
       : super(TableManagerState(
           db: db,
@@ -23492,11 +27114,16 @@ class $$AssetsTableTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {projectId = false, assetPropertyIndexTableRefs = false}) {
+              {projectId = false,
+              assetPropertyIndexTableRefs = false,
+              runInstancesTableRefs = false,
+              triggerMatchesTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (assetPropertyIndexTableRefs) db.assetPropertyIndexTable
+                if (assetPropertyIndexTableRefs) db.assetPropertyIndexTable,
+                if (runInstancesTableRefs) db.runInstancesTable,
+                if (triggerMatchesTableRefs) db.triggerMatchesTable
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -23537,6 +27164,30 @@ class $$AssetsTableTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem: (item,
                                 referencedItems) =>
                             referencedItems.where((e) => e.assetId == item.id),
+                        typedResults: items),
+                  if (runInstancesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$AssetsTableTableReferences
+                            ._runInstancesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AssetsTableTableReferences(db, table, p0)
+                                .runInstancesTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.assetId == item.id),
+                        typedResults: items),
+                  if (triggerMatchesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$AssetsTableTableReferences
+                            ._triggerMatchesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AssetsTableTableReferences(db, table, p0)
+                                .triggerMatchesTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.assetId == item.id),
                         typedResults: items)
                 ];
               },
@@ -23556,7 +27207,11 @@ typedef $$AssetsTableTableProcessedTableManager = ProcessedTableManager<
     $$AssetsTableTableUpdateCompanionBuilder,
     (AssetRow, $$AssetsTableTableReferences),
     AssetRow,
-    PrefetchHooks Function({bool projectId, bool assetPropertyIndexTableRefs})>;
+    PrefetchHooks Function(
+        {bool projectId,
+        bool assetPropertyIndexTableRefs,
+        bool runInstancesTableRefs,
+        bool triggerMatchesTableRefs})>;
 typedef $$AssetRelationshipsTableTableCreateCompanionBuilder
     = AssetRelationshipsTableCompanion Function({
   required String parentAssetId,
@@ -24200,6 +27855,2283 @@ typedef $$AssetPropertyIndexTableTableProcessedTableManager
         (AssetPropertyIndexRow, $$AssetPropertyIndexTableTableReferences),
         AssetPropertyIndexRow,
         PrefetchHooks Function({bool assetId})>;
+typedef $$RunInstancesTableTableCreateCompanionBuilder
+    = RunInstancesTableCompanion Function({
+  required String runId,
+  required String projectId,
+  required String templateId,
+  required String templateVersion,
+  required String triggerId,
+  required String assetId,
+  required String matchedValues,
+  required String parameters,
+  required String status,
+  required DateTime createdAt,
+  required String createdBy,
+  Value<DateTime?> updatedAt,
+  required String evidenceIds,
+  required String findingIds,
+  Value<String?> notes,
+  Value<int> priority,
+  Value<String> tags,
+  Value<int> rowid,
+});
+typedef $$RunInstancesTableTableUpdateCompanionBuilder
+    = RunInstancesTableCompanion Function({
+  Value<String> runId,
+  Value<String> projectId,
+  Value<String> templateId,
+  Value<String> templateVersion,
+  Value<String> triggerId,
+  Value<String> assetId,
+  Value<String> matchedValues,
+  Value<String> parameters,
+  Value<String> status,
+  Value<DateTime> createdAt,
+  Value<String> createdBy,
+  Value<DateTime?> updatedAt,
+  Value<String> evidenceIds,
+  Value<String> findingIds,
+  Value<String?> notes,
+  Value<int> priority,
+  Value<String> tags,
+  Value<int> rowid,
+});
+
+final class $$RunInstancesTableTableReferences extends BaseReferences<
+    _$MadnessDatabase, $RunInstancesTableTable, RunInstanceRow> {
+  $$RunInstancesTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTableTable _projectIdTable(_$MadnessDatabase db) =>
+      db.projectsTable.createAlias($_aliasNameGenerator(
+          db.runInstancesTable.projectId, db.projectsTable.id));
+
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
+    final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
+        .filter((f) => f.id($_item.projectId!));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AssetsTableTable _assetIdTable(_$MadnessDatabase db) =>
+      db.assetsTable.createAlias($_aliasNameGenerator(
+          db.runInstancesTable.assetId, db.assetsTable.id));
+
+  $$AssetsTableTableProcessedTableManager? get assetId {
+    if ($_item.assetId == null) return null;
+    final manager = $$AssetsTableTableTableManager($_db, $_db.assetsTable)
+        .filter((f) => f.id($_item.assetId!));
+    final item = $_typedResult.readTableOrNull(_assetIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$HistoryEntriesTableTable, List<HistoryEntryRow>>
+      _historyEntriesTableRefsTable(_$MadnessDatabase db) =>
+          MultiTypedResultKey.fromTable(db.historyEntriesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.runInstancesTable.runId, db.historyEntriesTable.runId));
+
+  $$HistoryEntriesTableTableProcessedTableManager get historyEntriesTableRefs {
+    final manager =
+        $$HistoryEntriesTableTableTableManager($_db, $_db.historyEntriesTable)
+            .filter((f) => f.runId.runId($_item.runId));
+
+    final cache =
+        $_typedResult.readTableOrNull(_historyEntriesTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ParameterResolutionsTableTable,
+      List<ParameterResolutionRow>> _parameterResolutionsTableRefsTable(
+          _$MadnessDatabase db) =>
+      MultiTypedResultKey.fromTable(db.parameterResolutionsTable,
+          aliasName: $_aliasNameGenerator(
+              db.runInstancesTable.runId, db.parameterResolutionsTable.runId));
+
+  $$ParameterResolutionsTableTableProcessedTableManager
+      get parameterResolutionsTableRefs {
+    final manager = $$ParameterResolutionsTableTableTableManager(
+            $_db, $_db.parameterResolutionsTable)
+        .filter((f) => f.runId.runId($_item.runId));
+
+    final cache = $_typedResult
+        .readTableOrNull(_parameterResolutionsTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$RunInstancesTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $RunInstancesTableTable> {
+  $$RunInstancesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get runId => $composableBuilder(
+      column: $table.runId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get templateId => $composableBuilder(
+      column: $table.templateId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get templateVersion => $composableBuilder(
+      column: $table.templateVersion,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get triggerId => $composableBuilder(
+      column: $table.triggerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get matchedValues => $composableBuilder(
+      column: $table.matchedValues, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get parameters => $composableBuilder(
+      column: $table.parameters, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+      column: $table.createdBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get evidenceIds => $composableBuilder(
+      column: $table.evidenceIds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get findingIds => $composableBuilder(
+      column: $table.findingIds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tags => $composableBuilder(
+      column: $table.tags, builder: (column) => ColumnFilters(column));
+
+  $$ProjectsTableTableFilterComposer get projectId {
+    final $$ProjectsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AssetsTableTableFilterComposer get assetId {
+    final $$AssetsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> historyEntriesTableRefs(
+      Expression<bool> Function($$HistoryEntriesTableTableFilterComposer f) f) {
+    final $$HistoryEntriesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.runId,
+        referencedTable: $db.historyEntriesTable,
+        getReferencedColumn: (t) => t.runId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$HistoryEntriesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.historyEntriesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> parameterResolutionsTableRefs(
+      Expression<bool> Function(
+              $$ParameterResolutionsTableTableFilterComposer f)
+          f) {
+    final $$ParameterResolutionsTableTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.runId,
+            referencedTable: $db.parameterResolutionsTable,
+            getReferencedColumn: (t) => t.runId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ParameterResolutionsTableTableFilterComposer(
+                  $db: $db,
+                  $table: $db.parameterResolutionsTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$RunInstancesTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $RunInstancesTableTable> {
+  $$RunInstancesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get runId => $composableBuilder(
+      column: $table.runId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get templateId => $composableBuilder(
+      column: $table.templateId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get templateVersion => $composableBuilder(
+      column: $table.templateVersion,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get triggerId => $composableBuilder(
+      column: $table.triggerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get matchedValues => $composableBuilder(
+      column: $table.matchedValues,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get parameters => $composableBuilder(
+      column: $table.parameters, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+      column: $table.createdBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get evidenceIds => $composableBuilder(
+      column: $table.evidenceIds, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get findingIds => $composableBuilder(
+      column: $table.findingIds, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+      column: $table.tags, builder: (column) => ColumnOrderings(column));
+
+  $$ProjectsTableTableOrderingComposer get projectId {
+    final $$ProjectsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AssetsTableTableOrderingComposer get assetId {
+    final $$AssetsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RunInstancesTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $RunInstancesTableTable> {
+  $$RunInstancesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get runId =>
+      $composableBuilder(column: $table.runId, builder: (column) => column);
+
+  GeneratedColumn<String> get templateId => $composableBuilder(
+      column: $table.templateId, builder: (column) => column);
+
+  GeneratedColumn<String> get templateVersion => $composableBuilder(
+      column: $table.templateVersion, builder: (column) => column);
+
+  GeneratedColumn<String> get triggerId =>
+      $composableBuilder(column: $table.triggerId, builder: (column) => column);
+
+  GeneratedColumn<String> get matchedValues => $composableBuilder(
+      column: $table.matchedValues, builder: (column) => column);
+
+  GeneratedColumn<String> get parameters => $composableBuilder(
+      column: $table.parameters, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get evidenceIds => $composableBuilder(
+      column: $table.evidenceIds, builder: (column) => column);
+
+  GeneratedColumn<String> get findingIds => $composableBuilder(
+      column: $table.findingIds, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  $$ProjectsTableTableAnnotationComposer get projectId {
+    final $$ProjectsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AssetsTableTableAnnotationComposer get assetId {
+    final $$AssetsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> historyEntriesTableRefs<T extends Object>(
+      Expression<T> Function($$HistoryEntriesTableTableAnnotationComposer a)
+          f) {
+    final $$HistoryEntriesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.runId,
+            referencedTable: $db.historyEntriesTable,
+            getReferencedColumn: (t) => t.runId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$HistoryEntriesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.historyEntriesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> parameterResolutionsTableRefs<T extends Object>(
+      Expression<T> Function(
+              $$ParameterResolutionsTableTableAnnotationComposer a)
+          f) {
+    final $$ParameterResolutionsTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.runId,
+            referencedTable: $db.parameterResolutionsTable,
+            getReferencedColumn: (t) => t.runId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ParameterResolutionsTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.parameterResolutionsTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$RunInstancesTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $RunInstancesTableTable,
+    RunInstanceRow,
+    $$RunInstancesTableTableFilterComposer,
+    $$RunInstancesTableTableOrderingComposer,
+    $$RunInstancesTableTableAnnotationComposer,
+    $$RunInstancesTableTableCreateCompanionBuilder,
+    $$RunInstancesTableTableUpdateCompanionBuilder,
+    (RunInstanceRow, $$RunInstancesTableTableReferences),
+    RunInstanceRow,
+    PrefetchHooks Function(
+        {bool projectId,
+        bool assetId,
+        bool historyEntriesTableRefs,
+        bool parameterResolutionsTableRefs})> {
+  $$RunInstancesTableTableTableManager(
+      _$MadnessDatabase db, $RunInstancesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RunInstancesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RunInstancesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RunInstancesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> runId = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<String> templateId = const Value.absent(),
+            Value<String> templateVersion = const Value.absent(),
+            Value<String> triggerId = const Value.absent(),
+            Value<String> assetId = const Value.absent(),
+            Value<String> matchedValues = const Value.absent(),
+            Value<String> parameters = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<String> createdBy = const Value.absent(),
+            Value<DateTime?> updatedAt = const Value.absent(),
+            Value<String> evidenceIds = const Value.absent(),
+            Value<String> findingIds = const Value.absent(),
+            Value<String?> notes = const Value.absent(),
+            Value<int> priority = const Value.absent(),
+            Value<String> tags = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RunInstancesTableCompanion(
+            runId: runId,
+            projectId: projectId,
+            templateId: templateId,
+            templateVersion: templateVersion,
+            triggerId: triggerId,
+            assetId: assetId,
+            matchedValues: matchedValues,
+            parameters: parameters,
+            status: status,
+            createdAt: createdAt,
+            createdBy: createdBy,
+            updatedAt: updatedAt,
+            evidenceIds: evidenceIds,
+            findingIds: findingIds,
+            notes: notes,
+            priority: priority,
+            tags: tags,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String runId,
+            required String projectId,
+            required String templateId,
+            required String templateVersion,
+            required String triggerId,
+            required String assetId,
+            required String matchedValues,
+            required String parameters,
+            required String status,
+            required DateTime createdAt,
+            required String createdBy,
+            Value<DateTime?> updatedAt = const Value.absent(),
+            required String evidenceIds,
+            required String findingIds,
+            Value<String?> notes = const Value.absent(),
+            Value<int> priority = const Value.absent(),
+            Value<String> tags = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RunInstancesTableCompanion.insert(
+            runId: runId,
+            projectId: projectId,
+            templateId: templateId,
+            templateVersion: templateVersion,
+            triggerId: triggerId,
+            assetId: assetId,
+            matchedValues: matchedValues,
+            parameters: parameters,
+            status: status,
+            createdAt: createdAt,
+            createdBy: createdBy,
+            updatedAt: updatedAt,
+            evidenceIds: evidenceIds,
+            findingIds: findingIds,
+            notes: notes,
+            priority: priority,
+            tags: tags,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$RunInstancesTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {projectId = false,
+              assetId = false,
+              historyEntriesTableRefs = false,
+              parameterResolutionsTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (historyEntriesTableRefs) db.historyEntriesTable,
+                if (parameterResolutionsTableRefs) db.parameterResolutionsTable
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable:
+                        $$RunInstancesTableTableReferences._projectIdTable(db),
+                    referencedColumn: $$RunInstancesTableTableReferences
+                        ._projectIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (assetId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.assetId,
+                    referencedTable:
+                        $$RunInstancesTableTableReferences._assetIdTable(db),
+                    referencedColumn:
+                        $$RunInstancesTableTableReferences._assetIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (historyEntriesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$RunInstancesTableTableReferences
+                            ._historyEntriesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RunInstancesTableTableReferences(db, table, p0)
+                                .historyEntriesTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.runId == item.runId),
+                        typedResults: items),
+                  if (parameterResolutionsTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$RunInstancesTableTableReferences
+                            ._parameterResolutionsTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RunInstancesTableTableReferences(db, table, p0)
+                                .parameterResolutionsTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.runId == item.runId),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$RunInstancesTableTableProcessedTableManager = ProcessedTableManager<
+    _$MadnessDatabase,
+    $RunInstancesTableTable,
+    RunInstanceRow,
+    $$RunInstancesTableTableFilterComposer,
+    $$RunInstancesTableTableOrderingComposer,
+    $$RunInstancesTableTableAnnotationComposer,
+    $$RunInstancesTableTableCreateCompanionBuilder,
+    $$RunInstancesTableTableUpdateCompanionBuilder,
+    (RunInstanceRow, $$RunInstancesTableTableReferences),
+    RunInstanceRow,
+    PrefetchHooks Function(
+        {bool projectId,
+        bool assetId,
+        bool historyEntriesTableRefs,
+        bool parameterResolutionsTableRefs})>;
+typedef $$HistoryEntriesTableTableCreateCompanionBuilder
+    = HistoryEntriesTableCompanion Function({
+  required String id,
+  required String runId,
+  required DateTime timestamp,
+  required String performedBy,
+  required String action,
+  required String description,
+  Value<String?> previousValue,
+  Value<String?> newValue,
+  Value<String> metadata,
+  Value<int> rowid,
+});
+typedef $$HistoryEntriesTableTableUpdateCompanionBuilder
+    = HistoryEntriesTableCompanion Function({
+  Value<String> id,
+  Value<String> runId,
+  Value<DateTime> timestamp,
+  Value<String> performedBy,
+  Value<String> action,
+  Value<String> description,
+  Value<String?> previousValue,
+  Value<String?> newValue,
+  Value<String> metadata,
+  Value<int> rowid,
+});
+
+final class $$HistoryEntriesTableTableReferences extends BaseReferences<
+    _$MadnessDatabase, $HistoryEntriesTableTable, HistoryEntryRow> {
+  $$HistoryEntriesTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $RunInstancesTableTable _runIdTable(_$MadnessDatabase db) =>
+      db.runInstancesTable.createAlias($_aliasNameGenerator(
+          db.historyEntriesTable.runId, db.runInstancesTable.runId));
+
+  $$RunInstancesTableTableProcessedTableManager? get runId {
+    if ($_item.runId == null) return null;
+    final manager =
+        $$RunInstancesTableTableTableManager($_db, $_db.runInstancesTable)
+            .filter((f) => f.runId($_item.runId!));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$HistoryEntriesTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $HistoryEntriesTableTable> {
+  $$HistoryEntriesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+      column: $table.timestamp, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get performedBy => $composableBuilder(
+      column: $table.performedBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get action => $composableBuilder(
+      column: $table.action, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get previousValue => $composableBuilder(
+      column: $table.previousValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get newValue => $composableBuilder(
+      column: $table.newValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnFilters(column));
+
+  $$RunInstancesTableTableFilterComposer get runId {
+    final $$RunInstancesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.runId,
+        referencedTable: $db.runInstancesTable,
+        getReferencedColumn: (t) => t.runId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RunInstancesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.runInstancesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$HistoryEntriesTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $HistoryEntriesTableTable> {
+  $$HistoryEntriesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+      column: $table.timestamp, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get performedBy => $composableBuilder(
+      column: $table.performedBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get action => $composableBuilder(
+      column: $table.action, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get previousValue => $composableBuilder(
+      column: $table.previousValue,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get newValue => $composableBuilder(
+      column: $table.newValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnOrderings(column));
+
+  $$RunInstancesTableTableOrderingComposer get runId {
+    final $$RunInstancesTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.runId,
+        referencedTable: $db.runInstancesTable,
+        getReferencedColumn: (t) => t.runId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RunInstancesTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.runInstancesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$HistoryEntriesTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $HistoryEntriesTableTable> {
+  $$HistoryEntriesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get performedBy => $composableBuilder(
+      column: $table.performedBy, builder: (column) => column);
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get previousValue => $composableBuilder(
+      column: $table.previousValue, builder: (column) => column);
+
+  GeneratedColumn<String> get newValue =>
+      $composableBuilder(column: $table.newValue, builder: (column) => column);
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  $$RunInstancesTableTableAnnotationComposer get runId {
+    final $$RunInstancesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.runId,
+            referencedTable: $db.runInstancesTable,
+            getReferencedColumn: (t) => t.runId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$RunInstancesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.runInstancesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$HistoryEntriesTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $HistoryEntriesTableTable,
+    HistoryEntryRow,
+    $$HistoryEntriesTableTableFilterComposer,
+    $$HistoryEntriesTableTableOrderingComposer,
+    $$HistoryEntriesTableTableAnnotationComposer,
+    $$HistoryEntriesTableTableCreateCompanionBuilder,
+    $$HistoryEntriesTableTableUpdateCompanionBuilder,
+    (HistoryEntryRow, $$HistoryEntriesTableTableReferences),
+    HistoryEntryRow,
+    PrefetchHooks Function({bool runId})> {
+  $$HistoryEntriesTableTableTableManager(
+      _$MadnessDatabase db, $HistoryEntriesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HistoryEntriesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HistoryEntriesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HistoryEntriesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> runId = const Value.absent(),
+            Value<DateTime> timestamp = const Value.absent(),
+            Value<String> performedBy = const Value.absent(),
+            Value<String> action = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String?> previousValue = const Value.absent(),
+            Value<String?> newValue = const Value.absent(),
+            Value<String> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HistoryEntriesTableCompanion(
+            id: id,
+            runId: runId,
+            timestamp: timestamp,
+            performedBy: performedBy,
+            action: action,
+            description: description,
+            previousValue: previousValue,
+            newValue: newValue,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String runId,
+            required DateTime timestamp,
+            required String performedBy,
+            required String action,
+            required String description,
+            Value<String?> previousValue = const Value.absent(),
+            Value<String?> newValue = const Value.absent(),
+            Value<String> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HistoryEntriesTableCompanion.insert(
+            id: id,
+            runId: runId,
+            timestamp: timestamp,
+            performedBy: performedBy,
+            action: action,
+            description: description,
+            previousValue: previousValue,
+            newValue: newValue,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$HistoryEntriesTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({runId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (runId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.runId,
+                    referencedTable:
+                        $$HistoryEntriesTableTableReferences._runIdTable(db),
+                    referencedColumn: $$HistoryEntriesTableTableReferences
+                        ._runIdTable(db)
+                        .runId,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$HistoryEntriesTableTableProcessedTableManager = ProcessedTableManager<
+    _$MadnessDatabase,
+    $HistoryEntriesTableTable,
+    HistoryEntryRow,
+    $$HistoryEntriesTableTableFilterComposer,
+    $$HistoryEntriesTableTableOrderingComposer,
+    $$HistoryEntriesTableTableAnnotationComposer,
+    $$HistoryEntriesTableTableCreateCompanionBuilder,
+    $$HistoryEntriesTableTableUpdateCompanionBuilder,
+    (HistoryEntryRow, $$HistoryEntriesTableTableReferences),
+    HistoryEntryRow,
+    PrefetchHooks Function({bool runId})>;
+typedef $$TriggerMatchesTableTableCreateCompanionBuilder
+    = TriggerMatchesTableCompanion Function({
+  required String id,
+  required String triggerId,
+  required String templateId,
+  required String assetId,
+  required String projectId,
+  required bool matched,
+  required String extractedValues,
+  Value<double> confidence,
+  required DateTime evaluatedAt,
+  Value<int> priority,
+  Value<String?> error,
+  Value<String> debugInfo,
+  Value<int> rowid,
+});
+typedef $$TriggerMatchesTableTableUpdateCompanionBuilder
+    = TriggerMatchesTableCompanion Function({
+  Value<String> id,
+  Value<String> triggerId,
+  Value<String> templateId,
+  Value<String> assetId,
+  Value<String> projectId,
+  Value<bool> matched,
+  Value<String> extractedValues,
+  Value<double> confidence,
+  Value<DateTime> evaluatedAt,
+  Value<int> priority,
+  Value<String?> error,
+  Value<String> debugInfo,
+  Value<int> rowid,
+});
+
+final class $$TriggerMatchesTableTableReferences extends BaseReferences<
+    _$MadnessDatabase, $TriggerMatchesTableTable, TriggerMatchRow> {
+  $$TriggerMatchesTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AssetsTableTable _assetIdTable(_$MadnessDatabase db) =>
+      db.assetsTable.createAlias($_aliasNameGenerator(
+          db.triggerMatchesTable.assetId, db.assetsTable.id));
+
+  $$AssetsTableTableProcessedTableManager? get assetId {
+    if ($_item.assetId == null) return null;
+    final manager = $$AssetsTableTableTableManager($_db, $_db.assetsTable)
+        .filter((f) => f.id($_item.assetId!));
+    final item = $_typedResult.readTableOrNull(_assetIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProjectsTableTable _projectIdTable(_$MadnessDatabase db) =>
+      db.projectsTable.createAlias($_aliasNameGenerator(
+          db.triggerMatchesTable.projectId, db.projectsTable.id));
+
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
+    final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
+        .filter((f) => f.id($_item.projectId!));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$TriggerMatchesTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $TriggerMatchesTableTable> {
+  $$TriggerMatchesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get triggerId => $composableBuilder(
+      column: $table.triggerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get templateId => $composableBuilder(
+      column: $table.templateId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get matched => $composableBuilder(
+      column: $table.matched, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get extractedValues => $composableBuilder(
+      column: $table.extractedValues,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get confidence => $composableBuilder(
+      column: $table.confidence, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get evaluatedAt => $composableBuilder(
+      column: $table.evaluatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get error => $composableBuilder(
+      column: $table.error, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get debugInfo => $composableBuilder(
+      column: $table.debugInfo, builder: (column) => ColumnFilters(column));
+
+  $$AssetsTableTableFilterComposer get assetId {
+    final $$AssetsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProjectsTableTableFilterComposer get projectId {
+    final $$ProjectsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TriggerMatchesTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $TriggerMatchesTableTable> {
+  $$TriggerMatchesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get triggerId => $composableBuilder(
+      column: $table.triggerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get templateId => $composableBuilder(
+      column: $table.templateId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get matched => $composableBuilder(
+      column: $table.matched, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get extractedValues => $composableBuilder(
+      column: $table.extractedValues,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get confidence => $composableBuilder(
+      column: $table.confidence, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get evaluatedAt => $composableBuilder(
+      column: $table.evaluatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get error => $composableBuilder(
+      column: $table.error, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get debugInfo => $composableBuilder(
+      column: $table.debugInfo, builder: (column) => ColumnOrderings(column));
+
+  $$AssetsTableTableOrderingComposer get assetId {
+    final $$AssetsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProjectsTableTableOrderingComposer get projectId {
+    final $$ProjectsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TriggerMatchesTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $TriggerMatchesTableTable> {
+  $$TriggerMatchesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get triggerId =>
+      $composableBuilder(column: $table.triggerId, builder: (column) => column);
+
+  GeneratedColumn<String> get templateId => $composableBuilder(
+      column: $table.templateId, builder: (column) => column);
+
+  GeneratedColumn<bool> get matched =>
+      $composableBuilder(column: $table.matched, builder: (column) => column);
+
+  GeneratedColumn<String> get extractedValues => $composableBuilder(
+      column: $table.extractedValues, builder: (column) => column);
+
+  GeneratedColumn<double> get confidence => $composableBuilder(
+      column: $table.confidence, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get evaluatedAt => $composableBuilder(
+      column: $table.evaluatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get error =>
+      $composableBuilder(column: $table.error, builder: (column) => column);
+
+  GeneratedColumn<String> get debugInfo =>
+      $composableBuilder(column: $table.debugInfo, builder: (column) => column);
+
+  $$AssetsTableTableAnnotationComposer get assetId {
+    final $$AssetsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProjectsTableTableAnnotationComposer get projectId {
+    final $$ProjectsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TriggerMatchesTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $TriggerMatchesTableTable,
+    TriggerMatchRow,
+    $$TriggerMatchesTableTableFilterComposer,
+    $$TriggerMatchesTableTableOrderingComposer,
+    $$TriggerMatchesTableTableAnnotationComposer,
+    $$TriggerMatchesTableTableCreateCompanionBuilder,
+    $$TriggerMatchesTableTableUpdateCompanionBuilder,
+    (TriggerMatchRow, $$TriggerMatchesTableTableReferences),
+    TriggerMatchRow,
+    PrefetchHooks Function({bool assetId, bool projectId})> {
+  $$TriggerMatchesTableTableTableManager(
+      _$MadnessDatabase db, $TriggerMatchesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TriggerMatchesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TriggerMatchesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TriggerMatchesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> triggerId = const Value.absent(),
+            Value<String> templateId = const Value.absent(),
+            Value<String> assetId = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<bool> matched = const Value.absent(),
+            Value<String> extractedValues = const Value.absent(),
+            Value<double> confidence = const Value.absent(),
+            Value<DateTime> evaluatedAt = const Value.absent(),
+            Value<int> priority = const Value.absent(),
+            Value<String?> error = const Value.absent(),
+            Value<String> debugInfo = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TriggerMatchesTableCompanion(
+            id: id,
+            triggerId: triggerId,
+            templateId: templateId,
+            assetId: assetId,
+            projectId: projectId,
+            matched: matched,
+            extractedValues: extractedValues,
+            confidence: confidence,
+            evaluatedAt: evaluatedAt,
+            priority: priority,
+            error: error,
+            debugInfo: debugInfo,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String triggerId,
+            required String templateId,
+            required String assetId,
+            required String projectId,
+            required bool matched,
+            required String extractedValues,
+            Value<double> confidence = const Value.absent(),
+            required DateTime evaluatedAt,
+            Value<int> priority = const Value.absent(),
+            Value<String?> error = const Value.absent(),
+            Value<String> debugInfo = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TriggerMatchesTableCompanion.insert(
+            id: id,
+            triggerId: triggerId,
+            templateId: templateId,
+            assetId: assetId,
+            projectId: projectId,
+            matched: matched,
+            extractedValues: extractedValues,
+            confidence: confidence,
+            evaluatedAt: evaluatedAt,
+            priority: priority,
+            error: error,
+            debugInfo: debugInfo,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$TriggerMatchesTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({assetId = false, projectId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (assetId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.assetId,
+                    referencedTable:
+                        $$TriggerMatchesTableTableReferences._assetIdTable(db),
+                    referencedColumn: $$TriggerMatchesTableTableReferences
+                        ._assetIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable: $$TriggerMatchesTableTableReferences
+                        ._projectIdTable(db),
+                    referencedColumn: $$TriggerMatchesTableTableReferences
+                        ._projectIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$TriggerMatchesTableTableProcessedTableManager = ProcessedTableManager<
+    _$MadnessDatabase,
+    $TriggerMatchesTableTable,
+    TriggerMatchRow,
+    $$TriggerMatchesTableTableFilterComposer,
+    $$TriggerMatchesTableTableOrderingComposer,
+    $$TriggerMatchesTableTableAnnotationComposer,
+    $$TriggerMatchesTableTableCreateCompanionBuilder,
+    $$TriggerMatchesTableTableUpdateCompanionBuilder,
+    (TriggerMatchRow, $$TriggerMatchesTableTableReferences),
+    TriggerMatchRow,
+    PrefetchHooks Function({bool assetId, bool projectId})>;
+typedef $$ParameterResolutionsTableTableCreateCompanionBuilder
+    = ParameterResolutionsTableCompanion Function({
+  required String id,
+  required String runId,
+  required String name,
+  required String type,
+  required String value,
+  required String source,
+  Value<bool> required,
+  Value<bool> resolved,
+  Value<String?> error,
+  required DateTime resolvedAt,
+  Value<String> metadata,
+  Value<int> rowid,
+});
+typedef $$ParameterResolutionsTableTableUpdateCompanionBuilder
+    = ParameterResolutionsTableCompanion Function({
+  Value<String> id,
+  Value<String> runId,
+  Value<String> name,
+  Value<String> type,
+  Value<String> value,
+  Value<String> source,
+  Value<bool> required,
+  Value<bool> resolved,
+  Value<String?> error,
+  Value<DateTime> resolvedAt,
+  Value<String> metadata,
+  Value<int> rowid,
+});
+
+final class $$ParameterResolutionsTableTableReferences extends BaseReferences<
+    _$MadnessDatabase,
+    $ParameterResolutionsTableTable,
+    ParameterResolutionRow> {
+  $$ParameterResolutionsTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $RunInstancesTableTable _runIdTable(_$MadnessDatabase db) =>
+      db.runInstancesTable.createAlias($_aliasNameGenerator(
+          db.parameterResolutionsTable.runId, db.runInstancesTable.runId));
+
+  $$RunInstancesTableTableProcessedTableManager? get runId {
+    if ($_item.runId == null) return null;
+    final manager =
+        $$RunInstancesTableTableTableManager($_db, $_db.runInstancesTable)
+            .filter((f) => f.runId($_item.runId!));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ParameterResolutionsTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $ParameterResolutionsTableTable> {
+  $$ParameterResolutionsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get value => $composableBuilder(
+      column: $table.value, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get required => $composableBuilder(
+      column: $table.required, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get resolved => $composableBuilder(
+      column: $table.resolved, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get error => $composableBuilder(
+      column: $table.error, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+      column: $table.resolvedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnFilters(column));
+
+  $$RunInstancesTableTableFilterComposer get runId {
+    final $$RunInstancesTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.runId,
+        referencedTable: $db.runInstancesTable,
+        getReferencedColumn: (t) => t.runId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RunInstancesTableTableFilterComposer(
+              $db: $db,
+              $table: $db.runInstancesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ParameterResolutionsTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $ParameterResolutionsTableTable> {
+  $$ParameterResolutionsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get value => $composableBuilder(
+      column: $table.value, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get required => $composableBuilder(
+      column: $table.required, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get resolved => $composableBuilder(
+      column: $table.resolved, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get error => $composableBuilder(
+      column: $table.error, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+      column: $table.resolvedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnOrderings(column));
+
+  $$RunInstancesTableTableOrderingComposer get runId {
+    final $$RunInstancesTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.runId,
+        referencedTable: $db.runInstancesTable,
+        getReferencedColumn: (t) => t.runId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RunInstancesTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.runInstancesTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ParameterResolutionsTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $ParameterResolutionsTableTable> {
+  $$ParameterResolutionsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<bool> get required =>
+      $composableBuilder(column: $table.required, builder: (column) => column);
+
+  GeneratedColumn<bool> get resolved =>
+      $composableBuilder(column: $table.resolved, builder: (column) => column);
+
+  GeneratedColumn<String> get error =>
+      $composableBuilder(column: $table.error, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+      column: $table.resolvedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  $$RunInstancesTableTableAnnotationComposer get runId {
+    final $$RunInstancesTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.runId,
+            referencedTable: $db.runInstancesTable,
+            getReferencedColumn: (t) => t.runId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$RunInstancesTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.runInstancesTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$ParameterResolutionsTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $ParameterResolutionsTableTable,
+    ParameterResolutionRow,
+    $$ParameterResolutionsTableTableFilterComposer,
+    $$ParameterResolutionsTableTableOrderingComposer,
+    $$ParameterResolutionsTableTableAnnotationComposer,
+    $$ParameterResolutionsTableTableCreateCompanionBuilder,
+    $$ParameterResolutionsTableTableUpdateCompanionBuilder,
+    (ParameterResolutionRow, $$ParameterResolutionsTableTableReferences),
+    ParameterResolutionRow,
+    PrefetchHooks Function({bool runId})> {
+  $$ParameterResolutionsTableTableTableManager(
+      _$MadnessDatabase db, $ParameterResolutionsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ParameterResolutionsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ParameterResolutionsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ParameterResolutionsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> runId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> value = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<bool> required = const Value.absent(),
+            Value<bool> resolved = const Value.absent(),
+            Value<String?> error = const Value.absent(),
+            Value<DateTime> resolvedAt = const Value.absent(),
+            Value<String> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ParameterResolutionsTableCompanion(
+            id: id,
+            runId: runId,
+            name: name,
+            type: type,
+            value: value,
+            source: source,
+            required: required,
+            resolved: resolved,
+            error: error,
+            resolvedAt: resolvedAt,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String runId,
+            required String name,
+            required String type,
+            required String value,
+            required String source,
+            Value<bool> required = const Value.absent(),
+            Value<bool> resolved = const Value.absent(),
+            Value<String?> error = const Value.absent(),
+            required DateTime resolvedAt,
+            Value<String> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ParameterResolutionsTableCompanion.insert(
+            id: id,
+            runId: runId,
+            name: name,
+            type: type,
+            value: value,
+            source: source,
+            required: required,
+            resolved: resolved,
+            error: error,
+            resolvedAt: resolvedAt,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ParameterResolutionsTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({runId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (runId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.runId,
+                    referencedTable: $$ParameterResolutionsTableTableReferences
+                        ._runIdTable(db),
+                    referencedColumn: $$ParameterResolutionsTableTableReferences
+                        ._runIdTable(db)
+                        .runId,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ParameterResolutionsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$MadnessDatabase,
+        $ParameterResolutionsTableTable,
+        ParameterResolutionRow,
+        $$ParameterResolutionsTableTableFilterComposer,
+        $$ParameterResolutionsTableTableOrderingComposer,
+        $$ParameterResolutionsTableTableAnnotationComposer,
+        $$ParameterResolutionsTableTableCreateCompanionBuilder,
+        $$ParameterResolutionsTableTableUpdateCompanionBuilder,
+        (ParameterResolutionRow, $$ParameterResolutionsTableTableReferences),
+        ParameterResolutionRow,
+        PrefetchHooks Function({bool runId})>;
+typedef $$MethodologyTemplatesTableTableCreateCompanionBuilder
+    = MethodologyTemplatesTableCompanion Function({
+  required String id,
+  required String version,
+  required String templateVersion,
+  required String name,
+  required String workstream,
+  required String author,
+  required DateTime created,
+  required DateTime modified,
+  required String status,
+  required String description,
+  required String tags,
+  required String riskLevel,
+  required String overview,
+  required String triggers,
+  required String equipment,
+  required String procedures,
+  required String findings,
+  required String cleanup,
+  required String troubleshooting,
+  Value<int> rowid,
+});
+typedef $$MethodologyTemplatesTableTableUpdateCompanionBuilder
+    = MethodologyTemplatesTableCompanion Function({
+  Value<String> id,
+  Value<String> version,
+  Value<String> templateVersion,
+  Value<String> name,
+  Value<String> workstream,
+  Value<String> author,
+  Value<DateTime> created,
+  Value<DateTime> modified,
+  Value<String> status,
+  Value<String> description,
+  Value<String> tags,
+  Value<String> riskLevel,
+  Value<String> overview,
+  Value<String> triggers,
+  Value<String> equipment,
+  Value<String> procedures,
+  Value<String> findings,
+  Value<String> cleanup,
+  Value<String> troubleshooting,
+  Value<int> rowid,
+});
+
+class $$MethodologyTemplatesTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $MethodologyTemplatesTableTable> {
+  $$MethodologyTemplatesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get templateVersion => $composableBuilder(
+      column: $table.templateVersion,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get workstream => $composableBuilder(
+      column: $table.workstream, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get author => $composableBuilder(
+      column: $table.author, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get created => $composableBuilder(
+      column: $table.created, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get modified => $composableBuilder(
+      column: $table.modified, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tags => $composableBuilder(
+      column: $table.tags, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get riskLevel => $composableBuilder(
+      column: $table.riskLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get overview => $composableBuilder(
+      column: $table.overview, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get triggers => $composableBuilder(
+      column: $table.triggers, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get equipment => $composableBuilder(
+      column: $table.equipment, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get procedures => $composableBuilder(
+      column: $table.procedures, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get findings => $composableBuilder(
+      column: $table.findings, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get cleanup => $composableBuilder(
+      column: $table.cleanup, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get troubleshooting => $composableBuilder(
+      column: $table.troubleshooting,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$MethodologyTemplatesTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $MethodologyTemplatesTableTable> {
+  $$MethodologyTemplatesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get templateVersion => $composableBuilder(
+      column: $table.templateVersion,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get workstream => $composableBuilder(
+      column: $table.workstream, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get author => $composableBuilder(
+      column: $table.author, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get created => $composableBuilder(
+      column: $table.created, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get modified => $composableBuilder(
+      column: $table.modified, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+      column: $table.tags, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get riskLevel => $composableBuilder(
+      column: $table.riskLevel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get overview => $composableBuilder(
+      column: $table.overview, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get triggers => $composableBuilder(
+      column: $table.triggers, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get equipment => $composableBuilder(
+      column: $table.equipment, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get procedures => $composableBuilder(
+      column: $table.procedures, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get findings => $composableBuilder(
+      column: $table.findings, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get cleanup => $composableBuilder(
+      column: $table.cleanup, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get troubleshooting => $composableBuilder(
+      column: $table.troubleshooting,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$MethodologyTemplatesTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $MethodologyTemplatesTableTable> {
+  $$MethodologyTemplatesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get templateVersion => $composableBuilder(
+      column: $table.templateVersion, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get workstream => $composableBuilder(
+      column: $table.workstream, builder: (column) => column);
+
+  GeneratedColumn<String> get author =>
+      $composableBuilder(column: $table.author, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get created =>
+      $composableBuilder(column: $table.created, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get modified =>
+      $composableBuilder(column: $table.modified, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  GeneratedColumn<String> get riskLevel =>
+      $composableBuilder(column: $table.riskLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get overview =>
+      $composableBuilder(column: $table.overview, builder: (column) => column);
+
+  GeneratedColumn<String> get triggers =>
+      $composableBuilder(column: $table.triggers, builder: (column) => column);
+
+  GeneratedColumn<String> get equipment =>
+      $composableBuilder(column: $table.equipment, builder: (column) => column);
+
+  GeneratedColumn<String> get procedures => $composableBuilder(
+      column: $table.procedures, builder: (column) => column);
+
+  GeneratedColumn<String> get findings =>
+      $composableBuilder(column: $table.findings, builder: (column) => column);
+
+  GeneratedColumn<String> get cleanup =>
+      $composableBuilder(column: $table.cleanup, builder: (column) => column);
+
+  GeneratedColumn<String> get troubleshooting => $composableBuilder(
+      column: $table.troubleshooting, builder: (column) => column);
+}
+
+class $$MethodologyTemplatesTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $MethodologyTemplatesTableTable,
+    MethodologyTemplateRow,
+    $$MethodologyTemplatesTableTableFilterComposer,
+    $$MethodologyTemplatesTableTableOrderingComposer,
+    $$MethodologyTemplatesTableTableAnnotationComposer,
+    $$MethodologyTemplatesTableTableCreateCompanionBuilder,
+    $$MethodologyTemplatesTableTableUpdateCompanionBuilder,
+    (
+      MethodologyTemplateRow,
+      BaseReferences<_$MadnessDatabase, $MethodologyTemplatesTableTable,
+          MethodologyTemplateRow>
+    ),
+    MethodologyTemplateRow,
+    PrefetchHooks Function()> {
+  $$MethodologyTemplatesTableTableTableManager(
+      _$MadnessDatabase db, $MethodologyTemplatesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MethodologyTemplatesTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MethodologyTemplatesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MethodologyTemplatesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> version = const Value.absent(),
+            Value<String> templateVersion = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> workstream = const Value.absent(),
+            Value<String> author = const Value.absent(),
+            Value<DateTime> created = const Value.absent(),
+            Value<DateTime> modified = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> tags = const Value.absent(),
+            Value<String> riskLevel = const Value.absent(),
+            Value<String> overview = const Value.absent(),
+            Value<String> triggers = const Value.absent(),
+            Value<String> equipment = const Value.absent(),
+            Value<String> procedures = const Value.absent(),
+            Value<String> findings = const Value.absent(),
+            Value<String> cleanup = const Value.absent(),
+            Value<String> troubleshooting = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              MethodologyTemplatesTableCompanion(
+            id: id,
+            version: version,
+            templateVersion: templateVersion,
+            name: name,
+            workstream: workstream,
+            author: author,
+            created: created,
+            modified: modified,
+            status: status,
+            description: description,
+            tags: tags,
+            riskLevel: riskLevel,
+            overview: overview,
+            triggers: triggers,
+            equipment: equipment,
+            procedures: procedures,
+            findings: findings,
+            cleanup: cleanup,
+            troubleshooting: troubleshooting,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String version,
+            required String templateVersion,
+            required String name,
+            required String workstream,
+            required String author,
+            required DateTime created,
+            required DateTime modified,
+            required String status,
+            required String description,
+            required String tags,
+            required String riskLevel,
+            required String overview,
+            required String triggers,
+            required String equipment,
+            required String procedures,
+            required String findings,
+            required String cleanup,
+            required String troubleshooting,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              MethodologyTemplatesTableCompanion.insert(
+            id: id,
+            version: version,
+            templateVersion: templateVersion,
+            name: name,
+            workstream: workstream,
+            author: author,
+            created: created,
+            modified: modified,
+            status: status,
+            description: description,
+            tags: tags,
+            riskLevel: riskLevel,
+            overview: overview,
+            triggers: triggers,
+            equipment: equipment,
+            procedures: procedures,
+            findings: findings,
+            cleanup: cleanup,
+            troubleshooting: troubleshooting,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$MethodologyTemplatesTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$MadnessDatabase,
+        $MethodologyTemplatesTableTable,
+        MethodologyTemplateRow,
+        $$MethodologyTemplatesTableTableFilterComposer,
+        $$MethodologyTemplatesTableTableOrderingComposer,
+        $$MethodologyTemplatesTableTableAnnotationComposer,
+        $$MethodologyTemplatesTableTableCreateCompanionBuilder,
+        $$MethodologyTemplatesTableTableUpdateCompanionBuilder,
+        (
+          MethodologyTemplateRow,
+          BaseReferences<_$MadnessDatabase, $MethodologyTemplatesTableTable,
+              MethodologyTemplateRow>
+        ),
+        MethodologyTemplateRow,
+        PrefetchHooks Function()>;
 
 class $MadnessDatabaseManager {
   final _$MadnessDatabase _db;
@@ -24258,4 +30190,16 @@ class $MadnessDatabaseManager {
   $$AssetPropertyIndexTableTableTableManager get assetPropertyIndexTable =>
       $$AssetPropertyIndexTableTableTableManager(
           _db, _db.assetPropertyIndexTable);
+  $$RunInstancesTableTableTableManager get runInstancesTable =>
+      $$RunInstancesTableTableTableManager(_db, _db.runInstancesTable);
+  $$HistoryEntriesTableTableTableManager get historyEntriesTable =>
+      $$HistoryEntriesTableTableTableManager(_db, _db.historyEntriesTable);
+  $$TriggerMatchesTableTableTableManager get triggerMatchesTable =>
+      $$TriggerMatchesTableTableTableManager(_db, _db.triggerMatchesTable);
+  $$ParameterResolutionsTableTableTableManager get parameterResolutionsTable =>
+      $$ParameterResolutionsTableTableTableManager(
+          _db, _db.parameterResolutionsTable);
+  $$MethodologyTemplatesTableTableTableManager get methodologyTemplatesTable =>
+      $$MethodologyTemplatesTableTableTableManager(
+          _db, _db.methodologyTemplatesTable);
 }

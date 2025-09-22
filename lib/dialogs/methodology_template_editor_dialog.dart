@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/methodology_detail.dart';
 import '../models/methodology_trigger.dart';
+import '../services/methodology_loader.dart' as loader;
 import '../constants/app_spacing.dart';
 
 class MethodologyTemplateEditorDialog extends ConsumerStatefulWidget {
   final MethodologyDetail? methodology;
+  final loader.MethodologyTemplate? jsonMethodology;
   final bool isEditMode;
   final Function(MethodologyDetail)? onSave;
 
   const MethodologyTemplateEditorDialog({
     super.key,
     this.methodology,
+    this.jsonMethodology,
     this.isEditMode = true,
     this.onSave,
   });
@@ -29,6 +32,9 @@ class _MethodologyTemplateEditorDialogState
   final List<MethodologyTrigger> _triggers = [];
   final List<String> _tags = [];
   String _riskLevel = 'medium';
+  final List<String> _equipment = [];
+  final List<Map<String, String>> _risksAndMitigations = [];
+  final List<Map<String, String>> _troubleshootingSteps = [];
 
   final List<_MethodologyTab> _tabs = [
     _MethodologyTab(
@@ -55,21 +61,89 @@ class _MethodologyTemplateEditorDialogState
       name: 'Cleanup',
       icon: Icons.cleaning_services,
     ),
+    _MethodologyTab(
+      name: 'Troubleshooting',
+      icon: Icons.help_outline,
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
-    _currentMethodology = widget.methodology ?? _createEmptyMethodology();
 
-    // Initialize tags from metadata
-    if (_currentMethodology.metadata['tags'] is List) {
-      _tags.addAll((_currentMethodology.metadata['tags'] as List).cast<String>());
+    if (widget.jsonMethodology != null) {
+      // Initialize from JSON methodology
+      _currentMethodology = _convertFromJsonMethodology(widget.jsonMethodology!);
+      _initializeFromJsonMethodology(widget.jsonMethodology!);
+    } else {
+      _currentMethodology = widget.methodology ?? _createEmptyMethodology();
+
+      // Initialize tags from metadata
+      if (_currentMethodology.metadata['tags'] is List) {
+        _tags.addAll((_currentMethodology.metadata['tags'] as List).cast<String>());
+      }
+      if (_currentMethodology.metadata['risk_level'] is String) {
+        _riskLevel = _currentMethodology.metadata['risk_level'] as String;
+      }
     }
-    if (_currentMethodology.metadata['risk_level'] is String) {
-      _riskLevel = _currentMethodology.metadata['risk_level'] as String;
+  }
+
+  void _initializeFromJsonMethodology(loader.MethodologyTemplate template) {
+    // Initialize tags
+    _tags.addAll(template.tags);
+
+    // Initialize risk level
+    _riskLevel = template.riskLevel;
+
+    // Initialize equipment
+    _equipment.addAll(template.equipment);
+
+    // Initialize triggers (simplified for now)
+    // TODO: Fix trigger model mapping
+    // for (final trigger in template.triggers) {
+    //   _triggers.add(...);
+    // }
+
+    // Initialize risks and mitigations from procedures
+    for (final procedure in template.procedures) {
+      for (final risk in procedure.risks) {
+        _risksAndMitigations.add({
+          'risk': risk.risk,
+          'mitigation': risk.mitigation,
+        });
+      }
     }
+
+    // Initialize troubleshooting
+    for (final trouble in template.troubleshooting) {
+      _troubleshootingSteps.add({
+        'issue': trouble.issue,
+        'solution': trouble.solution,
+      });
+    }
+  }
+
+  MethodologyDetail _convertFromJsonMethodology(loader.MethodologyTemplate template) {
+    return MethodologyDetail(
+      id: template.id,
+      title: template.name,
+      uniqueId: template.id,
+      overview: template.description,
+      purpose: template.overview.purpose,
+      commands: [],
+      cleanupSteps: [],
+      commonIssues: [],
+      relatedFindings: [],
+      metadata: {
+        'tags': template.tags,
+        'risk_level': template.riskLevel,
+        'version': template.version,
+        'author': template.author,
+        'workstream': template.workstream,
+        'status': template.status,
+      },
+    );
   }
 
   @override
@@ -224,6 +298,7 @@ class _MethodologyTemplateEditorDialogState
         _buildToolsReferencesTab(),
         _buildFindingsTab(),
         _buildCleanupTab(),
+        _buildTroubleshootingTab(),
       ],
     );
   }
@@ -477,6 +552,36 @@ class _MethodologyTemplateEditorDialogState
   Widget _buildTriggersTab() {
     return Column(
       children: [
+        // JSON Methodology Triggers (if available)
+        if (widget.jsonMethodology != null && widget.jsonMethodology!.triggers.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              border: Border(
+                bottom: BorderSide(color: Theme.of(context).dividerColor),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome, color: Theme.of(context).primaryColor),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'JSON Methodology Triggers',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            constraints: const BoxConstraints(maxHeight: 300),
+            child: _buildJsonTriggersSection(),
+          ),
+        ],
+
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -746,43 +851,451 @@ class _MethodologyTemplateEditorDialogState
   }
 
   Widget _buildProceduresTab() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            border: Border(
-              bottom: BorderSide(color: Theme.of(context).dividerColor),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Risk Rating Section
+          _buildSectionHeader('Risk Rating', Icons.warning, 'Set the risk level for executing this methodology'),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).dividerColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Risk Level',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                DropdownButtonFormField<String>(
+                  value: _riskLevel,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Select risk level',
+                  ),
+                  items: [
+                    DropdownMenuItem(value: 'low', child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green, size: 16),
+                        const SizedBox(width: 8),
+                        const Text('Low Risk'),
+                      ],
+                    )),
+                    DropdownMenuItem(value: 'medium', child: Row(
+                      children: [
+                        Icon(Icons.warning, color: Colors.orange, size: 16),
+                        const SizedBox(width: 8),
+                        const Text('Medium Risk'),
+                      ],
+                    )),
+                    DropdownMenuItem(value: 'high', child: Row(
+                      children: [
+                        Icon(Icons.error, color: Colors.red, size: 16),
+                        const SizedBox(width: 8),
+                        const Text('High Risk'),
+                      ],
+                    )),
+                    DropdownMenuItem(value: 'critical', child: Row(
+                      children: [
+                        Icon(Icons.dangerous, color: Colors.red[800], size: 16),
+                        const SizedBox(width: 8),
+                        const Text('Critical Risk'),
+                      ],
+                    )),
+                  ],
+                  onChanged: widget.isEditMode ? (value) {
+                    setState(() {
+                      _riskLevel = value ?? 'medium';
+                    });
+                  } : null,
+                ),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              Icon(Icons.list_alt, color: Theme.of(context).primaryColor),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Procedures & Commands',
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Risks and Mitigations Section
+          _buildSectionHeader('Risks & Mitigations', Icons.security, 'Document potential risks and their mitigation steps'),
+          const SizedBox(height: AppSpacing.sm),
+          _buildRisksAndMitigationsSection(),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // JSON Methodology Procedures (if available)
+          if (widget.jsonMethodology != null) ...[
+            _buildSectionHeader('Methodology Procedures', Icons.list_alt, 'Procedures and commands from JSON methodology'),
+            const SizedBox(height: AppSpacing.sm),
+            _buildJsonProceduresSection(),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+
+          // Commands Section
+          _buildSectionHeader('Commands & Procedures', Icons.terminal, 'Step-by-step commands and procedures'),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).dividerColor),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Theme.of(context).dividerColor),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.terminal, color: Theme.of(context).primaryColor),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Commands',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (widget.isEditMode)
+                        ElevatedButton.icon(
+                          onPressed: _addNewCommand,
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Add Command'),
+                        ),
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 300,
+                  child: _currentMethodology.commands.isEmpty
+                      ? _buildEmptyCommandsState()
+                      : _buildCommandsList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJsonTriggersSection() {
+    if (widget.jsonMethodology == null || widget.jsonMethodology!.triggers.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: const Text('No triggers defined in methodology'),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      itemCount: widget.jsonMethodology!.triggers.length,
+      itemBuilder: (context, index) {
+        final trigger = widget.jsonMethodology!.triggers[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      trigger.type == 'complex' ? Icons.settings : Icons.flash_on,
+                      color: trigger.type == 'complex' ? Colors.orange : Colors.blue,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        trigger.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: trigger.type == 'complex' ? Colors.orange.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: trigger.type == 'complex' ? Colors.orange : Colors.blue,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        trigger.type.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: trigger.type == 'complex' ? Colors.orange[700] : Colors.blue[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  trigger.description,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                if (trigger.conditions != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Conditions:',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          trigger.conditions.toString(),
+                          style: const TextStyle(
+                            fontFamily: 'Courier',
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (trigger.script != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Script:',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          trigger.script!,
+                          style: const TextStyle(
+                            fontFamily: 'Courier',
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildJsonProceduresSection() {
+    if (widget.jsonMethodology == null || widget.jsonMethodology!.procedures.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Theme.of(context).dividerColor),
+        ),
+        child: const Text('No procedures defined in methodology'),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        children: [
+          for (final procedure in widget.jsonMethodology!.procedures) ...[
+            ExpansionTile(
+              title: Text(
+                procedure.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const Spacer(),
-              if (widget.isEditMode)
-                ElevatedButton.icon(
-                  onPressed: _addNewCommand,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Command'),
+              subtitle: Text(
+                procedure.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              leading: Icon(
+                Icons.play_arrow,
+                color: _getRiskColor(procedure.riskLevel),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Description
+                      Text(
+                        'Description:',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(procedure.description),
+
+                      // Risk Level
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.warning,
+                            size: 16,
+                            color: _getRiskColor(procedure.riskLevel),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Risk Level: ${procedure.riskLevel.toUpperCase()}',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: _getRiskColor(procedure.riskLevel),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Commands
+                      if (procedure.commands.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'Commands:',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        for (final command in procedure.commands) ...[
+                          Container(
+                            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Theme.of(context).dividerColor),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.terminal, size: 16),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Text(
+                                      command.tool,
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    if (command.platforms != null)
+                                      Wrap(
+                                        spacing: 4,
+                                        children: command.platforms!.map((platform) =>
+                                          Chip(
+                                            label: Text(platform),
+                                            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                            labelStyle: const TextStyle(fontSize: 10),
+                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          )
+                                        ).toList(),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(AppSpacing.sm),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    command.command,
+                                    style: const TextStyle(
+                                      fontFamily: 'Courier',
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  command.description,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
                 ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _currentMethodology.commands.isEmpty
-              ? _buildEmptyCommandsState()
-              : _buildCommandsList(),
-        ),
-      ],
+              ],
+            ),
+          ],
+        ],
+      ),
     );
+  }
+
+  Color _getRiskColor(String riskLevel) {
+    switch (riskLevel.toLowerCase()) {
+      case 'low':
+        return Colors.green;
+      case 'medium':
+        return Colors.orange;
+      case 'high':
+        return Colors.red;
+      case 'critical':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildEmptyCommandsState() {
@@ -1025,13 +1538,22 @@ class _MethodologyTemplateEditorDialogState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('Required Tools'),
+          // Equipment Section
+          _buildSectionHeader('Equipment', Icons.hardware, 'Hardware and physical equipment required'),
+          const SizedBox(height: AppSpacing.sm),
+          _buildEquipmentSection(),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Software Tools Section
+          _buildSectionHeader('Required Tools', Icons.build, 'Software tools and utilities needed'),
           const SizedBox(height: AppSpacing.md),
-          _buildPlaceholderSection('Tool requirements will be listed here'),
+          _buildToolsSection(),
 
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
 
-          _buildSectionHeader('References & Documentation'),
+          // References Section
+          _buildSectionHeader('References & Documentation', Icons.link, 'Relevant documentation and references'),
           const SizedBox(height: AppSpacing.md),
           _buildPlaceholderSection('References and documentation links will be listed here'),
         ],
@@ -1338,32 +1860,35 @@ class _MethodologyTemplateEditorDialogState
     }
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.folder_outlined,
-            color: Theme.of(context).primaryColor,
-            size: 16,
-          ),
-          const SizedBox(width: AppSpacing.sm),
+  Widget _buildSectionHeader(String title, [IconData? icon, String? description]) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: Theme.of(context).primaryColor, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+            ],
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ],
+        ),
+        if (description != null) ...[
+          const SizedBox(height: 4),
           Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-              fontSize: 14,
+            description,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey[600],
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 
@@ -1597,6 +2122,543 @@ class _MethodologyTemplateEditorDialogState
 
     Navigator.of(context).pop();
   }
+
+  // Equipment Section Methods
+  Widget _buildEquipmentSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Equipment Required',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              if (widget.isEditMode)
+                ElevatedButton.icon(
+                  onPressed: _addEquipmentItem,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Equipment'),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (_equipment.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  Icon(Icons.hardware, size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'No equipment added yet',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          else
+            ..._equipment.map((equipment) => Card(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: ListTile(
+                leading: const Icon(Icons.hardware),
+                title: Text(equipment),
+                trailing: widget.isEditMode ? IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _removeEquipmentItem(equipment),
+                ) : null,
+              ),
+            )),
+        ],
+      ),
+    );
+  }
+
+  // Risks and Mitigations Section Methods
+  Widget _buildRisksAndMitigationsSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Risks & Mitigation Steps',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              if (widget.isEditMode)
+                ElevatedButton.icon(
+                  onPressed: _addRiskMitigation,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Risk'),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (_risksAndMitigations.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  Icon(Icons.security, size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'No risks documented yet',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          else
+            ..._risksAndMitigations.map((risk) => Card(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: ExpansionTile(
+                leading: const Icon(Icons.warning, color: Colors.orange),
+                title: Text(risk['risk'] ?? 'Unknown Risk'),
+                subtitle: Text('Mitigation: ${risk['mitigation']?.substring(0, 50) ?? ''}${(risk['mitigation']?.length ?? 0) > 50 ? '...' : ''}'),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Risk Description:',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(risk['risk'] ?? ''),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Mitigation Steps:',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(risk['mitigation'] ?? ''),
+                        if (widget.isEditMode) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () => _editRiskMitigation(risk),
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Edit'),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _removeRiskMitigation(risk),
+                                icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                                label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )),
+        ],
+      ),
+    );
+  }
+
+  // Troubleshooting Tab Method
+  Widget _buildTroubleshootingTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader('Troubleshooting Guide', Icons.help_outline, 'Common issues and their solutions'),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).dividerColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Common Issues & Solutions',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (widget.isEditMode)
+                      ElevatedButton.icon(
+                        onPressed: _addTroubleshootingStep,
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Add Issue'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                if (_troubleshootingSteps.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        Icon(Icons.help_outline, size: 48, color: Colors.grey[400]),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'No troubleshooting steps added yet',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ..._troubleshootingSteps.map((step) => Card(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: ExpansionTile(
+                      leading: const Icon(Icons.help, color: Colors.blue),
+                      title: Text(step['issue'] ?? 'Unknown Issue'),
+                      subtitle: Text('Solution: ${step['solution']?.substring(0, 50) ?? ''}${(step['solution']?.length ?? 0) > 50 ? '...' : ''}'),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Issue Description:',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              Text(step['issue'] ?? ''),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'Solution:',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              Text(step['solution'] ?? ''),
+                              if (widget.isEditMode) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: () => _editTroubleshootingStep(step),
+                                      icon: const Icon(Icons.edit, size: 16),
+                                      label: const Text('Edit'),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () => _removeTroubleshootingStep(step),
+                                      icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                                      label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tools Section Methods
+  Widget _buildToolsSection() {
+    // Extract tools from JSON methodology procedures
+    final Set<String> tools = <String>{};
+    if (widget.jsonMethodology != null) {
+      for (final procedure in widget.jsonMethodology!.procedures) {
+        for (final command in procedure.commands) {
+          tools.add(command.tool);
+        }
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Software Tools',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (tools.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                children: [
+                  Icon(Icons.build, size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'No tools found in methodology procedures',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          else
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: tools.map((tool) => _buildToolChip(tool)).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolChip(String tool) {
+    // Get tool icon and color based on common penetration testing tools
+    IconData icon;
+    Color color;
+
+    switch (tool.toLowerCase()) {
+      case 'nmap':
+        icon = Icons.radar;
+        color = Colors.blue;
+        break;
+      case 'nikto':
+        icon = Icons.web;
+        color = Colors.orange;
+        break;
+      case 'sqlmap':
+        icon = Icons.storage;
+        color = Colors.red;
+        break;
+      case 'airmon-ng':
+      case 'airodump-ng':
+      case 'aireplay-ng':
+        icon = Icons.wifi;
+        color = Colors.green;
+        break;
+      case 'metasploit':
+      case 'msfconsole':
+        icon = Icons.bug_report;
+        color = Colors.purple;
+        break;
+      case 'hydra':
+      case 'medusa':
+        icon = Icons.key;
+        color = Colors.amber;
+        break;
+      case 'john':
+      case 'hashcat':
+        icon = Icons.lock;
+        color = Colors.brown;
+        break;
+      case 'dirb':
+      case 'dirbuster':
+      case 'gobuster':
+        icon = Icons.folder;
+        color = Colors.teal;
+        break;
+      case 'burp':
+      case 'burpsuite':
+        icon = Icons.web_asset;
+        color = Colors.deepOrange;
+        break;
+      case 'wireshark':
+      case 'tcpdump':
+        icon = Icons.network_check;
+        color = Colors.indigo;
+        break;
+      case 'netcat':
+      case 'nc':
+        icon = Icons.link;
+        color = Colors.cyan;
+        break;
+      case 'ssh':
+        icon = Icons.terminal;
+        color = Colors.green.shade700;
+        break;
+      case 'curl':
+      case 'wget':
+        icon = Icons.download;
+        color = Colors.lightBlue;
+        break;
+      case 'python':
+      case 'python3':
+        icon = Icons.code;
+        color = Colors.yellow.shade700;
+        break;
+      case 'bash':
+      case 'sh':
+        icon = Icons.terminal;
+        color = Colors.green.shade800;
+        break;
+      case 'powershell':
+        icon = Icons.computer;
+        color = Colors.blue.shade700;
+        break;
+      case 'nmcli':
+      case 'iwconfig':
+        icon = Icons.settings_ethernet;
+        color = Colors.grey.shade700;
+        break;
+      case 'dhclient':
+        icon = Icons.network_wifi;
+        color = Colors.lightGreen;
+        break;
+      case 'macchanger':
+        icon = Icons.shuffle;
+        color = Colors.deepPurple;
+        break;
+      case 'yersinia':
+        icon = Icons.security;
+        color = Colors.red.shade700;
+        break;
+      case 'ettercap':
+        icon = Icons.router;
+        color = Colors.pink;
+        break;
+      default:
+        icon = Icons.build;
+        color = Colors.grey;
+    }
+
+    return Chip(
+      avatar: Icon(icon, size: 16, color: color),
+      label: Text(
+        tool,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      backgroundColor: color.withOpacity(0.1),
+      side: BorderSide(color: color.withOpacity(0.3)),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
+  // Action Methods
+  void _addEquipmentItem() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => _AddEquipmentDialog(),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _equipment.add(result);
+      });
+    }
+  }
+
+  void _removeEquipmentItem(String equipment) {
+    setState(() {
+      _equipment.remove(equipment);
+    });
+  }
+
+  void _addRiskMitigation() async {
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => _AddRiskMitigationDialog(),
+    );
+
+    if (result != null) {
+      setState(() {
+        _risksAndMitigations.add(result);
+      });
+    }
+  }
+
+  void _editRiskMitigation(Map<String, String> risk) async {
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => _AddRiskMitigationDialog(initialRisk: risk),
+    );
+
+    if (result != null) {
+      setState(() {
+        final index = _risksAndMitigations.indexOf(risk);
+        if (index != -1) {
+          _risksAndMitigations[index] = result;
+        }
+      });
+    }
+  }
+
+  void _removeRiskMitigation(Map<String, String> risk) {
+    setState(() {
+      _risksAndMitigations.remove(risk);
+    });
+  }
+
+  void _addTroubleshootingStep() async {
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => _AddTroubleshootingDialog(),
+    );
+
+    if (result != null) {
+      setState(() {
+        _troubleshootingSteps.add(result);
+      });
+    }
+  }
+
+  void _editTroubleshootingStep(Map<String, String> step) async {
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => _AddTroubleshootingDialog(initialStep: step),
+    );
+
+    if (result != null) {
+      setState(() {
+        final index = _troubleshootingSteps.indexOf(step);
+        if (index != -1) {
+          _troubleshootingSteps[index] = result;
+        }
+      });
+    }
+  }
+
+  void _removeTroubleshootingStep(Map<String, String> step) {
+    setState(() {
+      _troubleshootingSteps.remove(step);
+    });
+  }
 }
 
 class _MethodologyTab {
@@ -1649,6 +2711,201 @@ class _AddTagDialogState extends State<_AddTagDialog> {
           onPressed: () {
             if (_controller.text.isNotEmpty) {
               Navigator.of(context).pop(_controller.text);
+            }
+          },
+          child: const Text('Add'),
+        ),
+      ],
+    );
+  }
+}
+
+// Equipment Dialog
+class _AddEquipmentDialog extends StatefulWidget {
+  final String? initialEquipment;
+
+  const _AddEquipmentDialog({this.initialEquipment});
+
+  @override
+  State<_AddEquipmentDialog> createState() => _AddEquipmentDialogState();
+}
+
+class _AddEquipmentDialogState extends State<_AddEquipmentDialog> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialEquipment ?? '');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.initialEquipment != null ? 'Edit Equipment' : 'Add Equipment'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _controller,
+            decoration: const InputDecoration(
+              labelText: 'Equipment Name',
+              hintText: 'e.g., WiFi Card, USB Drive, Network Cable',
+              border: OutlineInputBorder(),
+            ),
+            autofocus: true,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_controller.text.isNotEmpty) {
+              Navigator.of(context).pop(_controller.text);
+            }
+          },
+          child: const Text('Add'),
+        ),
+      ],
+    );
+  }
+}
+
+// Risk Mitigation Dialog
+class _AddRiskMitigationDialog extends StatefulWidget {
+  final Map<String, String>? initialRisk;
+
+  const _AddRiskMitigationDialog({this.initialRisk});
+
+  @override
+  State<_AddRiskMitigationDialog> createState() => _AddRiskMitigationDialogState();
+}
+
+class _AddRiskMitigationDialogState extends State<_AddRiskMitigationDialog> {
+  late TextEditingController _riskController;
+  late TextEditingController _mitigationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _riskController = TextEditingController(text: widget.initialRisk?['risk'] ?? '');
+    _mitigationController = TextEditingController(text: widget.initialRisk?['mitigation'] ?? '');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.initialRisk != null ? 'Edit Risk & Mitigation' : 'Add Risk & Mitigation'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _riskController,
+            decoration: const InputDecoration(
+              labelText: 'Risk Description',
+              hintText: 'e.g., System may crash, Database corruption',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 2,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _mitigationController,
+            decoration: const InputDecoration(
+              labelText: 'Mitigation Steps',
+              hintText: 'Steps to prevent or minimize the risk',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_riskController.text.isNotEmpty && _mitigationController.text.isNotEmpty) {
+              Navigator.of(context).pop({
+                'risk': _riskController.text,
+                'mitigation': _mitigationController.text,
+              });
+            }
+          },
+          child: const Text('Add'),
+        ),
+      ],
+    );
+  }
+}
+
+// Troubleshooting Dialog
+class _AddTroubleshootingDialog extends StatefulWidget {
+  final Map<String, String>? initialStep;
+
+  const _AddTroubleshootingDialog({this.initialStep});
+
+  @override
+  State<_AddTroubleshootingDialog> createState() => _AddTroubleshootingDialogState();
+}
+
+class _AddTroubleshootingDialogState extends State<_AddTroubleshootingDialog> {
+  late TextEditingController _issueController;
+  late TextEditingController _solutionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _issueController = TextEditingController(text: widget.initialStep?['issue'] ?? '');
+    _solutionController = TextEditingController(text: widget.initialStep?['solution'] ?? '');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.initialStep != null ? 'Edit Troubleshooting Step' : 'Add Troubleshooting Step'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _issueController,
+            decoration: const InputDecoration(
+              labelText: 'Issue Description',
+              hintText: 'e.g., Command fails with permission error',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 2,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _solutionController,
+            decoration: const InputDecoration(
+              labelText: 'Solution Steps',
+              hintText: 'Steps to resolve the issue',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_issueController.text.isNotEmpty && _solutionController.text.isNotEmpty) {
+              Navigator.of(context).pop({
+                'issue': _issueController.text,
+                'solution': _solutionController.text,
+              });
             }
           },
           child: const Text('Add'),

@@ -343,7 +343,10 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                           isDense: true,
                         ),
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('All')),
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All', overflow: TextOverflow.ellipsis),
+                          ),
                           ...AssetDiscoveryStatus.values.map((status) => DropdownMenuItem(
                             value: status,
                             child: Text(_formatStatusName(status), overflow: TextOverflow.ellipsis),
@@ -356,30 +359,31 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                         },
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: DropdownButtonFormField<AccessLevel?>(
-                        value: _selectedAccessLevel,
-                        decoration: const InputDecoration(
-                          labelText: 'Access',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('All')),
-                          ...AccessLevel.values.map((level) => DropdownMenuItem(
-                            value: level,
-                            child: Text(_formatAccessLevelName(level), overflow: TextOverflow.ellipsis),
-                          )),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedAccessLevel = value;
-                          });
-                        },
-                      ),
-                    ),
                   ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                DropdownButtonFormField<AccessLevel?>(
+                  value: _selectedAccessLevel,
+                  decoration: const InputDecoration(
+                    labelText: 'Access Level',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All Access Levels', overflow: TextOverflow.ellipsis),
+                    ),
+                    ...AccessLevel.values.map((level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(_formatAccessLevelName(level), overflow: TextOverflow.ellipsis),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedAccessLevel = value;
+                    });
+                  },
                 ),
               ],
             );
@@ -388,7 +392,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
           return Row(
             children: [
               Expanded(
-                flex: 3,
+                flex: 2,
                 child: TextField(
                   decoration: const InputDecoration(
                     hintText: 'Search assets by name, type, or properties...',
@@ -405,7 +409,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: DropdownButtonFormField<AssetType?>(
                   value: _selectedType,
                   decoration: const InputDecoration(
@@ -435,6 +439,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
+                flex: 3,
                 child: DropdownButtonFormField<AssetDiscoveryStatus?>(
                   value: _selectedStatus,
                   decoration: const InputDecoration(
@@ -443,10 +448,16 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                     isDense: true,
                   ),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All Statuses')),
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All Statuses', overflow: TextOverflow.ellipsis),
+                    ),
                     ...AssetDiscoveryStatus.values.map((status) => DropdownMenuItem(
                       value: status,
-                      child: Text(_formatStatusName(status)),
+                      child: Text(
+                        _formatStatusName(status),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     )),
                   ],
                   onChanged: (value) {
@@ -458,6 +469,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
+                flex: 3,
                 child: DropdownButtonFormField<AccessLevel?>(
                   value: _selectedAccessLevel,
                   decoration: const InputDecoration(
@@ -466,10 +478,16 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                     isDense: true,
                   ),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All Access')),
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All Access', overflow: TextOverflow.ellipsis),
+                    ),
                     ...AccessLevel.values.map((level) => DropdownMenuItem(
                       value: level,
-                      child: Text(_formatAccessLevelName(level)),
+                      child: Text(
+                        _formatAccessLevelName(level),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     )),
                   ],
                   onChanged: (value) {

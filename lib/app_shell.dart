@@ -10,12 +10,21 @@ import 'screens/tasks_screen.dart';
 import 'screens/expenses_screen.dart';
 import 'screens/contacts_screen.dart';
 import 'screens/scope_screen.dart';
-import 'screens/all_screens.dart' hide ScreenshotsScreen, FindingsScreen, AssetsScreen, MethodologyScreen;
+import 'screens/comms_screen.dart';
+import 'screens/travel_screen.dart';
+import 'screens/history_screen.dart';
+import 'screens/reports_screen.dart';
+import 'screens/agents_screen.dart';
+import 'screens/plugins_screen.dart';
+import 'screens/ingestors_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/findings_screen.dart';
 import 'screens/credentials_screen.dart';
 import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
 import 'screens/assets_screen.dart';
+import 'screens/comprehensive_assets_screen.dart';
+import 'screens/trigger_evaluation_dashboard_screen.dart';
 import 'screens/attack_plan_screen.dart';
 import 'screens/methodology_library_screen.dart';
 import 'screens/questionnaire_screen.dart';
@@ -53,6 +62,10 @@ class AppShell extends ConsumerWidget {
         return const AttackPlanScreen();
       case NavigationSection.assets:
         return const AssetsScreen();
+      case NavigationSection.comprehensiveAssets:
+        return const ComprehensiveAssetsScreen();
+      case NavigationSection.triggerEvaluation:
+        return const TriggerEvaluationDashboardScreen();
       case NavigationSection.credentials:
         return const CredentialsScreen();
       case NavigationSection.history:
@@ -104,6 +117,10 @@ class AppShell extends ConsumerWidget {
         return 'Attack Plan';
       case NavigationSection.assets:
         return 'Assets';
+      case NavigationSection.comprehensiveAssets:
+        return 'Asset Management';
+      case NavigationSection.triggerEvaluation:
+        return 'Trigger Monitoring';
       case NavigationSection.credentials:
         return 'Credentials';
       case NavigationSection.history:
@@ -159,13 +176,17 @@ class AppShell extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Row(
                               children: [
-                                Text(
-                                  _getTitleForSection(navigationState.currentSection),
-                                  style: Theme.of(context).textTheme.headlineSmall,
-                                  overflow: TextOverflow.ellipsis,
+                                Expanded(
+                                  child: Text(
+                                    _getTitleForSection(navigationState.currentSection),
+                                    style: Theme.of(context).textTheme.headlineSmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 const SizedBox(width: 24),
-                                const ProjectSelector(),
+                                const Flexible(
+                                  child: ProjectSelector(),
+                                ),
                               ],
                             ),
                           ),

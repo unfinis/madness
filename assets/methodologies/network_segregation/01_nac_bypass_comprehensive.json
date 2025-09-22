@@ -1,0 +1,443 @@
+{
+  "id": "nac_bypass_comprehensive",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Comprehensive NAC Bypass Methodology",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Comprehensive methodology for bypassing Network Access Control (NAC) systems using various techniques including DHCP exploitation, static IP configuration, MAC spoofing, 802.1X bypass, VLAN hopping, and wireless attacks.",
+  "tags": ["nac", "network", "bypass", "802.1x", "dhcp", "vlan", "wireless", "physical"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Test the effectiveness of Network Access Control implementations by attempting various bypass techniques to gain unauthorized network access.",
+    "scope": "Physical network ports, wireless networks, DHCP services, 802.1X authentication, VLAN configurations, and captive portals within the target environment.",
+    "prerequisites": [
+      "Physical access to network infrastructure",
+      "WiFi adapter with monitor mode support",
+      "Network testing tools installed",
+      "Proper authorization for penetration testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "physical_network_access",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "nac_enabled": true,
+          "access_level": "blocked"
+        }
+      },
+      "description": "Trigger when NAC is present and initial access is blocked"
+    },
+    {
+      "name": "wireless_network_present",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "wireless_network",
+        "properties": {
+          "encryption": ["wpa2", "wpa3", "open"],
+          "guest_network": true
+        }
+      },
+      "description": "Trigger when wireless networks are available for testing"
+    },
+    {
+      "name": "dhcp_services_detected",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "dhcp_servers": {"exists": true}
+        }
+      },
+      "description": "Trigger when DHCP services are available on the network"
+    },
+    {
+      "name": "vlan_environment_detected",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "vlan_id": {"exists": true}
+        }
+      },
+      "description": "Trigger when VLAN segmentation is detected"
+    }
+  ],
+
+  "equipment": [
+    "Network interface (Ethernet/WiFi adapter)",
+    "WiFi adapter with monitor mode support",
+    "Network hub or tap device",
+    "Throwing star LAN tap (optional)",
+    "USB-to-Ethernet adapter",
+    "Network cables (various lengths)",
+    "Portable laptop/testing device"
+  ],
+
+  "procedures": [
+    {
+      "id": "dhcp_autoconfiguration",
+      "name": "DHCP Auto-Configuration",
+      "description": "Connect to the network and automatically obtain IP configuration via DHCP to gain initial network access.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "DHCP exhaustion protection may limit available addresses",
+          "mitigation": "Use multiple MAC addresses and test during different time periods"
+        },
+        {
+          "risk": "Network monitoring may detect DHCP requests from unknown devices",
+          "mitigation": "Use legitimate-looking device names and MAC addresses from known vendors"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "dhclient",
+          "command": "sudo dhclient -v {interface}",
+          "description": "Request DHCP configuration on Linux",
+          "parameters": {
+            "interface": "Network interface name (e.g., eth0, wlan0)"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ipconfig",
+          "command": "ipconfig /release \"{adapter}\" && ipconfig /renew \"{adapter}\"",
+          "description": "Release and renew DHCP lease on Windows",
+          "parameters": {
+            "adapter": "Network adapter name"
+          },
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -n port 67 and port 68",
+          "description": "Monitor DHCP traffic for analysis",
+          "parameters": {
+            "interface": "Network interface to monitor"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "static_ip_discovery",
+      "name": "Static IP Discovery and Configuration",
+      "description": "Identify and configure static IP addresses when DHCP is unavailable or restricted.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "IP conflicts with existing devices may cause network disruption",
+          "mitigation": "Perform passive discovery first and choose unused IP addresses"
+        },
+        {
+          "risk": "Incorrect network configuration may prevent connectivity",
+          "mitigation": "Document observed network settings before making changes"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -n arp",
+          "description": "Passively discover network topology through ARP traffic",
+          "parameters": {
+            "interface": "Network interface to monitor"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "arp-scan",
+          "command": "sudo arp-scan -l -I {interface}",
+          "description": "Actively scan for devices on the local network",
+          "parameters": {
+            "interface": "Network interface for scanning"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ip",
+          "command": "sudo ip addr add {ip}/{mask} dev {interface}",
+          "description": "Configure static IP address on Linux",
+          "parameters": {
+            "ip": "Target IP address",
+            "mask": "Subnet mask (e.g., 24)",
+            "interface": "Network interface"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "netsh",
+          "command": "netsh interface ip set address \"{adapter}\" static {ip} {mask} {gateway}",
+          "description": "Configure static IP address on Windows",
+          "parameters": {
+            "adapter": "Network adapter name",
+            "ip": "Target IP address",
+            "mask": "Subnet mask",
+            "gateway": "Gateway IP address"
+          },
+          "platforms": ["windows"]
+        }
+      ]
+    },
+    {
+      "id": "mac_spoofing_bypass",
+      "name": "MAC Address Spoofing for NAC Bypass",
+      "description": "Clone MAC address of an authorized device to bypass Network Access Control.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Duplicate MAC addresses may cause network conflicts",
+          "mitigation": "Ensure target device is offline before spoofing its MAC address"
+        },
+        {
+          "risk": "Port security with sticky MACs may prevent access",
+          "mitigation": "Test on different ports and document port security configurations"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "arp-scan",
+          "command": "sudo arp-scan -l -I {interface}",
+          "description": "Discover authorized MAC addresses on the network",
+          "parameters": {
+            "interface": "Network interface for scanning"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "macchanger",
+          "command": "sudo ifconfig {interface} down && sudo macchanger -m {target_mac} {interface} && sudo ifconfig {interface} up",
+          "description": "Change MAC address on Linux",
+          "parameters": {
+            "interface": "Network interface",
+            "target_mac": "Target MAC address to spoof"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ip",
+          "command": "sudo ip link set dev {interface} address {target_mac}",
+          "description": "Alternative method to change MAC address on Linux",
+          "parameters": {
+            "interface": "Network interface",
+            "target_mac": "Target MAC address to spoof"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "dot1x_hub_bypass",
+      "name": "802.1X Bypass via Hub/Tap",
+      "description": "Insert a hub or network tap between an authenticated device and switch port to piggyback on existing authentication.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "Physical insertion of hub may be detected by security personnel",
+          "mitigation": "Perform during off-hours and use discrete equipment"
+        },
+        {
+          "risk": "Network performance degradation may alert IT staff",
+          "mitigation": "Use high-quality hubs and monitor network performance"
+        },
+        {
+          "risk": "Modern switches may detect multiple MAC addresses per port",
+          "mitigation": "Test port security configuration before attempting bypass"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -w capture.pcap",
+          "description": "Monitor traffic on the tapped connection",
+          "parameters": {
+            "interface": "Network interface connected to hub/tap"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "vconfig",
+          "command": "sudo modprobe 8021q && sudo vconfig add {interface} {vlan_id}",
+          "description": "Create VLAN interface for tagged networks",
+          "parameters": {
+            "interface": "Physical network interface",
+            "vlan_id": "VLAN ID discovered from traffic"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "vlan_hopping",
+      "name": "VLAN Hopping Attacks",
+      "description": "Exploit VLAN misconfigurations to access restricted network segments.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "DTP attacks may cause switch configuration changes",
+          "mitigation": "Document original switch configuration and test on non-production VLANs"
+        },
+        {
+          "risk": "CAM table overflow may cause network instability",
+          "mitigation": "Limit the scope of VLAN enumeration and monitor switch resources"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "yersinia",
+          "command": "sudo yersinia dtp -attack 1 -interface {interface}",
+          "description": "Perform DTP attack to force trunk mode",
+          "parameters": {
+            "interface": "Network interface for DTP attack"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "vconfig",
+          "command": "for vlan in {1..100}; do sudo vconfig add {interface} $vlan 2>/dev/null; sudo ifconfig {interface}.$vlan up 2>/dev/null; done",
+          "description": "Enumerate VLANs by creating VLAN interfaces",
+          "parameters": {
+            "interface": "Network interface for VLAN enumeration"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "wireless_attacks",
+      "name": "Wireless Network Attacks",
+      "description": "Leverage wireless networks to bypass wired NAC restrictions.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Wireless attacks may be detected by wireless IDS",
+          "mitigation": "Use low-power attacks and avoid excessive deauthentication"
+        },
+        {
+          "risk": "Legal restrictions may apply to wireless testing",
+          "mitigation": "Ensure proper authorization for wireless testing activities"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "airmon-ng",
+          "command": "sudo airmon-ng start {wireless_interface}",
+          "description": "Put wireless interface into monitor mode",
+          "parameters": {
+            "wireless_interface": "Wireless network interface"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "airodump-ng",
+          "command": "sudo airodump-ng {wireless_interface}mon",
+          "description": "Scan for available wireless networks",
+          "parameters": {
+            "wireless_interface": "Wireless interface in monitor mode"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "nmcli",
+          "command": "nmcli dev wifi connect \"{ssid}\"",
+          "description": "Connect to open wireless network",
+          "parameters": {
+            "ssid": "Target wireless network SSID"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Network Access Control Bypass",
+      "severity": "High",
+      "description": "The Network Access Control (NAC) system can be bypassed using [specific technique], allowing unauthorized devices to gain network access.",
+      "recommendation": "Implement port security, strengthen NAC policies, and deploy additional network monitoring to detect bypass attempts."
+    },
+    {
+      "title": "Weak DHCP Security Controls",
+      "severity": "Medium",
+      "description": "DHCP servers provide network access without proper device authentication, allowing unauthorized devices to obtain IP configurations.",
+      "recommendation": "Implement DHCP snooping, port security, and integrate DHCP with NAC authentication mechanisms."
+    },
+    {
+      "title": "VLAN Segmentation Weaknesses",
+      "severity": "Medium",
+      "description": "VLAN configurations allow unauthorized access to restricted network segments through [specific technique].",
+      "recommendation": "Disable DTP on access ports, implement proper VLAN ACLs, and review native VLAN configurations."
+    },
+    {
+      "title": "Physical Port Security Missing",
+      "severity": "Medium",
+      "description": "Network ports lack proper physical security controls, allowing unauthorized device connections and NAC bypass attempts.",
+      "recommendation": "Implement port security features, disable unused ports, and deploy physical security controls for network infrastructure."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "restore_network_configuration",
+      "description": "Restore original network interface configuration",
+      "command": "sudo dhclient -r {interface} && sudo macchanger -p {interface}"
+    },
+    {
+      "step": "remove_vlan_interfaces",
+      "description": "Remove created VLAN interfaces",
+      "command": "for vlan in {1..4096}; do sudo vconfig rem {interface}.$vlan 2>/dev/null; done"
+    },
+    {
+      "step": "stop_wireless_monitoring",
+      "description": "Stop wireless monitor mode and restore normal operation",
+      "command": "sudo airmon-ng stop {wireless_interface}mon"
+    },
+    {
+      "step": "remove_physical_devices",
+      "description": "Remove any physical network taps or hubs installed during testing",
+      "command": "# Manual removal of physical devices required"
+    },
+    {
+      "step": "clear_dhcp_leases",
+      "description": "Clear any DHCP lease files created during testing",
+      "command": "sudo rm -f /var/lib/dhcp/dhclient.leases.*"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "DHCP requests timeout or fail",
+      "solution": "Check physical network connectivity, verify interface is up, and ensure DHCP server is reachable. Try different network ports or wireless networks."
+    },
+    {
+      "issue": "MAC address changes don't persist",
+      "solution": "Verify network interface supports MAC address changes, check if NetworkManager is overriding changes, and ensure proper permissions for interface modification."
+    },
+    {
+      "issue": "VLAN interfaces fail to get IP addresses",
+      "solution": "Verify VLAN tagging is required, check if DHCP is available on target VLAN, and ensure proper VLAN interface configuration."
+    },
+    {
+      "issue": "802.1X bypass doesn't work with hub",
+      "solution": "Verify target device maintains authentication, check if port security allows multiple MACs, and ensure hub properly forwards traffic."
+    },
+    {
+      "issue": "Wireless interface won't enter monitor mode",
+      "solution": "Check driver support for monitor mode, verify interface is not in use by other processes, and try different wireless adapters."
+    },
+    {
+      "issue": "Network access is still blocked after bypass attempts",
+      "solution": "Check for additional security controls like captive portals, verify network connectivity to target resources, and review firewall rules."
+    }
+  ]
+}

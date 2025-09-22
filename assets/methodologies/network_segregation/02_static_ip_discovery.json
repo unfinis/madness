@@ -1,0 +1,141 @@
+{
+  "id": "static_ip_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Static IP Discovery and Configuration",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Identify and configure static IP addresses when DHCP is unavailable or restricted.",
+  "tags": ["static", "ip", "discovery", "configuration", "network"],
+  "risk_level": "low",
+
+  "overview": {
+    "purpose": "Discover network topology and configure static IP addresses to gain network access when DHCP is not available.",
+    "scope": "Network interfaces, ARP traffic analysis, and static IP configuration within the target environment.",
+    "prerequisites": [
+      "Physical access to network infrastructure",
+      "Network analysis tools installed",
+      "Proper authorization for penetration testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "dhcp_unavailable",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "dhcp_servers": {"exists": false},
+          "access_level": "blocked"
+        }
+      },
+      "description": "Trigger when DHCP is not available on the network"
+    }
+  ],
+
+  "equipment": [
+    "Network interface (Ethernet/WiFi adapter)",
+    "Network packet capture tools",
+    "Network cables"
+  ],
+
+  "procedures": [
+    {
+      "id": "static_ip_discovery",
+      "name": "Static IP Discovery and Configuration",
+      "description": "Identify and configure static IP addresses when DHCP is unavailable or restricted.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "IP conflicts with existing devices may cause network disruption",
+          "mitigation": "Perform passive discovery first and choose unused IP addresses"
+        },
+        {
+          "risk": "Incorrect network configuration may prevent connectivity",
+          "mitigation": "Document observed network settings before making changes"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -n arp",
+          "description": "Passively discover network topology through ARP traffic",
+          "parameters": {
+            "interface": "Network interface to monitor"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "arp-scan",
+          "command": "sudo arp-scan -l -I {interface}",
+          "description": "Actively scan for devices on the local network",
+          "parameters": {
+            "interface": "Network interface for scanning"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ip",
+          "command": "sudo ip addr add {ip}/{mask} dev {interface}",
+          "description": "Configure static IP address on Linux",
+          "parameters": {
+            "ip": "Target IP address",
+            "mask": "Subnet mask (e.g., 24)",
+            "interface": "Network interface"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "netsh",
+          "command": "netsh interface ip set address \"{adapter}\" static {ip} {mask} {gateway}",
+          "description": "Configure static IP address on Windows",
+          "parameters": {
+            "adapter": "Network adapter name",
+            "ip": "Target IP address",
+            "mask": "Subnet mask",
+            "gateway": "Gateway IP address"
+          },
+          "platforms": ["windows"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Static IP Assignment Possible",
+      "severity": "Medium",
+      "description": "Network allows static IP configuration without authentication, enabling unauthorized network access.",
+      "recommendation": "Implement port security, MAC address filtering, and network access control to prevent unauthorized static IP assignments."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "remove_static_ip",
+      "description": "Remove configured static IP address",
+      "command": "sudo ip addr del {ip}/{mask} dev {interface}"
+    },
+    {
+      "step": "restore_dhcp",
+      "description": "Restore DHCP configuration",
+      "command": "sudo dhclient {interface}"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "No ARP traffic observed",
+      "solution": "Wait longer for network activity, try different network segments, or generate traffic to trigger ARP responses."
+    },
+    {
+      "issue": "Static IP configuration fails",
+      "solution": "Check interface permissions, verify IP range is correct, and ensure no conflicting network managers are running."
+    }
+  ]
+}

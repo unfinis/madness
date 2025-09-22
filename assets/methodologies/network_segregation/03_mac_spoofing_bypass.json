@@ -1,0 +1,131 @@
+{
+  "id": "mac_spoofing_bypass",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "MAC Address Spoofing for NAC Bypass",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Clone MAC address of an authorized device to bypass Network Access Control.",
+  "tags": ["mac", "spoofing", "nac", "bypass", "cloning"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Test MAC-based network access control by cloning authorized device MAC addresses.",
+    "scope": "Network interfaces, MAC address manipulation, and NAC bypass testing within the target environment.",
+    "prerequisites": [
+      "Physical access to network infrastructure",
+      "MAC address discovery tools",
+      "Network interface configuration tools",
+      "Proper authorization for penetration testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "mac_based_nac",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "nac_enabled": true,
+          "nac_type": "mac_auth",
+          "access_level": "blocked"
+        }
+      },
+      "description": "Trigger when MAC-based NAC is detected"
+    }
+  ],
+
+  "equipment": [
+    "Network interface (Ethernet/WiFi adapter)",
+    "Network packet capture tools",
+    "MAC address changing tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "mac_spoofing_bypass",
+      "name": "MAC Address Spoofing for NAC Bypass",
+      "description": "Clone MAC address of an authorized device to bypass Network Access Control.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Duplicate MAC addresses may cause network conflicts",
+          "mitigation": "Ensure target device is offline before spoofing its MAC address"
+        },
+        {
+          "risk": "Port security with sticky MACs may prevent access",
+          "mitigation": "Test on different ports and document port security configurations"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "arp-scan",
+          "command": "sudo arp-scan -l -I {interface}",
+          "description": "Discover authorized MAC addresses on the network",
+          "parameters": {
+            "interface": "Network interface for scanning"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "macchanger",
+          "command": "sudo ifconfig {interface} down && sudo macchanger -m {target_mac} {interface} && sudo ifconfig {interface} up",
+          "description": "Change MAC address on Linux",
+          "parameters": {
+            "interface": "Network interface",
+            "target_mac": "Target MAC address to spoof"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ip",
+          "command": "sudo ip link set dev {interface} address {target_mac}",
+          "description": "Alternative method to change MAC address on Linux",
+          "parameters": {
+            "interface": "Network interface",
+            "target_mac": "Target MAC address to spoof"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "MAC-based NAC Bypass",
+      "severity": "High",
+      "description": "Network Access Control can be bypassed by spoofing authorized MAC addresses, allowing unauthorized network access.",
+      "recommendation": "Implement additional authentication mechanisms beyond MAC addresses, such as 802.1X authentication, and deploy port security features."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "restore_original_mac",
+      "description": "Restore original MAC address",
+      "command": "sudo macchanger -p {interface}"
+    },
+    {
+      "step": "restart_interface",
+      "description": "Restart network interface",
+      "command": "sudo ifconfig {interface} down && sudo ifconfig {interface} up"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "MAC address changes don't persist",
+      "solution": "Verify network interface supports MAC address changes, check if NetworkManager is overriding changes, and ensure proper permissions for interface modification."
+    },
+    {
+      "issue": "Network access still blocked after MAC spoofing",
+      "solution": "Check for additional security controls like 802.1X authentication, verify the spoofed MAC is actually authorized, and test on different network ports."
+    }
+  ]
+}

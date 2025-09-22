@@ -1,0 +1,127 @@
+{
+  "id": "dhcp_autoconfiguration",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "DHCP Auto-Configuration",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Connect to the network and automatically obtain IP configuration via DHCP to gain initial network access.",
+  "tags": ["dhcp", "network", "autoconfiguration", "access"],
+  "risk_level": "low",
+
+  "overview": {
+    "purpose": "Obtain network access through DHCP autoconfiguration to bypass initial network restrictions.",
+    "scope": "Network interfaces, DHCP services, and basic network connectivity within the target environment.",
+    "prerequisites": [
+      "Physical access to network infrastructure",
+      "Network testing tools installed",
+      "Proper authorization for penetration testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "network_dhcp_available",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "dhcp_servers": {"exists": true},
+          "access_level": "blocked"
+        }
+      },
+      "description": "Trigger when DHCP services are available on a blocked network"
+    }
+  ],
+
+  "equipment": [
+    "Network interface (Ethernet/WiFi adapter)",
+    "Network cables",
+    "Portable laptop/testing device"
+  ],
+
+  "procedures": [
+    {
+      "id": "dhcp_autoconfiguration",
+      "name": "DHCP Auto-Configuration",
+      "description": "Connect to the network and automatically obtain IP configuration via DHCP to gain initial network access.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "DHCP exhaustion protection may limit available addresses",
+          "mitigation": "Use multiple MAC addresses and test during different time periods"
+        },
+        {
+          "risk": "Network monitoring may detect DHCP requests from unknown devices",
+          "mitigation": "Use legitimate-looking device names and MAC addresses from known vendors"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "dhclient",
+          "command": "sudo dhclient -v {interface}",
+          "description": "Request DHCP configuration on Linux",
+          "parameters": {
+            "interface": "Network interface name (e.g., eth0, wlan0)"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ipconfig",
+          "command": "ipconfig /release \"{adapter}\" && ipconfig /renew \"{adapter}\"",
+          "description": "Release and renew DHCP lease on Windows",
+          "parameters": {
+            "adapter": "Network adapter name"
+          },
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -n port 67 and port 68",
+          "description": "Monitor DHCP traffic for analysis",
+          "parameters": {
+            "interface": "Network interface to monitor"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "DHCP Service Available",
+      "severity": "Medium",
+      "description": "DHCP services provide network access without proper device authentication, allowing unauthorized devices to obtain IP configurations.",
+      "recommendation": "Implement DHCP snooping, port security, and integrate DHCP with NAC authentication mechanisms."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "release_dhcp_lease",
+      "description": "Release obtained DHCP lease",
+      "command": "sudo dhclient -r {interface}"
+    },
+    {
+      "step": "clear_dhcp_leases",
+      "description": "Clear any DHCP lease files created during testing",
+      "command": "sudo rm -f /var/lib/dhcp/dhclient.leases.*"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "DHCP requests timeout or fail",
+      "solution": "Check physical network connectivity, verify interface is up, and ensure DHCP server is reachable. Try different network ports."
+    },
+    {
+      "issue": "IP address obtained but no internet access",
+      "solution": "Check gateway configuration, DNS settings, and firewall rules that may be blocking traffic."
+    }
+  ]
+}

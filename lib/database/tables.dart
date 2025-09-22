@@ -510,3 +510,141 @@ class AssetPropertyIndexTable extends Table {
   @override
   Set<Column> get primaryKey => {assetId, propertyKey};
 }
+
+// ===== PHASE 1.1: METHODOLOGY ENGINE TABLES =====
+
+// Run instances for methodology execution tracking
+@DataClassName('RunInstanceRow')
+class RunInstancesTable extends Table {
+  @override
+  String get tableName => 'run_instances';
+
+  TextColumn get runId => text().named('run_id')();
+  TextColumn get projectId => text().named('project_id').references(ProjectsTable, #id)();
+  TextColumn get templateId => text().named('template_id')();
+  TextColumn get templateVersion => text().named('template_version')();
+  TextColumn get triggerId => text().named('trigger_id')();
+  TextColumn get assetId => text().named('asset_id').references(AssetsTable, #id)();
+
+  // JSON stored data
+  TextColumn get matchedValues => text().named('matched_values')(); // Map<String, dynamic> as JSON
+  TextColumn get parameters => text()(); // Map<String, dynamic> as JSON
+
+  // Status and metadata
+  TextColumn get status => text()(); // RunInstanceStatus enum as string
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+  TextColumn get createdBy => text().named('created_by')();
+  DateTimeColumn get updatedAt => dateTime().named('updated_at').nullable()();
+
+  // Evidence and findings - JSON arrays of IDs
+  TextColumn get evidenceIds => text().named('evidence_ids')(); // List<String> as JSON
+  TextColumn get findingIds => text().named('finding_ids')(); // List<String> as JSON
+
+  // Additional fields
+  TextColumn get notes => text().nullable()();
+  IntColumn get priority => integer().withDefault(const Constant(5))();
+  TextColumn get tags => text().withDefault(const Constant('[]'))(); // List<String> as JSON
+
+  @override
+  Set<Column> get primaryKey => {runId};
+}
+
+// History entries for audit trail
+@DataClassName('HistoryEntryRow')
+class HistoryEntriesTable extends Table {
+  @override
+  String get tableName => 'history_entries';
+
+  TextColumn get id => text()();
+  TextColumn get runId => text().named('run_id').references(RunInstancesTable, #runId)();
+  DateTimeColumn get timestamp => dateTime()();
+  TextColumn get performedBy => text().named('performed_by')();
+  TextColumn get action => text()(); // HistoryActionType enum as string
+  TextColumn get description => text()();
+  TextColumn get previousValue => text().named('previous_value').nullable()();
+  TextColumn get newValue => text().named('new_value').nullable()();
+  TextColumn get metadata => text().withDefault(const Constant('{}'))(); // Map<String, dynamic> as JSON
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Trigger evaluation results
+@DataClassName('TriggerMatchRow')
+class TriggerMatchesTable extends Table {
+  @override
+  String get tableName => 'trigger_matches';
+
+  TextColumn get id => text()();
+  TextColumn get triggerId => text().named('trigger_id')();
+  TextColumn get templateId => text().named('template_id')();
+  TextColumn get assetId => text().named('asset_id').references(AssetsTable, #id)();
+  TextColumn get projectId => text().named('project_id').references(ProjectsTable, #id)();
+
+  BoolColumn get matched => boolean()();
+  TextColumn get extractedValues => text().named('extracted_values')(); // Map<String, dynamic> as JSON
+  RealColumn get confidence => real().withDefault(const Constant(1.0))();
+  DateTimeColumn get evaluatedAt => dateTime().named('evaluated_at')();
+  IntColumn get priority => integer().withDefault(const Constant(5))();
+
+  TextColumn get error => text().nullable()();
+  TextColumn get debugInfo => text().named('debug_info').withDefault(const Constant('{}'))(); // Map<String, dynamic> as JSON
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Parameter resolution tracking
+@DataClassName('ParameterResolutionRow')
+class ParameterResolutionsTable extends Table {
+  @override
+  String get tableName => 'parameter_resolutions';
+
+  TextColumn get id => text()();
+  TextColumn get runId => text().named('run_id').references(RunInstancesTable, #runId)();
+  TextColumn get name => text()();
+  TextColumn get type => text()(); // ParameterType enum as string
+  TextColumn get value => text()(); // Dynamic value as JSON string
+  TextColumn get source => text()(); // ParameterSource enum as string
+
+  BoolColumn get required => boolean().withDefault(const Constant(false))();
+  BoolColumn get resolved => boolean().withDefault(const Constant(true))();
+  TextColumn get error => text().nullable()();
+  DateTimeColumn get resolvedAt => dateTime().named('resolved_at')();
+  TextColumn get metadata => text().withDefault(const Constant('{}'))(); // Map<String, dynamic> as JSON
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Methodology templates stored in database (instead of JSON assets)
+@DataClassName('MethodologyTemplateRow')
+class MethodologyTemplatesTable extends Table {
+  @override
+  String get tableName => 'methodology_templates';
+
+  TextColumn get id => text()();
+  TextColumn get version => text()();
+  TextColumn get templateVersion => text().named('template_version')();
+  TextColumn get name => text()();
+  TextColumn get workstream => text()();
+  TextColumn get author => text()();
+  DateTimeColumn get created => dateTime()();
+  DateTimeColumn get modified => dateTime()();
+  TextColumn get status => text()();
+  TextColumn get description => text()();
+  TextColumn get tags => text()(); // List<String> as JSON
+  TextColumn get riskLevel => text().named('risk_level')();
+
+  // Template content stored as JSON
+  TextColumn get overview => text()(); // MethodologyOverview as JSON
+  TextColumn get triggers => text()(); // List<MethodologyTrigger> as JSON
+  TextColumn get equipment => text()(); // List<String> as JSON
+  TextColumn get procedures => text()(); // List<MethodologyProcedure> as JSON
+  TextColumn get findings => text()(); // List<MethodologyFinding> as JSON
+  TextColumn get cleanup => text()(); // List<MethodologyCleanup> as JSON
+  TextColumn get troubleshooting => text()(); // List<MethodologyTroubleshooting> as JSON
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

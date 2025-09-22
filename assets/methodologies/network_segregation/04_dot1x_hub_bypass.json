@@ -1,0 +1,126 @@
+{
+  "id": "dot1x_hub_bypass",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "802.1X Bypass via Hub/Tap",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Insert a hub or network tap between an authenticated device and switch port to piggyback on existing authentication.",
+  "tags": ["802.1x", "bypass", "hub", "tap", "authentication"],
+  "risk_level": "high",
+
+  "overview": {
+    "purpose": "Test 802.1X authentication bypass by inserting network hardware between authenticated devices and switch ports.",
+    "scope": "Physical network infrastructure, 802.1X authentication systems, and network tap devices within the target environment.",
+    "prerequisites": [
+      "Physical access to network infrastructure",
+      "Network hub or tap device",
+      "Network monitoring tools",
+      "Proper authorization for penetration testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "dot1x_authentication",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "nac_enabled": true,
+          "nac_type": "802.1x",
+          "access_level": "blocked"
+        }
+      },
+      "description": "Trigger when 802.1X authentication is detected"
+    }
+  ],
+
+  "equipment": [
+    "Network hub or tap device",
+    "Throwing star LAN tap (optional)",
+    "Network cables (various lengths)",
+    "Network packet capture tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "dot1x_hub_bypass",
+      "name": "802.1X Bypass via Hub/Tap",
+      "description": "Insert a hub or network tap between an authenticated device and switch port to piggyback on existing authentication.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "Physical insertion of hub may be detected by security personnel",
+          "mitigation": "Perform during off-hours and use discrete equipment"
+        },
+        {
+          "risk": "Network performance degradation may alert IT staff",
+          "mitigation": "Use high-quality hubs and monitor network performance"
+        },
+        {
+          "risk": "Modern switches may detect multiple MAC addresses per port",
+          "mitigation": "Test port security configuration before attempting bypass"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -w capture.pcap",
+          "description": "Monitor traffic on the tapped connection",
+          "parameters": {
+            "interface": "Network interface connected to hub/tap"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "vconfig",
+          "command": "sudo modprobe 8021q && sudo vconfig add {interface} {vlan_id}",
+          "description": "Create VLAN interface for tagged networks",
+          "parameters": {
+            "interface": "Physical network interface",
+            "vlan_id": "VLAN ID discovered from traffic"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "802.1X Authentication Bypass",
+      "severity": "High",
+      "description": "802.1X authentication can be bypassed by inserting network equipment between authenticated devices and switch ports, allowing unauthorized network access.",
+      "recommendation": "Implement port security to detect multiple MAC addresses per port, deploy physical security controls for network infrastructure, and monitor for unusual network activity."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "remove_physical_devices",
+      "description": "Remove any physical network taps or hubs installed during testing",
+      "command": "# Manual removal of physical devices required"
+    },
+    {
+      "step": "remove_vlan_interfaces",
+      "description": "Remove created VLAN interfaces",
+      "command": "sudo vconfig rem {interface}.{vlan_id}"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "802.1X bypass doesn't work with hub",
+      "solution": "Verify target device maintains authentication, check if port security allows multiple MACs, and ensure hub properly forwards traffic."
+    },
+    {
+      "issue": "Network performance issues after hub insertion",
+      "solution": "Use higher quality network equipment, check for duplex mismatches, and verify cable integrity."
+    }
+  ]
+}

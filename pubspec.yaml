@@ -51,7 +51,8 @@ dependencies:
   yaml: ^3.1.2
   equatable: ^2.0.5
   freezed_annotation: ^2.4.1
-  json_annotation: ^4.8.1
+  json_annotation: ^4.9.0
+  cupertino_icons: ^1.0.8
 
 
 dev_dependencies:
@@ -87,6 +88,7 @@ flutter:
     - assets/screenshots/
     - assets/questionnaire/
     - assets/methodologies/
+    - assets/methodologies/network_segregation/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -128,6 +130,3 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/icon/app_icon.png"
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8

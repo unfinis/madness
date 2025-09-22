@@ -1,0 +1,128 @@
+{
+  "id": "wireless_attacks",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Wireless Network Attacks",
+  "workstream": "network_segregation",
+  "author": "Network Testing Team",
+  "created": "2024-01-15T00:00:00Z",
+  "modified": "2024-01-15T00:00:00Z",
+  "status": "active",
+  "description": "Leverage wireless networks to bypass wired NAC restrictions.",
+  "tags": ["wireless", "wifi", "bypass", "aircrack", "monitor"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Test wireless security and use wireless access points to bypass wired network access controls.",
+    "scope": "Wireless networks, access points, wireless authentication, and wireless-to-wired network bridging within the target environment.",
+    "prerequisites": [
+      "WiFi adapter with monitor mode support",
+      "Wireless security testing tools",
+      "Proper authorization for wireless testing activities",
+      "Legal compliance for wireless testing"
+    ],
+    "category": "Network Access Control Testing"
+  },
+
+  "triggers": [
+    {
+      "name": "wireless_network_present",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "wireless_network",
+        "properties": {
+          "encryption": ["wpa2", "wpa3", "open"],
+          "guest_network": true
+        }
+      },
+      "description": "Trigger when wireless networks are available for testing"
+    }
+  ],
+
+  "equipment": [
+    "WiFi adapter with monitor mode support",
+    "External wireless antennas (optional)",
+    "Wireless packet capture tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "wireless_attacks",
+      "name": "Wireless Network Attacks",
+      "description": "Leverage wireless networks to bypass wired NAC restrictions.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Wireless attacks may be detected by wireless IDS",
+          "mitigation": "Use low-power attacks and avoid excessive deauthentication"
+        },
+        {
+          "risk": "Legal restrictions may apply to wireless testing",
+          "mitigation": "Ensure proper authorization for wireless testing activities"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "airmon-ng",
+          "command": "sudo airmon-ng start {wireless_interface}",
+          "description": "Put wireless interface into monitor mode",
+          "parameters": {
+            "wireless_interface": "Wireless network interface"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "airodump-ng",
+          "command": "sudo airodump-ng {wireless_interface}mon",
+          "description": "Scan for available wireless networks",
+          "parameters": {
+            "wireless_interface": "Wireless interface in monitor mode"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "nmcli",
+          "command": "nmcli dev wifi connect \"{ssid}\"",
+          "description": "Connect to open wireless network",
+          "parameters": {
+            "ssid": "Target wireless network SSID"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Wireless NAC Bypass",
+      "severity": "Medium",
+      "description": "Wireless networks provide alternative access paths that bypass wired network access controls, allowing unauthorized network access.",
+      "recommendation": "Implement consistent security policies across wired and wireless networks, deploy wireless intrusion detection systems, and ensure wireless networks have proper segmentation from critical resources."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "stop_wireless_monitoring",
+      "description": "Stop wireless monitor mode and restore normal operation",
+      "command": "sudo airmon-ng stop {wireless_interface}mon"
+    },
+    {
+      "step": "disconnect_wireless",
+      "description": "Disconnect from wireless networks",
+      "command": "nmcli dev wifi disconnect"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "Wireless interface won't enter monitor mode",
+      "solution": "Check driver support for monitor mode, verify interface is not in use by other processes, and try different wireless adapters."
+    },
+    {
+      "issue": "No wireless networks detected",
+      "solution": "Check antenna connections, verify wireless is enabled, move to different locations, and check for 5GHz networks."
+    }
+  ]
+}

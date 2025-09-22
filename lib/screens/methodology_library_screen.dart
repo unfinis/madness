@@ -1,10 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/methodology_detail.dart';
 import '../providers/projects_provider.dart';
+import '../providers/storage_provider.dart';
 import '../widgets/common_state_widgets.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/methodology_template_editor_dialog.dart';
+import '../services/methodology_loader.dart';
 
 class MethodologyLibraryScreen extends ConsumerStatefulWidget {
   const MethodologyLibraryScreen({super.key});
@@ -19,69 +21,41 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   String _selectedRiskLevel = 'all';
   String _sortBy = 'name'; // name, created, updated, risk
 
-  // Mock data for now - would come from methodology service
-  final List<MethodologyTemplate> _methodologies = [
-    MethodologyTemplate(
-      id: 'METH-001',
-      title: 'SMB Enumeration',
-      objective: 'Enumerate SMB shares and permissions on Windows hosts',
-      tags: ['smb', 'windows', 'enumeration', 'network'],
-      riskLevel: 'low',
-      triggerCount: 2,
-      commandCount: 5,
-      version: '1.2.0',
-      lastModified: DateTime.now().subtract(const Duration(days: 5)),
-      created: DateTime.now().subtract(const Duration(days: 30)),
-    ),
-    MethodologyTemplate(
-      id: 'METH-002',
-      title: 'Web Service Discovery',
-      objective: 'Discover and fingerprint web services on discovered hosts',
-      tags: ['web', 'http', 'discovery', 'enumeration'],
-      riskLevel: 'low',
-      triggerCount: 3,
-      commandCount: 8,
-      version: '2.1.0',
-      lastModified: DateTime.now().subtract(const Duration(days: 2)),
-      created: DateTime.now().subtract(const Duration(days: 45)),
-    ),
-    MethodologyTemplate(
-      id: 'METH-003',
-      title: 'Credential Testing',
-      objective: 'Test discovered credentials against various services',
-      tags: ['credentials', 'authentication', 'testing', 'validation'],
-      riskLevel: 'medium',
-      triggerCount: 4,
-      commandCount: 12,
-      version: '1.0.0',
-      lastModified: DateTime.now().subtract(const Duration(days: 1)),
-      created: DateTime.now().subtract(const Duration(days: 10)),
-    ),
-    MethodologyTemplate(
-      id: 'METH-004',
-      title: 'SQL Injection Testing',
-      objective: 'Test web applications for SQL injection vulnerabilities',
-      tags: ['web', 'sql', 'injection', 'vulnerability'],
-      riskLevel: 'high',
-      triggerCount: 2,
-      commandCount: 15,
-      version: '1.5.0',
-      lastModified: DateTime.now().subtract(const Duration(hours: 6)),
-      created: DateTime.now().subtract(const Duration(days: 20)),
-    ),
-    MethodologyTemplate(
-      id: 'METH-005',
-      title: 'Buffer Overflow Exploitation',
-      objective: 'Exploit buffer overflow vulnerabilities in applications',
-      tags: ['exploitation', 'buffer overflow', 'binary', 'privilege escalation'],
-      riskLevel: 'critical',
-      triggerCount: 1,
-      commandCount: 25,
-      version: '0.9.0',
-      lastModified: DateTime.now().subtract(const Duration(days: 15)),
-      created: DateTime.now().subtract(const Duration(days: 60)),
-    ),
-  ];
+  bool _hasLoadedFromJson = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMethodologiesFromJsonIfNeeded();
+  }
+
+  /// Load methodologies from JSON assets if storage is empty
+  Future<void> _loadMethodologiesFromJsonIfNeeded() async {
+    if (_hasLoadedFromJson) return;
+
+    try {
+      final storage = ref.read(storageServiceProvider);
+      final existingTemplates = await storage.getAllTemplates();
+
+      // If storage is empty, load from JSON and migrate
+      if (existingTemplates.isEmpty) {
+        debugPrint('Storage empty, loading from JSON assets...');
+        await MethodologyLoader.loadAllMethodologies();
+        final jsonMethodologies = MethodologyLoader.getAllMethodologies();
+        debugPrint('Loaded ${jsonMethodologies.length} methodologies from JSON');
+
+        // Store in Drift database
+        for (final methodology in jsonMethodologies) {
+          await storage.storeTemplate(methodology);
+        }
+        debugPrint('Migrated ${jsonMethodologies.length} methodologies to Drift database');
+      }
+
+      _hasLoadedFromJson = true;
+    } catch (e) {
+      debugPrint('Error in _loadMethodologiesFromJsonIfNeeded: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,8 +67,59 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       );
     }
 
-    final filteredMethodologies = _applyFilters(_methodologies);
-    final allTags = _getAllTags(_methodologies);
+    // Watch templates from storage
+    final templatesAsync = ref.watch(templateNotifierProvider);
+
+    return templatesAsync.when(
+      loading: () => Scaffold(
+        appBar: AppBar(
+          title: const Text('Methodology Library'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (error, stackTrace) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Methodology Library'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error,
+                size: 64,
+                color: Colors.red[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading methodologies: $error',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.refresh(templateNotifierProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (methodologies) {
+        final filteredMethodologies = _applyFilters(methodologies);
+        final allTags = _getAllTags(methodologies);
+
+        return _buildLibraryContent(filteredMethodologies, allTags);
+      },
+    );
+  }
+
+  Widget _buildLibraryContent(List<MethodologyTemplate> filteredMethodologies, List<String> allTags) {
+    // Get original methodologies list for stats
+    final templatesAsync = ref.read(templateNotifierProvider);
+    final allMethodologies = templatesAsync.asData?.value ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -102,7 +127,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _refreshMethodologies,
+            onPressed: () => ref.refresh(templateNotifierProvider),
             tooltip: 'Refresh Library',
           ),
           PopupMenuButton<String>(
@@ -143,12 +168,12 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       ),
       body: Column(
         children: [
-          _buildStatsBar(filteredMethodologies, _methodologies),
+          _buildStatsBar(filteredMethodologies, allMethodologies),
           const Divider(height: 1),
           _buildSearchAndFilters(),
           const Divider(height: 1),
           if (allTags.isNotEmpty) ...[
-            _buildTagCloud(allTags),
+            _buildTagCloud(allTags, allMethodologies),
             const Divider(height: 1),
           ],
           Expanded(
@@ -322,9 +347,9 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  Widget _buildTagCloud(List<String> allTags) {
+  Widget _buildTagCloud(List<String> allTags, List<MethodologyTemplate> methodologies) {
     final tagFrequency = <String, int>{};
-    for (final methodology in _methodologies) {
+    for (final methodology in methodologies) {
       for (final tag in methodology.tags) {
         tagFrequency[tag] = (tagFrequency[tag] ?? 0) + 1;
       }
@@ -467,7 +492,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
                   children: [
                     Expanded(
                       child: Text(
-                        methodology.title,
+                        methodology.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -504,7 +529,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
                     children: [
                       // Objective
                       Text(
-                        methodology.objective,
+                        methodology.description,
                         style: Theme.of(context).textTheme.bodyMedium,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
@@ -549,9 +574,9 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
                       // Stats row
                       Row(
                         children: [
-                          _buildMethodologyBadge('Triggers: ${methodology.triggerCount}', Icons.flash_on, Colors.orange),
+                          _buildMethodologyBadge('Triggers: ${methodology.triggers.length}', Icons.flash_on, Colors.orange),
                           const SizedBox(width: 4),
-                          _buildMethodologyBadge('Commands: ${methodology.commandCount}', Icons.terminal, Colors.blue),
+                          _buildMethodologyBadge('Commands: ${methodology.procedures.expand((p) => p.commands).length}', Icons.terminal, Colors.blue),
                         ],
                       ),
                     ],
@@ -574,7 +599,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
                     Icon(Icons.access_time, size: 12, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      _formatDate(methodology.lastModified),
+                      _formatDate(methodology.modified),
                       style: TextStyle(
                         fontSize: 10,
                         color: Colors.grey[600],
@@ -686,9 +711,9 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       // Search filter
       if (_searchQuery.isNotEmpty) {
         final searchableText = [
-          methodology.title,
+          methodology.name,
           methodology.id,
-          methodology.objective,
+          methodology.description,
           ...methodology.tags,
         ].join(' ').toLowerCase();
 
@@ -713,13 +738,13 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     // Sort
     switch (_sortBy) {
       case 'name':
-        filtered.sort((a, b) => a.title.compareTo(b.title));
+        filtered.sort((a, b) => a.name.compareTo(b.name));
         break;
       case 'created':
         filtered.sort((a, b) => b.created.compareTo(a.created));
         break;
       case 'updated':
-        filtered.sort((a, b) => b.lastModified.compareTo(a.lastModified));
+        filtered.sort((a, b) => b.modified.compareTo(a.modified));
         break;
       case 'risk':
         filtered.sort((a, b) => _getRiskLevelPriority(b.riskLevel).compareTo(_getRiskLevelPriority(a.riskLevel)));
@@ -791,12 +816,6 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     }
   }
 
-  void _refreshMethodologies() {
-    // TODO: Implement methodology refresh
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Refreshing methodology library...')),
-    );
-  }
 
   void _handleMenuAction(String action) {
     switch (action) {
@@ -831,30 +850,10 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   }
 
   void _openMethodology(MethodologyTemplate template) {
-    // Convert template to MethodologyDetail for viewing
-    final methodology = MethodologyDetail(
-      id: template.id,
-      title: template.title,
-      uniqueId: template.id,
-      overview: template.objective,
-      purpose: '', // Would be loaded from full template
-      commands: [], // Would be loaded from full template
-      cleanupSteps: [],
-      commonIssues: [],
-      relatedFindings: [],
-      metadata: {
-        'tags': template.tags,
-        'risk_level': template.riskLevel,
-        'version': template.version,
-        'trigger_count': template.triggerCount,
-        'command_count': template.commandCount,
-      },
-    );
-
     showDialog(
       context: context,
       builder: (context) => MethodologyTemplateEditorDialog(
-        methodology: methodology,
+        jsonMethodology: template,
         isEditMode: false,
       ),
     );
@@ -881,28 +880,10 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   }
 
   void _editMethodology(MethodologyTemplate template) {
-    // Convert to MethodologyDetail and open in edit mode
-    final methodology = MethodologyDetail(
-      id: template.id,
-      title: template.title,
-      uniqueId: template.id,
-      overview: template.objective,
-      purpose: '',
-      commands: [],
-      cleanupSteps: [],
-      commonIssues: [],
-      relatedFindings: [],
-      metadata: {
-        'tags': template.tags,
-        'risk_level': template.riskLevel,
-        'version': template.version,
-      },
-    );
-
     showDialog(
       context: context,
       builder: (context) => MethodologyTemplateEditorDialog(
-        methodology: methodology,
+        jsonMethodology: template,
         isEditMode: true,
         onSave: (updatedMethodology) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -931,7 +912,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Methodology'),
-        content: Text('Are you sure you want to delete "${methodology.title}"? This action cannot be undone.'),
+        content: Text('Are you sure you want to delete "${methodology.name}"? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -941,7 +922,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Methodology "${methodology.title}" deleted')),
+                SnackBar(content: Text('Methodology "${methodology.name}" deleted')),
               );
               // TODO: Delete from methodology service
             },
@@ -973,31 +954,6 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
 }
 
 // Supporting classes
-class MethodologyTemplate {
-  final String id;
-  final String title;
-  final String objective;
-  final List<String> tags;
-  final String riskLevel;
-  final int triggerCount;
-  final int commandCount;
-  final String version;
-  final DateTime lastModified;
-  final DateTime created;
-
-  MethodologyTemplate({
-    required this.id,
-    required this.title,
-    required this.objective,
-    required this.tags,
-    required this.riskLevel,
-    required this.triggerCount,
-    required this.commandCount,
-    required this.version,
-    required this.lastModified,
-    required this.created,
-  });
-}
 
 class _MethodologyStats {
   final int lowRisk;

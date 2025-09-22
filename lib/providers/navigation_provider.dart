@@ -14,6 +14,8 @@ enum NavigationSection {
   methodology,
   methodologyDashboard,
   assets,
+  comprehensiveAssets,
+  triggerEvaluation,
   credentials,
   history,
   findings,
