@@ -1,5 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:math' as math;
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -223,9 +225,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     try {
       // Get the screenshot data first
       final screenshot = await ref.read(screenshotProvider(widget.screenshotId).future);
-      
+
       if (screenshot != null && screenshot.originalPath.isNotEmpty) {
-        await _loadImageFromAsset(screenshot.originalPath);
+        // Check if this is an asset path or a file path
+        if (screenshot.originalPath.startsWith('assets/')) {
+          await _loadImageFromAsset(screenshot.originalPath);
+        } else {
+          await _loadImageFromFile(screenshot.originalPath);
+        }
       } else {
         await _loadPlaceholderImage();
       }
@@ -241,13 +248,37 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       final Uint8List bytes = data.buffer.asUint8List();
       final ui.Codec codec = await ui.instantiateImageCodec(bytes);
       final ui.FrameInfo frameInfo = await codec.getNextFrame();
-      
+
       setState(() {
         _backgroundImage = frameInfo.image;
         _isLoading = false;
       });
     } catch (e) {
       print('Error loading image from asset: $e');
+      await _loadPlaceholderImage();
+    }
+  }
+
+  Future<void> _loadImageFromFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        print('File does not exist: $filePath');
+        await _loadPlaceholderImage();
+        return;
+      }
+
+      final Uint8List bytes = await file.readAsBytes();
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+
+      setState(() {
+        _backgroundImage = frameInfo.image;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading image from file: $e');
+      print('The asset does not exist or has empty data.');
       await _loadPlaceholderImage();
     }
   }

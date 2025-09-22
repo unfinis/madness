@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/projects_provider.dart';
+import '../providers/attack_plan_provider.dart';
+import '../providers/comprehensive_asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
 import '../constants/app_spacing.dart';
+import '../models/attack_plan_action.dart';
+import '../dialogs/attack_plan_action_detail_dialog.dart';
 
 class AttackPlanScreen extends ConsumerStatefulWidget {
   const AttackPlanScreen({super.key});
@@ -153,7 +157,7 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
           // Priority filter
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: _selectedFilter,
+              initialValue: _selectedFilter,
               decoration: InputDecoration(
                 labelText: 'Priority',
                 border: OutlineInputBorder(
@@ -181,6 +185,84 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
   }
 
   Widget _buildActionsTab(String filter) {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return const SizedBox();
+
+    final actionsAsync = ref.watch(attackPlanActionsProvider(currentProject.id));
+
+    return actionsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, size: 64, color: Colors.red[400]),
+            const SizedBox(height: AppSpacing.md),
+            Text('Error loading actions: $error'),
+            const SizedBox(height: AppSpacing.md),
+            ElevatedButton(
+              onPressed: () => ref.refresh(attackPlanActionsProvider(currentProject.id)),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (allActions) {
+        List<AttackPlanAction> filteredActions;
+
+        switch (filter) {
+          case 'pending':
+            filteredActions = allActions.where((a) => a.status == ActionStatus.pending).toList();
+            break;
+          case 'in_progress':
+            filteredActions = allActions.where((a) => a.status == ActionStatus.inProgress).toList();
+            break;
+          case 'completed':
+            filteredActions = allActions.where((a) => a.status == ActionStatus.completed).toList();
+            break;
+          default:
+            filteredActions = allActions;
+        }
+
+        // Apply search filter
+        if (_searchQuery.isNotEmpty) {
+          filteredActions = filteredActions.where((action) {
+            final query = _searchQuery.toLowerCase();
+            return action.title.toLowerCase().contains(query) ||
+                action.objective.toLowerCase().contains(query) ||
+                action.tags.any((tag) => tag.toLowerCase().contains(query));
+          }).toList();
+        }
+
+        // Apply priority filter
+        if (_selectedFilter != 'all') {
+          final priority = ActionPriority.values.where((p) => p.name == _selectedFilter).firstOrNull;
+          if (priority != null) {
+            filteredActions = filteredActions.where((a) => a.priority == priority).toList();
+          }
+        }
+
+        if (filteredActions.isEmpty && allActions.isEmpty) {
+          return _buildEmptyState(filter);
+        }
+
+        if (filteredActions.isEmpty) {
+          return _buildNoResultsState(filter);
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          itemCount: filteredActions.length,
+          itemBuilder: (context, index) {
+            final action = filteredActions[index];
+            return _buildActionCard(action);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String filter) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -216,23 +298,215 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
     );
   }
 
+  Widget _buildNoResultsState(String filter) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'No actions match your current filters',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'Try adjusting your search or filter criteria.',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCard(AttackPlanAction action) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: InkWell(
+        onTap: () => _showActionDetail(action),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      action.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  _buildStatusChip(action.status),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildPriorityChip(action.priority),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                action.objective,
+                style: Theme.of(context).textTheme.bodyMedium,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Icon(Icons.security, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Risk: ${action.riskLevel.displayName}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Created: ${action.createdAt.toString().split(' ')[0]}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+              if (action.tags.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  children: action.tags.take(3).map((tag) => Chip(
+                    label: Text(tag, style: const TextStyle(fontSize: 10)),
+                    backgroundColor: Colors.grey[200],
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  )).toList(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(ActionStatus status) {
+    Color color;
+    switch (status) {
+      case ActionStatus.pending:
+        color = Colors.orange;
+        break;
+      case ActionStatus.inProgress:
+        color = Colors.blue;
+        break;
+      case ActionStatus.completed:
+        color = Colors.green;
+        break;
+      case ActionStatus.blocked:
+        color = Colors.red;
+        break;
+      case ActionStatus.skipped:
+        color = Colors.grey;
+        break;
+    }
+
+    return Chip(
+      label: Text(
+        status.displayName,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+      backgroundColor: color,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
+  Widget _buildPriorityChip(ActionPriority priority) {
+    Color color;
+    switch (priority) {
+      case ActionPriority.critical:
+        color = Colors.red[700]!;
+        break;
+      case ActionPriority.high:
+        color = Colors.orange[700]!;
+        break;
+      case ActionPriority.medium:
+        color = Colors.yellow[700]!;
+        break;
+      case ActionPriority.low:
+        color = Colors.blue[700]!;
+        break;
+    }
+
+    return Chip(
+      label: Text(
+        priority.displayName,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+      backgroundColor: color,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
+  void _showActionDetail(AttackPlanAction action) {
+    showDialog(
+      context: context,
+      builder: (context) => AttackPlanActionDetailDialog(action: action),
+    );
+  }
+
   Future<void> _generateNewActions(String projectId) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Generating methodology actions...'),
+        duration: Duration(seconds: 2),
       ),
     );
 
-    // TODO: Implement action generation
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Get all assets for the project
+      final assets = await ref.read(assetsProvider(projectId).future);
+      print('AttackPlanScreen: Found ${assets.length} assets for project $projectId');
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Action generation coming soon...'),
-          backgroundColor: Colors.blue,
-        ),
-      );
+      if (assets.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No assets found. Please add some assets first.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Generate actions from assets
+      print('AttackPlanScreen: Calling generateActionsFromAssets with ${assets.length} assets');
+      for (int i = 0; i < assets.length; i++) {
+        final asset = assets[i];
+        print('AttackPlanScreen: Asset $i: ${asset.name} (${asset.type.name}) with properties: ${asset.properties.keys.toList()}');
+      }
+
+      final actionsNotifier = ref.read(attackPlanActionsProvider(projectId).notifier);
+      await actionsNotifier.generateActionsFromAssets(assets);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Actions generated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating actions: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

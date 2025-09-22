@@ -138,7 +138,16 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/enhanced_asset_dialog.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/assets_screen_classic.dart lib/dialogs/enhanced_asset_dialog.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/assets_screen_classic.dart lib/dialogs/enhanced_asset_dialog.dart --fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/enhanced_asset_dialog.dart lib/screens/assets_screen_classic.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/enhanced_asset_dialog.dart lib/screens/assets_screen_classic.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/editor_canvas.dart lib/dialogs/comprehensive_asset_detail_dialog.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/screenshot_thumbnail_service.dart lib/widgets/rendered_screenshot_thumbnail.dart lib/screens/screenshots_screen.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/properties_panel.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/providers/attack_plan_provider.dart lib/screens/attack_plan_screen.dart lib/services/memory_attack_plan_storage.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/providers/attack_plan_provider.dart lib/screens/attack_plan_screen.dart lib/services/memory_attack_plan_storage.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/providers/attack_plan_provider.dart lib/screens/attack_plan_screen.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/attack_plan_screen.dart lib/providers/attack_plan_provider.dart lib/services/attack_plan_generator.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/attack_plan_generator.dart lib/screens/attack_plan_screen.dart)"
     ],
     "deny": [],
     "ask": []

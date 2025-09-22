@@ -1,0 +1,364 @@
+{
+  "id": "vlan_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "VLAN Segmentation Discovery",
+  "workstream": "discovery",
+  "author": "Discovery Team",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Discover and enumerate VLAN segmentation and configuration to understand network segmentation security controls.",
+  "tags": ["vlan", "discovery", "enumeration", "segmentation", "network"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Determine VLAN configuration, segmentation policies, and potential bypass opportunities to assess network segmentation security.",
+    "scope": "Network segmentation security assessment focusing on VLAN discovery, configuration analysis, and inter-VLAN communication testing.",
+    "prerequisites": [
+      "Network access to target segment",
+      "Switch management access (if available)",
+      "VLAN-capable network interface",
+      "Network testing and packet crafting tools"
+    ],
+    "category": "Network Segmentation Discovery"
+  },
+
+  "triggers": [
+    {
+      "name": "vlan_segmentation_unknown",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "vlan_segmentation": ""
+        }
+      },
+      "description": "Trigger when VLAN segmentation status is unknown for network segment"
+    }
+  ],
+
+  "equipment": [
+    "Network adapter (VLAN-capable interface)",
+    "Managed switch access (optional)",
+    "Packet capture and analysis tools",
+    "VLAN configuration utilities",
+    "Network discovery and attack tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "vlan_traffic_analysis",
+      "name": "Network Traffic VLAN Tag Analysis",
+      "description": "Capture and analyze network traffic to identify VLAN tagging and discover VLAN IDs in use.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Packet capture may be detected by network monitoring",
+          "mitigation": "Use passive monitoring with minimal traffic capture duration"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -nn -e vlan -c 100",
+          "description": "Capture 802.1Q VLAN tagged frames to identify VLAN IDs",
+          "parameters": {
+            "interface": "Network interface for packet capture"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -nn -e 'vlan and icmp' -c 50",
+          "description": "Capture VLAN tagged ICMP traffic for analysis",
+          "parameters": {
+            "interface": "Network interface for VLAN traffic capture"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "switch_management_enumeration",
+      "name": "Switch Management Interface Discovery",
+      "description": "Enumerate network switches and their management interfaces for VLAN configuration access.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Management port scanning may trigger security alerts",
+          "mitigation": "Use standard port scanning techniques with appropriate timing"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -p 22,23,80,443,161,8080,9443 {network_range} --open",
+          "description": "Scan for switch management services",
+          "parameters": {
+            "network_range": "Network range to scan for switches"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "snmp_vlan_enumeration",
+      "name": "SNMP VLAN Configuration Enumeration",
+      "description": "Attempt to retrieve VLAN configuration information via SNMP if weak community strings exist.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "SNMP queries may be logged by network management systems",
+          "mitigation": "Use common community strings and limit query frequency"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "snmpwalk",
+          "command": "snmpwalk -v2c -c public {switch_ip} 1.3.6.1.2.1.17.7.1.4.3.1.1",
+          "description": "Query VLAN information via SNMP with public community",
+          "parameters": {
+            "switch_ip": "IP address of target switch"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "snmpwalk",
+          "command": "snmpwalk -v2c -c private {switch_ip} 1.3.6.1.2.1.17.7.1.4.3.1.1",
+          "description": "Query VLAN information with private community string",
+          "parameters": {
+            "switch_ip": "IP address of target switch"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "vlan_hopping_test",
+      "name": "VLAN Hopping via Double Tagging Test",
+      "description": "Test for VLAN hopping vulnerabilities using double tagging technique.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "VLAN hopping attempts may trigger security alerts",
+          "mitigation": "Test on non-production networks and document any configuration changes"
+        },
+        {
+          "risk": "Double tagging may cause network instability",
+          "mitigation": "Limit testing scope and monitor network performance"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "scapy",
+          "command": "python3 -c \"from scapy.all import *; send(Ether()/Dot1Q(vlan=1)/Dot1Q(vlan={target_vlan})/IP(dst='{target_ip}')/ICMP())\"",
+          "description": "Craft double-tagged VLAN packet for hopping test",
+          "parameters": {
+            "target_vlan": "Target VLAN ID to attempt access",
+            "target_ip": "Target IP address in destination VLAN"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "dtp_vulnerability_test",
+      "name": "Dynamic Trunking Protocol (DTP) Testing",
+      "description": "Test for DTP vulnerabilities that may allow unauthorized trunk negotiation.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "DTP attacks may cause switch port configuration changes",
+          "mitigation": "Document original port configuration and test on isolated ports"
+        },
+        {
+          "risk": "Trunk establishment may provide access to multiple VLANs",
+          "mitigation": "Monitor for unauthorized VLAN access and restore original configuration"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "yersinia",
+          "command": "sudo yersinia -I",
+          "description": "Launch Yersinia interactive mode for DTP testing",
+          "parameters": {},
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "vlan_enumeration",
+      "name": "VLAN Range Enumeration via ARP Sweeping",
+      "description": "Enumerate accessible VLANs by testing connectivity to different VLAN network ranges.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Network scanning across multiple VLANs may generate significant traffic",
+          "mitigation": "Use targeted scanning and limit scope to reasonable VLAN ranges"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "for vlan in {1..10}; do nmap -sn {network_base}.$vlan.0/24; done",
+          "description": "Scan for active hosts in different VLAN ranges",
+          "parameters": {
+            "network_base": "Base network address (e.g., 192.168 for 192.168.X.0/24)"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "inter_vlan_routing_test",
+      "name": "Inter-VLAN Routing Restriction Testing",
+      "description": "Test for inter-VLAN communication restrictions and routing policies.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Routing tests may generate logs in network monitoring systems",
+          "mitigation": "Use standard connectivity testing patterns"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "traceroute",
+          "command": "traceroute {target_vlan_ip}",
+          "description": "Trace routing path to target VLAN to identify segmentation",
+          "parameters": {
+            "target_vlan_ip": "IP address in target VLAN"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "ping",
+          "command": "ping -c 5 {target_vlan_ip}",
+          "description": "Test direct connectivity to target VLAN",
+          "parameters": {
+            "target_vlan_ip": "IP address in target VLAN"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "cdp_lldp_discovery",
+      "name": "CDP/LLDP Protocol Discovery",
+      "description": "Monitor for Cisco Discovery Protocol (CDP) and Link Layer Discovery Protocol (LLDP) frames.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Protocol monitoring is passive with minimal risk",
+          "mitigation": "Standard network monitoring activity"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -nn 'ether[12:2] = 0x88cc or ether[12:2] = 0x2000'",
+          "description": "Capture CDP and LLDP frames for switch and VLAN information",
+          "parameters": {
+            "interface": "Network interface for protocol capture"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "VLAN Segmentation Implemented",
+      "severity": "Informational",
+      "description": "Network implements VLAN-based segmentation with [specific VLAN configuration details].",
+      "recommendation": "Document VLAN configuration and verify proper access controls between VLANs."
+    },
+    {
+      "title": "VLAN Hopping Vulnerability",
+      "severity": "High",
+      "description": "Network is vulnerable to VLAN hopping attacks, allowing unauthorized access to restricted network segments.",
+      "recommendation": "Disable DTP on access ports, configure explicit access/trunk modes, and implement proper VLAN access controls."
+    },
+    {
+      "title": "Weak VLAN Configuration",
+      "severity": "Medium",
+      "description": "VLAN implementation has security weaknesses including [specific configuration issues].",
+      "recommendation": "Strengthen VLAN configuration, review native VLAN settings, and implement VLAN access control lists."
+    },
+    {
+      "title": "Inter-VLAN Routing Unrestricted",
+      "severity": "Medium",
+      "description": "No restrictions detected on inter-VLAN communication, allowing potential lateral movement.",
+      "recommendation": "Implement VLAN access control lists (ACLs) to restrict inter-VLAN communication based on security requirements."
+    },
+    {
+      "title": "DTP Vulnerability",
+      "severity": "Medium",
+      "description": "Dynamic Trunking Protocol allows unauthorized trunk negotiation, potentially exposing multiple VLANs.",
+      "recommendation": "Disable DTP on all access ports and configure trunk ports explicitly where required."
+    },
+    {
+      "title": "Information Disclosure via Network Protocols",
+      "severity": "Low",
+      "description": "CDP/LLDP protocols expose network topology and VLAN information to unauthorized users.",
+      "recommendation": "Disable CDP/LLDP on ports facing untrusted networks or implement proper access controls."
+    },
+    {
+      "title": "No VLAN Segmentation",
+      "severity": "Medium",
+      "description": "Network does not implement VLAN segmentation, providing no logical network separation.",
+      "recommendation": "Implement VLAN segmentation based on security requirements and business needs."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "remove_vlan_interfaces",
+      "description": "Remove any test VLAN interfaces created during testing",
+      "command": "sudo vconfig rem {interface}.{vlan_id}"
+    },
+    {
+      "step": "restore_interface_configuration",
+      "description": "Restore original network interface configuration",
+      "command": "sudo ifconfig {interface} {original_config}"
+    },
+    {
+      "step": "remove_capture_files",
+      "description": "Remove packet capture files created during testing",
+      "command": "sudo rm -f vlan_discovery.pcap"
+    },
+    {
+      "step": "clear_arp_cache",
+      "description": "Clear ARP cache to remove testing artifacts",
+      "command": "sudo ip neigh flush all"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "No VLAN tags detected in traffic capture",
+      "solution": "Verify interface supports VLAN tagging, check if trunk port is available, and ensure sufficient monitoring time. Some networks may use untagged VLANs."
+    },
+    {
+      "issue": "SNMP queries return no VLAN information",
+      "solution": "Try different community strings (public, private, company name), verify SNMP is enabled, and check if VLAN MIBs are supported on target devices."
+    },
+    {
+      "issue": "VLAN hopping test shows no response",
+      "solution": "Verify target VLAN and IP addresses exist, check if double tagging is filtered, and ensure proper packet crafting syntax."
+    },
+    {
+      "issue": "DTP testing tool fails to start",
+      "solution": "Check if yersinia is properly installed, verify interface permissions, and ensure no other network management tools are interfering."
+    },
+    {
+      "issue": "Inter-VLAN routing tests fail",
+      "solution": "Verify target IP addresses exist, check routing table configuration, and ensure no firewall rules are blocking traffic."
+    },
+    {
+      "issue": "CDP/LLDP frames not captured",
+      "solution": "Increase capture time as these protocols may have longer intervals, verify interface is connected to managed switch, and check if protocols are enabled."
+    }
+  ]
+}

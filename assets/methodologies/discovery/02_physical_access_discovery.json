@@ -1,0 +1,333 @@
+{
+  "id": "physical_access_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Physical Network Access Discovery",
+  "workstream": "discovery",
+  "author": "Discovery Team",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Assess physical network access capabilities and restrictions to understand physical security controls and potential attack vectors.",
+  "tags": ["physical", "discovery", "enumeration", "network", "infrastructure"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Determine physical network access capabilities and security controls to assess physical security posture and identify potential weaknesses.",
+    "scope": "Physical network security assessment focusing on device connectivity, access controls, and infrastructure discovery.",
+    "prerequisites": [
+      "Network connectivity to target segment",
+      "Physical access to network infrastructure areas",
+      "Network testing tools and multiple interfaces"
+    ],
+    "category": "Physical Security Discovery"
+  },
+
+  "triggers": [
+    {
+      "name": "physical_access_unknown",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "physical_access": ""
+        }
+      },
+      "description": "Trigger when physical access status is unknown for network segment"
+    }
+  ],
+
+  "equipment": [
+    "Network adapter (wired network interface)",
+    "USB-to-Ethernet adapter (for additional connectivity testing)",
+    "Wireless adapter (for WiFi connectivity testing)",
+    "Network testing tools (nmap, arp-scan)",
+    "MAC address manipulation tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "network_device_discovery",
+      "name": "Active Network Device Discovery",
+      "description": "Identify active network devices and access points to map physical network infrastructure.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Network scanning may be detected by monitoring systems",
+          "mitigation": "Use gentle scanning techniques with appropriate timing delays"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -sn {network_range} --exclude {current_ip}",
+          "description": "Discover active devices on network segment",
+          "parameters": {
+            "network_range": "Target network range (e.g., 192.168.1.0/24)",
+            "current_ip": "Current host IP to exclude from scan"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "infrastructure_enumeration",
+      "name": "Physical Network Infrastructure Scanning",
+      "description": "Scan for physical network infrastructure devices like switches, routers, and access points.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Management interface scanning may trigger security alerts",
+          "mitigation": "Focus on common management ports and use standard scanning techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -p 22,23,80,443,161,8080 {network_range} --open",
+          "description": "Scan for common management services on infrastructure devices",
+          "parameters": {
+            "network_range": "Target network range for infrastructure scanning"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "unmanaged_device_detection",
+      "name": "Unmanaged Switch and Hub Detection",
+      "description": "Check for unmanaged network devices that may provide additional access opportunities.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "ARP scanning may generate network traffic logs",
+          "mitigation": "Use standard ARP discovery patterns to blend with normal traffic"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "arp-scan",
+          "command": "sudo arp-scan -l",
+          "description": "Scan local network segment for all devices",
+          "parameters": {},
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "arp-scan",
+          "command": "sudo arp-scan -l | grep -E '(00:00:00|ff:ff:ff)'",
+          "description": "Look for devices with default or broadcast MAC addresses",
+          "parameters": {},
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "mac_spoofing_capability_test",
+      "name": "MAC Address Spoofing Capability Test",
+      "description": "Test the ability to change MAC addresses for potential access control bypass.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "MAC address changes may trigger port security violations",
+          "mitigation": "Document original MAC address and restore immediately after testing"
+        },
+        {
+          "risk": "Network conflicts may occur with duplicate MAC addresses",
+          "mitigation": "Use randomized MAC addresses and test for short periods"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "macchanger",
+          "command": "sudo macchanger --show {interface}",
+          "description": "Display current MAC address before testing",
+          "parameters": {
+            "interface": "Network interface to test"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "macchanger",
+          "command": "sudo macchanger -r {interface}",
+          "description": "Change to random MAC address",
+          "parameters": {
+            "interface": "Network interface to modify"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "macchanger",
+          "command": "sudo macchanger -p {interface}",
+          "description": "Restore permanent (original) MAC address",
+          "parameters": {
+            "interface": "Network interface to restore"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "interface_enumeration",
+      "name": "Network Interface Discovery",
+      "description": "Enumerate available network interfaces for comprehensive connectivity testing.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Interface enumeration is typically logged",
+          "mitigation": "This is normal system administration activity with minimal risk"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "ip",
+          "command": "ip link show | grep -E 'eth|wlan|usb'",
+          "description": "List available network interfaces on Linux",
+          "parameters": {},
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ifconfig",
+          "command": "ifconfig -a | grep -E 'eth|wlan|en'",
+          "description": "List network interfaces on macOS/BSD",
+          "parameters": {},
+          "platforms": ["macos"]
+        }
+      ]
+    },
+    {
+      "id": "connectivity_testing",
+      "name": "Multi-Interface Connectivity Testing",
+      "description": "Test network connectivity from different interface types to assess access restrictions.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Multiple connection attempts may be logged",
+          "mitigation": "Use standard connectivity tests that appear as normal network troubleshooting"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "ping",
+          "command": "ping -c 3 -I {interface} 8.8.8.8",
+          "description": "Test external connectivity through specific interface",
+          "parameters": {
+            "interface": "Network interface to test"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ping",
+          "command": "ping -c 3 -I {interface} {gateway_ip}",
+          "description": "Test local gateway connectivity",
+          "parameters": {
+            "interface": "Network interface to test",
+            "gateway_ip": "Local gateway IP address"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "wireless_discovery",
+      "name": "Wireless Network Availability Check",
+      "description": "Check for available wireless networks that may provide alternative access paths.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Wireless scanning may be detected by wireless IDS",
+          "mitigation": "Use passive scanning and standard wireless tools"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "iwlist",
+          "command": "sudo iwlist scan 2>/dev/null | grep -E 'ESSID|Encryption'",
+          "description": "Scan for available wireless networks and encryption status",
+          "parameters": {},
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "nmcli",
+          "command": "nmcli dev wifi list",
+          "description": "List available WiFi networks using NetworkManager",
+          "parameters": {},
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Unrestricted Physical Network Access",
+      "severity": "Medium",
+      "description": "Network allows unrestricted physical device connections without proper access controls or monitoring.",
+      "recommendation": "Implement network access control (NAC), port security, and physical security measures for network infrastructure areas."
+    },
+    {
+      "title": "Unmanaged Network Infrastructure",
+      "severity": "High",
+      "description": "Unmanaged switches or hubs detected in network infrastructure, providing potential bypass opportunities.",
+      "recommendation": "Replace unmanaged devices with managed switches, implement proper network segmentation, and establish centralized network management."
+    },
+    {
+      "title": "MAC Address Filtering Absent",
+      "severity": "Low",
+      "description": "No MAC address-based access controls detected, allowing easy device spoofing.",
+      "recommendation": "Consider implementing MAC address filtering as part of layered security approach, while recognizing its limitations."
+    },
+    {
+      "title": "Multiple Access Path Available",
+      "severity": "Medium",
+      "description": "Multiple network access methods (wired, wireless) available without proper segregation or monitoring.",
+      "recommendation": "Implement consistent access controls across all network interfaces and establish network segmentation between access methods."
+    },
+    {
+      "title": "Physical Security Controls Present",
+      "severity": "Informational",
+      "description": "Network infrastructure shows evidence of proper physical security controls and access restrictions.",
+      "recommendation": "Continue monitoring and maintaining physical security controls. Consider periodic assessment of effectiveness."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "restore_mac_addresses",
+      "description": "Restore original MAC addresses on all tested interfaces",
+      "command": "sudo macchanger -p {interface}"
+    },
+    {
+      "step": "disconnect_test_interfaces",
+      "description": "Disconnect any test interfaces that were brought up",
+      "command": "sudo ip link set {interface} down"
+    },
+    {
+      "step": "clear_arp_cache",
+      "description": "Clear ARP cache to remove testing artifacts",
+      "command": "sudo ip neigh flush all"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "Network discovery returns no results",
+      "solution": "Verify network connectivity, check interface configuration, and ensure target network range is correct. Try different discovery techniques like ARP scanning."
+    },
+    {
+      "issue": "MAC address change fails",
+      "solution": "Check if interface supports MAC address changes, verify interface is down before changing, and ensure sufficient privileges for network operations."
+    },
+    {
+      "issue": "Interface enumeration shows no additional interfaces",
+      "solution": "Check for USB network adapters, verify driver installation, and look for virtual network interfaces. Some interfaces may require specific drivers."
+    },
+    {
+      "issue": "Connectivity tests fail on all interfaces",
+      "solution": "Verify physical connections, check DHCP availability, and ensure routing configuration. Test with static IP configuration if DHCP fails."
+    },
+    {
+      "issue": "Wireless scanning returns no networks",
+      "solution": "Verify wireless adapter is working, check if interface supports monitor mode, and ensure wireless networks are within range."
+    }
+  ]
+}

@@ -1,0 +1,390 @@
+{
+  "id": "ssl_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "SSL/TLS Configuration Discovery",
+  "workstream": "discovery",
+  "author": "Discovery Team",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Discover and analyze SSL/TLS implementations and configurations to assess encryption security posture.",
+  "tags": ["ssl", "tls", "discovery", "encryption", "certificates", "web_security"],
+  "risk_level": "low",
+
+  "overview": {
+    "purpose": "Determine SSL/TLS implementation, configuration strength, and vulnerabilities to assess encryption security controls.",
+    "scope": "Web service and encrypted communication security assessment focusing on SSL/TLS discovery and configuration analysis.",
+    "prerequisites": [
+      "Network connectivity to target services",
+      "SSL/TLS analysis tools installed",
+      "Internet access for certificate validation"
+    ],
+    "category": "Encryption Security Discovery"
+  },
+
+  "triggers": [
+    {
+      "name": "ssl_status_unknown_web_service",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "webService",
+        "properties": {
+          "ssl_enabled": ""
+        }
+      },
+      "description": "Trigger when SSL/TLS status is unknown for web service"
+    },
+    {
+      "name": "ssl_status_unknown_host_with_web",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "ssl_enabled": "",
+          "web_services": {"exists": true}
+        }
+      },
+      "description": "Trigger when SSL/TLS status is unknown for host with web services"
+    }
+  ],
+
+  "equipment": [
+    "Network connectivity to target services",
+    "SSL/TLS analysis tools (nmap, openssl, sslscan)",
+    "Web client tools (curl, wget)",
+    "Certificate analysis utilities"
+  ],
+
+  "procedures": [
+    {
+      "id": "ssl_service_identification",
+      "name": "SSL/TLS Service Discovery",
+      "description": "Identify services that may be running SSL/TLS encryption.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Port scanning may be detected by security monitoring",
+          "mitigation": "Use standard SSL ports and gentle scanning techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -sS -p 443,8443,9443,8080,8000 {target} --open",
+          "description": "Scan for common SSL/TLS enabled ports",
+          "parameters": {
+            "target": "Target host or IP address"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "nmap",
+          "command": "nmap -sS -p 1-65535 {target} --open | grep -E '(ssl|tls|https)'",
+          "description": "Comprehensive scan for SSL/TLS services",
+          "parameters": {
+            "target": "Target host or IP address"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "ssl_protocol_enumeration",
+      "name": "SSL/TLS Protocol Version Detection",
+      "description": "Detect supported SSL/TLS protocol versions and cipher suites.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "SSL enumeration may generate connection logs",
+          "mitigation": "Standard SSL connectivity testing appears as normal traffic"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap --script ssl-enum-ciphers -p {ssl_ports} {target}",
+          "description": "Enumerate supported SSL/TLS versions and cipher suites",
+          "parameters": {
+            "target": "Target host or IP address",
+            "ssl_ports": "SSL/TLS ports to test (e.g., 443,8443)"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "certificate_analysis",
+      "name": "SSL Certificate Information Analysis",
+      "description": "Analyze SSL certificate details including issuer, subject, and validity.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Certificate enumeration is standard practice with minimal risk",
+          "mitigation": "Use standard SSL client tools"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "openssl",
+          "command": "openssl s_client -connect {target}:{port} -servername {hostname} < /dev/null 2>/dev/null | openssl x509 -text -noout",
+          "description": "Retrieve and analyze SSL certificate details",
+          "parameters": {
+            "target": "Target host or IP address",
+            "port": "SSL/TLS port (typically 443)",
+            "hostname": "Server hostname for SNI"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "openssl",
+          "command": "openssl s_client -connect {target}:{port} -showcerts < /dev/null 2>/dev/null",
+          "description": "Display full certificate chain",
+          "parameters": {
+            "target": "Target host or IP address",
+            "port": "SSL/TLS port"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "ssl_vulnerability_scanning",
+      "name": "SSL/TLS Vulnerability Assessment",
+      "description": "Test for common SSL/TLS vulnerabilities and security issues.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Vulnerability scanning may trigger security alerts",
+          "mitigation": "Use standard vulnerability assessment tools and techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap --script ssl-heartbleed,ssl-poodle,ssl-ccs-injection {target} -p {ssl_ports}",
+          "description": "Test for known SSL/TLS vulnerabilities",
+          "parameters": {
+            "target": "Target host or IP address",
+            "ssl_ports": "SSL/TLS ports to test"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "cipher_suite_analysis",
+      "name": "Cipher Suite Security Analysis",
+      "description": "Analyze cipher suite strength and identify weak encryption algorithms.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Cipher suite testing generates normal SSL handshake traffic",
+          "mitigation": "Standard SSL analysis activity"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "sslscan",
+          "command": "sslscan {target}:{port}",
+          "description": "Comprehensive SSL/TLS configuration analysis",
+          "parameters": {
+            "target": "Target host or IP address",
+            "port": "SSL/TLS port to analyze"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "certificate_validation_test",
+      "name": "Certificate Chain Validation Testing",
+      "description": "Test SSL certificate chain validation and trust relationships.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Certificate validation testing is standard practice",
+          "mitigation": "Normal SSL client behavior"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "openssl",
+          "command": "openssl s_client -connect {target}:{port} -verify 5 -CApath /etc/ssl/certs/",
+          "description": "Validate certificate chain with system CA store",
+          "parameters": {
+            "target": "Target host or IP address",
+            "port": "SSL/TLS port"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "security_headers_analysis",
+      "name": "HTTP Security Headers Analysis",
+      "description": "Check for important security headers like HSTS, HPKP, and others.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "HTTP header analysis is normal web browsing activity",
+          "mitigation": "Standard web client behavior"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "curl",
+          "command": "curl -sI https://{target}:{port}/ | grep -i strict-transport-security",
+          "description": "Check for HTTP Strict Transport Security (HSTS) header",
+          "parameters": {
+            "target": "Target host or domain",
+            "port": "HTTPS port (typically 443)"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "curl",
+          "command": "curl -sI https://{target}:{port}/ | grep -iE '(x-frame-options|x-content-type-options|x-xss-protection)'",
+          "description": "Check for additional security headers",
+          "parameters": {
+            "target": "Target host or domain",
+            "port": "HTTPS port"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "ssl_redirect_behavior",
+      "name": "HTTP to HTTPS Redirect Testing",
+      "description": "Test automatic redirection from HTTP to HTTPS.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "HTTP requests are normal web traffic",
+          "mitigation": "Standard web browsing behavior"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "curl",
+          "command": "curl -sI http://{target}:{http_port}/ | grep -i location",
+          "description": "Test for HTTP to HTTPS redirect",
+          "parameters": {
+            "target": "Target host or domain",
+            "http_port": "HTTP port (typically 80)"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "certificate_transparency_check",
+      "name": "Certificate Transparency Log Analysis",
+      "description": "Check certificate transparency logs for additional certificate information.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Certificate transparency queries are public information access",
+          "mitigation": "Standard certificate research activity"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "curl",
+          "command": "curl -s \"https://crt.sh/?q={domain}&output=json\" | jq -r '.[].name_value' | sort -u",
+          "description": "Query certificate transparency logs for domain certificates",
+          "parameters": {
+            "domain": "Domain name to query"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "SSL/TLS Enabled",
+      "severity": "Informational",
+      "description": "Service implements SSL/TLS encryption with [specific protocol versions and configuration details].",
+      "recommendation": "Document SSL/TLS implementation and verify proper configuration according to security best practices."
+    },
+    {
+      "title": "Weak SSL/TLS Configuration",
+      "severity": "Medium",
+      "description": "Service uses weak SSL/TLS protocols or cipher suites that may be vulnerable to attacks.",
+      "recommendation": "Upgrade to modern TLS versions (1.2+), disable weak cipher suites, and implement strong encryption algorithms."
+    },
+    {
+      "title": "SSL/TLS Vulnerability",
+      "severity": "High",
+      "description": "Service is vulnerable to known SSL/TLS attacks such as [specific vulnerability details].",
+      "recommendation": "Apply security patches, update SSL/TLS implementation, and disable vulnerable protocol versions."
+    },
+    {
+      "title": "Invalid Certificate",
+      "severity": "Medium",
+      "description": "Service uses invalid, expired, or self-signed certificates that may impact trust and security.",
+      "recommendation": "Obtain valid certificates from trusted Certificate Authorities and ensure proper certificate management."
+    },
+    {
+      "title": "Missing Security Headers",
+      "severity": "Low",
+      "description": "Service lacks important security headers like HSTS, which may impact overall security posture.",
+      "recommendation": "Implement HTTP Strict Transport Security (HSTS) and other relevant security headers."
+    },
+    {
+      "title": "Mixed Content Risk",
+      "severity": "Medium",
+      "description": "Service allows both HTTP and HTTPS access without proper redirects, creating potential security risks.",
+      "recommendation": "Implement automatic HTTP to HTTPS redirects and disable HTTP access where possible."
+    },
+    {
+      "title": "Strong SSL/TLS Implementation",
+      "severity": "Informational",
+      "description": "Service implements strong SSL/TLS configuration with modern protocols and secure cipher suites.",
+      "recommendation": "Continue monitoring SSL/TLS configuration and maintain current security standards."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "remove_certificate_files",
+      "description": "Remove temporary certificate files created during analysis",
+      "command": "rm -f /tmp/cert_*.pem"
+    },
+    {
+      "step": "clear_connection_logs",
+      "description": "Clear any connection history or logs created during testing",
+      "command": "history -c"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "SSL service discovery returns no results",
+      "solution": "Verify target host is reachable, check for non-standard SSL ports, and ensure services are actually running SSL/TLS."
+    },
+    {
+      "issue": "Certificate analysis fails with connection errors",
+      "solution": "Check hostname resolution, verify port accessibility, and try different SSL/TLS versions. Some services may require SNI."
+    },
+    {
+      "issue": "Vulnerability scanning shows false positives",
+      "solution": "Manually verify vulnerabilities using specific testing tools, check for service version information, and validate findings with alternative methods."
+    },
+    {
+      "issue": "Cipher suite analysis incomplete",
+      "solution": "Try different SSL/TLS analysis tools, check if service supports specific protocol versions, and ensure tool compatibility with target service."
+    },
+    {
+      "issue": "Certificate validation fails unexpectedly",
+      "solution": "Check system CA store is updated, verify network connectivity to OCSP responders, and test with different certificate validation methods."
+    },
+    {
+      "issue": "Security headers not detected",
+      "solution": "Try different HTTP methods and paths, check if headers are only present on specific URLs, and verify service actually supports HTTPS."
+    }
+  ]
+}

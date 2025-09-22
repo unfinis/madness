@@ -4,7 +4,9 @@ import '../database/database.dart';
 import '../models/run_instance.dart';
 import '../models/trigger_evaluation.dart';
 import '../models/asset.dart';
+import '../models/attack_plan_action.dart';
 import '../services/methodology_loader.dart' as loader;
+import '../services/memory_attack_plan_storage.dart';
 
 /// Drift-based storage service for managing all data persistence
 class DriftStorageService {
@@ -616,5 +618,35 @@ class DriftStorageService {
       confidence: row.confidence,
       tags: List<String>.from(jsonDecode(row.tags)),
     );
+  }
+
+  // ===== ATTACK PLAN ACTIONS =====
+
+  /// Store an attack plan action
+  Future<void> storeAttackPlanAction(AttackPlanAction action, String projectId) async {
+    // Using in-memory storage for now - in production this would use a proper database table
+    MemoryAttackPlanStorage.storeAction(action, projectId);
+  }
+
+  /// Get all attack plan actions for a project
+  Future<List<AttackPlanAction>> getAllAttackPlanActions(String projectId) async {
+    // Using in-memory storage for now - in production this would query the attack_plan_actions table
+    return MemoryAttackPlanStorage.getAllActions(projectId);
+  }
+
+  /// Update attack plan action status
+  Future<void> updateAttackPlanActionStatus(String actionId, ActionStatus newStatus) async {
+    // Using in-memory storage for now - in production this would update the database table
+    // Note: We need to get the projectId somehow - for now we'll search all projects
+    // In production, this would be a proper database query
+
+    // This is a simplified approach - in production you'd have the projectId as a parameter
+    for (final projectId in MemoryAttackPlanStorage.projectIds) {
+      final action = MemoryAttackPlanStorage.getActionById(actionId, projectId);
+      if (action != null) {
+        MemoryAttackPlanStorage.updateActionStatus(actionId, newStatus, projectId);
+        break;
+      }
+    }
   }
 }

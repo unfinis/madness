@@ -1,0 +1,451 @@
+{
+  "id": "authentication_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Authentication Mechanism Discovery",
+  "workstream": "discovery",
+  "author": "Discovery Team",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Discover and enumerate authentication methods and requirements to understand access control implementations.",
+  "tags": ["authentication", "discovery", "enumeration", "login", "access_control"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Identify authentication mechanisms, methods, and security controls to assess authentication security posture and identify potential weaknesses.",
+    "scope": "Authentication security assessment across services and network focusing on authentication method discovery and configuration analysis.",
+    "prerequisites": [
+      "Network connectivity to target services",
+      "Authentication testing tools installed",
+      "Proper authorization for authentication testing"
+    ],
+    "category": "Authentication Security Discovery"
+  },
+
+  "triggers": [
+    {
+      "name": "auth_device_unknown_network",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "authenticated_device_present": ""
+        }
+      },
+      "description": "Trigger when authentication device presence is unknown for network segment"
+    },
+    {
+      "name": "auth_method_unknown_web_service",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "webService",
+        "properties": {
+          "auth_method": ""
+        }
+      },
+      "description": "Trigger when authentication method is unknown for web service"
+    },
+    {
+      "name": "auth_method_unknown_host",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "auth_method": ""
+        }
+      },
+      "description": "Trigger when authentication method is unknown for host"
+    }
+  ],
+
+  "equipment": [
+    "Network connectivity to target services",
+    "Authentication testing tools (nmap, smbclient, ssh)",
+    "Web authentication analysis tools",
+    "LDAP and Kerberos testing utilities"
+  ],
+
+  "procedures": [
+    {
+      "id": "authentication_service_discovery",
+      "name": "Authentication Service and Protocol Discovery",
+      "description": "Identify authentication services and protocols running on target systems.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Service scanning may be detected by monitoring systems",
+          "mitigation": "Use standard port scanning techniques with appropriate timing"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -sS -p 22,23,21,25,53,88,135,139,389,445,636,993,995,1433,3389,5985 {target} --open",
+          "description": "Scan for common authentication and network services",
+          "parameters": {
+            "target": "Target host or network range"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "web_authentication_discovery",
+      "name": "Web-based Authentication Interface Discovery",
+      "description": "Detect and analyze web-based authentication interfaces and login forms.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Web authentication scanning may generate access logs",
+          "mitigation": "Use standard HTTP requests that appear as normal browsing"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap --script http-auth-finder -p 80,443,8080,8443 {target}",
+          "description": "Discover web authentication pages and login forms",
+          "parameters": {
+            "target": "Target host or IP address"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "curl",
+          "command": "curl -sL http://{target}/login | grep -iE '(username|password|login|signin)'",
+          "description": "Check for login forms on common paths",
+          "parameters": {
+            "target": "Target host or domain"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "ldap_ad_enumeration",
+      "name": "Active Directory/LDAP Service Enumeration",
+      "description": "Enumerate LDAP and Active Directory services for authentication information.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "LDAP queries may be logged by directory services",
+          "mitigation": "Use anonymous or standard LDAP queries that appear normal"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap --script ldap-rootdse -p 389,636 {target}",
+          "description": "Query LDAP root DSE for directory information",
+          "parameters": {
+            "target": "Target LDAP server"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "ldapsearch",
+          "command": "ldapsearch -x -h {target} -s base namingcontexts",
+          "description": "Anonymous LDAP query for naming contexts",
+          "parameters": {
+            "target": "Target LDAP server"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "kerberos_enumeration",
+      "name": "Kerberos Authentication Discovery",
+      "description": "Check for Kerberos authentication services and realm information.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Kerberos enumeration may be logged by domain controllers",
+          "mitigation": "Use standard Kerberos discovery techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap --script krb5-enum-users --script-args krb5-enum-users.realm='{domain}' -p 88 {target}",
+          "description": "Enumerate Kerberos realm and user information",
+          "parameters": {
+            "target": "Target Kerberos server",
+            "domain": "Domain name to test"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "smb_authentication_test",
+      "name": "SMB Authentication Requirements Testing",
+      "description": "Test SMB services for authentication requirements and supported methods.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "SMB enumeration attempts may be logged",
+          "mitigation": "Use standard SMB client tools and avoid brute force attempts"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "smbclient",
+          "command": "smbclient -L {target} -N",
+          "description": "Test SMB share enumeration without authentication",
+          "parameters": {
+            "target": "Target SMB server"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "nmap",
+          "command": "nmap --script smb-security-mode -p 445 {target}",
+          "description": "Detect SMB security mode and authentication requirements",
+          "parameters": {
+            "target": "Target SMB server"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "ssh_authentication_methods",
+      "name": "SSH Authentication Method Discovery",
+      "description": "Probe SSH services to identify supported authentication methods.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "SSH connection attempts may be logged",
+          "mitigation": "Use standard SSH client behavior and avoid repeated attempts"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "ssh",
+          "command": "ssh -o PreferredAuthentications=none {target} 2>&1 | grep -i 'authentication'",
+          "description": "Identify supported SSH authentication methods",
+          "parameters": {
+            "target": "Target SSH server"
+          },
+          "platforms": ["linux", "macos"]
+        },
+        {
+          "tool": "nmap",
+          "command": "nmap --script ssh-auth-methods -p 22 {target}",
+          "description": "Enumerate SSH authentication methods using nmap",
+          "parameters": {
+            "target": "Target SSH server"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "mfa_detection",
+      "name": "Multi-Factor Authentication Detection",
+      "description": "Check for indicators of multi-factor authentication implementation.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "MFA detection involves normal authentication flow analysis",
+          "mitigation": "Standard web analysis techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "curl",
+          "command": "curl -sL http://{target}/login | grep -iE '(mfa|2fa|otp|token|authenticator)'",
+          "description": "Search for MFA indicators in web login pages",
+          "parameters": {
+            "target": "Target web service"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "curl",
+          "command": "curl -sI https://{target}/login | grep -iE '(x-mfa|x-2fa)'",
+          "description": "Check for MFA-related HTTP headers",
+          "parameters": {
+            "target": "Target web service"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "certificate_authentication_test",
+      "name": "Certificate-based Authentication Testing",
+      "description": "Test for certificate-based authentication requirements.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Certificate authentication testing is standard SSL/TLS behavior",
+          "mitigation": "Normal SSL client activity"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "openssl",
+          "command": "openssl s_client -connect {target}:443 -cert /dev/null 2>&1 | grep -i 'verify'",
+          "description": "Test for client certificate authentication requirements",
+          "parameters": {
+            "target": "Target HTTPS service"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "radius_infrastructure_discovery",
+      "name": "RADIUS Authentication Infrastructure Discovery",
+      "description": "Enumerate RADIUS authentication servers in the network environment.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "RADIUS discovery may be detected by network monitoring",
+          "mitigation": "Use standard network discovery techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -sU -p 1812,1813 {network_range}",
+          "description": "Scan for RADIUS authentication servers",
+          "parameters": {
+            "network_range": "Network range to scan for RADIUS servers"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "sso_detection",
+      "name": "Single Sign-On (SSO) Implementation Detection",
+      "description": "Check for SSO implementations and federated authentication systems.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "SSO detection involves standard web traffic analysis",
+          "mitigation": "Normal web browsing behavior"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "curl",
+          "command": "curl -sI http://{target}/login | grep -iE '(saml|oauth|openid)'",
+          "description": "Check for SSO protocol redirects and headers",
+          "parameters": {
+            "target": "Target web service"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "curl",
+          "command": "curl -sL http://{target}/.well-known/openid_configuration",
+          "description": "Check for OpenID Connect configuration endpoint",
+          "parameters": {
+            "target": "Target web service"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Authentication Service Detected",
+      "severity": "Informational",
+      "description": "Authentication service or method identified: [specific authentication details and configuration].",
+      "recommendation": "Document authentication implementation and verify proper security configuration."
+    },
+    {
+      "title": "Weak Authentication Method",
+      "severity": "Medium",
+      "description": "Service uses weak or outdated authentication methods that may be vulnerable to attacks.",
+      "recommendation": "Upgrade to modern authentication methods, implement strong password policies, and consider multi-factor authentication."
+    },
+    {
+      "title": "No Multi-Factor Authentication",
+      "severity": "Medium",
+      "description": "Critical service lacks multi-factor authentication, increasing risk of unauthorized access.",
+      "recommendation": "Implement multi-factor authentication (MFA) for all critical services and privileged accounts."
+    },
+    {
+      "title": "Anonymous Access Allowed",
+      "severity": "High",
+      "description": "Service allows anonymous or guest access without proper authentication controls.",
+      "recommendation": "Disable anonymous access, implement proper authentication requirements, and review access control policies."
+    },
+    {
+      "title": "Default Credentials Risk",
+      "severity": "High",
+      "description": "Service may be using default authentication credentials based on service configuration.",
+      "recommendation": "Change all default credentials, implement strong password policies, and regularly audit authentication configurations."
+    },
+    {
+      "title": "Certificate Authentication Available",
+      "severity": "Informational",
+      "description": "Service supports certificate-based authentication, providing strong authentication options.",
+      "recommendation": "Ensure proper certificate management, validate certificate policies, and monitor certificate usage."
+    },
+    {
+      "title": "Single Sign-On Implemented",
+      "severity": "Informational",
+      "description": "Service uses SSO authentication mechanisms for centralized authentication management.",
+      "recommendation": "Verify SSO implementation security, review federation trust relationships, and monitor SSO activity."
+    },
+    {
+      "title": "Strong Authentication Implementation",
+      "severity": "Informational",
+      "description": "Service implements strong authentication methods with proper security controls.",
+      "recommendation": "Continue monitoring authentication implementation and maintain current security standards."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "clear_authentication_logs",
+      "description": "Clear any authentication test logs or history",
+      "command": "history -c"
+    },
+    {
+      "step": "remove_test_certificates",
+      "description": "Remove any temporary certificate files created during testing",
+      "command": "rm -f /tmp/auth_test_*"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "Authentication service discovery returns no results",
+      "solution": "Verify target hosts are reachable, check for non-standard service ports, and ensure services are actually running authentication mechanisms."
+    },
+    {
+      "issue": "Web authentication analysis fails",
+      "solution": "Try different HTTP methods and paths, check for JavaScript-based authentication, and verify web service is accessible."
+    },
+    {
+      "issue": "LDAP queries fail or timeout",
+      "solution": "Verify LDAP service is running, check network connectivity, and try anonymous bind before authenticated queries."
+    },
+    {
+      "issue": "Kerberos enumeration shows no results",
+      "solution": "Verify domain name is correct, check DNS resolution for domain controllers, and ensure Kerberos service is accessible."
+    },
+    {
+      "issue": "SMB authentication testing fails",
+      "solution": "Check SMB service version compatibility, verify network connectivity to port 445, and try different SMB protocol versions."
+    },
+    {
+      "issue": "SSH authentication method detection incomplete",
+      "solution": "Try different SSH client configurations, check if service requires specific key exchange algorithms, and verify SSH version compatibility."
+    },
+    {
+      "issue": "MFA detection shows false negatives",
+      "solution": "Check additional authentication flows, look for mobile app integrations, and test with different user agents or browser profiles."
+    }
+  ]
+}

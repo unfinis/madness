@@ -195,6 +195,7 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
                   const CircularProgressIndicator()
                 else if (!isViewMode)
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
@@ -209,6 +210,7 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
                   )
                 else
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit),
@@ -385,9 +387,13 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   isDense: true,
-                  suffix: !isViewMode ? IconButton(
+                  suffixIcon: !isViewMode ? IconButton(
                     icon: const Icon(Icons.close, size: 16),
                     onPressed: () => _removeProperty(key),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ) : null,
                 ),
                 readOnly: isViewMode,
@@ -398,9 +404,13 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   isDense: true,
-                  suffix: !isViewMode ? IconButton(
+                  suffixIcon: !isViewMode ? IconButton(
                     icon: const Icon(Icons.close, size: 16),
                     onPressed: () => _removeProperty(key),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ) : null,
                 ),
                 keyboardType: TextInputType.number,
@@ -415,15 +425,20 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
                 : Row(
                     children: [
                       Expanded(
+                        flex: 4,
                         child: CheckboxListTile(
                           title: Text(v ? 'Yes' : 'No'),
                           value: v,
                           onChanged: (newValue) => _updateProperty(key, PropertyValue.boolean(newValue ?? false)),
+                          contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 16),
-                        onPressed: () => _removeProperty(key),
+                      SizedBox(
+                        width: 40,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, size: 16),
+                          onPressed: () => _removeProperty(key),
+                        ),
                       ),
                     ],
                   ),

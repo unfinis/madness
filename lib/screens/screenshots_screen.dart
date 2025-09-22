@@ -12,6 +12,7 @@ import '../services/screenshot_upload_service.dart';
 import '../constants/responsive_breakpoints.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/screenshot_widgets.dart';
+import '../widgets/rendered_screenshot_thumbnail.dart';
 
 class ScreenshotsScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -875,20 +876,16 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
             Expanded(
               flex: 3,
               child: Container(
-                color: screenshot.isPlaceholder 
+                color: screenshot.isPlaceholder
                     ? theme.colorScheme.secondaryContainer.withOpacity(0.3)
                     : Colors.grey.shade100,
                 child: Stack(
                   children: [
-                    Center(
-                      child: Icon(
-                        screenshot.isPlaceholder 
-                            ? Icons.insert_photo_outlined
-                            : Icons.image,
-                        size: 48,
-                        color: screenshot.isPlaceholder
-                            ? theme.colorScheme.secondary
-                            : Colors.grey.shade400,
+                    // Rendered thumbnail with layers
+                    Positioned.fill(
+                      child: RenderedScreenshotThumbnail(
+                        screenshot: screenshot,
+                        fit: BoxFit.cover,
                       ),
                     ),
                     // Status badges

@@ -1,0 +1,271 @@
+{
+  "id": "nac_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "NAC Discovery and Detection",
+  "workstream": "discovery",
+  "author": "Discovery Team",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Detect and enumerate Network Access Control (NAC) mechanisms to determine security controls and potential bypass opportunities.",
+  "tags": ["nac", "discovery", "enumeration", "network_security"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Determine if Network Access Control (NAC) is enabled and identify its type and configuration to understand network security posture.",
+    "scope": "Network segment security assessment focusing on NAC implementation and configuration discovery.",
+    "prerequisites": [
+      "Network access to target segment",
+      "Network testing tools installed",
+      "Proper authorization for network discovery"
+    ],
+    "category": "Network Security Discovery"
+  },
+
+  "triggers": [
+    {
+      "name": "nac_status_unknown",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "nac_enabled": ""
+        }
+      },
+      "description": "Trigger when NAC status is unknown for network segment"
+    }
+  ],
+
+  "equipment": [
+    "Network adapter (wired network interface)",
+    "Network testing tools (tcpdump, nmap, curl)",
+    "DHCP client utilities",
+    "802.1X authentication testing tools"
+  ],
+
+  "procedures": [
+    {
+      "id": "passive_nac_monitoring",
+      "name": "Passive Network Monitoring for NAC Traffic",
+      "description": "Monitor network traffic passively to detect RADIUS, 802.1X, or other NAC-related authentication traffic.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Detection by network monitoring systems",
+          "mitigation": "Use passive reconnaissance only, avoid generating suspicious traffic"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -w nac_discovery.pcap 'port 1812 or port 1813 or port 8021'",
+          "description": "Capture RADIUS and 802.1X authentication traffic",
+          "parameters": {
+            "interface": "Network interface to monitor"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "dot1x_authentication_test",
+      "name": "802.1X Authentication Requirements Check",
+      "description": "Test for 802.1X authentication requirements on the network segment.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Authentication prompt may alert network administrators",
+          "mitigation": "Test during normal business hours to blend with legitimate traffic"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "wpa_supplicant",
+          "command": "sudo wpa_supplicant -i {interface} -c /dev/null -D wired",
+          "description": "Test for 802.1X authentication prompt on wired interface",
+          "parameters": {
+            "interface": "Wired network interface"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "captive_portal_detection",
+      "name": "Web-based Authentication Portal Detection",
+      "description": "Probe for web-based authentication portals or captive portals that may indicate NAC implementation.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "HTTP requests may be logged by web proxies",
+          "mitigation": "Use standard web requests that appear legitimate"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "curl",
+          "command": "curl -I http://1.1.1.1 --max-time 10",
+          "description": "Test for HTTP redirect to captive portal",
+          "parameters": {},
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "curl",
+          "command": "curl -I http://www.google.com --max-time 10",
+          "description": "Test for redirect to authentication portal",
+          "parameters": {},
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "mac_filtering_test",
+      "name": "MAC Address Filtering Detection",
+      "description": "Test for MAC address filtering by changing MAC address and attempting network access.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "MAC address changes may trigger security alerts",
+          "mitigation": "Document original MAC address and restore after testing"
+        },
+        {
+          "risk": "DHCP conflicts may occur with duplicate MAC addresses",
+          "mitigation": "Use random MAC addresses not in use on the network"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "macchanger",
+          "command": "sudo macchanger --show {interface}",
+          "description": "Record original MAC address before testing",
+          "parameters": {
+            "interface": "Network interface"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "macchanger",
+          "command": "sudo ip link set {interface} down && sudo macchanger -r {interface} && sudo ip link set {interface} up",
+          "description": "Change to random MAC address and test connectivity",
+          "parameters": {
+            "interface": "Network interface"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "dhclient",
+          "command": "sudo dhclient {interface}",
+          "description": "Attempt DHCP configuration with new MAC address",
+          "parameters": {
+            "interface": "Network interface"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "dhcp_nac_enumeration",
+      "name": "DHCP Options Enumeration for NAC Hints",
+      "description": "Enumerate DHCP options that may reveal NAC vendor information or configuration details.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "DHCP discovery requests may be logged",
+          "mitigation": "Limit number of DHCP requests to appear normal"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "sudo nmap --script dhcp-discover -e {interface}",
+          "description": "Discover DHCP server information and options",
+          "parameters": {
+            "interface": "Network interface for DHCP discovery"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "NAC Implementation Detected",
+      "severity": "Informational",
+      "description": "Network Access Control mechanisms have been identified on the network segment, including [specific NAC type and configuration details].",
+      "recommendation": "Document NAC implementation for security assessment and verify proper configuration according to security policies."
+    },
+    {
+      "title": "802.1X Authentication Required",
+      "severity": "Informational",
+      "description": "The network requires 802.1X authentication for device access, indicating strong network access controls.",
+      "recommendation": "Verify 802.1X implementation includes proper certificate validation and strong authentication methods."
+    },
+    {
+      "title": "Captive Portal Detected",
+      "severity": "Informational",
+      "description": "Web-based authentication portal detected, requiring user authentication for network access.",
+      "recommendation": "Review captive portal security controls and ensure proper HTTPS implementation for credential protection."
+    },
+    {
+      "title": "MAC Address Filtering Enabled",
+      "severity": "Low",
+      "description": "Network implements MAC address filtering as an access control mechanism.",
+      "recommendation": "Consider implementing stronger authentication methods as MAC addresses can be easily spoofed."
+    },
+    {
+      "title": "Weak NAC Configuration",
+      "severity": "Medium",
+      "description": "NAC implementation has exploitable weaknesses that may allow unauthorized network access.",
+      "recommendation": "Strengthen NAC configuration, implement additional security controls, and review access policies."
+    },
+    {
+      "title": "No NAC Implementation",
+      "severity": "Medium",
+      "description": "No Network Access Control mechanisms detected, allowing unrestricted device connections to the network.",
+      "recommendation": "Implement NAC solution to control and monitor device access to the network infrastructure."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "restore_mac_address",
+      "description": "Restore original MAC address",
+      "command": "sudo macchanger -p {interface}"
+    },
+    {
+      "step": "release_dhcp_lease",
+      "description": "Release DHCP lease obtained during testing",
+      "command": "sudo dhclient -r {interface}"
+    },
+    {
+      "step": "remove_capture_files",
+      "description": "Remove packet capture files created during testing",
+      "command": "sudo rm -f nac_discovery.pcap"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "No authentication traffic captured",
+      "solution": "Verify network interface is correctly configured, check if authentication occurs during specific events (device connection, periodic reauthentication), and ensure sufficient monitoring time."
+    },
+    {
+      "issue": "802.1X test fails to trigger authentication",
+      "solution": "Check if interface supports 802.1X, verify wpa_supplicant configuration, and ensure network port is configured for 802.1X authentication."
+    },
+    {
+      "issue": "Captive portal not detected",
+      "solution": "Try different target URLs, check DNS resolution, and verify network connectivity. Some captive portals only trigger on specific traffic types."
+    },
+    {
+      "issue": "MAC address change doesn't affect connectivity",
+      "solution": "Verify MAC address change was successful, check if port security is configured, and test with completely different MAC address ranges."
+    },
+    {
+      "issue": "DHCP discovery provides no additional information",
+      "solution": "Try DHCP requests from different vendor classes, check for DHCP option 82 (relay agent), and monitor for vendor-specific options."
+    }
+  ]
+}

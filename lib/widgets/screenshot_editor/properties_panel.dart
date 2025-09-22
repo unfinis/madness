@@ -598,93 +598,99 @@ class PropertiesPanel extends StatelessWidget {
     Color? currentColor, // Nullable for "None" option
     ValueChanged<Color?> onChanged,
   ) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
-          ),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
         ),
-        const SizedBox(width: 8),
-        // None button
-        GestureDetector(
-          onTap: () => onChanged(null),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: currentColor == null ? theme.colorScheme.primary : theme.colorScheme.outline,
-                width: currentColor == null ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Stack(
-              children: [
-                // Background circle to show "None"
-                Center(
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey, width: 1),
-                      borderRadius: BorderRadius.circular(10),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // None button
+              GestureDetector(
+                onTap: () => onChanged(null),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: currentColor == null ? theme.colorScheme.primary : theme.colorScheme.outline,
+                      width: currentColor == null ? 2 : 1,
                     ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Background circle to show "None"
+                      Center(
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey, width: 1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      // Diagonal line through it
+                      Center(
+                        child: Container(
+                          width: 24,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                          transform: Matrix4.rotationZ(-0.785398), // -45 degrees
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                // Diagonal line through it
-                Center(
+              ),
+              const SizedBox(width: 8),
+              // Color options
+              ...([
+                Colors.red,
+                Colors.orange,
+                Colors.yellow,
+                Colors.green,
+                Colors.blue,
+                Colors.purple,
+                Colors.black,
+                Colors.white,
+              ].map((color) => Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: GestureDetector(
+                  onTap: () => onChanged(color),
                   child: Container(
-                    width: 24,
-                    height: 2,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(1),
+                      color: color,
+                      border: Border.all(
+                        color: currentColor == color ? theme.colorScheme.primary : theme.colorScheme.outline,
+                        width: currentColor == color ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    transform: Matrix4.rotationZ(-0.785398), // -45 degrees
+                    child: color == Colors.white ? Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ) : null,
                   ),
                 ),
-              ],
-            ),
+              ))),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        // Color options
-        ...([
-          Colors.red,
-          Colors.orange,
-          Colors.yellow,
-          Colors.green,
-          Colors.blue,
-          Colors.purple,
-          Colors.black,
-          Colors.white,
-        ].map((color) => Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: GestureDetector(
-            onTap: () => onChanged(color),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: color,
-                border: Border.all(
-                  color: currentColor == color ? theme.colorScheme.primary : theme.colorScheme.outline,
-                  width: currentColor == color ? 2 : 1,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: color == Colors.white ? Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ) : null,
-            ),
-          ),
-        ))),
       ],
     );
   }
@@ -697,12 +703,15 @@ class PropertiesPanel extends StatelessWidget {
     ValueChanged<Color> onChanged,
   ) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          label,
-          style: theme.textTheme.labelMedium,
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium,
+          ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         GestureDetector(
           onTap: () => _showColorPicker(context, currentColor, onChanged),
           child: Container(

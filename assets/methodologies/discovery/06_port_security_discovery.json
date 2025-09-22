@@ -1,0 +1,398 @@
+{
+  "id": "port_security_discovery",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Port Security Configuration Discovery",
+  "workstream": "discovery",
+  "author": "Discovery Team",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Discover and analyze network port security implementations to understand MAC address restrictions and port-level access controls.",
+  "tags": ["port_security", "discovery", "enumeration", "switches", "mac_address"],
+  "risk_level": "high",
+
+  "overview": {
+    "purpose": "Determine port security configuration and MAC address restrictions to assess switch-level access controls and identify potential bypass opportunities.",
+    "scope": "Network switch port security assessment focusing on MAC address restrictions, port security features, and access control discovery.",
+    "prerequisites": [
+      "Network access to target segment",
+      "Multiple network interfaces preferred",
+      "MAC address manipulation tools",
+      "Switch management access (optional)"
+    ],
+    "category": "Network Port Security Discovery"
+  },
+
+  "triggers": [
+    {
+      "name": "port_security_status_unknown",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "port_security_enabled": ""
+        }
+      },
+      "description": "Trigger when port security status is unknown for network segment"
+    },
+    {
+      "name": "multiple_macs_policy_unknown",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "networkSegment",
+        "properties": {
+          "multiple_macs_allowed": ""
+        }
+      },
+      "description": "Trigger when multiple MAC address policy is unknown for network segment"
+    }
+  ],
+
+  "equipment": [
+    "Network adapter (wired network interface)",
+    "Multiple network interfaces (preferred for comprehensive testing)",
+    "MAC address manipulation tools (macchanger)",
+    "Network testing utilities (ping, dhclient, tcpdump)",
+    "SNMP tools (optional for switch management)"
+  ],
+
+  "procedures": [
+    {
+      "id": "switch_management_discovery",
+      "name": "Switch Management Interface Discovery",
+      "description": "Identify switch management interfaces that may provide port security configuration information.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Management interface scanning may be detected",
+          "mitigation": "Use standard network discovery techniques"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "nmap",
+          "command": "nmap -p 22,23,80,443,161 {network_range} --open",
+          "description": "Scan for switch management services",
+          "parameters": {
+            "network_range": "Network range to scan for switches"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "baseline_connectivity_test",
+      "name": "Baseline MAC Address Connectivity Testing",
+      "description": "Establish baseline connectivity with current MAC address before testing modifications.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Network connectivity testing is standard practice",
+          "mitigation": "Normal network troubleshooting activity"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "ping",
+          "command": "ping -c 3 {gateway_ip}",
+          "description": "Test baseline connectivity to network gateway",
+          "parameters": {
+            "gateway_ip": "Network gateway IP address"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        },
+        {
+          "tool": "arp",
+          "command": "arp -a | grep {interface}",
+          "description": "Record current ARP table entries for interface",
+          "parameters": {
+            "interface": "Network interface name"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "mac_address_change_test",
+      "name": "MAC Address Modification and Connectivity Test",
+      "description": "Test the impact of MAC address changes on network connectivity and access.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "MAC address changes may trigger port security violations and port shutdown",
+          "mitigation": "Document original MAC address, test carefully, and be prepared to restore quickly"
+        },
+        {
+          "risk": "Port security violations may alert network administrators",
+          "mitigation": "Perform testing during authorized assessment periods"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "macchanger",
+          "command": "sudo macchanger --show {interface}",
+          "description": "Record original MAC address before testing",
+          "parameters": {
+            "interface": "Network interface to test"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "macchanger",
+          "command": "sudo macchanger -r {interface}",
+          "description": "Change to random MAC address",
+          "parameters": {
+            "interface": "Network interface to modify"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "dhclient",
+          "command": "sudo dhclient {interface}",
+          "description": "Attempt DHCP configuration with new MAC address",
+          "parameters": {
+            "interface": "Network interface with modified MAC"
+          },
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ping",
+          "command": "ping -c 3 {gateway_ip}",
+          "description": "Test connectivity after MAC address change",
+          "parameters": {
+            "gateway_ip": "Network gateway IP address"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "multiple_mac_test",
+      "name": "Multiple MAC Address Support Testing",
+      "description": "Test if network port allows multiple MAC addresses simultaneously.",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "Multiple MAC address testing may exceed port security limits",
+          "mitigation": "Test incrementally and monitor for port security violations"
+        },
+        {
+          "risk": "Rapid MAC address changes may trigger security systems",
+          "mitigation": "Use appropriate delays between MAC changes and limit test scope"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "bash",
+          "command": "for mac in $(macchanger -l | head -5 | awk '{print $3}'); do sudo macchanger -m $mac {interface} && sudo dhclient {interface} && ping -c 1 {gateway_ip}; sleep 5; done",
+          "description": "Test multiple MAC addresses sequentially",
+          "parameters": {
+            "interface": "Network interface to test",
+            "gateway_ip": "Network gateway IP for connectivity testing"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "port_violation_monitoring",
+      "name": "Port Security Violation Monitoring",
+      "description": "Monitor network traffic for port security violation indicators.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Traffic monitoring is passive with minimal impact",
+          "mitigation": "Standard network monitoring activity"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "tcpdump",
+          "command": "sudo tcpdump -i {interface} -c 10 'arp or icmp'",
+          "description": "Monitor for network traffic patterns indicating port restrictions",
+          "parameters": {
+            "interface": "Network interface to monitor"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "mac_aging_test",
+      "name": "MAC Address Aging and Persistence Testing",
+      "description": "Test MAC address table aging behavior and persistence.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Extended testing may maintain unauthorized MAC addresses",
+          "mitigation": "Monitor test duration and restore original configuration promptly"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "bash",
+          "command": "sleep 300 && ping -c 3 {gateway_ip}",
+          "description": "Test connectivity after MAC address aging period",
+          "parameters": {
+            "gateway_ip": "Network gateway IP address"
+          },
+          "platforms": ["linux", "macos", "windows"]
+        }
+      ]
+    },
+    {
+      "id": "snmp_port_security_enumeration",
+      "name": "SNMP Port Security Configuration Enumeration",
+      "description": "Attempt to retrieve port security configuration via SNMP if accessible.",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "SNMP queries may be logged by network management systems",
+          "mitigation": "Use standard SNMP community strings and limit query frequency"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "snmpwalk",
+          "command": "snmpwalk -v2c -c public {switch_ip} 1.3.6.1.4.1.9.9.315.1.2.1",
+          "description": "Query Cisco port security MIB (if accessible)",
+          "parameters": {
+            "switch_ip": "IP address of target switch"
+          },
+          "platforms": ["linux", "macos"]
+        }
+      ]
+    },
+    {
+      "id": "virtual_interface_test",
+      "name": "Virtual Interface MAC Address Testing",
+      "description": "Test port security behavior with virtual network interfaces.",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Virtual interfaces may bypass some port security controls",
+          "mitigation": "Clean up virtual interfaces after testing"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "ip",
+          "command": "sudo ip link add veth0 type veth peer name veth1",
+          "description": "Create virtual ethernet pair for testing",
+          "parameters": {},
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "ip",
+          "command": "sudo ip link set veth0 address {random_mac} && sudo ip link set veth0 up",
+          "description": "Configure virtual interface with test MAC address",
+          "parameters": {
+            "random_mac": "Random MAC address for testing"
+          },
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Port Security Enabled",
+      "severity": "Informational",
+      "description": "Network implements port security restrictions with [specific configuration details and limitations].",
+      "recommendation": "Document port security configuration and verify it aligns with security requirements. Consider monitoring for bypass attempts."
+    },
+    {
+      "title": "No Port Security Implementation",
+      "severity": "Medium",
+      "description": "Network allows unrestricted MAC address changes without port-level security controls.",
+      "recommendation": "Implement port security features on network switches to prevent unauthorized device access and MAC address spoofing."
+    },
+    {
+      "title": "Multiple MAC Addresses Allowed",
+      "severity": "Low",
+      "description": "Network port allows multiple MAC addresses simultaneously, which may enable device spoofing.",
+      "recommendation": "Review port security policy to determine if multiple MAC addresses are required, or restrict to single MAC per port."
+    },
+    {
+      "title": "Weak Port Security Configuration",
+      "severity": "Medium",
+      "description": "Port security implementation has bypassable restrictions or insufficient enforcement.",
+      "recommendation": "Strengthen port security configuration, implement sticky MAC learning, and configure appropriate violation actions."
+    },
+    {
+      "title": "Port Security Violation Detected",
+      "severity": "Informational",
+      "description": "Attempted MAC address change triggered port security violation, indicating active security controls.",
+      "recommendation": "Verify port security violation handling is appropriate and ensure violations are properly logged and monitored."
+    },
+    {
+      "title": "MAC Address Aging Issues",
+      "severity": "Low",
+      "description": "MAC address aging configuration may allow unauthorized persistence of spoofed addresses.",
+      "recommendation": "Review MAC address aging timers and implement appropriate aging policies for security requirements."
+    },
+    {
+      "title": "Strong Port Security Implementation",
+      "severity": "Informational",
+      "description": "Network implements comprehensive port security controls with proper configuration and monitoring.",
+      "recommendation": "Continue monitoring port security effectiveness and maintain current configuration standards."
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "restore_original_mac",
+      "description": "Restore original MAC address on tested interface",
+      "command": "sudo macchanger -p {interface}"
+    },
+    {
+      "step": "remove_virtual_interfaces",
+      "description": "Remove any virtual interfaces created during testing",
+      "command": "sudo ip link delete veth0"
+    },
+    {
+      "step": "restart_network_interface",
+      "description": "Restart network interface to ensure clean state",
+      "command": "sudo ifdown {interface} && sudo ifup {interface}"
+    },
+    {
+      "step": "clear_dhcp_leases",
+      "description": "Clear any DHCP leases obtained during testing",
+      "command": "sudo dhclient -r {interface}"
+    },
+    {
+      "step": "flush_arp_cache",
+      "description": "Clear ARP cache to remove testing artifacts",
+      "command": "sudo ip neigh flush all"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "MAC address change fails or doesn't persist",
+      "solution": "Verify interface supports MAC address changes, check if NetworkManager is overriding changes, and ensure sufficient privileges for network operations."
+    },
+    {
+      "issue": "Network connectivity lost after MAC change",
+      "solution": "Check if port security triggered port shutdown, verify DHCP is available, and try restoring original MAC address to restore connectivity."
+    },
+    {
+      "issue": "Port security violations not detected",
+      "solution": "Verify switch supports port security, check if feature is enabled on target ports, and ensure testing is performed on appropriate network segments."
+    },
+    {
+      "issue": "SNMP queries return no port security information",
+      "solution": "Try different SNMP community strings, verify SNMP is enabled on switches, and check if port security MIBs are supported."
+    },
+    {
+      "issue": "Multiple MAC address testing shows inconsistent results",
+      "solution": "Check for switch port security limits, verify timing between MAC changes, and ensure each test allows sufficient time for network convergence."
+    },
+    {
+      "issue": "Virtual interface creation fails",
+      "solution": "Verify sufficient privileges for network operations, check if required kernel modules are loaded, and ensure virtual interface support is available."
+    }
+  ]
+}
