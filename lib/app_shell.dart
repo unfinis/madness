@@ -10,11 +10,14 @@ import 'screens/tasks_screen.dart';
 import 'screens/expenses_screen.dart';
 import 'screens/contacts_screen.dart';
 import 'screens/scope_screen.dart';
-import 'screens/all_screens.dart' hide ScreenshotsScreen, FindingsScreen;
+import 'screens/all_screens.dart' hide ScreenshotsScreen, FindingsScreen, AssetsScreen, MethodologyScreen;
 import 'screens/findings_screen.dart';
 import 'screens/credentials_screen.dart';
 import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
+import 'screens/assets_screen.dart';
+import 'screens/attack_plan_screen.dart';
+import 'widgets/methodology_browser.dart';
 import 'screens/questionnaire_screen.dart';
 import 'dialogs/project_transfer_link_dialog.dart';
 import 'constants/responsive_breakpoints.dart';
@@ -45,7 +48,9 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.travel:
         return const TravelScreen();
       case NavigationSection.methodology:
-        return const MethodologyScreen();
+        return const MethodologyBrowser();
+      case NavigationSection.methodologyDashboard:
+        return const AttackPlanScreen();
       case NavigationSection.assets:
         return const AssetsScreen();
       case NavigationSection.credentials:
@@ -55,7 +60,7 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.findings:
         return const FindingsScreen();
       case NavigationSection.attackChains:
-        return const AttackChainsScreen();
+        return const AttackPlanScreen();
       case NavigationSection.screenshots:
         return ScreenshotsScreen(projectId: projectId ?? '');
       case NavigationSection.reports:
@@ -94,7 +99,9 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.travel:
         return 'Travel & Hotels';
       case NavigationSection.methodology:
-        return 'Methodology';
+        return 'Methodology Library';
+      case NavigationSection.methodologyDashboard:
+        return 'Attack Plan';
       case NavigationSection.assets:
         return 'Assets';
       case NavigationSection.credentials:
@@ -104,7 +111,7 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.findings:
         return 'Findings';
       case NavigationSection.attackChains:
-        return 'Attack Chains';
+        return 'Attack Plan';
       case NavigationSection.screenshots:
         return 'Screenshots';
       case NavigationSection.reports:
@@ -522,7 +529,15 @@ class AppShell extends ConsumerWidget {
       context: context,
       applicationName: 'Madness',
       applicationVersion: '1.0.0',
-      applicationIcon: const Icon(Icons.security, size: 48),
+      applicationIcon: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/icon/app_icon.png',
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+        ),
+      ),
       children: const [
         Text('Penetration Testing Platform'),
         SizedBox(height: 8),

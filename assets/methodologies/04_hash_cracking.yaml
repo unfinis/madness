@@ -1,0 +1,162 @@
+id: hash_cracking
+name: "Hash Cracking"
+category: post_exploitation
+description: "Crack captured NTLM hashes using hashcat"
+estimated_duration: "1h"
+risk_level: low
+stealth_level: passive
+
+# Triggered when hashes are captured
+triggers:
+  - type: asset_discovered
+    conditions:
+      asset_type: "credential"
+      properties:
+        needs_cracking: true
+    priority: 10
+    description: "Trigger when hashes need cracking"
+
+  - type: custom_condition
+    conditions:
+      field: "captured_hashes.length"
+      operator: "greater_than"
+      value: 0
+    priority: 10
+    description: "Trigger when hashes are available"
+
+steps:
+  - id: prepare_hashfile
+    name: "Prepare Hash File"
+    type: command
+    description: "Format hashes for cracking"
+    order: 1
+    command: "echo '{hashes}' | sed 's/.*:://' > hashes.txt"
+    timeout: "1m"
+    expected_outputs:
+      - type: text
+        parser: generic
+        success_indicators: ["bytes written"]
+
+  - id: crack_with_wordlist
+    name: "Crack with Wordlist"
+    type: command
+    description: "Attempt to crack hashes using common wordlists"
+    order: 2
+    command: "hashcat -m 5600 hashes.txt /usr/share/wordlists/rockyou.txt -o cracked.txt"
+    command_variants:
+      - condition: "hash_type == 'NetNTLMv1'"
+        command: "hashcat -m 5500 hashes.txt /usr/share/wordlists/rockyou.txt -o cracked.txt"
+        description: "NetNTLMv1 mode"
+      - condition: "gpu_available == true"
+        command: "hashcat -m 5600 hashes.txt /usr/share/wordlists/rockyou.txt -O -w 3 -o cracked.txt"
+        description: "GPU optimized cracking"
+    timeout: "45m"
+    expected_outputs:
+      - type: text
+        parser: hashcat
+        success_indicators: ["Recovered", "Status.*Cracked"]
+        failure_indicators: ["Exhausted", "No hashes loaded"]
+    parameters:
+      attack_mode: 0  # Straight wordlist attack
+      rules: "best64.rule"
+      workload_profile: 3
+
+  - id: crack_with_rules
+    name: "Crack with Rules"
+    type: command
+    description: "Apply rule-based attacks for remaining hashes"
+    order: 3
+    command: "hashcat -m 5600 hashes.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule -o cracked.txt --increment"
+    timeout: "30m"
+    expected_outputs:
+      - type: text
+        parser: hashcat
+        success_indicators: ["Recovered"]
+
+  - id: extract_results
+    name: "Extract Cracked Passwords"
+    type: command
+    description: "Parse cracked passwords and match to users"
+    order: 4
+    command: "cat cracked.txt | while read line; do echo \"Cracked: $line\"; done"
+    expected_outputs:
+      - type: text
+        parser: generic
+    asset_discovery:
+      search_patterns:
+        - pattern: "([^:]+):(.+)"
+          asset_type: "credential"
+          confidence: 1.0
+          metadata:
+            credential_type: "cleartext"
+            from_hash: true
+            verified: false
+
+# Critical outcomes
+outcome_schema:
+  cracked_credentials:
+    type: array
+    items:
+      type: object
+      properties:
+        user: string
+        password: string
+        domain: string
+        from_hash: boolean
+    critical: true
+    triggers: "credential_testing"
+  uncracked_hashes:
+    type: array
+    items: string
+    description: "Hashes that couldn't be cracked"
+  crack_time:
+    type: string
+    description: "Time taken to crack"
+  crack_rate:
+    type: string
+    description: "Hashes per second"
+
+# Next steps after cracking
+next_methodologies:
+  - methodology: "credential_testing"
+    condition: "cracked_credentials.length > 0"
+    description: "Test cracked credentials"
+    priority: 10
+    context_mapping:
+      credentials: "{cracked_credentials}"
+      test_smb: true
+      test_rdp: true
+      test_winrm: true
+
+  - methodology: "password_spraying"
+    condition: "cracked_credentials.length > 0"
+    description: "Use discovered passwords for spraying"
+    context_mapping:
+      passwords: "{cracked_credentials.map(c => c.password)}"
+
+  - methodology: "kerberoasting"
+    condition: "cracked_credentials.length > 0 AND domain_identified != null"
+    description: "Attempt Kerberoasting with valid domain creds"
+    context_mapping:
+      domain_user: "{cracked_credentials[0]}"
+
+  - methodology: "advanced_cracking"
+    condition: "uncracked_hashes.length > 0 AND cracked_credentials.length < 2"
+    description: "Try advanced techniques for remaining hashes"
+    context_mapping:
+      remaining_hashes: "{uncracked_hashes}"
+      techniques: ["hybrid", "bruteforce", "rainbow_tables"]
+
+decision_points:
+  - condition: "crack_time > '2h' AND cracked_credentials.length == 0"
+    action: "abandon_cracking"
+    reason: "Taking too long with no results"
+
+  - condition: "cracked_credentials.filter(c => c.user.includes('admin')).length > 0"
+    action: "prioritize_admin"
+    reason: "Admin credential cracked - prioritize exploitation"
+
+deduplication:
+  strategy: "signature_based"
+  signature_fields: ["hash_list"]
+  max_executions: 3

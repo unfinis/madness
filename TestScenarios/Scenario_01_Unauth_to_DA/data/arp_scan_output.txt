@@ -1,0 +1,28 @@
+Interface: eth0, type: EN10MB, MAC: 02:42:ac:11:00:02, IPv4: 192.168.1.100
+Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)
+192.168.1.1	00:14:22:01:23:45	Cisco Systems, Inc.
+192.168.1.10	00:0c:29:8a:45:67	VMware, Inc.
+192.168.1.15	00:0c:29:bb:78:90	VMware, Inc.
+192.168.1.20	00:0c:29:cc:12:34	VMware, Inc.
+192.168.1.25	00:0c:29:dd:56:78	VMware, Inc.
+192.168.1.30	aa:bb:cc:dd:ee:ff	Unknown
+192.168.1.35	11:22:33:44:55:66	Unknown
+192.168.1.40	77:88:99:aa:bb:cc	Unknown
+192.168.1.45	12:34:56:78:90:ab	Unknown
+192.168.1.50	98:76:54:32:10:fe	Unknown
+192.168.1.55	00:0c:29:ee:99:aa	VMware, Inc.
+192.168.1.60	ab:cd:ef:12:34:56	Unknown
+192.168.1.65	56:78:90:ab:cd:ef	Unknown
+192.168.1.70	99:88:77:66:55:44	Unknown
+192.168.1.75	33:22:11:aa:bb:cc	Unknown
+192.168.1.80	dd:ee:ff:00:11:22	Unknown
+192.168.1.85	44:55:66:77:88:99	Unknown
+192.168.1.90	bb:aa:99:88:77:66	Unknown
+192.168.1.95	ff:ee:dd:cc:bb:aa	Unknown
+192.168.1.110	00:50:56:12:34:56	VMware, Inc.
+192.168.1.120	00:50:56:78:90:ab	VMware, Inc.
+192.168.1.130	00:50:56:cd:ef:12	VMware, Inc.
+192.168.1.140	00:50:56:34:56:78	VMware, Inc.
+
+23 packets received by filter, 0 packets dropped by kernel
+Ending arp-scan 1.9.7: 256 hosts scanned in 2.345 seconds (109.16 hosts/sec). 23 responded

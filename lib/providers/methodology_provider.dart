@@ -2,7 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/methodology.dart';
 import '../models/methodology_execution.dart';
 import '../services/methodology_engine.dart';
+import '../services/methodology_service.dart';
 import 'projects_provider.dart';
+import 'task_queue_provider.dart';
+
+// Methodology service provider
+final methodologyServiceProvider = Provider<MethodologyService>((ref) {
+  return MethodologyService();
+});
 
 // Main methodology engine provider
 final methodologyEngineProvider = Provider<MethodologyEngine>((ref) {
@@ -11,7 +18,9 @@ final methodologyEngineProvider = Provider<MethodologyEngine>((ref) {
 
 // Initialize methodology system
 final methodologyInitializationProvider = FutureProvider<void>((ref) async {
+  final service = ref.read(methodologyServiceProvider);
   final engine = ref.read(methodologyEngineProvider);
+  await service.initialize();
   await engine.initialize();
 });
 
@@ -106,41 +115,47 @@ class MethodologyFilters {
 
 // Methodology state notifier
 class MethodologyNotifier extends StateNotifier<MethodologyState> {
-  MethodologyNotifier(this._engine, this._projectId) : super(const MethodologyState()) {
+  MethodologyNotifier(this._engine, this._service, this._projectId) : super(const MethodologyState()) {
     _initialize();
   }
 
   final MethodologyEngine _engine;
+  final MethodologyService _service;
   final String _projectId;
 
   void _initialize() async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       await _engine.initialize();
-      
+      await _service.initialize();
+
+      // Load available methodologies from the service
+      final availableMethodologies = _service.methodologies;
+
       // Set up stream listeners
       _engine.executionsStream.listen((executions) {
         final projectExecutions = executions.where((e) => e.projectId == _projectId).toList();
         state = state.copyWith(executions: projectExecutions);
       });
-      
+
       _engine.recommendationsStream.listen((recommendations) {
         final projectRecommendations = recommendations.where((r) => r.projectId == _projectId).toList();
         state = state.copyWith(recommendations: projectRecommendations);
       });
-      
+
       _engine.assetsStream.listen((assets) {
         state = state.copyWith(discoveredAssets: assets);
       });
-      
+
       // Load initial data
       final projectAssets = _engine.getProjectAssets(_projectId);
       state = state.copyWith(
+        availableMethodologies: availableMethodologies,
         discoveredAssets: projectAssets,
         isLoading: false,
       );
-      
+
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -235,7 +250,8 @@ class MethodologyNotifier extends StateNotifier<MethodologyState> {
 // Provider for methodology state
 final methodologyProvider = StateNotifierProvider.family<MethodologyNotifier, MethodologyState, String>((ref, projectId) {
   final engine = ref.read(methodologyEngineProvider);
-  return MethodologyNotifier(engine, projectId);
+  final service = ref.read(methodologyServiceProvider);
+  return MethodologyNotifier(engine, service, projectId);
 });
 
 // Filtered methodologies provider

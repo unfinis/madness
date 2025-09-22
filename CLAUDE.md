@@ -70,6 +70,40 @@ The application supports responsive design with the following breakpoints:
 - On extremely small screens, the app scales down and becomes scrollable
 - This ensures usability across all device sizes
 
+## Asset-Property-Driven Trigger System
+
+The methodology system uses an advanced asset-property-based trigger architecture documented in `ASSET_DRIVEN_TRIGGER_SYSTEM.md`. Key concepts:
+
+### Trigger Philosophy
+- **Asset Properties Drive Actions**: Instead of methodology-completion triggers, use asset property combinations
+- **Deduplication**: Track attempted property combinations to prevent redundant executions
+- **Batch Processing**: Combine multiple similar triggers into efficient batch commands
+- **Completion Tracking**: Mark trigger combinations as completed/failed with persistent storage
+
+### Asset Property Examples
+```yaml
+network_segment:
+  properties:
+    nac_enabled: true
+    credentials_available: ["corp\\user:pass"]
+    web_services: [{host: "10.1.1.10", port: 80}]
+    access_level: "blocked" # blocked|limited|partial|full
+
+# Triggers when: nac_enabled=true AND credentials_available=exists
+methodology: nac_credential_testing
+deduplication_key: "{asset_id}:nac_cred:{creds_hash}"
+```
+
+### Batch Command Generation
+Multiple similar triggers automatically combine:
+```yaml
+# 4 web services → 1 batch command
+eyewitness --web -f {web_targets_file} --no-prompt
+parallel -j 4 "nikto -h {}" :::: {web_targets_file}
+```
+
+This creates realistic attack progression where network discoveries naturally trigger appropriate methodologies based on actual reconnaissance findings rather than arbitrary completion events.
+
 ## Notes
 
 - Material3 design system is enabled (useMaterial3: true)

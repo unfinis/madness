@@ -370,6 +370,7 @@ enum AssetType {
   user,
   domain,
   database,
+  share,
   other;
 
   String get displayName {
@@ -394,6 +395,8 @@ enum AssetType {
         return 'Domain';
       case AssetType.database:
         return 'Database';
+      case AssetType.share:
+        return 'Share';
       case AssetType.other:
         return 'Other';
     }
@@ -421,6 +424,8 @@ enum AssetType {
         return '🏷️';
       case AssetType.database:
         return '🗄️';
+      case AssetType.share:
+        return '📂';
       case AssetType.other:
         return '📦';
     }
@@ -448,6 +453,8 @@ enum AssetType {
         return const Color(0xFFf97316);
       case AssetType.database:
         return const Color(0xFF6366f1);
+      case AssetType.share:
+        return const Color(0xFF059669);
       case AssetType.other:
         return const Color(0xFF6b7280);
     }
@@ -465,6 +472,7 @@ class MethodologyRecommendation {
   final Map<String, dynamic> context;
   final DateTime createdDate;
   final bool isDismissed;
+  final List<String> suggestedActions;
 
   const MethodologyRecommendation({
     required this.id,
@@ -477,6 +485,7 @@ class MethodologyRecommendation {
     this.context = const {},
     required this.createdDate,
     this.isDismissed = false,
+    this.suggestedActions = const [],
   });
 
   MethodologyRecommendation copyWith({
@@ -490,6 +499,7 @@ class MethodologyRecommendation {
     Map<String, dynamic>? context,
     DateTime? createdDate,
     bool? isDismissed,
+    List<String>? suggestedActions,
   }) {
     return MethodologyRecommendation(
       id: id ?? this.id,
@@ -502,6 +512,7 @@ class MethodologyRecommendation {
       context: context ?? this.context,
       createdDate: createdDate ?? this.createdDate,
       isDismissed: isDismissed ?? this.isDismissed,
+      suggestedActions: suggestedActions ?? this.suggestedActions,
     );
   }
 

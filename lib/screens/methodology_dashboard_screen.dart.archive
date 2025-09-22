@@ -1,0 +1,1014 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/outcome_ingestion_service.dart';
+import '../services/attack_chain_service.dart';
+import '../providers/projects_provider.dart';
+import '../providers/attack_chain_provider.dart';
+import '../dialogs/ingest_outcome_dialog.dart';
+import '../dialogs/methodology_detail_dialog.dart';
+
+class MethodologyDashboardScreen extends ConsumerStatefulWidget {
+  const MethodologyDashboardScreen({super.key});
+
+  @override
+  ConsumerState<MethodologyDashboardScreen> createState() => _MethodologyDashboardScreenState();
+}
+
+class _MethodologyDashboardScreenState extends ConsumerState<MethodologyDashboardScreen> {
+  final OutcomeIngestionService _ingestionService = OutcomeIngestionService();
+
+  @override
+  Widget build(BuildContext context) {
+    final currentProject = ref.watch(currentProjectProvider);
+    final engagementContext = _ingestionService.getEngagementContext();
+    final history = _ingestionService.getIngestionHistory();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Methodology Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Ingest Outcome',
+            onPressed: () => _showIngestDialog(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () => setState(() {}),
+          ),
+        ],
+      ),
+      body: currentProject == null
+          ? const Center(
+              child: Text('Please select a project to view methodology dashboard'),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Engagement Overview
+                  _buildEngagementOverview(engagementContext),
+                  const SizedBox(height: 24),
+
+                  // Current State Cards
+                  _buildStateCards(engagementContext),
+                  const SizedBox(height: 24),
+
+                  // Attack Chain Progress
+                  _buildAttackChainProgress(engagementContext),
+                  const SizedBox(height: 24),
+
+                  // Recent Activity
+                  _buildRecentActivity(history),
+                  const SizedBox(height: 24),
+
+                  // Recommendations
+                  _buildRecommendations(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildEngagementOverview(Map<String, dynamic> engagementContext) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Engagement Overview',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildOverviewStat(
+                    'Assets Discovered',
+                    (engagementContext['all_assets'] as List?)?.length.toString() ?? '0',
+                    Icons.devices,
+                  ),
+                ),
+                Expanded(
+                  child: _buildOverviewStat(
+                    'Credentials',
+                    (engagementContext['valid_credentials'] as List?)?.length.toString() ?? '0',
+                    Icons.vpn_key,
+                  ),
+                ),
+                Expanded(
+                  child: _buildOverviewStat(
+                    'Admin Access',
+                    (engagementContext['admin_access'] as Map?)?.length.toString() ?? '0',
+                    Icons.admin_panel_settings,
+                  ),
+                ),
+                Expanded(
+                  child: _buildOverviewStat(
+                    'Live Hosts',
+                    engagementContext['live_hosts_count']?.toString() ?? '0',
+                    Icons.computer,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewStat(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStateCards(Map<String, dynamic> engagementContext) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Network Information
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.network_check),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Network Information',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (engagementContext['domain_identified'] != null)
+                    _buildInfoRow('Domain', engagementContext['domain_identified']),
+                  if (engagementContext['broadcast_protocols'] != null)
+                    _buildInfoRow(
+                      'Broadcast Protocols',
+                      (engagementContext['broadcast_protocols'] as List).join(', '),
+                    ),
+                  if (engagementContext['domain_controllers'] != null)
+                    _buildInfoRow(
+                      'Domain Controllers',
+                      (engagementContext['domain_controllers'] as List).length.toString(),
+                    ),
+                  if (engagementContext['sql_servers'] != null)
+                    _buildInfoRow(
+                      'SQL Servers',
+                      (engagementContext['sql_servers'] as List).length.toString(),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Credentials Status
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.security),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Credentials Status',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    'Valid Credentials',
+                    (engagementContext['valid_credentials'] as List?)?.length.toString() ?? '0',
+                  ),
+                  _buildInfoRow(
+                    'Captured Hashes',
+                    (engagementContext['captured_hashes'] as List?)?.length.toString() ?? '0',
+                  ),
+                  _buildInfoRow(
+                    'Admin Access Hosts',
+                    (engagementContext['admin_access'] as Map?)?.length.toString() ?? '0',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Attack Progress
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.timeline),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Attack Progress',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildProgressIndicator(engagementContext),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator(Map<String, dynamic> engagementContext) {
+    final phases = [
+      ('Reconnaissance', _hasRecon(engagementContext)),
+      ('Initial Access', _hasInitialAccess(engagementContext)),
+      ('Lateral Movement', _hasLateralMovement(engagementContext)),
+      ('Privilege Escalation', _hasPrivEsc(engagementContext)),
+      ('Domain Admin', _hasDomainAdmin(engagementContext)),
+    ];
+
+    return Column(
+      children: phases.map((phase) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Icon(
+                phase.$2 ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: phase.$2 ? Colors.green : Colors.grey,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  phase.$1,
+                  style: TextStyle(
+                    color: phase.$2 ? Colors.green : null,
+                    fontWeight: phase.$2 ? FontWeight.bold : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  bool _hasRecon(Map<String, dynamic> context) {
+    return context['live_hosts_count'] != null && context['live_hosts_count'] > 0;
+  }
+
+  bool _hasInitialAccess(Map<String, dynamic> context) {
+    final validCreds = context['valid_credentials'] as List?;
+    return validCreds != null && validCreds.isNotEmpty;
+  }
+
+  bool _hasLateralMovement(Map<String, dynamic> context) {
+    final adminAccess = context['admin_access'] as Map?;
+    return adminAccess != null && adminAccess.isNotEmpty;
+  }
+
+  bool _hasPrivEsc(Map<String, dynamic> context) {
+    final adminAccess = context['admin_access'] as Map?;
+    return adminAccess != null && adminAccess.length > 1;
+  }
+
+  bool _hasDomainAdmin(Map<String, dynamic> context) {
+    final adminAccess = context['admin_access'] as Map?;
+    final domainControllers = context['domain_controllers'] as List?;
+
+    if (adminAccess == null || domainControllers == null) return false;
+
+    return domainControllers.any((dc) => adminAccess.containsKey(dc));
+  }
+
+  Widget _buildAttackChainProgress(Map<String, dynamic> engagementContext) {
+    final currentProject = ref.watch(currentProjectProvider);
+    if (currentProject == null) {
+      return const SizedBox.shrink();
+    }
+
+    final chainAsync = ref.watch(attackChainProvider(currentProject.id));
+    final chainStats = ref.watch(attackChainStatsProvider(currentProject.id));
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Attack Chain Progress',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (chainStats.totalSteps > 0)
+                  Chip(
+                    label: Text('${chainStats.completedSteps}/${chainStats.totalSteps}'),
+                    backgroundColor: Colors.blue.withOpacity(0.2),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            chainAsync.when(
+              data: (chain) => _buildDynamicAttackChain(chain, chainStats),
+              loading: () => const CircularProgressIndicator(),
+              error: (error, stack) => Text('Error: $error'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttackChain(Map<String, dynamic> engagementContext) {
+    final steps = [
+      _AttackStep('Network Discovery', _hasRecon(engagementContext),
+          'Discover live hosts and services'),
+      _AttackStep('Service Enumeration', _hasRecon(engagementContext),
+          'Identify running services'),
+      _AttackStep('Credential Acquisition', _hasInitialAccess(engagementContext),
+          'Obtain valid credentials'),
+      _AttackStep('Access Verification', _hasLateralMovement(engagementContext),
+          'Test and verify access levels'),
+      _AttackStep('Lateral Movement', _hasLateralMovement(engagementContext),
+          'Move between systems'),
+      _AttackStep('Privilege Escalation', _hasPrivEsc(engagementContext),
+          'Escalate to admin privileges'),
+      _AttackStep('Domain Compromise', _hasDomainAdmin(engagementContext),
+          'Achieve domain admin access'),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: steps.asMap().entries.map((entry) {
+          final index = entry.key;
+          final step = entry.value;
+          final isLast = index == steps.length - 1;
+
+          return Row(
+            children: [
+              _buildStepCard(step),
+              if (!isLast)
+                Container(
+                  width: 40,
+                  height: 2,
+                  color: step.completed ? Colors.green : Colors.grey[300],
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildStepCard(_AttackStep step) {
+    return Container(
+      width: 120,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: step.completed ? Colors.green[50] : Colors.grey[50],
+        border: Border.all(
+          color: step.completed ? Colors.green : Colors.grey[300]!,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            step.completed ? Icons.check_circle : Icons.pending,
+            color: step.completed ? Colors.green : Colors.grey,
+            size: 24,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            step.name,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: step.completed ? Colors.green[800] : null,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            step.description,
+            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivity(List<IngestionEvent> history) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Recent Activity',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            if (history.isEmpty)
+              const Center(
+                child: Text('No activity recorded yet. Ingest your first outcome!'),
+              )
+            else
+              ...history.reversed.take(10).map((event) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(event.methodologyId.substring(0, 1).toUpperCase()),
+                  ),
+                  title: Text('${event.methodologyId} - ${event.stepId}'),
+                  subtitle: Text(_formatOutcome(event.outcome)),
+                  trailing: Text(
+                    _formatTime(event.timestamp),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendations() {
+    final currentProject = ref.watch(currentProjectProvider);
+    if (currentProject == null) {
+      return const SizedBox.shrink();
+    }
+
+    final nextSteps = ref.watch(nextRecommendedStepsProvider(currentProject.id));
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Next Recommended Steps',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            if (nextSteps.isEmpty)
+              Column(
+                children: [
+                  Icon(Icons.lightbulb_outline, color: Colors.grey[400]),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No recommendations yet',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  Text(
+                    'Discover assets to generate attack steps',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                ],
+              )
+            else
+              ...nextSteps.map((step) => _buildEnhancedStepRecommendation(step)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStaticRecommendations() {
+    final context = _ingestionService.getEngagementContext();
+    final recommendations = <String>[];
+
+    // Generate recommendations based on current state
+    if (context.isEmpty) {
+      recommendations.add('Start with passive network monitoring');
+    } else {
+      if (context['live_hosts_count'] == null) {
+        recommendations.add('Perform ARP scan to discover live hosts');
+      }
+
+      if (context['broadcast_protocols']?.contains('LLMNR') == true &&
+          (context['valid_credentials'] as List?)?.isEmpty != false) {
+        recommendations.add('Try LLMNR/NBT-NS poisoning attack');
+      }
+
+      if ((context['captured_hashes'] as List?)?.isNotEmpty == true &&
+          (context['valid_credentials'] as List?)?.isEmpty != false) {
+        recommendations.add('Crack captured hashes with wordlist');
+      }
+
+      if ((context['valid_credentials'] as List?)?.isNotEmpty == true &&
+          context['admin_access'] == null) {
+        recommendations.add('Test credentials against discovered hosts');
+      }
+
+      if (context['admin_access'] != null) {
+        recommendations.add('Deploy payload on admin access hosts');
+      }
+
+      if (context['domain_identified'] != null &&
+          (context['valid_credentials'] as List?)?.isNotEmpty == true) {
+        recommendations.add('Run BloodHound for attack path analysis');
+      }
+    }
+
+    if (recommendations.isEmpty) {
+      recommendations.add('Consider lateral movement techniques');
+      recommendations.add('Establish persistence mechanisms');
+    }
+
+    return Column(
+      children: recommendations.take(5).map((rec) {
+        return ListTile(
+          leading: const Icon(Icons.lightbulb_outline),
+          title: Text(rec),
+          trailing: IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _showIngestDialog(),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  String _formatOutcome(Map<String, dynamic> outcome) {
+    if (outcome['captured_hashes'] != null) {
+      final hashes = outcome['captured_hashes'] as List;
+      return 'Captured ${hashes.length} hashes';
+    }
+    if (outcome['valid_credentials'] != null) {
+      final creds = outcome['valid_credentials'] as List;
+      return 'Found ${creds.length} credentials';
+    }
+    if (outcome['admin_access'] != null) {
+      return 'Achieved admin access';
+    }
+    if (outcome['live_hosts_count'] != null) {
+      return 'Found ${outcome['live_hosts_count']} hosts';
+    }
+    return 'Custom outcome recorded';
+  }
+
+  String _formatTime(DateTime timestamp) {
+    final now = DateTime.now();
+    final diff = now.difference(timestamp);
+
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
+
+  Widget _buildDynamicAttackChain(List<AttackChainStep> chain, AttackChainStats stats) {
+    if (chain.isEmpty) {
+      return Column(
+        children: [
+          Icon(Icons.timeline, size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 8),
+          Text(
+            'No attack chain steps generated yet',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Steps will be automatically generated when assets are discovered',
+            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+          ),
+        ],
+      );
+    }
+
+    // Group steps by phase
+    final stepsByPhase = <AttackChainPhase, List<AttackChainStep>>{};
+    for (final step in chain) {
+      stepsByPhase.putIfAbsent(step.phase, () => []).add(step);
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: AttackChainPhase.values.map((phase) {
+          final phaseSteps = stepsByPhase[phase] ?? [];
+          final hasCompletedSteps = phaseSteps.any((s) => s.status == AttackChainStepStatus.completed);
+          final hasPendingSteps = phaseSteps.any((s) => s.status == AttackChainStepStatus.pending);
+          final isCurrentPhase = stats.currentPhase == phase;
+
+          return _buildPhaseCard(phase, phaseSteps, hasCompletedSteps, hasPendingSteps, isCurrentPhase);
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPhaseCard(AttackChainPhase phase, List<AttackChainStep> steps,
+                        bool hasCompleted, bool hasPending, bool isCurrent) {
+    Color phaseColor;
+    IconData phaseIcon;
+
+    if (hasCompleted) {
+      phaseColor = Colors.green;
+      phaseIcon = Icons.check_circle;
+    } else if (isCurrent && hasPending) {
+      phaseColor = Colors.orange;
+      phaseIcon = Icons.play_circle;
+    } else if (hasPending) {
+      phaseColor = Colors.blue;
+      phaseIcon = Icons.circle_outlined;
+    } else {
+      phaseColor = Colors.grey;
+      phaseIcon = Icons.circle_outlined;
+    }
+
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 8),
+      child: Card(
+        color: phaseColor.withOpacity(0.1),
+        child: InkWell(
+          onTap: steps.isNotEmpty ? () => _showPhaseSteps(phase, steps) : null,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(phaseIcon, color: phaseColor, size: 24),
+                const SizedBox(height: 8),
+                Text(
+                  phase.displayName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: phaseColor,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${steps.where((s) => s.status == AttackChainStepStatus.completed).length}/${steps.length}',
+                  style: TextStyle(
+                    color: phaseColor,
+                    fontSize: 11,
+                  ),
+                ),
+                if (steps.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: phaseColor.withOpacity(0.7),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPhaseSteps(AttackChainPhase phase, List<AttackChainStep> steps) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(_getPhaseIcon(phase), color: _getPhaseColor(phase)),
+            const SizedBox(width: 8),
+            Text('${phase.displayName} Steps'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          height: 400,
+          child: ListView.builder(
+            itemCount: steps.length,
+            itemBuilder: (context, index) {
+              final step = steps[index];
+              return Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: _getStepStatusColor(step.status).withOpacity(0.2),
+                    child: Icon(
+                      _getStepStatusIcon(step.status),
+                      color: _getStepStatusColor(step.status),
+                      size: 16,
+                    ),
+                  ),
+                  title: Text(step.title),
+                  subtitle: Text(step.description),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${step.estimatedDuration.inMinutes}m'),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _showDetailedStepDialog(step);
+                        },
+                        icon: const Icon(Icons.launch),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStepStatusColor(AttackChainStepStatus status) {
+    switch (status) {
+      case AttackChainStepStatus.pending:
+        return Colors.grey;
+      case AttackChainStepStatus.inProgress:
+        return Colors.orange;
+      case AttackChainStepStatus.completed:
+        return Colors.green;
+      case AttackChainStepStatus.failed:
+        return Colors.red;
+      case AttackChainStepStatus.skipped:
+        return Colors.blue;
+    }
+  }
+
+  IconData _getStepStatusIcon(AttackChainStepStatus status) {
+    switch (status) {
+      case AttackChainStepStatus.pending:
+        return Icons.circle_outlined;
+      case AttackChainStepStatus.inProgress:
+        return Icons.play_circle;
+      case AttackChainStepStatus.completed:
+        return Icons.check_circle;
+      case AttackChainStepStatus.failed:
+        return Icons.error;
+      case AttackChainStepStatus.skipped:
+        return Icons.skip_next;
+    }
+  }
+
+  IconData _getPhaseIcon(AttackChainPhase phase) {
+    switch (phase) {
+      case AttackChainPhase.reconnaissance:
+        return Icons.search;
+      case AttackChainPhase.initialAccess:
+        return Icons.login;
+      case AttackChainPhase.lateralMovement:
+        return Icons.network_check;
+      case AttackChainPhase.privilegeEscalation:
+        return Icons.trending_up;
+      case AttackChainPhase.domainAdmin:
+        return Icons.admin_panel_settings;
+    }
+  }
+
+  Color _getPhaseColor(AttackChainPhase phase) {
+    switch (phase) {
+      case AttackChainPhase.reconnaissance:
+        return Colors.blue;
+      case AttackChainPhase.initialAccess:
+        return Colors.orange;
+      case AttackChainPhase.lateralMovement:
+        return Colors.purple;
+      case AttackChainPhase.privilegeEscalation:
+        return Colors.red;
+      case AttackChainPhase.domainAdmin:
+        return Colors.green;
+    }
+  }
+
+  Widget _buildEnhancedStepRecommendation(AttackChainStep step) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      child: InkWell(
+        onTap: () => _showDetailedStepDialog(step),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _getPhaseColor(step.phase).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getPhaseIcon(step.phase),
+                      color: _getPhaseColor(step.phase),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          step.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          step.description,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getPriorityColor(step.priority).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Priority ${step.priority}',
+                          style: TextStyle(
+                            color: _getPriorityColor(step.priority),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${step.estimatedDuration.inMinutes}m',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Chip(
+                    label: Text(step.phase.displayName),
+                    backgroundColor: _getPhaseColor(step.phase).withOpacity(0.1),
+                    labelStyle: TextStyle(
+                      color: _getPhaseColor(step.phase),
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (step.context.isNotEmpty) ...[
+                    Chip(
+                      label: const Text('Has Context'),
+                      backgroundColor: Colors.blue.withOpacity(0.1),
+                      labelStyle: const TextStyle(
+                        color: Colors.blue,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => _showDetailedStepDialog(step),
+                    icon: const Icon(Icons.launch, size: 16),
+                    label: const Text('View Details'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getPriorityColor(int priority) {
+    if (priority >= 9) return Colors.red;
+    if (priority >= 7) return Colors.orange;
+    if (priority >= 5) return Colors.blue;
+    return Colors.grey;
+  }
+
+  void _showDetailedStepDialog(AttackChainStep step) {
+    showDialog(
+      context: context,
+      builder: (context) => MethodologyDetailDialog(step: step),
+    );
+  }
+
+  void _showStepDetails(AttackChainStep step) {
+    _showDetailedStepDialog(step);
+  }
+
+  void _showIngestDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const IngestOutcomeDialog(),
+    ).then((result) {
+      if (result != null) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Outcome ingested successfully!')),
+        );
+      }
+    });
+  }
+}
+
+class _AttackStep {
+  final String name;
+  final bool completed;
+  final String description;
+
+  _AttackStep(this.name, this.completed, this.description);
+}

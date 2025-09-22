@@ -1,0 +1,413 @@
+id: comprehensive_port_scanning
+name: Comprehensive Port Scanning and Service Discovery
+category: Reconnaissance
+priority: critical
+description: Perform comprehensive port scanning to identify open TCP/UDP services and their versions
+detailed_description: |
+  Systematically scan for open ports and services across target hosts using multiple techniques.
+  This methodology adapts based on host properties and performs both TCP and UDP scanning
+  with service version detection and vulnerability assessment.
+
+# Asset property-based triggers
+asset_triggers:
+  - asset_type: host
+    conditions:
+      all:
+        - property: ip_address
+          operator: exists
+        - property: services_discovered
+          operator: not_exists
+        - property: port_scan_completed
+          operator: not_equals
+          value: true
+    priority: 95
+    deduplication_key: "{asset.id}:port_scan"
+    batch_capable: true
+    batch_criteria: network_segment
+    max_batch_size: 50
+
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: live_hosts
+          operator: greater_than
+          value: 0
+        - property: port_scan_completed
+          operator: not_equals
+          value: true
+    priority: 90
+    deduplication_key: "{asset.id}:network_port_scan:{live_hosts.count}"
+    batch_capable: true
+
+# Variable extraction
+variables:
+  target_hosts:
+    source: live_hosts
+    default: []
+    transform: "live_hosts.join(' ')"
+
+  target_ip:
+    source: ip_address
+
+  hosts_file:
+    value: "/tmp/hosts_{asset.id}_{timestamp}.txt"
+
+  output_dir:
+    value: "/tmp/scan_{asset.id}_{timestamp}"
+
+  scan_intensity:
+    source: scan_preference
+    default: "normal"
+    values: ["stealth", "normal", "aggressive"]
+
+  custom_ports:
+    source: custom_port_list
+    default: ""
+
+# Batch command for multiple hosts
+batch_command: |
+  #!/bin/bash
+  OUTPUT_DIR="{output_dir}"
+  HOSTS_FILE="{hosts_file}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  # Create hosts file
+  cat > "$HOSTS_FILE" << 'EOF'
+  {target_hosts}
+  EOF
+
+  echo "[*] Starting comprehensive port scan at $(date)"
+
+  # Quick TCP scan (top 1000 ports)
+  echo "[+] Phase 1: Quick TCP scan (top 1000 ports)"
+  nmap -sS -sV -sC -O -iL "$HOSTS_FILE" \
+    --top-ports 1000 -T{scan_speed} \
+    -oA "$OUTPUT_DIR/quick_tcp"
+
+  # Full TCP port scan on interesting hosts
+  echo "[+] Phase 2: Full TCP port scan"
+  for host in $(cat "$HOSTS_FILE"); do
+    echo "  [*] Full TCP scan: $host"
+    nmap -sS -sV -p- -T{scan_speed} "$host" \
+      -oA "$OUTPUT_DIR/full_tcp_$host" \
+      --max-scan-delay 25ms \
+      --max-retries 1
+  done
+
+  # UDP scan (top 1000 ports)
+  echo "[+] Phase 3: UDP scan (top 1000 ports)"
+  nmap -sU -sV --top-ports 1000 -T{scan_speed} \
+    -iL "$HOSTS_FILE" \
+    -oA "$OUTPUT_DIR/udp_scan"
+
+  # Version detection on discovered services
+  echo "[+] Phase 4: Intensive version detection"
+  nmap -sV --version-intensity 9 -iL "$HOSTS_FILE" \
+    -oA "$OUTPUT_DIR/version_scan"
+
+  # Vulnerability scanning
+  echo "[+] Phase 5: Vulnerability assessment"
+  nmap --script vuln -iL "$HOSTS_FILE" \
+    -oA "$OUTPUT_DIR/vuln_scan"
+
+  # Custom ports if specified
+  if [ -n "{custom_ports}" ]; then
+    echo "[+] Phase 6: Custom port scan"
+    nmap -sS -sV -p {custom_ports} -iL "$HOSTS_FILE" \
+      -oA "$OUTPUT_DIR/custom_ports"
+  fi
+
+  # Parse results and extract services
+  echo "[+] Phase 7: Parsing results"
+  python3 << 'PYTHON_SCRIPT'
+import xml.etree.ElementTree as ET
+import json
+import os
+
+def parse_nmap_xml(xml_file):
+    services = []
+    try:
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+
+        for host in root.findall('host'):
+            addr = host.find('address').get('addr')
+            ports = host.find('ports')
+            if ports is not None:
+                for port in ports.findall('port'):
+                    port_id = port.get('portid')
+                    protocol = port.get('protocol')
+                    state = port.find('state').get('state')
+
+                    service = port.find('service')
+                    service_name = service.get('name') if service is not None else 'unknown'
+                    service_version = service.get('version') if service is not None else ''
+                    service_product = service.get('product') if service is not None else ''
+
+                    services.append({
+                        'host': addr,
+                        'port': int(port_id),
+                        'protocol': protocol,
+                        'state': state,
+                        'service': service_name,
+                        'version': service_version,
+                        'product': service_product,
+                        'banner': f"{service_product} {service_version}".strip()
+                    })
+    except Exception as e:
+        print(f"Error parsing {xml_file}: {e}")
+
+    return services
+
+# Parse all XML files
+all_services = []
+for xml_file in os.listdir("{output_dir}"):
+    if xml_file.endswith('.xml'):
+        services = parse_nmap_xml(os.path.join("{output_dir}", xml_file))
+        all_services.extend(services)
+
+# Save results
+with open("{output_dir}/discovered_services.json", 'w') as f:
+    json.dump(all_services, f, indent=2)
+
+print(f"[+] Discovered {len(all_services)} services")
+PYTHON_SCRIPT
+
+  echo "[*] Port scanning completed at $(date)"
+  echo "[*] Results saved to: $OUTPUT_DIR"
+
+# Individual command for single host
+individual_command: |
+  #!/bin/bash
+  TARGET="{target_ip}"
+  OUTPUT_DIR="{output_dir}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  echo "[*] Scanning $TARGET at $(date)"
+
+  # Quick scan first
+  echo "[+] Quick scan (SYN scan with version detection)"
+  nmap -sS -sV -sC -O "$TARGET" \
+    --top-ports 1000 -T{scan_speed} \
+    -oA "$OUTPUT_DIR/quick_scan"
+
+  # Check if host seems interesting (has open ports)
+  OPEN_PORTS=$(grep -c "open" "$OUTPUT_DIR/quick_scan.nmap" || echo "0")
+
+  if [ "$OPEN_PORTS" -gt 0 ]; then
+    echo "[+] Found $OPEN_PORTS open ports, performing detailed scan"
+
+    # Full TCP scan
+    nmap -sS -sV -p- -T{scan_speed} "$TARGET" \
+      -oA "$OUTPUT_DIR/full_tcp"
+
+    # UDP scan (top ports)
+    nmap -sU -sV --top-ports 1000 -T{scan_speed} "$TARGET" \
+      -oA "$OUTPUT_DIR/udp_scan"
+
+    # Script scanning
+    nmap -sC --script safe "$TARGET" \
+      -oA "$OUTPUT_DIR/script_scan"
+
+    # Vulnerability assessment
+    nmap --script vuln "$TARGET" \
+      -oA "$OUTPUT_DIR/vuln_scan"
+  else
+    echo "[!] No open ports found on quick scan"
+  fi
+
+# Service-specific follow-up scans
+follow_up_commands:
+  web_services:
+    condition: "discovered_services contains http"
+    command: |
+      # Web service specific scanning
+      echo "[+] Web services detected, running HTTP enumeration"
+      nmap --script http-enum,http-headers,http-methods,http-title {target_ip} \
+        -p $(echo {web_ports} | tr ',' '\n' | paste -sd,)
+
+  smb_services:
+    condition: "discovered_services contains smb"
+    command: |
+      # SMB specific scanning
+      echo "[+] SMB services detected, running SMB enumeration"
+      nmap --script smb-enum-shares,smb-enum-users,smb-vuln* {target_ip} -p 445,139
+
+  database_services:
+    condition: "discovered_services contains database"
+    command: |
+      # Database specific scanning
+      echo "[+] Database services detected, running DB enumeration"
+      nmap --script mysql-info,mysql-enum,mssql-info,oracle-sid-brute {target_ip}
+
+# Expected property updates
+property_updates:
+  on_success:
+    - property: port_scan_completed
+      operation: set
+      value: true
+
+    - property: services_discovered
+      operation: set
+      value: true
+
+    - property: discovered_services
+      operation: set
+      value: "{parsed_services}"
+
+    - property: open_ports
+      operation: set
+      value: "{open_ports_list}"
+
+    - property: service_count
+      operation: set
+      value: "{service_count}"
+
+    - property: scan_timestamp
+      operation: set
+      value: "{timestamp}"
+
+    - property: os_detection
+      operation: set
+      value: "{detected_os}"
+      condition: os_detected
+
+  on_failure:
+    - property: port_scan_failed
+      operation: set
+      value: true
+
+    - property: scan_error
+      operation: set
+      value: "{error_message}"
+
+# Expected discoveries - services will be created as child assets
+expected_discoveries:
+  - asset_type: service
+    conditions:
+      - state: "open"
+    properties:
+      port: "{port}"
+      protocol: "{protocol}"
+      service_name: "{service}"
+      version: "{version}"
+      banner: "{banner}"
+      host_id: "{parent_host_id}"
+      state: "open"
+      discovery_method: "port_scan"
+
+# Chain triggers based on discovered services
+chain_triggers:
+  on_success:
+    - condition:
+        property: discovered_services
+        operator: contains
+        match:
+          service: "http"
+      trigger: web_service_enumeration
+
+    - condition:
+        property: discovered_services
+        operator: contains
+        match:
+          service: "smb"
+      trigger: smb_enumeration
+
+    - condition:
+        property: discovered_services
+        operator: contains
+        match:
+          service: "ssh"
+      trigger: ssh_enumeration
+
+    - condition:
+        property: discovered_services
+        operator: contains
+        match:
+          service: "ftp"
+      trigger: ftp_enumeration
+
+    - condition:
+        property: discovered_services
+        operator: contains
+        match:
+          category: "database"
+      trigger: database_enumeration
+
+    - condition:
+        property: service_count
+        operator: greater_than
+        value: 5
+      trigger: default_credential_testing
+
+# Scan intensity configurations
+scan_configurations:
+  stealth:
+    timing: "T2"
+    max_scan_delay: "100ms"
+    max_retries: 1
+    fragmentation: true
+
+  normal:
+    timing: "T3"
+    max_scan_delay: "25ms"
+    max_retries: 2
+    fragmentation: false
+
+  aggressive:
+    timing: "T4"
+    max_scan_delay: "10ms"
+    max_retries: 3
+    fragmentation: false
+
+# Outcome analysis
+outcome_analysis:
+  success_indicators:
+    - Open ports discovered
+    - Services identified
+    - Version information obtained
+    - OS fingerprinting successful
+
+  failure_indicators:
+    - Host unreachable
+    - All ports filtered
+    - Scan timeouts
+    - Permission denied
+
+  metrics:
+    - total_ports_scanned: "{total_ports}"
+    - open_ports_found: "{open_ports.count}"
+    - services_identified: "{services.count}"
+    - scan_duration: "{scan_time}"
+
+# Cleanup
+cleanup:
+  - priority: low
+    action: Remove temporary files
+    command: rm -rf {output_dir} {hosts_file}
+
+  - priority: low
+    action: Clear scan cache
+    command: |
+      # Clear any nmap cache files
+      rm -f ~/.nmap/nmap-*
+
+# Detection evasion options
+evasion_techniques:
+  fragment_packets:
+    enabled: false
+    command_addition: "-f"
+
+  decoy_scan:
+    enabled: false
+    command_addition: "-D RND:10"
+
+  source_port_spoofing:
+    enabled: false
+    command_addition: "--source-port 53"
+
+  timing_template:
+    default: "T3"
+    options: ["T0", "T1", "T2", "T3", "T4", "T5"]

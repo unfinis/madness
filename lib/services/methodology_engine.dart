@@ -3,14 +3,18 @@ import 'dart:io';
 import 'package:uuid/uuid.dart';
 import '../models/methodology.dart';
 import '../models/methodology_execution.dart';
-import 'methodology_service_v2.dart';
+import 'methodology_service.dart';
+import 'output_parser_service.dart';
+import 'attack_chain_service.dart';
 
-class MethodologyEngineV2 {
-  static final MethodologyEngineV2 _instance = MethodologyEngineV2._internal();
-  factory MethodologyEngineV2() => _instance;
-  MethodologyEngineV2._internal();
+class MethodologyEngine {
+  static final MethodologyEngine _instance = MethodologyEngine._internal();
+  factory MethodologyEngine() => _instance;
+  MethodologyEngine._internal();
 
-  final MethodologyServiceV2 _methodologyService = MethodologyServiceV2();
+  final MethodologyService _methodologyService = MethodologyService();
+  final OutputParserService _outputParser = OutputParserService();
+  final AttackChainService _attackChainService = AttackChainService();
   final Map<String, MethodologyExecution> _activeExecutions = {};
   final Map<String, List<DiscoveredAsset>> _projectAssets = {};
   final List<MethodologyRecommendation> _recommendations = [];
@@ -33,25 +37,34 @@ class MethodologyEngineV2 {
 
   Future<void> initialize() async {
     await _methodologyService.initialize();
+    await _attackChainService.initialize();
   }
 
   // Asset Management
   void addDiscoveredAsset(String projectId, DiscoveredAsset asset) {
     _projectAssets.putIfAbsent(projectId, () => []);
     _projectAssets[projectId]!.add(asset);
-    
+
     _assetsController.add(_projectAssets[projectId]!);
-    
+
     // Re-evaluate recommendations when new assets are discovered
     _updateRecommendations(projectId);
+
+    // Automatically generate attack chain steps for this asset
+    _generateAttackChainSteps(projectId, asset);
   }
 
   void addDiscoveredAssets(String projectId, List<DiscoveredAsset> assets) {
     _projectAssets.putIfAbsent(projectId, () => []);
     _projectAssets[projectId]!.addAll(assets);
-    
+
     _assetsController.add(_projectAssets[projectId]!);
     _updateRecommendations(projectId);
+
+    // Generate attack chain steps for each asset
+    for (final asset in assets) {
+      _generateAttackChainSteps(projectId, asset);
+    }
   }
 
   List<DiscoveredAsset> getProjectAssets(String projectId) {
@@ -604,10 +617,36 @@ class MethodologyEngineV2 {
     return _activeExecutions[executionId];
   }
 
+  /// Generate attack chain steps for a discovered asset
+  Future<void> _generateAttackChainSteps(String projectId, DiscoveredAsset asset) async {
+    try {
+      final generatedSteps = await _attackChainService.generateStepsForAsset(projectId, asset);
+
+      // Optionally log or notify about generated steps
+      if (generatedSteps.isNotEmpty) {
+        print('Generated ${generatedSteps.length} attack chain steps for asset: ${asset.name}');
+      }
+    } catch (e) {
+      print('Error generating attack chain steps for asset ${asset.name}: $e');
+    }
+  }
+
+  /// Get attack chain service for UI access
+  AttackChainService get attackChainService => _attackChainService;
+
+  /// Get attack chain steps for a project
+  List<AttackChainStep> getProjectAttackChain(String projectId) {
+    return _attackChainService.getProjectChain(projectId);
+  }
+
+  /// Get attack chain stream
+  Stream<List<AttackChainStep>> get attackChainStream => _attackChainService.chainStream;
+
   void dispose() {
     _executionsController.close();
     _recommendationsController.close();
     _assetsController.close();
+    _attackChainService.dispose();
   }
 }
 

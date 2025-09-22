@@ -1,0 +1,120 @@
+id: arp_scanning
+name: "ARP Network Scanning"
+category: reconnaissance
+description: "Perform ARP scanning to discover live hosts on the network"
+estimated_duration: "5m"
+risk_level: low
+stealth_level: moderate
+
+# Triggered after passive monitoring or when IP address received
+triggers:
+  - type: methodology_completed
+    conditions:
+      methodology_id: "passive_monitoring"
+    priority: 8
+    description: "Trigger after passive monitoring completes"
+
+  - type: asset_discovered
+    conditions:
+      asset_type: "network_interface"
+      properties:
+        ip_assigned: true
+    priority: 7
+    description: "Trigger when IP address is assigned"
+
+steps:
+  - id: arp_scan
+    name: "ARP Scan Local Network"
+    type: command
+    description: "Discover live hosts using ARP"
+    order: 1
+    command: "arp-scan -l --interface={interface}"
+    command_variants:
+      - condition: "sudo_available == true"
+        command: "sudo arp-scan -l --interface={interface}"
+        description: "Use sudo if available"
+      - condition: "tool == 'netdiscover'"
+        command: "netdiscover -i {interface} -P -N"
+        description: "Alternative using netdiscover"
+    timeout: "5m"
+    expected_outputs:
+      - type: text
+        parser: arp-scan
+        success_indicators: ["hosts found", "Received", "packets"]
+        failure_indicators: ["permission denied", "no such device"]
+    asset_discovery:
+      search_patterns:
+        - pattern: "(\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+([:0-9a-fA-F]+)"
+          asset_type: "host"
+          confidence: 1.0
+          metadata:
+            discovery_method: "arp"
+        - pattern: "VMware"
+          asset_type: "host"
+          confidence: 0.9
+          metadata:
+            vendor: "VMware"
+            interesting: true
+        - pattern: "Cisco"
+          asset_type: "network_device"
+          confidence: 0.9
+          metadata:
+            vendor: "Cisco"
+
+# Outcomes to track
+outcome_schema:
+  live_hosts_count:
+    type: integer
+    description: "Number of live hosts discovered"
+    decision_point: true
+  subnet_density:
+    type: string
+    enum: ["high", "medium", "low"]
+    description: "Network density classification"
+  interesting_macs:
+    type: array
+    items:
+      type: object
+      properties:
+        mac: string
+        vendor: string
+    description: "Notable MAC addresses (VMware, printers, etc)"
+  hosts:
+    type: array
+    items:
+      type: object
+      properties:
+        ip: string
+        mac: string
+        vendor: string
+
+# Decision logic based on results
+next_methodologies:
+  - methodology: "fast_port_scan"
+    condition: "live_hosts_count > 100"
+    description: "Use fast scanning for high-density networks"
+    context_mapping:
+      scan_type: "fast"
+      hosts: "{hosts}"
+
+  - methodology: "thorough_port_scan"
+    condition: "live_hosts_count > 0 AND live_hosts_count <= 100"
+    description: "Use thorough scanning for medium-density networks"
+    context_mapping:
+      scan_type: "thorough"
+      hosts: "{hosts}"
+
+  - methodology: "targeted_enumeration"
+    condition: "interesting_macs.length > 0"
+    description: "Focus on interesting devices"
+    context_mapping:
+      targets: "{interesting_macs}"
+
+  - methodology: "dhcp_starvation"
+    condition: "subnet_density == 'low' AND live_hosts_count < 20"
+    description: "Consider DHCP attacks on low-density networks"
+
+deduplication:
+  strategy: "cooldown_based"
+  cooldown_period: "10m"
+  signature_fields: ["subnet"]

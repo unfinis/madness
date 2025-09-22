@@ -52,7 +52,8 @@ class SideNavigation extends ConsumerWidget {
         NavigationGroup(
           title: 'TESTING',
           items: [
-            NavigationItem(label: 'Methodology', icon: Icons.search, section: NavigationSection.methodology),
+            NavigationItem(label: 'Attack Plan', icon: Icons.account_tree, section: NavigationSection.methodologyDashboard),
+            NavigationItem(label: 'Methodology Library', icon: Icons.library_books, section: NavigationSection.methodology),
             NavigationItem(label: 'Assets', icon: Icons.computer, section: NavigationSection.assets),
             NavigationItem(label: 'Credentials', icon: Icons.key, section: NavigationSection.credentials),
             NavigationItem(label: 'History', icon: Icons.history, section: NavigationSection.history),
@@ -62,7 +63,6 @@ class SideNavigation extends ConsumerWidget {
           title: 'RESULTS',
           items: [
             NavigationItem(label: 'Findings', icon: Icons.bug_report, section: NavigationSection.findings),
-            NavigationItem(label: 'Attack Chains', icon: Icons.link, section: NavigationSection.attackChains),
             NavigationItem(label: 'Screenshots', icon: Icons.photo_camera, section: NavigationSection.screenshots),
             NavigationItem(label: 'Reports', icon: Icons.article, section: NavigationSection.reports),
           ],
@@ -115,10 +115,22 @@ class SideNavigation extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.security,
-                  color: Colors.white,
-                  size: isNarrow ? 24 : 32,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.asset(
+                    'assets/icon/app_icon.png',
+                    width: isNarrow ? 24 : 32,
+                    height: isNarrow ? 24 : 32,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to icon if image fails to load
+                      return Icon(
+                        Icons.security,
+                        color: Colors.white,
+                        size: isNarrow ? 24 : 32,
+                      );
+                    },
+                  ),
                 ),
                 if (!isNarrow) ...[
                   const SizedBox(width: 12),

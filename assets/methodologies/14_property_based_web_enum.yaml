@@ -1,0 +1,207 @@
+id: property_based_web_enum
+name: Web Service Enumeration (Property-Based)
+category: Enumeration
+priority: high
+description: Automatically enumerate discovered web services in batch
+detailed_description: |
+  When web services are discovered on a network segment, automatically perform
+  batch enumeration including screenshots, technology detection, and vulnerability scanning.
+
+# Asset property-based triggers
+asset_triggers:
+  - asset_type: network_segment
+    conditions:
+      all:
+        - property: web_services
+          operator: exists
+        - property: web_services.count
+          operator: greater_than
+          value: 0
+    priority: 75
+    deduplication_key: "{asset.id}:web_enum:{web_services.count}"
+    batch_capable: true
+    batch_criteria: subnet
+    max_batch_size: 50
+
+  - asset_type: host
+    conditions:
+      any:
+        - property: services
+          operator: contains
+          match:
+            service_name: http
+        - property: services
+          operator: contains
+          match:
+            service_name: https
+        - property: open_ports
+          operator: contains_any
+          values: [80, 443, 8080, 8443, 8000, 8888]
+    priority: 70
+    deduplication_key: "{asset.id}:web_enum:{services.hash}"
+
+# Variable extraction from asset properties
+variables:
+  web_targets:
+    source: web_services
+    transform: |
+      web_services.map(s =>
+        `${s.ssl ? 'https' : 'http'}://${s.host}:${s.port}`
+      ).join('\n')
+
+  targets_file:
+    value: "/tmp/web_targets_{timestamp}.txt"
+
+  output_dir:
+    value: "/tmp/web_enum_{asset.id}_{timestamp}"
+
+  parallel_jobs:
+    source: web_services.count
+    transform: "Math.min(web_services.count, 10)"
+
+# Batch command template
+batch_command: |
+  #!/bin/bash
+  # Create targets file
+  cat > {targets_file} << EOF
+  {web_targets}
+  EOF
+
+  # Create output directory
+  mkdir -p {output_dir}
+
+  # Take screenshots of all web services
+  echo "[*] Taking screenshots..."
+  eyewitness --web -f {targets_file} --no-prompt -d {output_dir}/screenshots
+
+  # Run nikto scans in parallel
+  echo "[*] Running vulnerability scans..."
+  parallel -j {parallel_jobs} \
+    "nikto -h {} -output {output_dir}/nikto_{#}.txt -Format txt" \
+    :::: {targets_file}
+
+  # Detect technologies
+  echo "[*] Detecting technologies..."
+  whatweb -i {targets_file} --log-json {output_dir}/whatweb.json
+
+  # Check for common vulnerabilities
+  echo "[*] Checking for common issues..."
+  nuclei -l {targets_file} -o {output_dir}/nuclei.txt -severity low,medium,high,critical
+
+  # Directory brute forcing (limited)
+  echo "[*] Quick directory enumeration..."
+  parallel -j {parallel_jobs} \
+    "gobuster dir -u {} -w /usr/share/wordlists/dirb/common.txt -o {output_dir}/dirs_{#}.txt -q" \
+    :::: {targets_file}
+
+# Individual command (when not batched)
+individual_command: |
+  #!/bin/bash
+  URL="{protocol}://{host}:{port}"
+  OUTPUT_DIR="{output_dir}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  # Screenshot
+  eyewitness --single "$URL" -d "$OUTPUT_DIR/screenshot"
+
+  # Vulnerability scan
+  nikto -h "$URL" -output "$OUTPUT_DIR/nikto.txt"
+
+  # Technology detection
+  whatweb "$URL" --log-json "$OUTPUT_DIR/whatweb.json"
+
+  # Nuclei scan
+  echo "$URL" | nuclei -o "$OUTPUT_DIR/nuclei.txt"
+
+# Expected property updates after execution
+property_updates:
+  - property: web_services
+    operation: update
+    fields:
+      - technologies: "{detected_technologies}"
+      - vulnerabilities: "{found_vulnerabilities}"
+      - directories: "{discovered_directories}"
+      - screenshot: "{screenshot_path}"
+      - last_scanned: "{timestamp}"
+
+# Assets that might be discovered
+expected_discoveries:
+  - asset_type: vulnerability
+    conditions:
+      - severity: ["high", "critical"]
+    properties:
+      cve: "{cve_id}"
+      affected_service: "{service_url}"
+      severity: "{severity}"
+      exploitable: "{exploitable}"
+
+  - asset_type: credential
+    conditions:
+      - found_in: ["comments", "javascript", "config_files"]
+    properties:
+      username: "{username}"
+      password: "{password}"
+      source: "web_enumeration"
+      url: "{found_at_url}"
+
+# Cleanup steps
+cleanup:
+  - priority: low
+    action: Remove temporary files
+    command: rm -f {targets_file}
+
+  - priority: low
+    action: Compress results
+    command: tar -czf {output_dir}.tar.gz {output_dir}/
+
+# Success and failure indicators
+outcome_analysis:
+  success_indicators:
+    - Screenshots captured successfully
+    - Technology stack identified
+    - Vulnerability scans completed
+    - No rate limiting encountered
+
+  failure_indicators:
+    - Connection timeouts
+    - Authentication required
+    - WAF blocking scans
+    - Rate limiting detected
+
+  property_updates_on_success:
+    - web_enumeration_completed: true
+    - web_enumeration_date: "{timestamp}"
+    - web_technologies_identified: "{technology_count}"
+    - web_vulnerabilities_found: "{vulnerability_count}"
+
+  property_updates_on_failure:
+    - web_enumeration_failed: true
+    - web_enumeration_error: "{error_message}"
+
+# Integration with other methodologies
+chain_triggers:
+  on_success:
+    - condition:
+        property: vulnerabilities
+        operator: contains
+        value: "sql_injection"
+      trigger: sql_injection_exploitation
+
+    - condition:
+        property: technologies
+        operator: contains
+        value: "wordpress"
+      trigger: wordpress_enumeration
+
+    - condition:
+        property: found_credentials
+        operator: exists
+      trigger: credential_testing
+
+  on_failure:
+    - condition:
+        property: waf_detected
+        operator: equals
+        value: true
+      trigger: waf_bypass_techniques

@@ -11841,6 +11841,1636 @@ class MethodologyRecommendationsTableCompanion
   }
 }
 
+class $AssetsTableTable extends AssetsTable
+    with TableInfo<$AssetsTableTable, AssetRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssetsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects (id)'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _propertiesMeta =
+      const VerificationMeta('properties');
+  @override
+  late final GeneratedColumn<String> properties = GeneratedColumn<String>(
+      'properties', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _discoveryStatusMeta =
+      const VerificationMeta('discoveryStatus');
+  @override
+  late final GeneratedColumn<String> discoveryStatus = GeneratedColumn<String>(
+      'discovery_status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _discoveredAtMeta =
+      const VerificationMeta('discoveredAt');
+  @override
+  late final GeneratedColumn<DateTime> discoveredAt = GeneratedColumn<DateTime>(
+      'discovered_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastUpdatedMeta =
+      const VerificationMeta('lastUpdated');
+  @override
+  late final GeneratedColumn<DateTime> lastUpdated = GeneratedColumn<DateTime>(
+      'last_updated', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _discoveryMethodMeta =
+      const VerificationMeta('discoveryMethod');
+  @override
+  late final GeneratedColumn<String> discoveryMethod = GeneratedColumn<String>(
+      'discovery_method', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _confidenceMeta =
+      const VerificationMeta('confidence');
+  @override
+  late final GeneratedColumn<double> confidence = GeneratedColumn<double>(
+      'confidence', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1.0));
+  static const VerificationMeta _parentAssetIdsMeta =
+      const VerificationMeta('parentAssetIds');
+  @override
+  late final GeneratedColumn<String> parentAssetIds = GeneratedColumn<String>(
+      'parent_asset_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _childAssetIdsMeta =
+      const VerificationMeta('childAssetIds');
+  @override
+  late final GeneratedColumn<String> childAssetIds = GeneratedColumn<String>(
+      'child_asset_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _relatedAssetIdsMeta =
+      const VerificationMeta('relatedAssetIds');
+  @override
+  late final GeneratedColumn<String> relatedAssetIds = GeneratedColumn<String>(
+      'related_asset_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _completedTriggersMeta =
+      const VerificationMeta('completedTriggers');
+  @override
+  late final GeneratedColumn<String> completedTriggers =
+      GeneratedColumn<String>('completed_triggers', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _triggerResultsMeta =
+      const VerificationMeta('triggerResults');
+  @override
+  late final GeneratedColumn<String> triggerResults = GeneratedColumn<String>(
+      'trigger_results', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+      'tags', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _metadataMeta =
+      const VerificationMeta('metadata');
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+      'metadata', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _accessLevelMeta =
+      const VerificationMeta('accessLevel');
+  @override
+  late final GeneratedColumn<String> accessLevel = GeneratedColumn<String>(
+      'access_level', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _securityControlsMeta =
+      const VerificationMeta('securityControls');
+  @override
+  late final GeneratedColumn<String> securityControls = GeneratedColumn<String>(
+      'security_controls', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        type,
+        projectId,
+        name,
+        description,
+        properties,
+        discoveryStatus,
+        discoveredAt,
+        lastUpdated,
+        discoveryMethod,
+        confidence,
+        parentAssetIds,
+        childAssetIds,
+        relatedAssetIds,
+        completedTriggers,
+        triggerResults,
+        tags,
+        metadata,
+        accessLevel,
+        securityControls
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'assets';
+  @override
+  VerificationContext validateIntegrity(Insertable<AssetRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('properties')) {
+      context.handle(
+          _propertiesMeta,
+          properties.isAcceptableOrUnknown(
+              data['properties']!, _propertiesMeta));
+    } else if (isInserting) {
+      context.missing(_propertiesMeta);
+    }
+    if (data.containsKey('discovery_status')) {
+      context.handle(
+          _discoveryStatusMeta,
+          discoveryStatus.isAcceptableOrUnknown(
+              data['discovery_status']!, _discoveryStatusMeta));
+    } else if (isInserting) {
+      context.missing(_discoveryStatusMeta);
+    }
+    if (data.containsKey('discovered_at')) {
+      context.handle(
+          _discoveredAtMeta,
+          discoveredAt.isAcceptableOrUnknown(
+              data['discovered_at']!, _discoveredAtMeta));
+    } else if (isInserting) {
+      context.missing(_discoveredAtMeta);
+    }
+    if (data.containsKey('last_updated')) {
+      context.handle(
+          _lastUpdatedMeta,
+          lastUpdated.isAcceptableOrUnknown(
+              data['last_updated']!, _lastUpdatedMeta));
+    }
+    if (data.containsKey('discovery_method')) {
+      context.handle(
+          _discoveryMethodMeta,
+          discoveryMethod.isAcceptableOrUnknown(
+              data['discovery_method']!, _discoveryMethodMeta));
+    }
+    if (data.containsKey('confidence')) {
+      context.handle(
+          _confidenceMeta,
+          confidence.isAcceptableOrUnknown(
+              data['confidence']!, _confidenceMeta));
+    }
+    if (data.containsKey('parent_asset_ids')) {
+      context.handle(
+          _parentAssetIdsMeta,
+          parentAssetIds.isAcceptableOrUnknown(
+              data['parent_asset_ids']!, _parentAssetIdsMeta));
+    } else if (isInserting) {
+      context.missing(_parentAssetIdsMeta);
+    }
+    if (data.containsKey('child_asset_ids')) {
+      context.handle(
+          _childAssetIdsMeta,
+          childAssetIds.isAcceptableOrUnknown(
+              data['child_asset_ids']!, _childAssetIdsMeta));
+    } else if (isInserting) {
+      context.missing(_childAssetIdsMeta);
+    }
+    if (data.containsKey('related_asset_ids')) {
+      context.handle(
+          _relatedAssetIdsMeta,
+          relatedAssetIds.isAcceptableOrUnknown(
+              data['related_asset_ids']!, _relatedAssetIdsMeta));
+    } else if (isInserting) {
+      context.missing(_relatedAssetIdsMeta);
+    }
+    if (data.containsKey('completed_triggers')) {
+      context.handle(
+          _completedTriggersMeta,
+          completedTriggers.isAcceptableOrUnknown(
+              data['completed_triggers']!, _completedTriggersMeta));
+    } else if (isInserting) {
+      context.missing(_completedTriggersMeta);
+    }
+    if (data.containsKey('trigger_results')) {
+      context.handle(
+          _triggerResultsMeta,
+          triggerResults.isAcceptableOrUnknown(
+              data['trigger_results']!, _triggerResultsMeta));
+    } else if (isInserting) {
+      context.missing(_triggerResultsMeta);
+    }
+    if (data.containsKey('tags')) {
+      context.handle(
+          _tagsMeta, tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta));
+    } else if (isInserting) {
+      context.missing(_tagsMeta);
+    }
+    if (data.containsKey('metadata')) {
+      context.handle(_metadataMeta,
+          metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta));
+    }
+    if (data.containsKey('access_level')) {
+      context.handle(
+          _accessLevelMeta,
+          accessLevel.isAcceptableOrUnknown(
+              data['access_level']!, _accessLevelMeta));
+    }
+    if (data.containsKey('security_controls')) {
+      context.handle(
+          _securityControlsMeta,
+          securityControls.isAcceptableOrUnknown(
+              data['security_controls']!, _securityControlsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AssetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssetRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      properties: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}properties'])!,
+      discoveryStatus: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}discovery_status'])!,
+      discoveredAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}discovered_at'])!,
+      lastUpdated: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_updated']),
+      discoveryMethod: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}discovery_method']),
+      confidence: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}confidence'])!,
+      parentAssetIds: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}parent_asset_ids'])!,
+      childAssetIds: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}child_asset_ids'])!,
+      relatedAssetIds: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}related_asset_ids'])!,
+      completedTriggers: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}completed_triggers'])!,
+      triggerResults: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}trigger_results'])!,
+      tags: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tags'])!,
+      metadata: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata']),
+      accessLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}access_level']),
+      securityControls: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}security_controls']),
+    );
+  }
+
+  @override
+  $AssetsTableTable createAlias(String alias) {
+    return $AssetsTableTable(attachedDatabase, alias);
+  }
+}
+
+class AssetRow extends DataClass implements Insertable<AssetRow> {
+  final String id;
+  final String type;
+  final String projectId;
+  final String name;
+  final String? description;
+  final String properties;
+  final String discoveryStatus;
+  final DateTime discoveredAt;
+  final DateTime? lastUpdated;
+  final String? discoveryMethod;
+  final double confidence;
+  final String parentAssetIds;
+  final String childAssetIds;
+  final String relatedAssetIds;
+  final String completedTriggers;
+  final String triggerResults;
+  final String tags;
+  final String? metadata;
+  final String? accessLevel;
+  final String? securityControls;
+  const AssetRow(
+      {required this.id,
+      required this.type,
+      required this.projectId,
+      required this.name,
+      this.description,
+      required this.properties,
+      required this.discoveryStatus,
+      required this.discoveredAt,
+      this.lastUpdated,
+      this.discoveryMethod,
+      required this.confidence,
+      required this.parentAssetIds,
+      required this.childAssetIds,
+      required this.relatedAssetIds,
+      required this.completedTriggers,
+      required this.triggerResults,
+      required this.tags,
+      this.metadata,
+      this.accessLevel,
+      this.securityControls});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    map['project_id'] = Variable<String>(projectId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['properties'] = Variable<String>(properties);
+    map['discovery_status'] = Variable<String>(discoveryStatus);
+    map['discovered_at'] = Variable<DateTime>(discoveredAt);
+    if (!nullToAbsent || lastUpdated != null) {
+      map['last_updated'] = Variable<DateTime>(lastUpdated);
+    }
+    if (!nullToAbsent || discoveryMethod != null) {
+      map['discovery_method'] = Variable<String>(discoveryMethod);
+    }
+    map['confidence'] = Variable<double>(confidence);
+    map['parent_asset_ids'] = Variable<String>(parentAssetIds);
+    map['child_asset_ids'] = Variable<String>(childAssetIds);
+    map['related_asset_ids'] = Variable<String>(relatedAssetIds);
+    map['completed_triggers'] = Variable<String>(completedTriggers);
+    map['trigger_results'] = Variable<String>(triggerResults);
+    map['tags'] = Variable<String>(tags);
+    if (!nullToAbsent || metadata != null) {
+      map['metadata'] = Variable<String>(metadata);
+    }
+    if (!nullToAbsent || accessLevel != null) {
+      map['access_level'] = Variable<String>(accessLevel);
+    }
+    if (!nullToAbsent || securityControls != null) {
+      map['security_controls'] = Variable<String>(securityControls);
+    }
+    return map;
+  }
+
+  AssetsTableCompanion toCompanion(bool nullToAbsent) {
+    return AssetsTableCompanion(
+      id: Value(id),
+      type: Value(type),
+      projectId: Value(projectId),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      properties: Value(properties),
+      discoveryStatus: Value(discoveryStatus),
+      discoveredAt: Value(discoveredAt),
+      lastUpdated: lastUpdated == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastUpdated),
+      discoveryMethod: discoveryMethod == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discoveryMethod),
+      confidence: Value(confidence),
+      parentAssetIds: Value(parentAssetIds),
+      childAssetIds: Value(childAssetIds),
+      relatedAssetIds: Value(relatedAssetIds),
+      completedTriggers: Value(completedTriggers),
+      triggerResults: Value(triggerResults),
+      tags: Value(tags),
+      metadata: metadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadata),
+      accessLevel: accessLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accessLevel),
+      securityControls: securityControls == null && nullToAbsent
+          ? const Value.absent()
+          : Value(securityControls),
+    );
+  }
+
+  factory AssetRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssetRow(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      properties: serializer.fromJson<String>(json['properties']),
+      discoveryStatus: serializer.fromJson<String>(json['discoveryStatus']),
+      discoveredAt: serializer.fromJson<DateTime>(json['discoveredAt']),
+      lastUpdated: serializer.fromJson<DateTime?>(json['lastUpdated']),
+      discoveryMethod: serializer.fromJson<String?>(json['discoveryMethod']),
+      confidence: serializer.fromJson<double>(json['confidence']),
+      parentAssetIds: serializer.fromJson<String>(json['parentAssetIds']),
+      childAssetIds: serializer.fromJson<String>(json['childAssetIds']),
+      relatedAssetIds: serializer.fromJson<String>(json['relatedAssetIds']),
+      completedTriggers: serializer.fromJson<String>(json['completedTriggers']),
+      triggerResults: serializer.fromJson<String>(json['triggerResults']),
+      tags: serializer.fromJson<String>(json['tags']),
+      metadata: serializer.fromJson<String?>(json['metadata']),
+      accessLevel: serializer.fromJson<String?>(json['accessLevel']),
+      securityControls: serializer.fromJson<String?>(json['securityControls']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'projectId': serializer.toJson<String>(projectId),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'properties': serializer.toJson<String>(properties),
+      'discoveryStatus': serializer.toJson<String>(discoveryStatus),
+      'discoveredAt': serializer.toJson<DateTime>(discoveredAt),
+      'lastUpdated': serializer.toJson<DateTime?>(lastUpdated),
+      'discoveryMethod': serializer.toJson<String?>(discoveryMethod),
+      'confidence': serializer.toJson<double>(confidence),
+      'parentAssetIds': serializer.toJson<String>(parentAssetIds),
+      'childAssetIds': serializer.toJson<String>(childAssetIds),
+      'relatedAssetIds': serializer.toJson<String>(relatedAssetIds),
+      'completedTriggers': serializer.toJson<String>(completedTriggers),
+      'triggerResults': serializer.toJson<String>(triggerResults),
+      'tags': serializer.toJson<String>(tags),
+      'metadata': serializer.toJson<String?>(metadata),
+      'accessLevel': serializer.toJson<String?>(accessLevel),
+      'securityControls': serializer.toJson<String?>(securityControls),
+    };
+  }
+
+  AssetRow copyWith(
+          {String? id,
+          String? type,
+          String? projectId,
+          String? name,
+          Value<String?> description = const Value.absent(),
+          String? properties,
+          String? discoveryStatus,
+          DateTime? discoveredAt,
+          Value<DateTime?> lastUpdated = const Value.absent(),
+          Value<String?> discoveryMethod = const Value.absent(),
+          double? confidence,
+          String? parentAssetIds,
+          String? childAssetIds,
+          String? relatedAssetIds,
+          String? completedTriggers,
+          String? triggerResults,
+          String? tags,
+          Value<String?> metadata = const Value.absent(),
+          Value<String?> accessLevel = const Value.absent(),
+          Value<String?> securityControls = const Value.absent()}) =>
+      AssetRow(
+        id: id ?? this.id,
+        type: type ?? this.type,
+        projectId: projectId ?? this.projectId,
+        name: name ?? this.name,
+        description: description.present ? description.value : this.description,
+        properties: properties ?? this.properties,
+        discoveryStatus: discoveryStatus ?? this.discoveryStatus,
+        discoveredAt: discoveredAt ?? this.discoveredAt,
+        lastUpdated: lastUpdated.present ? lastUpdated.value : this.lastUpdated,
+        discoveryMethod: discoveryMethod.present
+            ? discoveryMethod.value
+            : this.discoveryMethod,
+        confidence: confidence ?? this.confidence,
+        parentAssetIds: parentAssetIds ?? this.parentAssetIds,
+        childAssetIds: childAssetIds ?? this.childAssetIds,
+        relatedAssetIds: relatedAssetIds ?? this.relatedAssetIds,
+        completedTriggers: completedTriggers ?? this.completedTriggers,
+        triggerResults: triggerResults ?? this.triggerResults,
+        tags: tags ?? this.tags,
+        metadata: metadata.present ? metadata.value : this.metadata,
+        accessLevel: accessLevel.present ? accessLevel.value : this.accessLevel,
+        securityControls: securityControls.present
+            ? securityControls.value
+            : this.securityControls,
+      );
+  AssetRow copyWithCompanion(AssetsTableCompanion data) {
+    return AssetRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      properties:
+          data.properties.present ? data.properties.value : this.properties,
+      discoveryStatus: data.discoveryStatus.present
+          ? data.discoveryStatus.value
+          : this.discoveryStatus,
+      discoveredAt: data.discoveredAt.present
+          ? data.discoveredAt.value
+          : this.discoveredAt,
+      lastUpdated:
+          data.lastUpdated.present ? data.lastUpdated.value : this.lastUpdated,
+      discoveryMethod: data.discoveryMethod.present
+          ? data.discoveryMethod.value
+          : this.discoveryMethod,
+      confidence:
+          data.confidence.present ? data.confidence.value : this.confidence,
+      parentAssetIds: data.parentAssetIds.present
+          ? data.parentAssetIds.value
+          : this.parentAssetIds,
+      childAssetIds: data.childAssetIds.present
+          ? data.childAssetIds.value
+          : this.childAssetIds,
+      relatedAssetIds: data.relatedAssetIds.present
+          ? data.relatedAssetIds.value
+          : this.relatedAssetIds,
+      completedTriggers: data.completedTriggers.present
+          ? data.completedTriggers.value
+          : this.completedTriggers,
+      triggerResults: data.triggerResults.present
+          ? data.triggerResults.value
+          : this.triggerResults,
+      tags: data.tags.present ? data.tags.value : this.tags,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+      accessLevel:
+          data.accessLevel.present ? data.accessLevel.value : this.accessLevel,
+      securityControls: data.securityControls.present
+          ? data.securityControls.value
+          : this.securityControls,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('properties: $properties, ')
+          ..write('discoveryStatus: $discoveryStatus, ')
+          ..write('discoveredAt: $discoveredAt, ')
+          ..write('lastUpdated: $lastUpdated, ')
+          ..write('discoveryMethod: $discoveryMethod, ')
+          ..write('confidence: $confidence, ')
+          ..write('parentAssetIds: $parentAssetIds, ')
+          ..write('childAssetIds: $childAssetIds, ')
+          ..write('relatedAssetIds: $relatedAssetIds, ')
+          ..write('completedTriggers: $completedTriggers, ')
+          ..write('triggerResults: $triggerResults, ')
+          ..write('tags: $tags, ')
+          ..write('metadata: $metadata, ')
+          ..write('accessLevel: $accessLevel, ')
+          ..write('securityControls: $securityControls')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      type,
+      projectId,
+      name,
+      description,
+      properties,
+      discoveryStatus,
+      discoveredAt,
+      lastUpdated,
+      discoveryMethod,
+      confidence,
+      parentAssetIds,
+      childAssetIds,
+      relatedAssetIds,
+      completedTriggers,
+      triggerResults,
+      tags,
+      metadata,
+      accessLevel,
+      securityControls);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssetRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.projectId == this.projectId &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.properties == this.properties &&
+          other.discoveryStatus == this.discoveryStatus &&
+          other.discoveredAt == this.discoveredAt &&
+          other.lastUpdated == this.lastUpdated &&
+          other.discoveryMethod == this.discoveryMethod &&
+          other.confidence == this.confidence &&
+          other.parentAssetIds == this.parentAssetIds &&
+          other.childAssetIds == this.childAssetIds &&
+          other.relatedAssetIds == this.relatedAssetIds &&
+          other.completedTriggers == this.completedTriggers &&
+          other.triggerResults == this.triggerResults &&
+          other.tags == this.tags &&
+          other.metadata == this.metadata &&
+          other.accessLevel == this.accessLevel &&
+          other.securityControls == this.securityControls);
+}
+
+class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<String> projectId;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<String> properties;
+  final Value<String> discoveryStatus;
+  final Value<DateTime> discoveredAt;
+  final Value<DateTime?> lastUpdated;
+  final Value<String?> discoveryMethod;
+  final Value<double> confidence;
+  final Value<String> parentAssetIds;
+  final Value<String> childAssetIds;
+  final Value<String> relatedAssetIds;
+  final Value<String> completedTriggers;
+  final Value<String> triggerResults;
+  final Value<String> tags;
+  final Value<String?> metadata;
+  final Value<String?> accessLevel;
+  final Value<String?> securityControls;
+  final Value<int> rowid;
+  const AssetsTableCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.properties = const Value.absent(),
+    this.discoveryStatus = const Value.absent(),
+    this.discoveredAt = const Value.absent(),
+    this.lastUpdated = const Value.absent(),
+    this.discoveryMethod = const Value.absent(),
+    this.confidence = const Value.absent(),
+    this.parentAssetIds = const Value.absent(),
+    this.childAssetIds = const Value.absent(),
+    this.relatedAssetIds = const Value.absent(),
+    this.completedTriggers = const Value.absent(),
+    this.triggerResults = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.accessLevel = const Value.absent(),
+    this.securityControls = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssetsTableCompanion.insert({
+    required String id,
+    required String type,
+    required String projectId,
+    required String name,
+    this.description = const Value.absent(),
+    required String properties,
+    required String discoveryStatus,
+    required DateTime discoveredAt,
+    this.lastUpdated = const Value.absent(),
+    this.discoveryMethod = const Value.absent(),
+    this.confidence = const Value.absent(),
+    required String parentAssetIds,
+    required String childAssetIds,
+    required String relatedAssetIds,
+    required String completedTriggers,
+    required String triggerResults,
+    required String tags,
+    this.metadata = const Value.absent(),
+    this.accessLevel = const Value.absent(),
+    this.securityControls = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        type = Value(type),
+        projectId = Value(projectId),
+        name = Value(name),
+        properties = Value(properties),
+        discoveryStatus = Value(discoveryStatus),
+        discoveredAt = Value(discoveredAt),
+        parentAssetIds = Value(parentAssetIds),
+        childAssetIds = Value(childAssetIds),
+        relatedAssetIds = Value(relatedAssetIds),
+        completedTriggers = Value(completedTriggers),
+        triggerResults = Value(triggerResults),
+        tags = Value(tags);
+  static Insertable<AssetRow> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<String>? projectId,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? properties,
+    Expression<String>? discoveryStatus,
+    Expression<DateTime>? discoveredAt,
+    Expression<DateTime>? lastUpdated,
+    Expression<String>? discoveryMethod,
+    Expression<double>? confidence,
+    Expression<String>? parentAssetIds,
+    Expression<String>? childAssetIds,
+    Expression<String>? relatedAssetIds,
+    Expression<String>? completedTriggers,
+    Expression<String>? triggerResults,
+    Expression<String>? tags,
+    Expression<String>? metadata,
+    Expression<String>? accessLevel,
+    Expression<String>? securityControls,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (projectId != null) 'project_id': projectId,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (properties != null) 'properties': properties,
+      if (discoveryStatus != null) 'discovery_status': discoveryStatus,
+      if (discoveredAt != null) 'discovered_at': discoveredAt,
+      if (lastUpdated != null) 'last_updated': lastUpdated,
+      if (discoveryMethod != null) 'discovery_method': discoveryMethod,
+      if (confidence != null) 'confidence': confidence,
+      if (parentAssetIds != null) 'parent_asset_ids': parentAssetIds,
+      if (childAssetIds != null) 'child_asset_ids': childAssetIds,
+      if (relatedAssetIds != null) 'related_asset_ids': relatedAssetIds,
+      if (completedTriggers != null) 'completed_triggers': completedTriggers,
+      if (triggerResults != null) 'trigger_results': triggerResults,
+      if (tags != null) 'tags': tags,
+      if (metadata != null) 'metadata': metadata,
+      if (accessLevel != null) 'access_level': accessLevel,
+      if (securityControls != null) 'security_controls': securityControls,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssetsTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? type,
+      Value<String>? projectId,
+      Value<String>? name,
+      Value<String?>? description,
+      Value<String>? properties,
+      Value<String>? discoveryStatus,
+      Value<DateTime>? discoveredAt,
+      Value<DateTime?>? lastUpdated,
+      Value<String?>? discoveryMethod,
+      Value<double>? confidence,
+      Value<String>? parentAssetIds,
+      Value<String>? childAssetIds,
+      Value<String>? relatedAssetIds,
+      Value<String>? completedTriggers,
+      Value<String>? triggerResults,
+      Value<String>? tags,
+      Value<String?>? metadata,
+      Value<String?>? accessLevel,
+      Value<String?>? securityControls,
+      Value<int>? rowid}) {
+    return AssetsTableCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      projectId: projectId ?? this.projectId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      properties: properties ?? this.properties,
+      discoveryStatus: discoveryStatus ?? this.discoveryStatus,
+      discoveredAt: discoveredAt ?? this.discoveredAt,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+      discoveryMethod: discoveryMethod ?? this.discoveryMethod,
+      confidence: confidence ?? this.confidence,
+      parentAssetIds: parentAssetIds ?? this.parentAssetIds,
+      childAssetIds: childAssetIds ?? this.childAssetIds,
+      relatedAssetIds: relatedAssetIds ?? this.relatedAssetIds,
+      completedTriggers: completedTriggers ?? this.completedTriggers,
+      triggerResults: triggerResults ?? this.triggerResults,
+      tags: tags ?? this.tags,
+      metadata: metadata ?? this.metadata,
+      accessLevel: accessLevel ?? this.accessLevel,
+      securityControls: securityControls ?? this.securityControls,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (properties.present) {
+      map['properties'] = Variable<String>(properties.value);
+    }
+    if (discoveryStatus.present) {
+      map['discovery_status'] = Variable<String>(discoveryStatus.value);
+    }
+    if (discoveredAt.present) {
+      map['discovered_at'] = Variable<DateTime>(discoveredAt.value);
+    }
+    if (lastUpdated.present) {
+      map['last_updated'] = Variable<DateTime>(lastUpdated.value);
+    }
+    if (discoveryMethod.present) {
+      map['discovery_method'] = Variable<String>(discoveryMethod.value);
+    }
+    if (confidence.present) {
+      map['confidence'] = Variable<double>(confidence.value);
+    }
+    if (parentAssetIds.present) {
+      map['parent_asset_ids'] = Variable<String>(parentAssetIds.value);
+    }
+    if (childAssetIds.present) {
+      map['child_asset_ids'] = Variable<String>(childAssetIds.value);
+    }
+    if (relatedAssetIds.present) {
+      map['related_asset_ids'] = Variable<String>(relatedAssetIds.value);
+    }
+    if (completedTriggers.present) {
+      map['completed_triggers'] = Variable<String>(completedTriggers.value);
+    }
+    if (triggerResults.present) {
+      map['trigger_results'] = Variable<String>(triggerResults.value);
+    }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
+    if (accessLevel.present) {
+      map['access_level'] = Variable<String>(accessLevel.value);
+    }
+    if (securityControls.present) {
+      map['security_controls'] = Variable<String>(securityControls.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('properties: $properties, ')
+          ..write('discoveryStatus: $discoveryStatus, ')
+          ..write('discoveredAt: $discoveredAt, ')
+          ..write('lastUpdated: $lastUpdated, ')
+          ..write('discoveryMethod: $discoveryMethod, ')
+          ..write('confidence: $confidence, ')
+          ..write('parentAssetIds: $parentAssetIds, ')
+          ..write('childAssetIds: $childAssetIds, ')
+          ..write('relatedAssetIds: $relatedAssetIds, ')
+          ..write('completedTriggers: $completedTriggers, ')
+          ..write('triggerResults: $triggerResults, ')
+          ..write('tags: $tags, ')
+          ..write('metadata: $metadata, ')
+          ..write('accessLevel: $accessLevel, ')
+          ..write('securityControls: $securityControls, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AssetRelationshipsTableTable extends AssetRelationshipsTable
+    with TableInfo<$AssetRelationshipsTableTable, AssetRelationshipRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssetRelationshipsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _parentAssetIdMeta =
+      const VerificationMeta('parentAssetId');
+  @override
+  late final GeneratedColumn<String> parentAssetId = GeneratedColumn<String>(
+      'parent_asset_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+  static const VerificationMeta _childAssetIdMeta =
+      const VerificationMeta('childAssetId');
+  @override
+  late final GeneratedColumn<String> childAssetId = GeneratedColumn<String>(
+      'child_asset_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+  static const VerificationMeta _relationshipTypeMeta =
+      const VerificationMeta('relationshipType');
+  @override
+  late final GeneratedColumn<String> relationshipType = GeneratedColumn<String>(
+      'relationship_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _metadataMeta =
+      const VerificationMeta('metadata');
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+      'metadata', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [parentAssetId, childAssetId, relationshipType, createdAt, metadata];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'asset_relationships';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<AssetRelationshipRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('parent_asset_id')) {
+      context.handle(
+          _parentAssetIdMeta,
+          parentAssetId.isAcceptableOrUnknown(
+              data['parent_asset_id']!, _parentAssetIdMeta));
+    } else if (isInserting) {
+      context.missing(_parentAssetIdMeta);
+    }
+    if (data.containsKey('child_asset_id')) {
+      context.handle(
+          _childAssetIdMeta,
+          childAssetId.isAcceptableOrUnknown(
+              data['child_asset_id']!, _childAssetIdMeta));
+    } else if (isInserting) {
+      context.missing(_childAssetIdMeta);
+    }
+    if (data.containsKey('relationship_type')) {
+      context.handle(
+          _relationshipTypeMeta,
+          relationshipType.isAcceptableOrUnknown(
+              data['relationship_type']!, _relationshipTypeMeta));
+    } else if (isInserting) {
+      context.missing(_relationshipTypeMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('metadata')) {
+      context.handle(_metadataMeta,
+          metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey =>
+      {parentAssetId, childAssetId, relationshipType};
+  @override
+  AssetRelationshipRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssetRelationshipRow(
+      parentAssetId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}parent_asset_id'])!,
+      childAssetId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}child_asset_id'])!,
+      relationshipType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}relationship_type'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      metadata: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata']),
+    );
+  }
+
+  @override
+  $AssetRelationshipsTableTable createAlias(String alias) {
+    return $AssetRelationshipsTableTable(attachedDatabase, alias);
+  }
+}
+
+class AssetRelationshipRow extends DataClass
+    implements Insertable<AssetRelationshipRow> {
+  final String parentAssetId;
+  final String childAssetId;
+  final String relationshipType;
+  final DateTime createdAt;
+  final String? metadata;
+  const AssetRelationshipRow(
+      {required this.parentAssetId,
+      required this.childAssetId,
+      required this.relationshipType,
+      required this.createdAt,
+      this.metadata});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['parent_asset_id'] = Variable<String>(parentAssetId);
+    map['child_asset_id'] = Variable<String>(childAssetId);
+    map['relationship_type'] = Variable<String>(relationshipType);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || metadata != null) {
+      map['metadata'] = Variable<String>(metadata);
+    }
+    return map;
+  }
+
+  AssetRelationshipsTableCompanion toCompanion(bool nullToAbsent) {
+    return AssetRelationshipsTableCompanion(
+      parentAssetId: Value(parentAssetId),
+      childAssetId: Value(childAssetId),
+      relationshipType: Value(relationshipType),
+      createdAt: Value(createdAt),
+      metadata: metadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadata),
+    );
+  }
+
+  factory AssetRelationshipRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssetRelationshipRow(
+      parentAssetId: serializer.fromJson<String>(json['parentAssetId']),
+      childAssetId: serializer.fromJson<String>(json['childAssetId']),
+      relationshipType: serializer.fromJson<String>(json['relationshipType']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      metadata: serializer.fromJson<String?>(json['metadata']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'parentAssetId': serializer.toJson<String>(parentAssetId),
+      'childAssetId': serializer.toJson<String>(childAssetId),
+      'relationshipType': serializer.toJson<String>(relationshipType),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'metadata': serializer.toJson<String?>(metadata),
+    };
+  }
+
+  AssetRelationshipRow copyWith(
+          {String? parentAssetId,
+          String? childAssetId,
+          String? relationshipType,
+          DateTime? createdAt,
+          Value<String?> metadata = const Value.absent()}) =>
+      AssetRelationshipRow(
+        parentAssetId: parentAssetId ?? this.parentAssetId,
+        childAssetId: childAssetId ?? this.childAssetId,
+        relationshipType: relationshipType ?? this.relationshipType,
+        createdAt: createdAt ?? this.createdAt,
+        metadata: metadata.present ? metadata.value : this.metadata,
+      );
+  AssetRelationshipRow copyWithCompanion(
+      AssetRelationshipsTableCompanion data) {
+    return AssetRelationshipRow(
+      parentAssetId: data.parentAssetId.present
+          ? data.parentAssetId.value
+          : this.parentAssetId,
+      childAssetId: data.childAssetId.present
+          ? data.childAssetId.value
+          : this.childAssetId,
+      relationshipType: data.relationshipType.present
+          ? data.relationshipType.value
+          : this.relationshipType,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetRelationshipRow(')
+          ..write('parentAssetId: $parentAssetId, ')
+          ..write('childAssetId: $childAssetId, ')
+          ..write('relationshipType: $relationshipType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('metadata: $metadata')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      parentAssetId, childAssetId, relationshipType, createdAt, metadata);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssetRelationshipRow &&
+          other.parentAssetId == this.parentAssetId &&
+          other.childAssetId == this.childAssetId &&
+          other.relationshipType == this.relationshipType &&
+          other.createdAt == this.createdAt &&
+          other.metadata == this.metadata);
+}
+
+class AssetRelationshipsTableCompanion
+    extends UpdateCompanion<AssetRelationshipRow> {
+  final Value<String> parentAssetId;
+  final Value<String> childAssetId;
+  final Value<String> relationshipType;
+  final Value<DateTime> createdAt;
+  final Value<String?> metadata;
+  final Value<int> rowid;
+  const AssetRelationshipsTableCompanion({
+    this.parentAssetId = const Value.absent(),
+    this.childAssetId = const Value.absent(),
+    this.relationshipType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssetRelationshipsTableCompanion.insert({
+    required String parentAssetId,
+    required String childAssetId,
+    required String relationshipType,
+    required DateTime createdAt,
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : parentAssetId = Value(parentAssetId),
+        childAssetId = Value(childAssetId),
+        relationshipType = Value(relationshipType),
+        createdAt = Value(createdAt);
+  static Insertable<AssetRelationshipRow> custom({
+    Expression<String>? parentAssetId,
+    Expression<String>? childAssetId,
+    Expression<String>? relationshipType,
+    Expression<DateTime>? createdAt,
+    Expression<String>? metadata,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (parentAssetId != null) 'parent_asset_id': parentAssetId,
+      if (childAssetId != null) 'child_asset_id': childAssetId,
+      if (relationshipType != null) 'relationship_type': relationshipType,
+      if (createdAt != null) 'created_at': createdAt,
+      if (metadata != null) 'metadata': metadata,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssetRelationshipsTableCompanion copyWith(
+      {Value<String>? parentAssetId,
+      Value<String>? childAssetId,
+      Value<String>? relationshipType,
+      Value<DateTime>? createdAt,
+      Value<String?>? metadata,
+      Value<int>? rowid}) {
+    return AssetRelationshipsTableCompanion(
+      parentAssetId: parentAssetId ?? this.parentAssetId,
+      childAssetId: childAssetId ?? this.childAssetId,
+      relationshipType: relationshipType ?? this.relationshipType,
+      createdAt: createdAt ?? this.createdAt,
+      metadata: metadata ?? this.metadata,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (parentAssetId.present) {
+      map['parent_asset_id'] = Variable<String>(parentAssetId.value);
+    }
+    if (childAssetId.present) {
+      map['child_asset_id'] = Variable<String>(childAssetId.value);
+    }
+    if (relationshipType.present) {
+      map['relationship_type'] = Variable<String>(relationshipType.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetRelationshipsTableCompanion(')
+          ..write('parentAssetId: $parentAssetId, ')
+          ..write('childAssetId: $childAssetId, ')
+          ..write('relationshipType: $relationshipType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('metadata: $metadata, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AssetPropertyIndexTableTable extends AssetPropertyIndexTable
+    with TableInfo<$AssetPropertyIndexTableTable, AssetPropertyIndexRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssetPropertyIndexTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _assetIdMeta =
+      const VerificationMeta('assetId');
+  @override
+  late final GeneratedColumn<String> assetId = GeneratedColumn<String>(
+      'asset_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+  static const VerificationMeta _propertyKeyMeta =
+      const VerificationMeta('propertyKey');
+  @override
+  late final GeneratedColumn<String> propertyKey = GeneratedColumn<String>(
+      'property_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _propertyValueMeta =
+      const VerificationMeta('propertyValue');
+  @override
+  late final GeneratedColumn<String> propertyValue = GeneratedColumn<String>(
+      'property_value', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _propertyTypeMeta =
+      const VerificationMeta('propertyType');
+  @override
+  late final GeneratedColumn<String> propertyType = GeneratedColumn<String>(
+      'property_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _indexedAtMeta =
+      const VerificationMeta('indexedAt');
+  @override
+  late final GeneratedColumn<DateTime> indexedAt = GeneratedColumn<DateTime>(
+      'indexed_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [assetId, propertyKey, propertyValue, propertyType, indexedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'asset_property_index';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<AssetPropertyIndexRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('asset_id')) {
+      context.handle(_assetIdMeta,
+          assetId.isAcceptableOrUnknown(data['asset_id']!, _assetIdMeta));
+    } else if (isInserting) {
+      context.missing(_assetIdMeta);
+    }
+    if (data.containsKey('property_key')) {
+      context.handle(
+          _propertyKeyMeta,
+          propertyKey.isAcceptableOrUnknown(
+              data['property_key']!, _propertyKeyMeta));
+    } else if (isInserting) {
+      context.missing(_propertyKeyMeta);
+    }
+    if (data.containsKey('property_value')) {
+      context.handle(
+          _propertyValueMeta,
+          propertyValue.isAcceptableOrUnknown(
+              data['property_value']!, _propertyValueMeta));
+    } else if (isInserting) {
+      context.missing(_propertyValueMeta);
+    }
+    if (data.containsKey('property_type')) {
+      context.handle(
+          _propertyTypeMeta,
+          propertyType.isAcceptableOrUnknown(
+              data['property_type']!, _propertyTypeMeta));
+    } else if (isInserting) {
+      context.missing(_propertyTypeMeta);
+    }
+    if (data.containsKey('indexed_at')) {
+      context.handle(_indexedAtMeta,
+          indexedAt.isAcceptableOrUnknown(data['indexed_at']!, _indexedAtMeta));
+    } else if (isInserting) {
+      context.missing(_indexedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {assetId, propertyKey};
+  @override
+  AssetPropertyIndexRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssetPropertyIndexRow(
+      assetId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}asset_id'])!,
+      propertyKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}property_key'])!,
+      propertyValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}property_value'])!,
+      propertyType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}property_type'])!,
+      indexedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}indexed_at'])!,
+    );
+  }
+
+  @override
+  $AssetPropertyIndexTableTable createAlias(String alias) {
+    return $AssetPropertyIndexTableTable(attachedDatabase, alias);
+  }
+}
+
+class AssetPropertyIndexRow extends DataClass
+    implements Insertable<AssetPropertyIndexRow> {
+  final String assetId;
+  final String propertyKey;
+  final String propertyValue;
+  final String propertyType;
+  final DateTime indexedAt;
+  const AssetPropertyIndexRow(
+      {required this.assetId,
+      required this.propertyKey,
+      required this.propertyValue,
+      required this.propertyType,
+      required this.indexedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['asset_id'] = Variable<String>(assetId);
+    map['property_key'] = Variable<String>(propertyKey);
+    map['property_value'] = Variable<String>(propertyValue);
+    map['property_type'] = Variable<String>(propertyType);
+    map['indexed_at'] = Variable<DateTime>(indexedAt);
+    return map;
+  }
+
+  AssetPropertyIndexTableCompanion toCompanion(bool nullToAbsent) {
+    return AssetPropertyIndexTableCompanion(
+      assetId: Value(assetId),
+      propertyKey: Value(propertyKey),
+      propertyValue: Value(propertyValue),
+      propertyType: Value(propertyType),
+      indexedAt: Value(indexedAt),
+    );
+  }
+
+  factory AssetPropertyIndexRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssetPropertyIndexRow(
+      assetId: serializer.fromJson<String>(json['assetId']),
+      propertyKey: serializer.fromJson<String>(json['propertyKey']),
+      propertyValue: serializer.fromJson<String>(json['propertyValue']),
+      propertyType: serializer.fromJson<String>(json['propertyType']),
+      indexedAt: serializer.fromJson<DateTime>(json['indexedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'assetId': serializer.toJson<String>(assetId),
+      'propertyKey': serializer.toJson<String>(propertyKey),
+      'propertyValue': serializer.toJson<String>(propertyValue),
+      'propertyType': serializer.toJson<String>(propertyType),
+      'indexedAt': serializer.toJson<DateTime>(indexedAt),
+    };
+  }
+
+  AssetPropertyIndexRow copyWith(
+          {String? assetId,
+          String? propertyKey,
+          String? propertyValue,
+          String? propertyType,
+          DateTime? indexedAt}) =>
+      AssetPropertyIndexRow(
+        assetId: assetId ?? this.assetId,
+        propertyKey: propertyKey ?? this.propertyKey,
+        propertyValue: propertyValue ?? this.propertyValue,
+        propertyType: propertyType ?? this.propertyType,
+        indexedAt: indexedAt ?? this.indexedAt,
+      );
+  AssetPropertyIndexRow copyWithCompanion(
+      AssetPropertyIndexTableCompanion data) {
+    return AssetPropertyIndexRow(
+      assetId: data.assetId.present ? data.assetId.value : this.assetId,
+      propertyKey:
+          data.propertyKey.present ? data.propertyKey.value : this.propertyKey,
+      propertyValue: data.propertyValue.present
+          ? data.propertyValue.value
+          : this.propertyValue,
+      propertyType: data.propertyType.present
+          ? data.propertyType.value
+          : this.propertyType,
+      indexedAt: data.indexedAt.present ? data.indexedAt.value : this.indexedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetPropertyIndexRow(')
+          ..write('assetId: $assetId, ')
+          ..write('propertyKey: $propertyKey, ')
+          ..write('propertyValue: $propertyValue, ')
+          ..write('propertyType: $propertyType, ')
+          ..write('indexedAt: $indexedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(assetId, propertyKey, propertyValue, propertyType, indexedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssetPropertyIndexRow &&
+          other.assetId == this.assetId &&
+          other.propertyKey == this.propertyKey &&
+          other.propertyValue == this.propertyValue &&
+          other.propertyType == this.propertyType &&
+          other.indexedAt == this.indexedAt);
+}
+
+class AssetPropertyIndexTableCompanion
+    extends UpdateCompanion<AssetPropertyIndexRow> {
+  final Value<String> assetId;
+  final Value<String> propertyKey;
+  final Value<String> propertyValue;
+  final Value<String> propertyType;
+  final Value<DateTime> indexedAt;
+  final Value<int> rowid;
+  const AssetPropertyIndexTableCompanion({
+    this.assetId = const Value.absent(),
+    this.propertyKey = const Value.absent(),
+    this.propertyValue = const Value.absent(),
+    this.propertyType = const Value.absent(),
+    this.indexedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssetPropertyIndexTableCompanion.insert({
+    required String assetId,
+    required String propertyKey,
+    required String propertyValue,
+    required String propertyType,
+    required DateTime indexedAt,
+    this.rowid = const Value.absent(),
+  })  : assetId = Value(assetId),
+        propertyKey = Value(propertyKey),
+        propertyValue = Value(propertyValue),
+        propertyType = Value(propertyType),
+        indexedAt = Value(indexedAt);
+  static Insertable<AssetPropertyIndexRow> custom({
+    Expression<String>? assetId,
+    Expression<String>? propertyKey,
+    Expression<String>? propertyValue,
+    Expression<String>? propertyType,
+    Expression<DateTime>? indexedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (assetId != null) 'asset_id': assetId,
+      if (propertyKey != null) 'property_key': propertyKey,
+      if (propertyValue != null) 'property_value': propertyValue,
+      if (propertyType != null) 'property_type': propertyType,
+      if (indexedAt != null) 'indexed_at': indexedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssetPropertyIndexTableCompanion copyWith(
+      {Value<String>? assetId,
+      Value<String>? propertyKey,
+      Value<String>? propertyValue,
+      Value<String>? propertyType,
+      Value<DateTime>? indexedAt,
+      Value<int>? rowid}) {
+    return AssetPropertyIndexTableCompanion(
+      assetId: assetId ?? this.assetId,
+      propertyKey: propertyKey ?? this.propertyKey,
+      propertyValue: propertyValue ?? this.propertyValue,
+      propertyType: propertyType ?? this.propertyType,
+      indexedAt: indexedAt ?? this.indexedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (assetId.present) {
+      map['asset_id'] = Variable<String>(assetId.value);
+    }
+    if (propertyKey.present) {
+      map['property_key'] = Variable<String>(propertyKey.value);
+    }
+    if (propertyValue.present) {
+      map['property_value'] = Variable<String>(propertyValue.value);
+    }
+    if (propertyType.present) {
+      map['property_type'] = Variable<String>(propertyType.value);
+    }
+    if (indexedAt.present) {
+      map['indexed_at'] = Variable<DateTime>(indexedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetPropertyIndexTableCompanion(')
+          ..write('assetId: $assetId, ')
+          ..write('propertyKey: $propertyKey, ')
+          ..write('propertyValue: $propertyValue, ')
+          ..write('propertyType: $propertyType, ')
+          ..write('indexedAt: $indexedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MadnessDatabase extends GeneratedDatabase {
   _$MadnessDatabase(QueryExecutor e) : super(e);
   $MadnessDatabaseManager get managers => $MadnessDatabaseManager(this);
@@ -11879,6 +13509,11 @@ abstract class _$MadnessDatabase extends GeneratedDatabase {
   late final $MethodologyRecommendationsTableTable
       methodologyRecommendationsTable =
       $MethodologyRecommendationsTableTable(this);
+  late final $AssetsTableTable assetsTable = $AssetsTableTable(this);
+  late final $AssetRelationshipsTableTable assetRelationshipsTable =
+      $AssetRelationshipsTableTable(this);
+  late final $AssetPropertyIndexTableTable assetPropertyIndexTable =
+      $AssetPropertyIndexTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11903,7 +13538,10 @@ abstract class _$MadnessDatabase extends GeneratedDatabase {
         methodologyExecutionsTable,
         stepExecutionsTable,
         discoveredAssetsTable,
-        methodologyRecommendationsTable
+        methodologyRecommendationsTable,
+        assetsTable,
+        assetRelationshipsTable,
+        assetPropertyIndexTable
       ];
 }
 
@@ -12152,6 +13790,21 @@ final class $$ProjectsTableTableReferences
 
     final cache = $_typedResult
         .readTableOrNull(_methodologyRecommendationsTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AssetsTableTable, List<AssetRow>>
+      _assetsTableRefsTable(_$MadnessDatabase db) =>
+          MultiTypedResultKey.fromTable(db.assetsTable,
+              aliasName: $_aliasNameGenerator(
+                  db.projectsTable.id, db.assetsTable.projectId));
+
+  $$AssetsTableTableProcessedTableManager get assetsTableRefs {
+    final manager = $$AssetsTableTableTableManager($_db, $_db.assetsTable)
+        .filter((f) => f.projectId.id($_item.id));
+
+    final cache = $_typedResult.readTableOrNull(_assetsTableRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -12475,6 +14128,27 @@ class $$ProjectsTableTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> assetsTableRefs(
+      Expression<bool> Function($$AssetsTableTableFilterComposer f) f) {
+    final $$AssetsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -12864,6 +14538,27 @@ class $$ProjectsTableTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> assetsTableRefs<T extends Object>(
+      Expression<T> Function($$AssetsTableTableAnnotationComposer a) f) {
+    final $$AssetsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$ProjectsTableTableTableManager extends RootTableManager<
@@ -12889,7 +14584,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
         bool findingsTableRefs,
         bool methodologyExecutionsTableRefs,
         bool discoveredAssetsTableRefs,
-        bool methodologyRecommendationsTableRefs})> {
+        bool methodologyRecommendationsTableRefs,
+        bool assetsTableRefs})> {
   $$ProjectsTableTableTableManager(
       _$MadnessDatabase db, $ProjectsTableTable table)
       : super(TableManagerState(
@@ -12999,7 +14695,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
               findingsTableRefs = false,
               methodologyExecutionsTableRefs = false,
               discoveredAssetsTableRefs = false,
-              methodologyRecommendationsTableRefs = false}) {
+              methodologyRecommendationsTableRefs = false,
+              assetsTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -13016,7 +14713,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
                   db.methodologyExecutionsTable,
                 if (discoveredAssetsTableRefs) db.discoveredAssetsTable,
                 if (methodologyRecommendationsTableRefs)
-                  db.methodologyRecommendationsTable
+                  db.methodologyRecommendationsTable,
+                if (assetsTableRefs) db.assetsTable
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -13164,6 +14862,18 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.projectId == item.id),
+                        typedResults: items),
+                  if (assetsTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableTableReferences
+                            ._assetsTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableTableReferences(db, table, p0)
+                                .assetsTableRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
                         typedResults: items)
                 ];
               },
@@ -13195,7 +14905,8 @@ typedef $$ProjectsTableTableProcessedTableManager = ProcessedTableManager<
         bool findingsTableRefs,
         bool methodologyExecutionsTableRefs,
         bool discoveredAssetsTableRefs,
-        bool methodologyRecommendationsTableRefs})>;
+        bool methodologyRecommendationsTableRefs,
+        bool assetsTableRefs})>;
 typedef $$ProjectStatsTableTableCreateCompanionBuilder
     = ProjectStatsTableCompanion Function({
   required String projectId,
@@ -13226,9 +14937,10 @@ final class $$ProjectStatsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.projectStatsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -13531,9 +15243,10 @@ final class $$TasksTableTableReferences
       db.projectsTable.createAlias(
           $_aliasNameGenerator(db.tasksTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -13907,9 +15620,10 @@ final class $$ContactsTableTableReferences
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.contactsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -14256,9 +15970,10 @@ final class $$ExpensesTableTableReferences
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.expensesTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -14663,9 +16378,10 @@ final class $$EvidenceFilesTableTableReferences extends BaseReferences<
       db.expensesTable.createAlias($_aliasNameGenerator(
           db.evidenceFilesTable.expenseId, db.expensesTable.id));
 
-  $$ExpensesTableTableProcessedTableManager get expenseId {
+  $$ExpensesTableTableProcessedTableManager? get expenseId {
+    if ($_item.expenseId == null) return null;
     final manager = $$ExpensesTableTableTableManager($_db, $_db.expensesTable)
-        .filter((f) => f.id($_item.expenseId));
+        .filter((f) => f.id($_item.expenseId!));
     final item = $_typedResult.readTableOrNull(_expenseIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -14985,9 +16701,10 @@ final class $$CredentialsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.credentialsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -15386,9 +17103,10 @@ final class $$ScopeSegmentsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.scopeSegmentsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -15796,10 +17514,11 @@ final class $$ScopeItemsTableTableReferences extends BaseReferences<
       db.scopeSegmentsTable.createAlias($_aliasNameGenerator(
           db.scopeItemsTable.segmentId, db.scopeSegmentsTable.id));
 
-  $$ScopeSegmentsTableTableProcessedTableManager get segmentId {
+  $$ScopeSegmentsTableTableProcessedTableManager? get segmentId {
+    if ($_item.segmentId == null) return null;
     final manager =
         $$ScopeSegmentsTableTableTableManager($_db, $_db.scopeSegmentsTable)
-            .filter((f) => f.id($_item.segmentId));
+            .filter((f) => f.id($_item.segmentId!));
     final item = $_typedResult.readTableOrNull(_segmentIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -16144,9 +17863,10 @@ final class $$DocumentsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.documentsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -16668,9 +18388,10 @@ final class $$ScreenshotsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.screenshotsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -17333,10 +19054,11 @@ final class $$EditorLayersTableTableReferences extends BaseReferences<
       db.screenshotsTable.createAlias($_aliasNameGenerator(
           db.editorLayersTable.screenshotId, db.screenshotsTable.id));
 
-  $$ScreenshotsTableTableProcessedTableManager get screenshotId {
+  $$ScreenshotsTableTableProcessedTableManager? get screenshotId {
+    if ($_item.screenshotId == null) return null;
     final manager =
         $$ScreenshotsTableTableTableManager($_db, $_db.screenshotsTable)
-            .filter((f) => f.id($_item.screenshotId));
+            .filter((f) => f.id($_item.screenshotId!));
     final item = $_typedResult.readTableOrNull(_screenshotIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -17705,10 +19427,11 @@ final class $$ScreenshotFindingsTableTableReferences extends BaseReferences<
       db.screenshotsTable.createAlias($_aliasNameGenerator(
           db.screenshotFindingsTable.screenshotId, db.screenshotsTable.id));
 
-  $$ScreenshotsTableTableProcessedTableManager get screenshotId {
+  $$ScreenshotsTableTableProcessedTableManager? get screenshotId {
+    if ($_item.screenshotId == null) return null;
     final manager =
         $$ScreenshotsTableTableTableManager($_db, $_db.screenshotsTable)
-            .filter((f) => f.id($_item.screenshotId));
+            .filter((f) => f.id($_item.screenshotId!));
     final item = $_typedResult.readTableOrNull(_screenshotIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -18029,9 +19752,10 @@ final class $$FindingsTableTableReferences
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.findingsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -18652,9 +20376,10 @@ final class $$FindingComponentsTableTableReferences extends BaseReferences<
       db.findingsTable.createAlias($_aliasNameGenerator(
           db.findingComponentsTable.findingId, db.findingsTable.id));
 
-  $$FindingsTableTableProcessedTableManager get findingId {
+  $$FindingsTableTableProcessedTableManager? get findingId {
+    if ($_item.findingId == null) return null;
     final manager = $$FindingsTableTableTableManager($_db, $_db.findingsTable)
-        .filter((f) => f.id($_item.findingId));
+        .filter((f) => f.id($_item.findingId!));
     final item = $_typedResult.readTableOrNull(_findingIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -18974,9 +20699,10 @@ final class $$FindingLinksTableTableReferences extends BaseReferences<
       db.findingsTable.createAlias($_aliasNameGenerator(
           db.findingLinksTable.findingId, db.findingsTable.id));
 
-  $$FindingsTableTableProcessedTableManager get findingId {
+  $$FindingsTableTableProcessedTableManager? get findingId {
+    if ($_item.findingId == null) return null;
     final manager = $$FindingsTableTableTableManager($_db, $_db.findingsTable)
-        .filter((f) => f.id($_item.findingId));
+        .filter((f) => f.id($_item.findingId!));
     final item = $_typedResult.readTableOrNull(_findingIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -19284,9 +21010,10 @@ final class $$MethodologyExecutionsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.methodologyExecutionsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -19865,10 +21592,11 @@ final class $$StepExecutionsTableTableReferences extends BaseReferences<
           db.stepExecutionsTable.executionId,
           db.methodologyExecutionsTable.id));
 
-  $$MethodologyExecutionsTableTableProcessedTableManager get executionId {
+  $$MethodologyExecutionsTableTableProcessedTableManager? get executionId {
+    if ($_item.executionId == null) return null;
     final manager = $$MethodologyExecutionsTableTableTableManager(
             $_db, $_db.methodologyExecutionsTable)
-        .filter((f) => f.id($_item.executionId));
+        .filter((f) => f.id($_item.executionId!));
     final item = $_typedResult.readTableOrNull(_executionIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -20224,9 +21952,10 @@ final class $$DiscoveredAssetsTableTableReferences extends BaseReferences<
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.discoveredAssetsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -20776,9 +22505,10 @@ final class $$MethodologyRecommendationsTableTableReferences
       db.projectsTable.createAlias($_aliasNameGenerator(
           db.methodologyRecommendationsTable.projectId, db.projectsTable.id));
 
-  $$ProjectsTableTableProcessedTableManager get projectId {
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
-        .filter((f) => f.id($_item.projectId));
+        .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -21230,6 +22960,1246 @@ typedef $$MethodologyRecommendationsTableTableProcessedTableManager
         ),
         MethodologyRecommendationRow,
         PrefetchHooks Function({bool projectId, bool triggerAssetId})>;
+typedef $$AssetsTableTableCreateCompanionBuilder = AssetsTableCompanion
+    Function({
+  required String id,
+  required String type,
+  required String projectId,
+  required String name,
+  Value<String?> description,
+  required String properties,
+  required String discoveryStatus,
+  required DateTime discoveredAt,
+  Value<DateTime?> lastUpdated,
+  Value<String?> discoveryMethod,
+  Value<double> confidence,
+  required String parentAssetIds,
+  required String childAssetIds,
+  required String relatedAssetIds,
+  required String completedTriggers,
+  required String triggerResults,
+  required String tags,
+  Value<String?> metadata,
+  Value<String?> accessLevel,
+  Value<String?> securityControls,
+  Value<int> rowid,
+});
+typedef $$AssetsTableTableUpdateCompanionBuilder = AssetsTableCompanion
+    Function({
+  Value<String> id,
+  Value<String> type,
+  Value<String> projectId,
+  Value<String> name,
+  Value<String?> description,
+  Value<String> properties,
+  Value<String> discoveryStatus,
+  Value<DateTime> discoveredAt,
+  Value<DateTime?> lastUpdated,
+  Value<String?> discoveryMethod,
+  Value<double> confidence,
+  Value<String> parentAssetIds,
+  Value<String> childAssetIds,
+  Value<String> relatedAssetIds,
+  Value<String> completedTriggers,
+  Value<String> triggerResults,
+  Value<String> tags,
+  Value<String?> metadata,
+  Value<String?> accessLevel,
+  Value<String?> securityControls,
+  Value<int> rowid,
+});
+
+final class $$AssetsTableTableReferences
+    extends BaseReferences<_$MadnessDatabase, $AssetsTableTable, AssetRow> {
+  $$AssetsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTableTable _projectIdTable(_$MadnessDatabase db) =>
+      db.projectsTable.createAlias(
+          $_aliasNameGenerator(db.assetsTable.projectId, db.projectsTable.id));
+
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
+    final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
+        .filter((f) => f.id($_item.projectId!));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$AssetPropertyIndexTableTable,
+      List<AssetPropertyIndexRow>> _assetPropertyIndexTableRefsTable(
+          _$MadnessDatabase db) =>
+      MultiTypedResultKey.fromTable(db.assetPropertyIndexTable,
+          aliasName: $_aliasNameGenerator(
+              db.assetsTable.id, db.assetPropertyIndexTable.assetId));
+
+  $$AssetPropertyIndexTableTableProcessedTableManager
+      get assetPropertyIndexTableRefs {
+    final manager = $$AssetPropertyIndexTableTableTableManager(
+            $_db, $_db.assetPropertyIndexTable)
+        .filter((f) => f.assetId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_assetPropertyIndexTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$AssetsTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $AssetsTableTable> {
+  $$AssetsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get properties => $composableBuilder(
+      column: $table.properties, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get discoveryStatus => $composableBuilder(
+      column: $table.discoveryStatus,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get discoveredAt => $composableBuilder(
+      column: $table.discoveredAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastUpdated => $composableBuilder(
+      column: $table.lastUpdated, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get discoveryMethod => $composableBuilder(
+      column: $table.discoveryMethod,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get confidence => $composableBuilder(
+      column: $table.confidence, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get parentAssetIds => $composableBuilder(
+      column: $table.parentAssetIds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get childAssetIds => $composableBuilder(
+      column: $table.childAssetIds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get relatedAssetIds => $composableBuilder(
+      column: $table.relatedAssetIds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get completedTriggers => $composableBuilder(
+      column: $table.completedTriggers,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get triggerResults => $composableBuilder(
+      column: $table.triggerResults,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tags => $composableBuilder(
+      column: $table.tags, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accessLevel => $composableBuilder(
+      column: $table.accessLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get securityControls => $composableBuilder(
+      column: $table.securityControls,
+      builder: (column) => ColumnFilters(column));
+
+  $$ProjectsTableTableFilterComposer get projectId {
+    final $$ProjectsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> assetPropertyIndexTableRefs(
+      Expression<bool> Function($$AssetPropertyIndexTableTableFilterComposer f)
+          f) {
+    final $$AssetPropertyIndexTableTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.assetPropertyIndexTable,
+            getReferencedColumn: (t) => t.assetId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$AssetPropertyIndexTableTableFilterComposer(
+                  $db: $db,
+                  $table: $db.assetPropertyIndexTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$AssetsTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $AssetsTableTable> {
+  $$AssetsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get properties => $composableBuilder(
+      column: $table.properties, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get discoveryStatus => $composableBuilder(
+      column: $table.discoveryStatus,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get discoveredAt => $composableBuilder(
+      column: $table.discoveredAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastUpdated => $composableBuilder(
+      column: $table.lastUpdated, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get discoveryMethod => $composableBuilder(
+      column: $table.discoveryMethod,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get confidence => $composableBuilder(
+      column: $table.confidence, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get parentAssetIds => $composableBuilder(
+      column: $table.parentAssetIds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get childAssetIds => $composableBuilder(
+      column: $table.childAssetIds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get relatedAssetIds => $composableBuilder(
+      column: $table.relatedAssetIds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get completedTriggers => $composableBuilder(
+      column: $table.completedTriggers,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get triggerResults => $composableBuilder(
+      column: $table.triggerResults,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+      column: $table.tags, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get accessLevel => $composableBuilder(
+      column: $table.accessLevel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get securityControls => $composableBuilder(
+      column: $table.securityControls,
+      builder: (column) => ColumnOrderings(column));
+
+  $$ProjectsTableTableOrderingComposer get projectId {
+    final $$ProjectsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetsTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $AssetsTableTable> {
+  $$AssetsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get properties => $composableBuilder(
+      column: $table.properties, builder: (column) => column);
+
+  GeneratedColumn<String> get discoveryStatus => $composableBuilder(
+      column: $table.discoveryStatus, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get discoveredAt => $composableBuilder(
+      column: $table.discoveredAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastUpdated => $composableBuilder(
+      column: $table.lastUpdated, builder: (column) => column);
+
+  GeneratedColumn<String> get discoveryMethod => $composableBuilder(
+      column: $table.discoveryMethod, builder: (column) => column);
+
+  GeneratedColumn<double> get confidence => $composableBuilder(
+      column: $table.confidence, builder: (column) => column);
+
+  GeneratedColumn<String> get parentAssetIds => $composableBuilder(
+      column: $table.parentAssetIds, builder: (column) => column);
+
+  GeneratedColumn<String> get childAssetIds => $composableBuilder(
+      column: $table.childAssetIds, builder: (column) => column);
+
+  GeneratedColumn<String> get relatedAssetIds => $composableBuilder(
+      column: $table.relatedAssetIds, builder: (column) => column);
+
+  GeneratedColumn<String> get completedTriggers => $composableBuilder(
+      column: $table.completedTriggers, builder: (column) => column);
+
+  GeneratedColumn<String> get triggerResults => $composableBuilder(
+      column: $table.triggerResults, builder: (column) => column);
+
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  GeneratedColumn<String> get accessLevel => $composableBuilder(
+      column: $table.accessLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get securityControls => $composableBuilder(
+      column: $table.securityControls, builder: (column) => column);
+
+  $$ProjectsTableTableAnnotationComposer get projectId {
+    final $$ProjectsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProjectsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.projectsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> assetPropertyIndexTableRefs<T extends Object>(
+      Expression<T> Function($$AssetPropertyIndexTableTableAnnotationComposer a)
+          f) {
+    final $$AssetPropertyIndexTableTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.assetPropertyIndexTable,
+            getReferencedColumn: (t) => t.assetId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$AssetPropertyIndexTableTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.assetPropertyIndexTable,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$AssetsTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $AssetsTableTable,
+    AssetRow,
+    $$AssetsTableTableFilterComposer,
+    $$AssetsTableTableOrderingComposer,
+    $$AssetsTableTableAnnotationComposer,
+    $$AssetsTableTableCreateCompanionBuilder,
+    $$AssetsTableTableUpdateCompanionBuilder,
+    (AssetRow, $$AssetsTableTableReferences),
+    AssetRow,
+    PrefetchHooks Function(
+        {bool projectId, bool assetPropertyIndexTableRefs})> {
+  $$AssetsTableTableTableManager(_$MadnessDatabase db, $AssetsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssetsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssetsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssetsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<String> properties = const Value.absent(),
+            Value<String> discoveryStatus = const Value.absent(),
+            Value<DateTime> discoveredAt = const Value.absent(),
+            Value<DateTime?> lastUpdated = const Value.absent(),
+            Value<String?> discoveryMethod = const Value.absent(),
+            Value<double> confidence = const Value.absent(),
+            Value<String> parentAssetIds = const Value.absent(),
+            Value<String> childAssetIds = const Value.absent(),
+            Value<String> relatedAssetIds = const Value.absent(),
+            Value<String> completedTriggers = const Value.absent(),
+            Value<String> triggerResults = const Value.absent(),
+            Value<String> tags = const Value.absent(),
+            Value<String?> metadata = const Value.absent(),
+            Value<String?> accessLevel = const Value.absent(),
+            Value<String?> securityControls = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssetsTableCompanion(
+            id: id,
+            type: type,
+            projectId: projectId,
+            name: name,
+            description: description,
+            properties: properties,
+            discoveryStatus: discoveryStatus,
+            discoveredAt: discoveredAt,
+            lastUpdated: lastUpdated,
+            discoveryMethod: discoveryMethod,
+            confidence: confidence,
+            parentAssetIds: parentAssetIds,
+            childAssetIds: childAssetIds,
+            relatedAssetIds: relatedAssetIds,
+            completedTriggers: completedTriggers,
+            triggerResults: triggerResults,
+            tags: tags,
+            metadata: metadata,
+            accessLevel: accessLevel,
+            securityControls: securityControls,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String type,
+            required String projectId,
+            required String name,
+            Value<String?> description = const Value.absent(),
+            required String properties,
+            required String discoveryStatus,
+            required DateTime discoveredAt,
+            Value<DateTime?> lastUpdated = const Value.absent(),
+            Value<String?> discoveryMethod = const Value.absent(),
+            Value<double> confidence = const Value.absent(),
+            required String parentAssetIds,
+            required String childAssetIds,
+            required String relatedAssetIds,
+            required String completedTriggers,
+            required String triggerResults,
+            required String tags,
+            Value<String?> metadata = const Value.absent(),
+            Value<String?> accessLevel = const Value.absent(),
+            Value<String?> securityControls = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssetsTableCompanion.insert(
+            id: id,
+            type: type,
+            projectId: projectId,
+            name: name,
+            description: description,
+            properties: properties,
+            discoveryStatus: discoveryStatus,
+            discoveredAt: discoveredAt,
+            lastUpdated: lastUpdated,
+            discoveryMethod: discoveryMethod,
+            confidence: confidence,
+            parentAssetIds: parentAssetIds,
+            childAssetIds: childAssetIds,
+            relatedAssetIds: relatedAssetIds,
+            completedTriggers: completedTriggers,
+            triggerResults: triggerResults,
+            tags: tags,
+            metadata: metadata,
+            accessLevel: accessLevel,
+            securityControls: securityControls,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$AssetsTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {projectId = false, assetPropertyIndexTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (assetPropertyIndexTableRefs) db.assetPropertyIndexTable
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable:
+                        $$AssetsTableTableReferences._projectIdTable(db),
+                    referencedColumn:
+                        $$AssetsTableTableReferences._projectIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (assetPropertyIndexTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$AssetsTableTableReferences
+                            ._assetPropertyIndexTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AssetsTableTableReferences(db, table, p0)
+                                .assetPropertyIndexTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.assetId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AssetsTableTableProcessedTableManager = ProcessedTableManager<
+    _$MadnessDatabase,
+    $AssetsTableTable,
+    AssetRow,
+    $$AssetsTableTableFilterComposer,
+    $$AssetsTableTableOrderingComposer,
+    $$AssetsTableTableAnnotationComposer,
+    $$AssetsTableTableCreateCompanionBuilder,
+    $$AssetsTableTableUpdateCompanionBuilder,
+    (AssetRow, $$AssetsTableTableReferences),
+    AssetRow,
+    PrefetchHooks Function({bool projectId, bool assetPropertyIndexTableRefs})>;
+typedef $$AssetRelationshipsTableTableCreateCompanionBuilder
+    = AssetRelationshipsTableCompanion Function({
+  required String parentAssetId,
+  required String childAssetId,
+  required String relationshipType,
+  required DateTime createdAt,
+  Value<String?> metadata,
+  Value<int> rowid,
+});
+typedef $$AssetRelationshipsTableTableUpdateCompanionBuilder
+    = AssetRelationshipsTableCompanion Function({
+  Value<String> parentAssetId,
+  Value<String> childAssetId,
+  Value<String> relationshipType,
+  Value<DateTime> createdAt,
+  Value<String?> metadata,
+  Value<int> rowid,
+});
+
+final class $$AssetRelationshipsTableTableReferences extends BaseReferences<
+    _$MadnessDatabase, $AssetRelationshipsTableTable, AssetRelationshipRow> {
+  $$AssetRelationshipsTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AssetsTableTable _parentAssetIdTable(_$MadnessDatabase db) =>
+      db.assetsTable.createAlias($_aliasNameGenerator(
+          db.assetRelationshipsTable.parentAssetId, db.assetsTable.id));
+
+  $$AssetsTableTableProcessedTableManager? get parentAssetId {
+    if ($_item.parentAssetId == null) return null;
+    final manager = $$AssetsTableTableTableManager($_db, $_db.assetsTable)
+        .filter((f) => f.id($_item.parentAssetId!));
+    final item = $_typedResult.readTableOrNull(_parentAssetIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AssetsTableTable _childAssetIdTable(_$MadnessDatabase db) =>
+      db.assetsTable.createAlias($_aliasNameGenerator(
+          db.assetRelationshipsTable.childAssetId, db.assetsTable.id));
+
+  $$AssetsTableTableProcessedTableManager? get childAssetId {
+    if ($_item.childAssetId == null) return null;
+    final manager = $$AssetsTableTableTableManager($_db, $_db.assetsTable)
+        .filter((f) => f.id($_item.childAssetId!));
+    final item = $_typedResult.readTableOrNull(_childAssetIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$AssetRelationshipsTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $AssetRelationshipsTableTable> {
+  $$AssetRelationshipsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get relationshipType => $composableBuilder(
+      column: $table.relationshipType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnFilters(column));
+
+  $$AssetsTableTableFilterComposer get parentAssetId {
+    final $$AssetsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.parentAssetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AssetsTableTableFilterComposer get childAssetId {
+    final $$AssetsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.childAssetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetRelationshipsTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $AssetRelationshipsTableTable> {
+  $$AssetRelationshipsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get relationshipType => $composableBuilder(
+      column: $table.relationshipType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnOrderings(column));
+
+  $$AssetsTableTableOrderingComposer get parentAssetId {
+    final $$AssetsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.parentAssetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AssetsTableTableOrderingComposer get childAssetId {
+    final $$AssetsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.childAssetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetRelationshipsTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $AssetRelationshipsTableTable> {
+  $$AssetRelationshipsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get relationshipType => $composableBuilder(
+      column: $table.relationshipType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  $$AssetsTableTableAnnotationComposer get parentAssetId {
+    final $$AssetsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.parentAssetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AssetsTableTableAnnotationComposer get childAssetId {
+    final $$AssetsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.childAssetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetRelationshipsTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $AssetRelationshipsTableTable,
+    AssetRelationshipRow,
+    $$AssetRelationshipsTableTableFilterComposer,
+    $$AssetRelationshipsTableTableOrderingComposer,
+    $$AssetRelationshipsTableTableAnnotationComposer,
+    $$AssetRelationshipsTableTableCreateCompanionBuilder,
+    $$AssetRelationshipsTableTableUpdateCompanionBuilder,
+    (AssetRelationshipRow, $$AssetRelationshipsTableTableReferences),
+    AssetRelationshipRow,
+    PrefetchHooks Function({bool parentAssetId, bool childAssetId})> {
+  $$AssetRelationshipsTableTableTableManager(
+      _$MadnessDatabase db, $AssetRelationshipsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssetRelationshipsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssetRelationshipsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssetRelationshipsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> parentAssetId = const Value.absent(),
+            Value<String> childAssetId = const Value.absent(),
+            Value<String> relationshipType = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<String?> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssetRelationshipsTableCompanion(
+            parentAssetId: parentAssetId,
+            childAssetId: childAssetId,
+            relationshipType: relationshipType,
+            createdAt: createdAt,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String parentAssetId,
+            required String childAssetId,
+            required String relationshipType,
+            required DateTime createdAt,
+            Value<String?> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssetRelationshipsTableCompanion.insert(
+            parentAssetId: parentAssetId,
+            childAssetId: childAssetId,
+            relationshipType: relationshipType,
+            createdAt: createdAt,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$AssetRelationshipsTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {parentAssetId = false, childAssetId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (parentAssetId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.parentAssetId,
+                    referencedTable: $$AssetRelationshipsTableTableReferences
+                        ._parentAssetIdTable(db),
+                    referencedColumn: $$AssetRelationshipsTableTableReferences
+                        ._parentAssetIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (childAssetId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.childAssetId,
+                    referencedTable: $$AssetRelationshipsTableTableReferences
+                        ._childAssetIdTable(db),
+                    referencedColumn: $$AssetRelationshipsTableTableReferences
+                        ._childAssetIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AssetRelationshipsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$MadnessDatabase,
+        $AssetRelationshipsTableTable,
+        AssetRelationshipRow,
+        $$AssetRelationshipsTableTableFilterComposer,
+        $$AssetRelationshipsTableTableOrderingComposer,
+        $$AssetRelationshipsTableTableAnnotationComposer,
+        $$AssetRelationshipsTableTableCreateCompanionBuilder,
+        $$AssetRelationshipsTableTableUpdateCompanionBuilder,
+        (AssetRelationshipRow, $$AssetRelationshipsTableTableReferences),
+        AssetRelationshipRow,
+        PrefetchHooks Function({bool parentAssetId, bool childAssetId})>;
+typedef $$AssetPropertyIndexTableTableCreateCompanionBuilder
+    = AssetPropertyIndexTableCompanion Function({
+  required String assetId,
+  required String propertyKey,
+  required String propertyValue,
+  required String propertyType,
+  required DateTime indexedAt,
+  Value<int> rowid,
+});
+typedef $$AssetPropertyIndexTableTableUpdateCompanionBuilder
+    = AssetPropertyIndexTableCompanion Function({
+  Value<String> assetId,
+  Value<String> propertyKey,
+  Value<String> propertyValue,
+  Value<String> propertyType,
+  Value<DateTime> indexedAt,
+  Value<int> rowid,
+});
+
+final class $$AssetPropertyIndexTableTableReferences extends BaseReferences<
+    _$MadnessDatabase, $AssetPropertyIndexTableTable, AssetPropertyIndexRow> {
+  $$AssetPropertyIndexTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AssetsTableTable _assetIdTable(_$MadnessDatabase db) =>
+      db.assetsTable.createAlias($_aliasNameGenerator(
+          db.assetPropertyIndexTable.assetId, db.assetsTable.id));
+
+  $$AssetsTableTableProcessedTableManager? get assetId {
+    if ($_item.assetId == null) return null;
+    final manager = $$AssetsTableTableTableManager($_db, $_db.assetsTable)
+        .filter((f) => f.id($_item.assetId!));
+    final item = $_typedResult.readTableOrNull(_assetIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$AssetPropertyIndexTableTableFilterComposer
+    extends Composer<_$MadnessDatabase, $AssetPropertyIndexTableTable> {
+  $$AssetPropertyIndexTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get propertyKey => $composableBuilder(
+      column: $table.propertyKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get propertyValue => $composableBuilder(
+      column: $table.propertyValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get propertyType => $composableBuilder(
+      column: $table.propertyType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get indexedAt => $composableBuilder(
+      column: $table.indexedAt, builder: (column) => ColumnFilters(column));
+
+  $$AssetsTableTableFilterComposer get assetId {
+    final $$AssetsTableTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableFilterComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetPropertyIndexTableTableOrderingComposer
+    extends Composer<_$MadnessDatabase, $AssetPropertyIndexTableTable> {
+  $$AssetPropertyIndexTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get propertyKey => $composableBuilder(
+      column: $table.propertyKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get propertyValue => $composableBuilder(
+      column: $table.propertyValue,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get propertyType => $composableBuilder(
+      column: $table.propertyType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get indexedAt => $composableBuilder(
+      column: $table.indexedAt, builder: (column) => ColumnOrderings(column));
+
+  $$AssetsTableTableOrderingComposer get assetId {
+    final $$AssetsTableTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableOrderingComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetPropertyIndexTableTableAnnotationComposer
+    extends Composer<_$MadnessDatabase, $AssetPropertyIndexTableTable> {
+  $$AssetPropertyIndexTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get propertyKey => $composableBuilder(
+      column: $table.propertyKey, builder: (column) => column);
+
+  GeneratedColumn<String> get propertyValue => $composableBuilder(
+      column: $table.propertyValue, builder: (column) => column);
+
+  GeneratedColumn<String> get propertyType => $composableBuilder(
+      column: $table.propertyType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get indexedAt =>
+      $composableBuilder(column: $table.indexedAt, builder: (column) => column);
+
+  $$AssetsTableTableAnnotationComposer get assetId {
+    final $$AssetsTableTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.assetId,
+        referencedTable: $db.assetsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assetsTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AssetPropertyIndexTableTableTableManager extends RootTableManager<
+    _$MadnessDatabase,
+    $AssetPropertyIndexTableTable,
+    AssetPropertyIndexRow,
+    $$AssetPropertyIndexTableTableFilterComposer,
+    $$AssetPropertyIndexTableTableOrderingComposer,
+    $$AssetPropertyIndexTableTableAnnotationComposer,
+    $$AssetPropertyIndexTableTableCreateCompanionBuilder,
+    $$AssetPropertyIndexTableTableUpdateCompanionBuilder,
+    (AssetPropertyIndexRow, $$AssetPropertyIndexTableTableReferences),
+    AssetPropertyIndexRow,
+    PrefetchHooks Function({bool assetId})> {
+  $$AssetPropertyIndexTableTableTableManager(
+      _$MadnessDatabase db, $AssetPropertyIndexTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssetPropertyIndexTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssetPropertyIndexTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssetPropertyIndexTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> assetId = const Value.absent(),
+            Value<String> propertyKey = const Value.absent(),
+            Value<String> propertyValue = const Value.absent(),
+            Value<String> propertyType = const Value.absent(),
+            Value<DateTime> indexedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssetPropertyIndexTableCompanion(
+            assetId: assetId,
+            propertyKey: propertyKey,
+            propertyValue: propertyValue,
+            propertyType: propertyType,
+            indexedAt: indexedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String assetId,
+            required String propertyKey,
+            required String propertyValue,
+            required String propertyType,
+            required DateTime indexedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssetPropertyIndexTableCompanion.insert(
+            assetId: assetId,
+            propertyKey: propertyKey,
+            propertyValue: propertyValue,
+            propertyType: propertyType,
+            indexedAt: indexedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$AssetPropertyIndexTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({assetId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (assetId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.assetId,
+                    referencedTable: $$AssetPropertyIndexTableTableReferences
+                        ._assetIdTable(db),
+                    referencedColumn: $$AssetPropertyIndexTableTableReferences
+                        ._assetIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AssetPropertyIndexTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$MadnessDatabase,
+        $AssetPropertyIndexTableTable,
+        AssetPropertyIndexRow,
+        $$AssetPropertyIndexTableTableFilterComposer,
+        $$AssetPropertyIndexTableTableOrderingComposer,
+        $$AssetPropertyIndexTableTableAnnotationComposer,
+        $$AssetPropertyIndexTableTableCreateCompanionBuilder,
+        $$AssetPropertyIndexTableTableUpdateCompanionBuilder,
+        (AssetPropertyIndexRow, $$AssetPropertyIndexTableTableReferences),
+        AssetPropertyIndexRow,
+        PrefetchHooks Function({bool assetId})>;
 
 class $MadnessDatabaseManager {
   final _$MadnessDatabase _db;
@@ -21280,4 +24250,12 @@ class $MadnessDatabaseManager {
       get methodologyRecommendationsTable =>
           $$MethodologyRecommendationsTableTableTableManager(
               _db, _db.methodologyRecommendationsTable);
+  $$AssetsTableTableTableManager get assetsTable =>
+      $$AssetsTableTableTableManager(_db, _db.assetsTable);
+  $$AssetRelationshipsTableTableTableManager get assetRelationshipsTable =>
+      $$AssetRelationshipsTableTableTableManager(
+          _db, _db.assetRelationshipsTable);
+  $$AssetPropertyIndexTableTableTableManager get assetPropertyIndexTable =>
+      $$AssetPropertyIndexTableTableTableManager(
+          _db, _db.assetPropertyIndexTable);
 }

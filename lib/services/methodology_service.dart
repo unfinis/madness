@@ -1,26 +1,40 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:yaml/yaml.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import '../models/methodology.dart';
 import '../models/methodology_execution.dart';
+import 'methodology_yaml_parser.dart';
 
-class MethodologyServiceV2 {
-  static final MethodologyServiceV2 _instance = MethodologyServiceV2._internal();
-  factory MethodologyServiceV2() => _instance;
-  MethodologyServiceV2._internal();
+class MethodologyService {
+  static final MethodologyService _instance = MethodologyService._internal();
+  factory MethodologyService() => _instance;
+  MethodologyService._internal();
 
   final Map<String, Methodology> _methodologies = {};
   final Map<String, List<String>> _dependencyGraph = {};
+  final Map<String, MethodologySource> _methodologySources = {};
   bool _isInitialized = false;
+
+  // File system paths
+  late final Directory _methodologyDirectory;
+  late final Directory _builtInDirectory;
+  late final Directory _customDirectory;
+  late final Directory _importedDirectory;
+  late final Directory _disabledDirectory;
 
   List<Methodology> get methodologies => _methodologies.values.toList();
   bool get isInitialized => _isInitialized;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
+      await _initializeDirectoryStructure();
+      await _copyBuiltInMethodologies();
       await _loadMethodologies();
       _buildDependencyGraph();
       _isInitialized = true;
@@ -29,63 +43,105 @@ class MethodologyServiceV2 {
     }
   }
 
-  Future<void> _loadMethodologies() async {
-    _methodologies.clear();
-    
+  Future<void> _initializeDirectoryStructure() async {
+    final documentsDir = await getApplicationDocumentsDirectory();
+    _methodologyDirectory = Directory(path.join(documentsDir.path, 'methodologies'));
+    _builtInDirectory = Directory(path.join(_methodologyDirectory.path, 'built-in'));
+    _customDirectory = Directory(path.join(_methodologyDirectory.path, 'custom'));
+    _importedDirectory = Directory(path.join(_methodologyDirectory.path, 'imported'));
+    _disabledDirectory = Directory(path.join(_methodologyDirectory.path, 'disabled'));
+
+    // Create directories if they don't exist
+    await _builtInDirectory.create(recursive: true);
+    await _customDirectory.create(recursive: true);
+    await _importedDirectory.create(recursive: true);
+    await _disabledDirectory.create(recursive: true);
+  }
+
+  Future<void> _copyBuiltInMethodologies() async {
     try {
       // Load methodology files from assets
       final manifest = await rootBundle.loadString('AssetManifest.json');
       final Map<String, dynamic> manifestMap = json.decode(manifest);
-      
+
       final methodologyFiles = manifestMap.keys
           .where((key) => key.startsWith('assets/methodologies/') && key.endsWith('.yaml'))
           .toList();
-      
-      for (final filePath in methodologyFiles) {
-        try {
-          final yamlContent = await rootBundle.loadString(filePath);
-          final methodology = await _parseMethodologyYaml(yamlContent, filePath);
-          _methodologies[methodology.id] = methodology;
-        } catch (e) {
-          // Log error but continue loading other methodologies
-          print('Error loading methodology from $filePath: $e');
+
+      for (final assetPath in methodologyFiles) {
+        final fileName = path.basename(assetPath);
+        final localFile = File(path.join(_builtInDirectory.path, fileName));
+
+        // Only copy if file doesn't exist or is older than app version
+        if (!await localFile.exists() || await _shouldUpdateBuiltIn(localFile)) {
+          final yamlContent = await rootBundle.loadString(assetPath);
+          await localFile.writeAsString(yamlContent);
+          print('Copied built-in methodology: $fileName');
         }
       }
-      
-      print('Loaded ${_methodologies.length} methodologies');
+    } catch (e) {
+      print('Warning: Failed to copy built-in methodologies: $e');
+      // Continue initialization even if copying fails
+    }
+  }
+
+  Future<bool> _shouldUpdateBuiltIn(File localFile) async {
+    // For now, always update built-in files
+    // In future, could check file modification times or version headers
+    return true;
+  }
+
+  Future<void> _loadMethodologies() async {
+    _methodologies.clear();
+    _methodologySources.clear();
+
+    try {
+      // Load methodologies from all directories
+      await _loadMethodologiesFromDirectory(_builtInDirectory, MethodologySource.builtIn);
+      await _loadMethodologiesFromDirectory(_customDirectory, MethodologySource.custom);
+      await _loadMethodologiesFromDirectory(_importedDirectory, MethodologySource.imported);
+
+      print('Loaded ${_methodologies.length} methodologies from file system');
     } catch (e) {
       throw MethodologyServiceException('Failed to load methodologies: $e');
     }
   }
 
+  Future<void> _loadMethodologiesFromDirectory(Directory directory, MethodologySource source) async {
+    if (!await directory.exists()) return;
+
+    final yamlFiles = await directory
+        .list()
+        .where((entity) => entity is File && entity.path.endsWith('.yaml'))
+        .cast<File>()
+        .toList();
+
+    for (final file in yamlFiles) {
+      try {
+        final yamlContent = await file.readAsString();
+        final methodology = await _parseMethodologyYaml(yamlContent, file.path);
+
+        // Check for ID conflicts
+        if (_methodologies.containsKey(methodology.id)) {
+          print('Warning: Methodology ID conflict: ${methodology.id} in ${file.path}');
+          print('Skipping duplicate methodology from ${source.name}');
+          continue;
+        }
+
+        _methodologies[methodology.id] = methodology;
+        _methodologySources[methodology.id] = source;
+
+        print('Loaded methodology: ${methodology.name} (${source.name})');
+      } catch (e) {
+        print('Error loading methodology from ${file.path}: $e');
+      }
+    }
+  }
+
   Future<Methodology> _parseMethodologyYaml(String yamlContent, String filePath) async {
     try {
-      final dynamic yamlDoc = loadYaml(yamlContent);
-      if (yamlDoc is! Map) {
-        throw FormatException('Invalid YAML structure');
-      }
-
-      final Map<String, dynamic> yaml = Map<String, dynamic>.from(yamlDoc);
-      
-      return Methodology(
-        id: yaml['id'] ?? _extractIdFromFilePath(filePath),
-        name: yaml['name'] ?? 'Unknown Methodology',
-        version: yaml['version'] ?? '1.0.0',
-        projectId: '', // Will be set when methodology is assigned to project
-        category: _parseCategory(yaml['category']),
-        description: yaml['description'] ?? '',
-        rationale: yaml['rationale'] ?? '',
-        riskLevel: _parseRiskLevel(yaml['risk_level']),
-        stealthLevel: _parseStealthLevel(yaml['stealth_level']),
-        estimatedDuration: _parseDuration(yaml['estimated_duration']),
-        triggers: _parseTriggers(yaml['triggers']),
-        steps: _parseSteps(yaml['steps']),
-        expectedAssetTypes: _parseExpectedAssetTypes(yaml['asset_discovery']),
-        suppressionOptions: _parseSuppressionOptions(yaml['suppression_options']),
-        nextMethodologyIds: _parseNextMethodologies(yaml['next_methodologies']),
-        createdDate: DateTime.now(),
-        updatedDate: DateTime.now(),
-      );
+      // Use our enhanced YAML parser
+      return MethodologyYamlParser.parseYaml(yamlContent);
     } catch (e) {
       throw MethodologyParseException('Failed to parse methodology YAML: $e');
     }
@@ -525,6 +581,238 @@ class MethodologyServiceV2 {
     _isInitialized = false;
     await initialize();
   }
+
+  // Runtime methodology management methods
+  Future<void> importMethodology(String yamlContent, {MethodologySource source = MethodologySource.imported}) async {
+    try {
+      final methodology = await _parseMethodologyYaml(yamlContent, 'imported');
+
+      // Determine target directory
+      Directory targetDir;
+      switch (source) {
+        case MethodologySource.custom:
+          targetDir = _customDirectory;
+          break;
+        case MethodologySource.imported:
+          targetDir = _importedDirectory;
+          break;
+        case MethodologySource.builtIn:
+          throw MethodologyServiceException('Cannot import as built-in methodology');
+      }
+
+      // Create filename from methodology ID
+      final fileName = '${methodology.id}.yaml';
+      final targetFile = File(path.join(targetDir.path, fileName));
+
+      // Check for conflicts
+      if (await targetFile.exists()) {
+        throw MethodologyServiceException('Methodology already exists: ${methodology.id}');
+      }
+
+      // Write file and update in-memory cache
+      await targetFile.writeAsString(yamlContent);
+      _methodologies[methodology.id] = methodology;
+      _methodologySources[methodology.id] = source;
+
+      print('Imported methodology: ${methodology.name} to ${source.name}');
+    } catch (e) {
+      throw MethodologyServiceException('Failed to import methodology: $e');
+    }
+  }
+
+  Future<String> exportMethodology(String methodologyId) async {
+    final methodology = _methodologies[methodologyId];
+    if (methodology == null) {
+      throw MethodologyServiceException('Methodology not found: $methodologyId');
+    }
+
+    final source = _methodologySources[methodologyId];
+    Directory sourceDir;
+
+    switch (source) {
+      case MethodologySource.builtIn:
+        sourceDir = _builtInDirectory;
+        break;
+      case MethodologySource.custom:
+        sourceDir = _customDirectory;
+        break;
+      case MethodologySource.imported:
+        sourceDir = _importedDirectory;
+        break;
+      default:
+        throw MethodologyServiceException('Unknown methodology source');
+    }
+
+    final fileName = '${methodologyId}.yaml';
+    final sourceFile = File(path.join(sourceDir.path, fileName));
+
+    if (!await sourceFile.exists()) {
+      throw MethodologyServiceException('Methodology file not found: ${sourceFile.path}');
+    }
+
+    return await sourceFile.readAsString();
+  }
+
+  Future<void> createCustomMethodology(String yamlContent) async {
+    await importMethodology(yamlContent, source: MethodologySource.custom);
+  }
+
+  Future<void> updateMethodology(String methodologyId, String yamlContent) async {
+    final source = _methodologySources[methodologyId];
+    if (source == null) {
+      throw MethodologyServiceException('Methodology not found: $methodologyId');
+    }
+
+    if (source == MethodologySource.builtIn) {
+      throw MethodologyServiceException('Cannot modify built-in methodology');
+    }
+
+    // Parse to validate
+    final methodology = await _parseMethodologyYaml(yamlContent, 'updated');
+    if (methodology.id != methodologyId) {
+      throw MethodologyServiceException('Methodology ID mismatch');
+    }
+
+    Directory targetDir = source == MethodologySource.custom ? _customDirectory : _importedDirectory;
+    final fileName = '${methodologyId}.yaml';
+    final targetFile = File(path.join(targetDir.path, fileName));
+
+    await targetFile.writeAsString(yamlContent);
+    _methodologies[methodologyId] = methodology;
+
+    print('Updated methodology: ${methodology.name}');
+  }
+
+  Future<void> deleteMethodology(String methodologyId) async {
+    final source = _methodologySources[methodologyId];
+    if (source == null) {
+      throw MethodologyServiceException('Methodology not found: $methodologyId');
+    }
+
+    if (source == MethodologySource.builtIn) {
+      throw MethodologyServiceException('Cannot delete built-in methodology');
+    }
+
+    Directory sourceDir = source == MethodologySource.custom ? _customDirectory : _importedDirectory;
+    final fileName = '${methodologyId}.yaml';
+    final sourceFile = File(path.join(sourceDir.path, fileName));
+
+    if (await sourceFile.exists()) {
+      await sourceFile.delete();
+    }
+
+    _methodologies.remove(methodologyId);
+    _methodologySources.remove(methodologyId);
+
+    print('Deleted methodology: $methodologyId');
+  }
+
+  Future<void> disableMethodology(String methodologyId) async {
+    final source = _methodologySources[methodologyId];
+    if (source == null) {
+      throw MethodologyServiceException('Methodology not found: $methodologyId');
+    }
+
+    Directory sourceDir;
+    switch (source) {
+      case MethodologySource.builtIn:
+        sourceDir = _builtInDirectory;
+        break;
+      case MethodologySource.custom:
+        sourceDir = _customDirectory;
+        break;
+      case MethodologySource.imported:
+        sourceDir = _importedDirectory;
+        break;
+    }
+
+    final fileName = '${methodologyId}.yaml';
+    final sourceFile = File(path.join(sourceDir.path, fileName));
+    final disabledFile = File(path.join(_disabledDirectory.path, fileName));
+
+    if (await sourceFile.exists()) {
+      await sourceFile.rename(disabledFile.path);
+      _methodologies.remove(methodologyId);
+      _methodologySources.remove(methodologyId);
+      print('Disabled methodology: $methodologyId');
+    }
+  }
+
+  Future<void> enableMethodology(String methodologyId, MethodologySource targetSource) async {
+    final fileName = '${methodologyId}.yaml';
+    final disabledFile = File(path.join(_disabledDirectory.path, fileName));
+
+    if (!await disabledFile.exists()) {
+      throw MethodologyServiceException('Disabled methodology not found: $methodologyId');
+    }
+
+    Directory targetDir;
+    switch (targetSource) {
+      case MethodologySource.custom:
+        targetDir = _customDirectory;
+        break;
+      case MethodologySource.imported:
+        targetDir = _importedDirectory;
+        break;
+      case MethodologySource.builtIn:
+        throw MethodologyServiceException('Cannot enable as built-in methodology');
+    }
+
+    final targetFile = File(path.join(targetDir.path, fileName));
+    await disabledFile.rename(targetFile.path);
+
+    // Reload the methodology
+    final yamlContent = await targetFile.readAsString();
+    final methodology = await _parseMethodologyYaml(yamlContent, targetFile.path);
+    _methodologies[methodology.id] = methodology;
+    _methodologySources[methodology.id] = targetSource;
+
+    print('Enabled methodology: ${methodology.name}');
+  }
+
+  // Utility methods
+  MethodologySource? getMethodologySource(String methodologyId) {
+    return _methodologySources[methodologyId];
+  }
+
+  List<Methodology> getMethodologiesBySource(MethodologySource source) {
+    return _methodologies.entries
+        .where((entry) => _methodologySources[entry.key] == source)
+        .map((entry) => entry.value)
+        .toList();
+  }
+
+  List<String> getDisabledMethodologyIds() {
+    if (!_disabledDirectory.existsSync()) return [];
+
+    return _disabledDirectory
+        .listSync()
+        .where((entity) => entity is File && entity.path.endsWith('.yaml'))
+        .map((file) => path.basenameWithoutExtension(file.path))
+        .toList();
+  }
+
+  Future<String> getMethodologyFilePath(String methodologyId) async {
+    final source = _methodologySources[methodologyId];
+    if (source == null) {
+      throw MethodologyServiceException('Methodology not found: $methodologyId');
+    }
+
+    Directory sourceDir;
+    switch (source) {
+      case MethodologySource.builtIn:
+        sourceDir = _builtInDirectory;
+        break;
+      case MethodologySource.custom:
+        sourceDir = _customDirectory;
+        break;
+      case MethodologySource.imported:
+        sourceDir = _importedDirectory;
+        break;
+    }
+
+    return path.join(sourceDir.path, '${methodologyId}.yaml');
+  }
 }
 
 class MethodologyServiceException implements Exception {
@@ -538,7 +826,35 @@ class MethodologyServiceException implements Exception {
 class MethodologyParseException implements Exception {
   final String message;
   MethodologyParseException(this.message);
-  
+
   @override
   String toString() => 'MethodologyParseException: $message';
+}
+
+enum MethodologySource {
+  builtIn,
+  custom,
+  imported;
+
+  String get displayName {
+    switch (this) {
+      case MethodologySource.builtIn:
+        return 'Built-in';
+      case MethodologySource.custom:
+        return 'Custom';
+      case MethodologySource.imported:
+        return 'Imported';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case MethodologySource.builtIn:
+        return 'Methodologies shipped with the application';
+      case MethodologySource.custom:
+        return 'User-created methodologies';
+      case MethodologySource.imported:
+        return 'Methodologies imported from external sources';
+    }
+  }
 }

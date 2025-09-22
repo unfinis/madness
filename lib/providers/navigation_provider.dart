@@ -12,6 +12,7 @@ enum NavigationSection {
   documents,
   travel,
   methodology,
+  methodologyDashboard,
   assets,
   credentials,
   history,

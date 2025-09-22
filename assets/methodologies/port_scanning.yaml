@@ -1,0 +1,121 @@
+id: port_scanning
+name: Port Scanning
+version: 1.0.0
+category: scanning
+description: Perform port scanning on discovered hosts
+rationale: Port scanning identifies open services and potential attack vectors
+risk_level: low
+stealth_level: active
+estimated_duration_minutes: 10
+
+triggers:
+  - id: host_discovered
+    type: asset_discovered
+    description: Trigger when a new host is discovered
+    priority: 5
+    conditions:
+      type: host
+      in_scope: true
+    deduplication:
+      strategy: signature_based
+      signature_fields: [host]
+      cooldown_seconds: 1800
+      max_executions: 1
+
+execution_methods:
+  - id: tcp_scan
+    name: TCP Port Scan
+    description: Scan common TCP ports
+    type: command
+    command: nmap -sS -T4 -p- {{HOST}}
+    variants:
+      - condition: stealth_level == "passive"
+        command: nmap -sS -T2 -p1-1000 {{HOST}}
+        description: Stealthy scan of common ports
+      - condition: stealth_level == "aggressive"
+        command: nmap -sS -T5 -p- --min-rate=1000 {{HOST}}
+        description: Fast aggressive scan
+    expected_outputs:
+      - type: port_discovery
+        parser: nmap
+        success_indicators:
+          - "open"
+          - "Nmap scan report"
+        failure_indicators:
+          - "Host seems down"
+          - "0 hosts up"
+    asset_discovery:
+      - pattern: "(\\d+)/tcp\\s+open\\s+(\\S+)"
+        asset_type: service
+        confidence: 0.95
+        metadata:
+          protocol: tcp
+          state: open
+      - pattern: "(\\d+)/tcp\\s+filtered\\s+(\\S+)"
+        asset_type: service
+        confidence: 0.7
+        metadata:
+          protocol: tcp
+          state: filtered
+    timeout_seconds: 300
+
+  - id: udp_scan
+    name: UDP Port Scan
+    description: Scan common UDP ports
+    type: command
+    command: nmap -sU -T4 --top-ports 1000 {{HOST}}
+    expected_outputs:
+      - type: udp_port_discovery
+        parser: nmap
+        success_indicators:
+          - "open"
+          - "open|filtered"
+    asset_discovery:
+      - pattern: "(\\d+)/udp\\s+open\\s+(\\S+)"
+        asset_type: service
+        confidence: 0.9
+        metadata:
+          protocol: udp
+          state: open
+    timeout_seconds: 600
+
+  - id: service_version_scan
+    name: Service Version Detection
+    description: Detect service versions on open ports
+    type: command
+    command: nmap -sV -T4 {{HOST}} -p {{OPEN_PORTS}}
+    parameters:
+      OPEN_PORTS: "derived_from_previous_scans"
+    expected_outputs:
+      - type: version_detection
+        parser: nmap
+        success_indicators:
+          - "VERSION"
+          - "Service Info"
+    asset_discovery:
+      - pattern: "(\\d+)/tcp\\s+open\\s+(\\S+)\\s+(.+)"
+        asset_type: service
+        confidence: 0.95
+        metadata:
+          version_info: true
+    timeout_seconds: 180
+
+expected_asset_types:
+  - service
+  - port
+
+suppression_options:
+  - scope: host
+    description: Skip port scanning for this host
+    conditions:
+      - host_is_critical_system
+      - host_scanning_prohibited
+  - scope: network
+    description: Skip entire network range
+    conditions:
+      - network_out_of_scope
+
+next_methodologies:
+  - service_enumeration
+  - vulnerability_scanning
+  - smb_auth_test

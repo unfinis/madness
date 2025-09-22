@@ -430,7 +430,83 @@ class MethodologyRecommendationsTable extends Table {
   BoolColumn get isSuppressed => boolean().named('is_suppressed').withDefault(const Constant(false))();
   TextColumn get suppressionReason => text().named('suppression_reason').nullable()();
   TextColumn get context => text().nullable()(); // JSON
-  
+
   @override
   Set<Column> get primaryKey => {id};
+}
+
+
+// Assets table for hierarchical object-oriented asset system
+@DataClassName('AssetRow')
+class AssetsTable extends Table {
+  @override
+  String get tableName => 'assets';
+
+  TextColumn get id => text()();
+  TextColumn get type => text()(); // AssetType enum as string
+  TextColumn get projectId => text().named('project_id').references(ProjectsTable, #id)();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+
+  // Rich property system - stored as JSON
+  TextColumn get properties => text()(); // Map<String, AssetPropertyValue> as JSON
+
+  // Discovery and status
+  TextColumn get discoveryStatus => text().named('discovery_status')(); // AssetDiscoveryStatus enum
+  DateTimeColumn get discoveredAt => dateTime().named('discovered_at')();
+  DateTimeColumn get lastUpdated => dateTime().named('last_updated').nullable()();
+  TextColumn get discoveryMethod => text().named('discovery_method').nullable()();
+  RealColumn get confidence => real().withDefault(const Constant(1.0))();
+
+  // Hierarchical relationships - stored as JSON arrays
+  TextColumn get parentAssetIds => text().named('parent_asset_ids')(); // List<String> as JSON
+  TextColumn get childAssetIds => text().named('child_asset_ids')(); // List<String> as JSON
+  TextColumn get relatedAssetIds => text().named('related_asset_ids')(); // List<String> as JSON
+
+  // Methodology integration
+  TextColumn get completedTriggers => text().named('completed_triggers')(); // List<String> as JSON
+  TextColumn get triggerResults => text().named('trigger_results')(); // Map<String, TriggerExecutionResult> as JSON
+
+  // Organization and filtering
+  TextColumn get tags => text()(); // List<String> as JSON
+  TextColumn get metadata => text().nullable()(); // Map<String, String> as JSON
+
+  // Security context
+  TextColumn get accessLevel => text().named('access_level').nullable()(); // AccessLevel enum as string
+  TextColumn get securityControls => text().named('security_controls').nullable()(); // List<String> as JSON
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Asset relationships table for efficient querying of hierarchical relationships
+@DataClassName('AssetRelationshipRow')
+class AssetRelationshipsTable extends Table {
+  @override
+  String get tableName => 'asset_relationships';
+
+  TextColumn get parentAssetId => text().named('parent_asset_id').references(AssetsTable, #id)();
+  TextColumn get childAssetId => text().named('child_asset_id').references(AssetsTable, #id)();
+  TextColumn get relationshipType => text().named('relationship_type')(); // "parent", "child", "related"
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+  TextColumn get metadata => text().nullable()(); // Additional relationship metadata as JSON
+
+  @override
+  Set<Column> get primaryKey => {parentAssetId, childAssetId, relationshipType};
+}
+
+// Asset property index for efficient property-based searches
+@DataClassName('AssetPropertyIndexRow')
+class AssetPropertyIndexTable extends Table {
+  @override
+  String get tableName => 'asset_property_index';
+
+  TextColumn get assetId => text().named('asset_id').references(AssetsTable, #id)();
+  TextColumn get propertyKey => text().named('property_key')();
+  TextColumn get propertyValue => text().named('property_value')(); // String representation for indexing
+  TextColumn get propertyType => text().named('property_type')(); // "string", "integer", "boolean", etc.
+  DateTimeColumn get indexedAt => dateTime().named('indexed_at')();
+
+  @override
+  Set<Column> get primaryKey => {assetId, propertyKey};
 }

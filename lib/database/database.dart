@@ -10,6 +10,8 @@ import '../models/document.dart';
 import '../models/screenshot.dart';
 import '../models/editor_layer.dart';
 import '../models/methodology_execution.dart';
+import '../models/assets.dart' as AssetsNew;
+import '../models/asset_relationship.dart';
 import 'tables.dart';
 import 'dart:convert';
 
@@ -36,12 +38,15 @@ part 'database.g.dart';
   StepExecutionsTable,
   DiscoveredAssetsTable,
   MethodologyRecommendationsTable,
+  AssetsTable,
+  AssetRelationshipsTable,
+  AssetPropertyIndexTable,
 ])
 class MadnessDatabase extends _$MadnessDatabase {
   MadnessDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -52,7 +57,15 @@ class MadnessDatabase extends _$MadnessDatabase {
       onUpgrade: (Migrator m, int from, int to) async {
         // For now, we recreate all tables on schema changes
         // as per CLAUDE.md instructions
-        if (to >= 9) {
+        if (to >= 12) {
+          // Drop and recreate assets table to include new schema
+          await m.deleteTable('assets');
+          await m.deleteTable('asset_relationships');
+          await m.deleteTable('asset_property_index');
+
+          // Recreate all tables
+          await m.createAll();
+        } else if (to >= 9) {
           // Drop and recreate all tables to ensure consistency
           await m.deleteTable('methodology_executions');
           await m.deleteTable('step_executions');
@@ -1154,5 +1167,344 @@ class MadnessDatabase extends _$MadnessDatabase {
       suppressionReason: Value(null), // Not directly available in current model
       context: Value(jsonEncode(recommendation.context)),
     );
+  }
+
+
+  // ==========================================================================
+  // Asset Management Operations
+  // ==========================================================================
+
+  /// Get all assets for a project
+  Future<List<AssetsNew.Asset>> getAssetsForProject(String projectId) async {
+    final query = select(assetsTable)
+      ..where((a) => a.projectId.equals(projectId))
+      ..orderBy([(a) => OrderingTerm.desc(a.discoveredAt)]);
+    final rows = await query.get();
+    return rows.map(_assetRowToModel).toList();
+  }
+
+  /// Get assets by type
+  Future<List<AssetsNew.Asset>> getAssetsByType(
+      String projectId, AssetsNew.AssetType type) async {
+    final query = select(assetsTable)
+      ..where((a) => a.projectId.equals(projectId) & a.type.equals(type.name))
+      ..orderBy([(a) => OrderingTerm.desc(a.discoveredAt)]);
+    final rows = await query.get();
+    return rows.map(_assetRowToModel).toList();
+  }
+
+  /// Get a single asset by ID
+  Future<AssetsNew.Asset?> getAsset(String id) async {
+    final query = select(assetsTable)..where((a) => a.id.equals(id));
+    final row = await query.getSingleOrNull();
+    return row != null ? _assetRowToModel(row) : null;
+  }
+
+  /// Insert a new asset
+  Future<AssetsNew.Asset> insertAsset(AssetsNew.Asset asset) async {
+    await into(assetsTable).insert(_modelToAssetRow(asset));
+
+    // Insert relationships
+    await _insertAssetRelationships(asset);
+
+    // Index properties for searching
+    await _indexAssetProperties(asset);
+
+    return asset;
+  }
+
+  /// Update an existing asset
+  Future<AssetsNew.Asset> updateAsset(AssetsNew.Asset asset) async {
+    await (update(assetsTable)..where((a) => a.id.equals(asset.id)))
+        .write(_modelToAssetRow(asset));
+
+    // Update relationships
+    await _deleteAssetRelationships(asset.id);
+    await _insertAssetRelationships(asset);
+
+    // Re-index properties
+    await _deleteAssetPropertyIndex(asset.id);
+    await _indexAssetProperties(asset);
+
+    return asset;
+  }
+
+  /// Delete an asset
+  Future<void> deleteAsset(String id) async {
+    await _deleteAssetRelationships(id);
+    await _deleteAssetPropertyIndex(id);
+    await (delete(assetsTable)..where((a) => a.id.equals(id))).go();
+  }
+
+  Future<void> insertAssetRelationship(AssetRelationship relationship) async {
+    await into(assetRelationshipsTable).insert(
+      AssetRelationshipsTableCompanion(
+        parentAssetId: Value(relationship.parentAssetId),
+        childAssetId: Value(relationship.childAssetId),
+        relationshipType: Value(relationship.relationshipType.name),
+        createdAt: Value(relationship.createdAt),
+      ),
+    );
+  }
+
+  /// Get child assets for a parent asset
+  Future<List<AssetsNew.Asset>> getChildAssets(String parentAssetId) async {
+    final relationshipQuery = select(assetRelationshipsTable)
+      ..where((r) => r.parentAssetId.equals(parentAssetId) &
+                     r.relationshipType.equals('parent'));
+
+    final relationships = await relationshipQuery.get();
+    final childIds = relationships.map((r) => r.childAssetId).toList();
+
+    if (childIds.isEmpty) return [];
+
+    final assetQuery = select(assetsTable)
+      ..where((a) => a.id.isIn(childIds));
+
+    final rows = await assetQuery.get();
+    return rows.map(_assetRowToModel).toList();
+  }
+
+  /// Get parent assets for a child asset
+  Future<List<AssetsNew.Asset>> getParentAssets(String childAssetId) async {
+    final relationshipQuery = select(assetRelationshipsTable)
+      ..where((r) => r.childAssetId.equals(childAssetId) &
+                     r.relationshipType.equals('parent'));
+
+    final relationships = await relationshipQuery.get();
+    final parentIds = relationships.map((r) => r.parentAssetId).toList();
+
+    if (parentIds.isEmpty) return [];
+
+    final assetQuery = select(assetsTable)
+      ..where((a) => a.id.isIn(parentIds));
+
+    final rows = await assetQuery.get();
+    return rows.map(_assetRowToModel).toList();
+  }
+
+  /// Search assets by property values
+  Future<List<AssetsNew.Asset>> searchAssetsByProperty(
+      String projectId, String propertyKey, String propertyValue) async {
+    final indexQuery = select(assetPropertyIndexTable)
+      ..where((i) => i.propertyKey.equals(propertyKey) &
+                     i.propertyValue.like('%$propertyValue%'));
+
+    final indexRows = await indexQuery.get();
+    final assetIds = indexRows.map((i) => i.assetId).toSet().toList();
+
+    if (assetIds.isEmpty) return [];
+
+    final assetQuery = select(assetsTable)
+      ..where((a) => a.projectId.equals(projectId) & a.id.isIn(assetIds));
+
+    final rows = await assetQuery.get();
+    return rows.map(_assetRowToModel).toList();
+  }
+
+  /// Get assets by discovery status
+  Future<List<AssetsNew.Asset>> getAssetsByDiscoveryStatus(
+      String projectId, AssetsNew.AssetDiscoveryStatus status) async {
+    final query = select(assetsTable)
+      ..where((a) => a.projectId.equals(projectId) &
+                     a.discoveryStatus.equals(status.name))
+      ..orderBy([(a) => OrderingTerm.desc(a.discoveredAt)]);
+
+    final rows = await query.get();
+    return rows.map(_assetRowToModel).toList();
+  }
+
+  // Private helper methods for assets
+
+  /// Convert database row to asset model
+  AssetsNew.Asset _assetRowToModel(AssetRow row) {
+    try {
+      final propertiesMap = jsonDecode(row.properties) as Map<String, dynamic>;
+      final properties = <String, AssetsNew.AssetPropertyValue>{};
+
+      for (final entry in propertiesMap.entries) {
+        properties[entry.key] = AssetsNew.AssetPropertyValue.fromJson(entry.value);
+      }
+
+      final completedTriggers = List<String>.from(jsonDecode(row.completedTriggers));
+
+      final triggerResultsMap = jsonDecode(row.triggerResults) as Map<String, dynamic>;
+      final triggerResults = <String, AssetsNew.TriggerExecutionResult>{};
+
+      for (final entry in triggerResultsMap.entries) {
+        triggerResults[entry.key] = AssetsNew.TriggerExecutionResult.fromJson(entry.value);
+      }
+
+      final parentAssetIds = List<String>.from(jsonDecode(row.parentAssetIds));
+      final childAssetIds = List<String>.from(jsonDecode(row.childAssetIds));
+      final relatedAssetIds = List<String>.from(jsonDecode(row.relatedAssetIds));
+      final tags = List<String>.from(jsonDecode(row.tags));
+
+      final metadata = row.metadata != null
+          ? Map<String, String>.from(jsonDecode(row.metadata!))
+          : <String, String>{};
+
+      final securityControls = row.securityControls != null
+          ? List<String>.from(jsonDecode(row.securityControls!))
+          : <String>[];
+
+      return AssetsNew.Asset(
+        id: row.id,
+        type: AssetsNew.AssetType.values.byName(row.type),
+        projectId: row.projectId,
+        name: row.name,
+        description: row.description,
+        properties: properties,
+        discoveryStatus: AssetsNew.AssetDiscoveryStatus.values.byName(row.discoveryStatus),
+        discoveredAt: row.discoveredAt,
+        lastUpdated: row.lastUpdated,
+        discoveryMethod: row.discoveryMethod,
+        confidence: row.confidence,
+        parentAssetIds: parentAssetIds,
+        childAssetIds: childAssetIds,
+        relatedAssetIds: relatedAssetIds,
+        completedTriggers: completedTriggers,
+        triggerResults: triggerResults,
+        tags: tags,
+        metadata: metadata,
+        accessLevel: row.accessLevel != null
+            ? AssetsNew.AccessLevel.values.byName(row.accessLevel!) : null,
+        securityControls: securityControls,
+      );
+    } catch (e) {
+      throw Exception('Failed to convert ComprehensiveAssetRow to Asset: $e');
+    }
+  }
+
+  /// Convert asset model to database row
+  AssetsTableCompanion _modelToAssetRow(AssetsNew.Asset asset) {
+    try {
+      final propertiesJson = <String, dynamic>{};
+      for (final entry in asset.properties.entries) {
+        propertiesJson[entry.key] = entry.value.toJson();
+      }
+
+      final triggerResultsJson = <String, dynamic>{};
+      for (final entry in asset.triggerResults.entries) {
+        triggerResultsJson[entry.key] = entry.value.toJson();
+      }
+
+      return AssetsTableCompanion(
+        id: Value(asset.id),
+        type: Value(asset.type.name),
+        projectId: Value(asset.projectId),
+        name: Value(asset.name),
+        description: Value(asset.description),
+        properties: Value(jsonEncode(propertiesJson)),
+        discoveryStatus: Value(asset.discoveryStatus.name),
+        discoveredAt: Value(asset.discoveredAt),
+        lastUpdated: Value(asset.lastUpdated),
+        discoveryMethod: Value(asset.discoveryMethod),
+        confidence: Value(asset.confidence),
+        parentAssetIds: Value(jsonEncode(asset.parentAssetIds)),
+        childAssetIds: Value(jsonEncode(asset.childAssetIds)),
+        relatedAssetIds: Value(jsonEncode(asset.relatedAssetIds)),
+        completedTriggers: Value(jsonEncode(asset.completedTriggers)),
+        triggerResults: Value(jsonEncode(triggerResultsJson)),
+        tags: Value(jsonEncode(asset.tags)),
+        metadata: Value(asset.metadata != null ? jsonEncode(asset.metadata!) : null),
+        accessLevel: Value(asset.accessLevel?.name),
+        securityControls: Value(asset.securityControls != null ?
+            jsonEncode(asset.securityControls!) : null),
+      );
+    } catch (e) {
+      throw Exception('Failed to convert Asset to AssetsTableCompanion: $e');
+    }
+  }
+
+  /// Insert asset relationships
+  Future<void> _insertAssetRelationships(AssetsNew.Asset asset) async {
+    final now = DateTime.now();
+
+    // Insert parent relationships
+    for (final parentId in asset.parentAssetIds) {
+      await into(assetRelationshipsTable).insert(
+        AssetRelationshipsTableCompanion(
+          parentAssetId: Value(parentId),
+          childAssetId: Value(asset.id),
+          relationshipType: const Value('parent'),
+          createdAt: Value(now),
+        ),
+      );
+    }
+
+    // Insert child relationships
+    for (final childId in asset.childAssetIds) {
+      await into(assetRelationshipsTable).insert(
+        AssetRelationshipsTableCompanion(
+          parentAssetId: Value(asset.id),
+          childAssetId: Value(childId),
+          relationshipType: const Value('parent'),
+          createdAt: Value(now),
+        ),
+      );
+    }
+
+    // Insert related relationships
+    for (final relatedId in asset.relatedAssetIds) {
+      await into(assetRelationshipsTable).insert(
+        AssetRelationshipsTableCompanion(
+          parentAssetId: Value(asset.id),
+          childAssetId: Value(relatedId),
+          relationshipType: const Value('related'),
+          createdAt: Value(now),
+        ),
+      );
+    }
+  }
+
+  /// Delete asset relationships
+  Future<void> _deleteAssetRelationships(String assetId) async {
+    await (delete(assetRelationshipsTable)..where((r) =>
+        r.parentAssetId.equals(assetId) | r.childAssetId.equals(assetId))).go();
+  }
+
+  /// Index asset properties for searching
+  Future<void> _indexAssetProperties(AssetsNew.Asset asset) async {
+    final now = DateTime.now();
+
+    for (final entry in asset.properties.entries) {
+      final propertyValue = entry.value.when(
+        string: (v) => v,
+        integer: (v) => v.toString(),
+        double: (v) => v.toString(),
+        boolean: (v) => v.toString(),
+        stringList: (v) => v.join(','),
+        dateTime: (v) => v.toIso8601String(),
+        map: (v) => jsonEncode(v),
+        objectList: (v) => jsonEncode(v),
+      );
+
+      final propertyType = entry.value.when(
+        string: (_) => 'string',
+        integer: (_) => 'integer',
+        double: (_) => 'double',
+        boolean: (_) => 'boolean',
+        stringList: (_) => 'stringList',
+        dateTime: (_) => 'dateTime',
+        map: (_) => 'map',
+        objectList: (_) => 'objectList',
+      );
+
+      await into(assetPropertyIndexTable).insert(
+        AssetPropertyIndexTableCompanion(
+          assetId: Value(asset.id),
+          propertyKey: Value(entry.key),
+          propertyValue: Value(propertyValue),
+          propertyType: Value(propertyType),
+          indexedAt: Value(now),
+        ),
+      );
+    }
+  }
+
+  /// Delete asset property index entries
+  Future<void> _deleteAssetPropertyIndex(String assetId) async {
+    await (delete(assetPropertyIndexTable)..where((i) => i.assetId.equals(assetId))).go();
   }
 }
