@@ -252,23 +252,26 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
 
   Widget _buildStatChip(String label, int count, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
-          Text(
-            '$label: $count',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -279,101 +282,206 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
   Widget _buildFilters() {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Search assets by name, type, or properties...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            flex: 2,
-            child: DropdownButtonFormField<AssetType?>(
-              value: _selectedType,
-              decoration: const InputDecoration(
-                labelText: 'Type',
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                const DropdownMenuItem(
-                  value: null,
-                  child: Text('All Types', overflow: TextOverflow.ellipsis),
-                ),
-                ...AssetType.values.map((type) => DropdownMenuItem(
-                  value: type,
-                  child: Text(
-                    _formatAssetTypeName(type),
-                    overflow: TextOverflow.ellipsis,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Use column layout for narrow screens
+          if (constraints.maxWidth < 800) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search assets...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                    isDense: true,
                   ),
-                )),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<AssetType?>(
+                        value: _selectedType,
+                        decoration: const InputDecoration(
+                          labelText: 'Type',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All', overflow: TextOverflow.ellipsis),
+                          ),
+                          ...AssetType.values.map((type) => DropdownMenuItem(
+                            value: type,
+                            child: Text(
+                              _formatAssetTypeName(type),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedType = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: DropdownButtonFormField<AssetDiscoveryStatus?>(
+                        value: _selectedStatus,
+                        decoration: const InputDecoration(
+                          labelText: 'Status',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('All')),
+                          ...AssetDiscoveryStatus.values.map((status) => DropdownMenuItem(
+                            value: status,
+                            child: Text(_formatStatusName(status), overflow: TextOverflow.ellipsis),
+                          )),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: DropdownButtonFormField<AccessLevel?>(
+                        value: _selectedAccessLevel,
+                        decoration: const InputDecoration(
+                          labelText: 'Access',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('All')),
+                          ...AccessLevel.values.map((level) => DropdownMenuItem(
+                            value: level,
+                            child: Text(_formatAccessLevelName(level), overflow: TextOverflow.ellipsis),
+                          )),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedAccessLevel = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedType = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: DropdownButtonFormField<AssetDiscoveryStatus?>(
-              value: _selectedStatus,
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                border: OutlineInputBorder(),
-                isDense: true,
+            );
+          }
+          // Use row layout for wider screens
+          return Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search assets by name, type, or properties...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                ),
               ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('All Statuses')),
-                ...AssetDiscoveryStatus.values.map((status) => DropdownMenuItem(
-                  value: status,
-                  child: Text(_formatStatusName(status)),
-                )),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedStatus = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: DropdownButtonFormField<AccessLevel?>(
-              value: _selectedAccessLevel,
-              decoration: const InputDecoration(
-                labelText: 'Access',
-                border: OutlineInputBorder(),
-                isDense: true,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<AssetType?>(
+                  value: _selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Type',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All Types', overflow: TextOverflow.ellipsis),
+                    ),
+                    ...AssetType.values.map((type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(
+                        _formatAssetTypeName(type),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedType = value;
+                    });
+                  },
+                ),
               ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('All Access')),
-                ...AccessLevel.values.map((level) => DropdownMenuItem(
-                  value: level,
-                  child: Text(_formatAccessLevelName(level)),
-                )),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedAccessLevel = value;
-                });
-              },
-            ),
-          ),
-        ],
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: DropdownButtonFormField<AssetDiscoveryStatus?>(
+                  value: _selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Status',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All Statuses')),
+                    ...AssetDiscoveryStatus.values.map((status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(_formatStatusName(status)),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedStatus = value;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: DropdownButtonFormField<AccessLevel?>(
+                  value: _selectedAccessLevel,
+                  decoration: const InputDecoration(
+                    labelText: 'Access',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All Access')),
+                    ...AccessLevel.values.map((level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(_formatAccessLevelName(level)),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedAccessLevel = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -463,26 +571,32 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
             ],
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (asset.childAssetIds.isNotEmpty)
-              Chip(
-                label: Text('${asset.childAssetIds.length}'),
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              ),
-            const SizedBox(width: AppSpacing.sm),
-            PopupMenuButton<String>(
-              onSelected: (action) => _handleAssetAction(action, asset),
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'view', child: Text('View Details')),
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                const PopupMenuItem(value: 'relationships', child: Text('View Relationships')),
-                const PopupMenuItem(value: 'trigger', child: Text('Trigger Methodologies')),
-                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+        trailing: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 120),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (asset.childAssetIds.isNotEmpty) ...[
+                Flexible(
+                  child: Chip(
+                    label: Text('${asset.childAssetIds.length}'),
+                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  ),
+                ),
+                const SizedBox(width: 4),
               ],
-            ),
-          ],
+              PopupMenuButton<String>(
+                onSelected: (action) => _handleAssetAction(action, asset),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'view', child: Text('View Details')),
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  const PopupMenuItem(value: 'relationships', child: Text('View Relationships')),
+                  const PopupMenuItem(value: 'trigger', child: Text('Trigger Methodologies')),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              ),
+            ],
+          ),
         ),
         onTap: () => _showAssetDetails(asset),
       ),
@@ -490,29 +604,75 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
   }
 
   Widget _buildAssetStatusRow(Asset asset) {
-    return Row(
-      children: [
-        _buildStatusChip(asset.discoveryStatus),
-        const SizedBox(width: AppSpacing.sm),
-        if (asset.accessLevel != null) ...[
-          _buildAccessChip(asset.accessLevel!),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-        Text(
-          _formatAssetTypeName(asset.type),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: _getAssetTypeColor(asset.type),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          _formatDate(asset.discoveredAt),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // For very narrow screens, use column layout
+        if (constraints.maxWidth < 300) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _buildStatusChip(asset.discoveryStatus),
+                  const SizedBox(width: AppSpacing.sm),
+                  if (asset.accessLevel != null)
+                    _buildAccessChip(asset.accessLevel!),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      _formatAssetTypeName(asset.type),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: _getAssetTypeColor(asset.type),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    _formatDate(asset.discoveredAt),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+        // For normal width, use row but with flexible elements
+        return Row(
+          children: [
+            _buildStatusChip(asset.discoveryStatus),
+            const SizedBox(width: AppSpacing.sm),
+            if (asset.accessLevel != null) ...[
+              _buildAccessChip(asset.accessLevel!),
+              const SizedBox(width: AppSpacing.sm),
+            ],
+            Flexible(
+              child: Text(
+                _formatAssetTypeName(asset.type),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: _getAssetTypeColor(asset.type),
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              _formatDate(asset.discoveredAt),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -520,10 +680,13 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
     return Chip(
       label: Text(
         _formatStatusName(status),
-        style: const TextStyle(fontSize: 10),
+        style: const TextStyle(fontSize: 9),
+        overflow: TextOverflow.ellipsis,
       ),
       backgroundColor: _getStatusColor(status).withOpacity(0.1),
       side: BorderSide(color: _getStatusColor(status)),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -531,10 +694,13 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
     return Chip(
       label: Text(
         _formatAccessLevelName(level),
-        style: const TextStyle(fontSize: 10),
+        style: const TextStyle(fontSize: 9),
+        overflow: TextOverflow.ellipsis,
       ),
       backgroundColor: _getAccessLevelColor(level).withOpacity(0.1),
       side: BorderSide(color: _getAccessLevelColor(level)),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
     );
   }
 

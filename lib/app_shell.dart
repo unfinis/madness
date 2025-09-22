@@ -17,7 +17,7 @@ import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
 import 'screens/assets_screen.dart';
 import 'screens/attack_plan_screen.dart';
-import 'widgets/methodology_browser.dart';
+import 'screens/methodology_library_screen.dart';
 import 'screens/questionnaire_screen.dart';
 import 'dialogs/project_transfer_link_dialog.dart';
 import 'constants/responsive_breakpoints.dart';
@@ -48,7 +48,7 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.travel:
         return const TravelScreen();
       case NavigationSection.methodology:
-        return const MethodologyBrowser();
+        return const MethodologyLibraryScreen();
       case NavigationSection.methodologyDashboard:
         return const AttackPlanScreen();
       case NavigationSection.assets:

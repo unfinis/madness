@@ -74,7 +74,19 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/firewall_rule_dialog.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze . --fatal-warnings)",
       "Bash(mv:*)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/attack_plan_screen.dart lib/app_shell.dart lib/widgets/side_navigation.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/attack_plan_screen.dart lib/app_shell.dart lib/widgets/side_navigation.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/methodology_template_editor_dialog.dart lib/screens/methodology_library_screen.dart lib/dialogs/run_instance_execution_dialog.dart lib/services/tool_output_parsers.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/methodology_template_editor_dialog.dart lib/screens/methodology_library_screen.dart lib/dialogs/run_instance_execution_dialog.dart lib/services/tool_output_parsers.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/tool_output_parsers.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/methodology_template_editor_dialog.dart lib/screens/methodology_library_screen.dart lib/dialogs/run_instance_execution_dialog.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/methodology_template_editor_dialog.dart lib/screens/methodology_library_screen.dart lib/dialogs/run_instance_execution_dialog.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/app_shell.dart lib/screens/methodology_library_screen.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/methodology_library_screen.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/app_shell.dart lib/screens/methodology_library_screen.dart lib/dialogs/methodology_template_editor_dialog.dart lib/dialogs/run_instance_execution_dialog.dart lib/services/tool_output_parsers.dart)",
+      "Bash(for file in methodology_template_editor_dialog run_instance_execution_dialog tool_output_parsers)",
+      "Bash(do echo \"=== $file.dart ===\")",
+      "Bash(grep:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
