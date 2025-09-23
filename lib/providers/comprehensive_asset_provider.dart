@@ -6,7 +6,15 @@ import '../services/drift_storage_service.dart';
 import '../services/comprehensive_trigger_evaluator.dart';
 import '../services/asset_trigger_integration_service.dart';
 import '../providers/storage_provider.dart';
-import '../providers/trigger_evaluation_provider.dart';
+
+/// Provider for comprehensive trigger evaluator
+final triggerEvaluationServiceProvider = Provider.family<ComprehensiveTriggerEvaluator, String>((ref, projectId) {
+  final storage = ref.read(storageServiceProvider);
+  return ComprehensiveTriggerEvaluator(
+    storage: storage,
+    projectId: projectId,
+  );
+});
 
 /// Provider for asset trigger integration service
 final assetTriggerIntegrationProvider = Provider.family<AssetTriggerIntegrationService, String>((ref, projectId) {

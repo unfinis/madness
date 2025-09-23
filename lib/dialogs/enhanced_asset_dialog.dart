@@ -112,6 +112,58 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
         return 3; // Overview, Structure, Users & Computers
       case AssetType.wireless_network:
         return 3; // Overview, Wireless Config, Security
+      case AssetType.restrictedEnvironment:
+        return 2; // Overview, Restrictions
+      case AssetType.securityControl:
+        return 2; // Overview, Configuration
+      // AD asset types
+      case AssetType.activeDirectoryDomain:
+        return 3; // Overview, Configuration, Trust Relationships
+      case AssetType.domainController:
+        return 3; // Overview, Services, Security
+      case AssetType.adUser:
+        return 3; // Overview, Properties, Permissions
+      case AssetType.adComputer:
+        return 3; // Overview, Properties, Services
+      case AssetType.certificateAuthority:
+        return 3; // Overview, Templates, Security
+      case AssetType.certificateTemplate:
+        return 2; // Overview, Configuration
+      case AssetType.sccmServer:
+        return 3; // Overview, Configuration, Security
+      case AssetType.smbShare:
+        return 3; // Overview, Permissions, Contents
+      case AssetType.kerberosTicket:
+        return 2; // Overview, Ticket Details
+      // Azure asset types
+      case AssetType.azureTenant:
+        return 3; // Overview, Configuration, Users & Security
+      case AssetType.azureSubscription:
+        return 3; // Overview, Resources, Access Control
+      case AssetType.azureStorageAccount:
+        return 3; // Overview, Containers, Security
+      case AssetType.azureVirtualMachine:
+        return 3; // Overview, System Info, Extensions
+      case AssetType.azureKeyVault:
+        return 3; // Overview, Secrets, Access Policies
+      case AssetType.azureWebApp:
+        return 3; // Overview, Configuration, Deployment
+      case AssetType.azureFunctionApp:
+        return 3; // Overview, Functions, Configuration
+      case AssetType.azureDevOpsOrganization:
+        return 3; // Overview, Projects, Security
+      case AssetType.azureSqlDatabase:
+        return 3; // Overview, Configuration, Security
+      case AssetType.azureContainerRegistry:
+        return 3; // Overview, Repositories, Security
+      case AssetType.azureLogicApp:
+        return 3; // Overview, Workflow, Connections
+      case AssetType.azureAutomationAccount:
+        return 3; // Overview, Runbooks, Credentials
+      case AssetType.azureServicePrincipal:
+        return 3; // Overview, Permissions, Certificates
+      case AssetType.azureManagedIdentity:
+        return 2; // Overview, Assignments
     }
   }
 
@@ -158,6 +210,153 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
           Tab(icon: Icon(Icons.info), text: 'Overview'),
           Tab(icon: Icon(Icons.wifi), text: 'Wireless'),
           Tab(icon: Icon(Icons.shield), text: 'Security'),
+        ];
+      case AssetType.restrictedEnvironment:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.lock), text: 'Restrictions'),
+        ];
+      case AssetType.securityControl:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.shield), text: 'Configuration'),
+        ];
+      // AD asset types
+      case AssetType.activeDirectoryDomain:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.domain_verification), text: 'Config'),
+          Tab(icon: Icon(Icons.account_tree), text: 'Trusts'),
+        ];
+      case AssetType.domainController:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.dns), text: 'Services'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.adUser:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.person), text: 'Properties'),
+          Tab(icon: Icon(Icons.lock), text: 'Permissions'),
+        ];
+      case AssetType.adComputer:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.computer), text: 'Properties'),
+          Tab(icon: Icon(Icons.list), text: 'Services'),
+        ];
+      case AssetType.certificateAuthority:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.badge), text: 'Templates'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.certificateTemplate:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.settings), text: 'Config'),
+        ];
+      case AssetType.sccmServer:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.settings), text: 'Config'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.smbShare:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.lock), text: 'Permissions'),
+          Tab(icon: Icon(Icons.folder), text: 'Contents'),
+        ];
+      case AssetType.kerberosTicket:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.key), text: 'Ticket'),
+        ];
+      // Azure asset types
+      case AssetType.azureTenant:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.cloud), text: 'Config'),
+          Tab(icon: Icon(Icons.people), text: 'Users'),
+        ];
+      case AssetType.azureSubscription:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.inventory), text: 'Resources'),
+          Tab(icon: Icon(Icons.security), text: 'Access'),
+        ];
+      case AssetType.azureStorageAccount:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.storage), text: 'Containers'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.azureVirtualMachine:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.computer), text: 'System'),
+          Tab(icon: Icon(Icons.extension), text: 'Extensions'),
+        ];
+      case AssetType.azureKeyVault:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.vpn_key), text: 'Secrets'),
+          Tab(icon: Icon(Icons.policy), text: 'Policies'),
+        ];
+      case AssetType.azureWebApp:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.web), text: 'Config'),
+          Tab(icon: Icon(Icons.publish), text: 'Deploy'),
+        ];
+      case AssetType.azureFunctionApp:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.functions), text: 'Functions'),
+          Tab(icon: Icon(Icons.settings), text: 'Config'),
+        ];
+      case AssetType.azureDevOpsOrganization:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.work), text: 'Projects'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.azureSqlDatabase:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.data_object), text: 'Config'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.azureContainerRegistry:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.storage), text: 'Repos'),
+          Tab(icon: Icon(Icons.security), text: 'Security'),
+        ];
+      case AssetType.azureLogicApp:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.account_tree), text: 'Workflow'),
+          Tab(icon: Icon(Icons.link), text: 'Connections'),
+        ];
+      case AssetType.azureAutomationAccount:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.auto_awesome), text: 'Runbooks'),
+          Tab(icon: Icon(Icons.key), text: 'Creds'),
+        ];
+      case AssetType.azureServicePrincipal:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.admin_panel_settings), text: 'Permissions'),
+          Tab(icon: Icon(Icons.verified_user), text: 'Certs'),
+        ];
+      case AssetType.azureManagedIdentity:
+        return const [
+          Tab(icon: Icon(Icons.info), text: 'Overview'),
+          Tab(icon: Icon(Icons.assignment), text: 'Assignments'),
         ];
     }
   }
@@ -1203,6 +1402,58 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
         return Icons.domain;
       case AssetType.wireless_network:
         return Icons.wifi;
+      case AssetType.restrictedEnvironment:
+        return Icons.lock;
+      case AssetType.securityControl:
+        return Icons.shield;
+      // AD asset types
+      case AssetType.activeDirectoryDomain:
+        return Icons.domain_verification;
+      case AssetType.domainController:
+        return Icons.dns;
+      case AssetType.adUser:
+        return Icons.person;
+      case AssetType.adComputer:
+        return Icons.computer;
+      case AssetType.certificateAuthority:
+        return Icons.verified_user;
+      case AssetType.certificateTemplate:
+        return Icons.badge;
+      case AssetType.sccmServer:
+        return Icons.settings_applications;
+      case AssetType.smbShare:
+        return Icons.folder_shared;
+      case AssetType.kerberosTicket:
+        return Icons.confirmation_number;
+      // Azure asset types
+      case AssetType.azureTenant:
+        return Icons.cloud;
+      case AssetType.azureSubscription:
+        return Icons.credit_card;
+      case AssetType.azureStorageAccount:
+        return Icons.storage;
+      case AssetType.azureVirtualMachine:
+        return Icons.computer;
+      case AssetType.azureKeyVault:
+        return Icons.vpn_key;
+      case AssetType.azureWebApp:
+        return Icons.web;
+      case AssetType.azureFunctionApp:
+        return Icons.functions;
+      case AssetType.azureDevOpsOrganization:
+        return Icons.work;
+      case AssetType.azureSqlDatabase:
+        return Icons.data_object;
+      case AssetType.azureContainerRegistry:
+        return Icons.inventory_2;
+      case AssetType.azureLogicApp:
+        return Icons.account_tree;
+      case AssetType.azureAutomationAccount:
+        return Icons.auto_awesome;
+      case AssetType.azureServicePrincipal:
+        return Icons.admin_panel_settings;
+      case AssetType.azureManagedIdentity:
+        return Icons.badge;
     }
   }
 
@@ -1222,6 +1473,58 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
         return 'Domain';
       case AssetType.wireless_network:
         return 'Wireless Network';
+      case AssetType.restrictedEnvironment:
+        return 'Restricted Environment';
+      case AssetType.securityControl:
+        return 'Security Control';
+      // AD asset types
+      case AssetType.activeDirectoryDomain:
+        return 'Active Directory Domain';
+      case AssetType.domainController:
+        return 'Domain Controller';
+      case AssetType.adUser:
+        return 'AD User';
+      case AssetType.adComputer:
+        return 'AD Computer';
+      case AssetType.certificateAuthority:
+        return 'Certificate Authority';
+      case AssetType.certificateTemplate:
+        return 'Certificate Template';
+      case AssetType.sccmServer:
+        return 'SCCM Server';
+      case AssetType.smbShare:
+        return 'SMB Share';
+      case AssetType.kerberosTicket:
+        return 'Kerberos Ticket';
+      // Azure asset types
+      case AssetType.azureTenant:
+        return 'Azure Tenant';
+      case AssetType.azureSubscription:
+        return 'Azure Subscription';
+      case AssetType.azureStorageAccount:
+        return 'Azure Storage Account';
+      case AssetType.azureVirtualMachine:
+        return 'Azure Virtual Machine';
+      case AssetType.azureKeyVault:
+        return 'Azure Key Vault';
+      case AssetType.azureWebApp:
+        return 'Azure Web App';
+      case AssetType.azureFunctionApp:
+        return 'Azure Function App';
+      case AssetType.azureDevOpsOrganization:
+        return 'Azure DevOps Organization';
+      case AssetType.azureSqlDatabase:
+        return 'Azure SQL Database';
+      case AssetType.azureContainerRegistry:
+        return 'Azure Container Registry';
+      case AssetType.azureLogicApp:
+        return 'Azure Logic App';
+      case AssetType.azureAutomationAccount:
+        return 'Azure Automation Account';
+      case AssetType.azureServicePrincipal:
+        return 'Azure Service Principal';
+      case AssetType.azureManagedIdentity:
+        return 'Azure Managed Identity';
     }
   }
 

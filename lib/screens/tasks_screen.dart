@@ -5,10 +5,10 @@ import '../providers/task_provider.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/task_item_widget.dart';
 import '../widgets/task_table_widget.dart';
-import '../widgets/task_summary_widget.dart';
 import '../widgets/task_filters_widget.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
+import '../constants/app_spacing.dart';
 import '../dialogs/add_task_dialog.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
@@ -56,7 +56,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     
     return ScreenWrapper(
       children: [
-        TaskSummaryWidget(projectId: currentProject.id, compact: true),
+        _buildTasksStatsBar(context, currentProject.id),
         SizedBox(height: CommonLayoutWidgets.sectionSpacing),
         
         ResponsiveCard(
@@ -324,4 +324,109 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       ),
     );
   }
+
+  Widget _buildTasksStatsBar(BuildContext context, String projectId) {
+    final tasksAsync = ref.watch(filteredTasksProvider(projectId));
+
+    return tasksAsync.when(
+      loading: () => Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: const Text('Error loading tasks'),
+      ),
+      data: (tasks) {
+        final stats = _calculateTaskStats(tasks);
+
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatChip('Total', stats.total, Icons.task_alt, Theme.of(context).primaryColor),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Pending', stats.pending, Icons.radio_button_unchecked, Colors.orange),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('In Progress', stats.inProgress, Icons.access_time, Colors.blue),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Completed', stats.completed, Icons.check_circle, Colors.green),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('High Priority', stats.highPriority, Icons.priority_high, Colors.red),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Overdue', stats.overdue, Icons.warning, Colors.deepOrange),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  TaskStats _calculateTaskStats(List<Task> tasks) {
+    final now = DateTime.now();
+    final pending = tasks.where((t) => t.status == TaskStatus.pending).length;
+    final inProgress = tasks.where((t) => t.status == TaskStatus.inProgress).length;
+    final completed = tasks.where((t) => t.status == TaskStatus.completed).length;
+    final highPriority = tasks.where((t) => t.priority == TaskPriority.high).length;
+    final overdue = tasks.where((t) => t.dueDate != null && t.dueDate!.isBefore(now) && t.status != TaskStatus.completed).length;
+
+    return TaskStats(
+      total: tasks.length,
+      pending: pending,
+      inProgress: inProgress,
+      completed: completed,
+      highPriority: highPriority,
+      overdue: overdue,
+    );
+  }
+}
+
+class TaskStats {
+  final int total;
+  final int pending;
+  final int inProgress;
+  final int completed;
+  final int highPriority;
+  final int overdue;
+
+  TaskStats({
+    required this.total,
+    required this.pending,
+    required this.inProgress,
+    required this.completed,
+    required this.highPriority,
+    required this.overdue,
+  });
 }

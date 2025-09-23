@@ -4,10 +4,10 @@ import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/expense_item_widget.dart';
 import '../widgets/expense_table_widget.dart';
-import '../widgets/expense_summary_widget.dart';
 import '../widgets/expense_filters_widget.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
+import '../constants/app_spacing.dart';
 import '../dialogs/add_expense_dialog.dart';
 import '../dialogs/export_dialog.dart';
 import '../services/import_export_service.dart';
@@ -60,7 +60,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     
     return ScreenWrapper(
       children: [
-        ExpenseSummaryWidget(projectId: widget.projectId, compact: true),
+        _buildExpensesStatsBar(context, widget.projectId),
         SizedBox(height: CommonLayoutWidgets.sectionSpacing),
         
         ResponsiveCard(
@@ -498,4 +498,100 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     }
   }
 
+  Widget _buildExpensesStatsBar(BuildContext context, String projectId) {
+    final expenses = ref.watch(filteredExpensesProvider(projectId));
+    final stats = _calculateExpenseStats(expenses);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildStatChip('Total', stats.total, Icons.receipt, Theme.of(context).primaryColor),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Billable', stats.billable, Icons.monetization_on, Colors.green),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Personal', stats.personal, Icons.person, Colors.blue),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Travel', stats.travel, Icons.flight, Colors.orange),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Accommodation', stats.accommodation, Icons.hotel, Colors.purple),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Food', stats.food, Icons.restaurant, Colors.red),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Equipment', stats.equipment, Icons.devices, Colors.teal),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ExpenseStats _calculateExpenseStats(List<Expense> expenses) {
+    final billable = expenses.where((e) => e.type == ExpenseType.billable).length;
+    final personal = expenses.where((e) => e.type == ExpenseType.personal).length;
+    final travel = expenses.where((e) => e.category == ExpenseCategory.travel).length;
+    final accommodation = expenses.where((e) => e.category == ExpenseCategory.accommodation).length;
+    final food = expenses.where((e) => e.category == ExpenseCategory.food).length;
+    final equipment = expenses.where((e) => e.category == ExpenseCategory.equipment).length;
+
+    return ExpenseStats(
+      total: expenses.length,
+      billable: billable,
+      personal: personal,
+      travel: travel,
+      accommodation: accommodation,
+      food: food,
+      equipment: equipment,
+    );
+  }
+}
+
+class ExpenseStats {
+  final int total;
+  final int billable;
+  final int personal;
+  final int travel;
+  final int accommodation;
+  final int food;
+  final int equipment;
+
+  ExpenseStats({
+    required this.total,
+    required this.billable,
+    required this.personal,
+    required this.travel,
+    required this.accommodation,
+    required this.food,
+    required this.equipment,
+  });
 }

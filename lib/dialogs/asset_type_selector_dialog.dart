@@ -67,6 +67,20 @@ class _AssetTypeSelectorDialogState extends State<AssetTypeSelectorDialog> {
       icon: Icons.wifi,
       examples: ['Corporate-WiFi', 'Guest Network', 'IoT SSID'],
     ),
+    AssetTypeInfo(
+      type: AssetType.restrictedEnvironment,
+      title: 'Restricted Environment',
+      description: 'Kiosks, containers, sandboxes, and restricted shells',
+      icon: Icons.shield,
+      examples: ['Citrix VDI', 'Kiosk Mode', 'Docker Container'],
+    ),
+    AssetTypeInfo(
+      type: AssetType.securityControl,
+      title: 'Security Control',
+      description: 'Security products and defensive mechanisms',
+      icon: Icons.security,
+      examples: ['Windows Defender', 'AMSI', 'Application Whitelisting'],
+    ),
   ];
 
   @override

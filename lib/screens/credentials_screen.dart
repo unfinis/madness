@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/credential.dart';
 import '../providers/credential_provider.dart';
-import '../widgets/credential_summary_widget.dart';
 import '../widgets/credential_filters_widget.dart';
 import '../widgets/credential_table_widget.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
+import '../constants/app_spacing.dart';
 import '../dialogs/add_credential_dialog.dart';
 
 class CredentialsScreen extends ConsumerStatefulWidget {
@@ -32,7 +32,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
     
     return ScreenWrapper(
       children: [
-        const CredentialSummaryWidget(compact: true),
+        _buildCredentialsStatsBar(context),
         SizedBox(height: CommonLayoutWidgets.sectionSpacing),
         
         ResponsiveCard(
@@ -390,4 +390,95 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
       ),
     );
   }
+
+  Widget _buildCredentialsStatsBar(BuildContext context) {
+    final credentials = ref.watch(filteredCredentialsProvider);
+    final stats = _calculateCredentialStats(credentials);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildStatChip('Total', stats.total, Icons.key, Theme.of(context).primaryColor),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Valid', stats.valid, Icons.check_circle, Colors.green),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Invalid', stats.invalid, Icons.cancel, Colors.red),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Untested', stats.untested, Icons.help_outline, Colors.orange),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('User Accounts', stats.userAccounts, Icons.person, Colors.blue),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Admin Accounts', stats.adminAccounts, Icons.admin_panel_settings, Colors.purple),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  CredentialStats _calculateCredentialStats(List<Credential> credentials) {
+    final valid = credentials.where((c) => c.status == CredentialStatus.valid).length;
+    final invalid = credentials.where((c) => c.status == CredentialStatus.invalid).length;
+    final untested = credentials.where((c) => c.status == CredentialStatus.untested).length;
+    final userAccounts = credentials.where((c) => c.type == CredentialType.user).length;
+    final adminAccounts = credentials.where((c) => c.type == CredentialType.admin).length;
+
+    return CredentialStats(
+      total: credentials.length,
+      valid: valid,
+      invalid: invalid,
+      untested: untested,
+      userAccounts: userAccounts,
+      adminAccounts: adminAccounts,
+    );
+  }
+}
+
+class CredentialStats {
+  final int total;
+  final int valid;
+  final int invalid;
+  final int untested;
+  final int userAccounts;
+  final int adminAccounts;
+
+  CredentialStats({
+    required this.total,
+    required this.valid,
+    required this.invalid,
+    required this.untested,
+    required this.userAccounts,
+    required this.adminAccounts,
+  });
 }

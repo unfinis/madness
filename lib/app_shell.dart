@@ -23,7 +23,6 @@ import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
 import 'screens/assets_screen_classic.dart';
 import 'screens/methodology_library_screen_classic.dart';
-import 'screens/run_dashboard_simple.dart';
 import 'screens/attack_plan_screen.dart';
 import 'screens/questionnaire_screen.dart';
 import 'dialogs/project_transfer_link_dialog.dart';
@@ -60,8 +59,6 @@ class AppShell extends ConsumerWidget {
         return const AttackPlanScreen();
       case NavigationSection.assets:
         return const AssetsScreenClassic();
-      case NavigationSection.triggerEvaluation:
-        return const RunDashboardSimple();
       case NavigationSection.history:
         return const HistoryScreen();
       case NavigationSection.findings:

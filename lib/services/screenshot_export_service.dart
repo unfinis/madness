@@ -147,6 +147,11 @@ class ScreenshotExportService {
     textPainter.paint(canvas, layer.bounds!.topLeft);
   }
   
+  // Convert blur radius to sigma for Gaussian blur
+  static double _radiusToSigma(double radius) {
+    return radius * 0.57735 + 0.5; // Approximation for better visual results
+  }
+
   static Future<void> _renderRedactionLayer(Canvas canvas, RedactionLayer layer, Paint paint) async {
     if (layer.bounds == null) return;
     
@@ -159,17 +164,19 @@ class ScreenshotExportService {
         break;
         
       case RedactionType.blur:
-        // TODO: Implement blur effect
+        // TODO: Implement actual blur effect with background image
+        // For now, we'll use a placeholder with proper opacity
         paint
-          ..color = Colors.grey.withOpacity(0.7)
+          ..color = Colors.grey.withOpacity(0.5 * layer.opacity)
           ..style = PaintingStyle.fill;
         canvas.drawRect(layer.bounds!, paint);
         break;
         
       case RedactionType.pixelate:
-        // TODO: Implement pixelation effect  
+        // TODO: Implement actual pixelation effect with background image
+        // For now, we'll use a placeholder with proper opacity
         paint
-          ..color = Colors.grey.withOpacity(0.7)
+          ..color = Colors.grey.withOpacity(0.5 * layer.opacity)
           ..style = PaintingStyle.fill;
         canvas.drawRect(layer.bounds!, paint);
         break;

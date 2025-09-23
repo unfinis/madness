@@ -148,6 +148,70 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
           'signal_strength': const PropertyValue.integer(-50),
           'encryption': const PropertyValue.string(''),
         };
+      case AssetType.restrictedEnvironment:
+        return {
+          // Environment Type
+          'environment_type': const PropertyValue.string(''),  // 'citrix_vdi', 'vmware_horizon', 'kiosk', 'container', 'sandbox'
+          'virtualization_platform': const PropertyValue.string(''),  // 'vmware', 'citrix', 'docker', 'hyper_v'
+          'container_runtime': const PropertyValue.string(''),  // 'docker', 'containerd', 'podman'
+
+          // Access Control
+          'shell_type': const PropertyValue.string(''),  // 'restricted', 'powershell_constrained', 'bash_restricted'
+          'application_whitelisting': const PropertyValue.boolean(false),
+          'user_privileges': const PropertyValue.string('standard'),  // 'admin', 'standard', 'restricted'
+          'breakout_attempted': const PropertyValue.boolean(false),
+          'breakout_successful': const PropertyValue.boolean(false),
+
+          // Environment Properties
+          'host_os': const PropertyValue.string(''),  // 'windows', 'linux'
+          'client_type': const PropertyValue.string(''),  // 'thick_client', 'web_client', 'published_app'
+          'published_applications': const PropertyValue.stringList([]),
+          'available_drives': const PropertyValue.stringList([]),
+          'network_access': const PropertyValue.string(''),  // 'none', 'limited', 'full'
+
+          // Security Controls
+          'clipboard_disabled': const PropertyValue.boolean(false),
+          'file_transfer_disabled': const PropertyValue.boolean(false),
+          'usb_access': const PropertyValue.boolean(false),
+          'printing_allowed': const PropertyValue.boolean(false),
+
+          // Discovery Results
+          'escape_techniques_available': const PropertyValue.stringList([]),
+          'privilege_escalation_paths': const PropertyValue.stringList([]),
+          'host_system_access': const PropertyValue.boolean(false),
+        };
+      case AssetType.securityControl:
+        return {
+          // Control Type
+          'control_type': const PropertyValue.string(''),  // 'antivirus', 'edr', 'amsi', 'application_control', 'firewall'
+          'product_name': const PropertyValue.string(''),  // 'Windows Defender', 'CrowdStrike', 'Carbon Black'
+          'version': const PropertyValue.string(''),
+          'enabled': const PropertyValue.boolean(true),
+
+          // Configuration
+          'real_time_protection': const PropertyValue.boolean(true),
+          'cloud_protection': const PropertyValue.boolean(false),
+          'tamper_protection': const PropertyValue.boolean(false),
+          'logging_enabled': const PropertyValue.boolean(true),
+          'quarantine_enabled': const PropertyValue.boolean(true),
+
+          // Detection Capabilities
+          'detects_powershell': const PropertyValue.boolean(false),
+          'detects_mimikatz': const PropertyValue.boolean(false),
+          'detects_lateral_movement': const PropertyValue.boolean(false),
+          'behavioral_analysis': const PropertyValue.boolean(false),
+
+          // Bypass Status
+          'bypass_attempted': const PropertyValue.boolean(false),
+          'bypass_successful': const PropertyValue.boolean(false),
+          'bypass_methods': const PropertyValue.stringList([]),
+          'evasion_techniques': const PropertyValue.stringList([]),
+
+          // Protected Assets
+          'protected_hosts': const PropertyValue.stringList([]),
+          'exclusions_discovered': const PropertyValue.stringList([]),
+          'whitelisted_paths': const PropertyValue.stringList([]),
+        };
     }
   }
 
@@ -731,6 +795,10 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
         return Icons.domain;
       case AssetType.wireless_network:
         return Icons.wifi;
+      case AssetType.restrictedEnvironment:
+        return Icons.shield;
+      case AssetType.securityControl:
+        return Icons.security;
     }
   }
 

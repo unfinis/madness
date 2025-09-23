@@ -4,12 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/contact.dart';
 import '../providers/contact_provider.dart';
 import '../providers/projects_provider.dart';
-import '../widgets/contact_summary_widget.dart';
 import '../widgets/contact_table_widget.dart';
 import '../widgets/common_state_widgets.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../dialogs/add_contact_dialog.dart';
-import '../constants/responsive_breakpoints.dart';
+import '../constants/app_spacing.dart';
 import '../widgets/contact_filters_widget.dart';
 import '../services/contacts_export_service.dart';
 
@@ -61,7 +60,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     
     return ScreenWrapper(
       children: [
-            ContactSummaryWidget(projectId: widget.projectId, compact: true),
+            _buildContactsStatsBar(context, currentProject.id),
             SizedBox(height: CommonLayoutWidgets.sectionSpacing),
             
             ResponsiveCard(
@@ -692,4 +691,107 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     }
   }
 
+  Widget _buildContactsStatsBar(BuildContext context, String projectId) {
+    final contactsAsync = ref.watch(contactProvider(projectId));
+
+    return contactsAsync.when(
+      loading: () => Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: const Text('Error loading contacts'),
+      ),
+      data: (contacts) {
+        final stats = _calculateContactStats(contacts);
+
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatChip('Total', stats.total, Icons.people_outline, Theme.of(context).primaryColor),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Emergency', stats.emergency, Icons.emergency, Colors.red),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Technical', stats.technical, Icons.engineering, Colors.blue),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Report Recipients', stats.reportRecipients, Icons.report, Colors.green),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Client Contacts', stats.clientContacts, Icons.business, Colors.orange),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Internal Team', stats.internalTeam, Icons.group, Colors.purple),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ContactStats _calculateContactStats(List<Contact> contacts) {
+    final emergency = contacts.where((c) => c.tags.contains('emergency')).length;
+    final technical = contacts.where((c) => c.tags.contains('technical')).length;
+    final reportRecipients = contacts.where((c) => c.tags.contains('reportRecipient')).length;
+    final clientContacts = contacts.where((c) => c.tags.contains('client')).length;
+    final internalTeam = contacts.where((c) => c.tags.contains('internal')).length;
+
+    return ContactStats(
+      total: contacts.length,
+      emergency: emergency,
+      technical: technical,
+      reportRecipients: reportRecipients,
+      clientContacts: clientContacts,
+      internalTeam: internalTeam,
+    );
+  }
+}
+
+class ContactStats {
+  final int total;
+  final int emergency;
+  final int technical;
+  final int reportRecipients;
+  final int clientContacts;
+  final int internalTeam;
+
+  ContactStats({
+    required this.total,
+    required this.emergency,
+    required this.technical,
+    required this.reportRecipients,
+    required this.clientContacts,
+    required this.internalTeam,
+  });
 }

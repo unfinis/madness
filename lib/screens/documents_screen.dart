@@ -64,52 +64,35 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   }
 
   Widget _buildAssetsHeader(BuildContext context, Map<String, int> summary) {
-    final theme = Theme.of(context);
-    
-    return Card(
-      child: Padding(
-        padding: AppSpacing.cardPadding,
-        child: Column(
-        children: [
-          // Summary Stats
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  summary['total'].toString(),
-                  'Total Documents',
-                ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  summary['approved'].toString(),
-                  'Signed',
-                  color: Colors.green,
-                ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  summary['drafts'].toString(),
-                  'Pending',
-                  color: Colors.orange,
-                ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  summary['confidential'].toString(),
-                  'Confidential',
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            ],
+    return Column(
+      children: [
+        // Assets-style chip summary
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatChip('Total', summary['total'] ?? 0, Icons.folder_outlined, Theme.of(context).primaryColor),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Signed', summary['approved'] ?? 0, Icons.check_circle, Colors.green),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Pending', summary['drafts'] ?? 0, Icons.pending, Colors.orange),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Confidential', summary['confidential'] ?? 0, Icons.security, Colors.red),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Authorization', summary['authorization'] ?? 0, Icons.verified_user, Colors.blue),
+                const SizedBox(width: AppSpacing.sm),
+                _buildStatChip('Technical', summary['technical'] ?? 0, Icons.engineering, Colors.purple),
+              ],
+            ),
           ),
-          AppSpacing.vGapLG,
-          // Action Buttons
-          Row(
+        ),
+        const Divider(height: 1),
+        // Action Buttons
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton.icon(
@@ -122,41 +105,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               ),
             ],
           ),
-        ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    BuildContext context,
-    String number,
-    String label, {
-    Color? color,
-  }) {
-    final theme = Theme.of(context);
-    final displayColor = color ?? theme.colorScheme.onSurface;
-
-    return Column(
-      children: [
-        Text(
-          number,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            color: displayColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        AppSpacing.vGapXS,
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
+
 
   Widget _buildFiltersSection(BuildContext context) {
     final theme = Theme.of(context);
@@ -327,7 +280,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               borderRadius: BorderRadius.circular(AppSizes.chipRadius),
             ),
             child: Text(
-              '${_getCategoryIcon(document.type)} ${document.typeDisplayName}',
+              document.typeDisplayName,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: _getCategoryColor(document.type),
                 fontWeight: FontWeight.w500,
@@ -455,20 +408,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   }
 
   String _getCategoryIcon(DocumentType type) {
-    switch (type) {
-      case DocumentType.authorisationForms:
-        return '📋';
-      case DocumentType.statementOfWork:
-        return '📊';
-      case DocumentType.presalesNotes:
-        return '📝';
-      case DocumentType.scopingDocuments:
-        return '🔍';
-      case DocumentType.technicalDocuments:
-        return '🛠️';
-      default:
-        return '📄';
-    }
+    // Icons removed for cleaner UI design
+    return '';
   }
 
   Color _getStatusColor(DocumentStatus status) {
@@ -615,7 +556,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('📤 Share "${document.name}"'),
+          title: Text('Share "${document.name}"'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -691,12 +632,12 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     items: const [
-                      DropdownMenuItem(value: DocumentType.authorisationForms, child: Text('📋 Authorisation Forms')),
-                      DropdownMenuItem(value: DocumentType.statementOfWork, child: Text('📊 Statement of Work')),
-                      DropdownMenuItem(value: DocumentType.presalesNotes, child: Text('📝 Presales Notes')),
-                      DropdownMenuItem(value: DocumentType.scopingDocuments, child: Text('🔍 Scoping Documents')),
-                      DropdownMenuItem(value: DocumentType.technicalDocuments, child: Text('🛠️ Technical Documents')),
-                      DropdownMenuItem(value: DocumentType.other, child: Text('📄 Other')),
+                      DropdownMenuItem(value: DocumentType.authorisationForms, child: Text('Authorisation Forms')),
+                      DropdownMenuItem(value: DocumentType.statementOfWork, child: Text('Statement of Work')),
+                      DropdownMenuItem(value: DocumentType.presalesNotes, child: Text('Presales Notes')),
+                      DropdownMenuItem(value: DocumentType.scopingDocuments, child: Text('Scoping Documents')),
+                      DropdownMenuItem(value: DocumentType.technicalDocuments, child: Text('Technical Documents')),
+                      DropdownMenuItem(value: DocumentType.other, child: Text('Other')),
                     ],
                     onChanged: (value) {
                       setModalState(() {
@@ -878,7 +819,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           return AlertDialog(
           title: Row(
             children: [
-              const Text('📤 Upload Document'),
+              const Text('Upload Document'),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close),
@@ -905,12 +846,12 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   items: [
-                    DropdownMenuItem(value: DocumentType.authorisationForms, child: Text('📋 Authorisation Forms')),
-                    DropdownMenuItem(value: DocumentType.statementOfWork, child: Text('📊 Statement of Work')),
-                    DropdownMenuItem(value: DocumentType.presalesNotes, child: Text('📝 Presales Notes')),
-                    DropdownMenuItem(value: DocumentType.scopingDocuments, child: Text('🔍 Scoping Documents')),
-                    DropdownMenuItem(value: DocumentType.technicalDocuments, child: Text('🛠️ Technical Documents')),
-                    DropdownMenuItem(value: DocumentType.other, child: Text('📄 Other')),
+                    DropdownMenuItem(value: DocumentType.authorisationForms, child: Text('Authorisation Forms')),
+                    DropdownMenuItem(value: DocumentType.statementOfWork, child: Text('Statement of Work')),
+                    DropdownMenuItem(value: DocumentType.presalesNotes, child: Text('Presales Notes')),
+                    DropdownMenuItem(value: DocumentType.scopingDocuments, child: Text('Scoping Documents')),
+                    DropdownMenuItem(value: DocumentType.technicalDocuments, child: Text('Technical Documents')),
+                    DropdownMenuItem(value: DocumentType.other, child: Text('Other')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -1197,6 +1138,35 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         );
       }
     }
+  }
+
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
 }

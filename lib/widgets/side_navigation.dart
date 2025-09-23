@@ -55,7 +55,6 @@ class SideNavigation extends ConsumerWidget {
             NavigationItem(label: 'Attack Plan', icon: Icons.account_tree, section: NavigationSection.methodologyDashboard),
             NavigationItem(label: 'Methodology Library', icon: Icons.library_books, section: NavigationSection.methodology),
             NavigationItem(label: 'Asset Management', icon: Icons.storage, section: NavigationSection.assets),
-            NavigationItem(label: 'Trigger Monitoring', icon: Icons.gps_fixed, section: NavigationSection.triggerEvaluation),
             NavigationItem(label: 'History', icon: Icons.history, section: NavigationSection.history),
           ],
         ),

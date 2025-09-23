@@ -452,7 +452,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       children: [
         _buildActionButton(
           context,
-          '📝 Edit Scope',
+          'Edit Scope',
           () {
             setState(() {
               _isEditingScope = true;
@@ -462,7 +462,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         _buildActionButton(
           context,
-          '👥 Team Members',
+          'Team Members',
           () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Team members coming soon')),
           ),
@@ -561,7 +561,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Row(
             children: [
               const Text(
-                '📋',
+                '',
                 style: TextStyle(fontSize: 20),
               ),
               const SizedBox(width: 8),
@@ -650,7 +650,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Row(
             children: [
               const Text(
-                '⚖️',
+                '',
                 style: TextStyle(fontSize: 20),
               ),
               const SizedBox(width: 8),
@@ -805,11 +805,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                _buildStatCard(theme, '📊', '${statistics.totalFindings}', 'Total Findings', theme.colorScheme.primary),
-                _buildStatCard(theme, '🎯', '${statistics.criticalIssues}', 'Critical Issues', Colors.red),
-                _buildStatCard(theme, '📷', '${statistics.screenshots}', 'Screenshots', theme.colorScheme.secondary),
-                _buildStatCard(theme, '🔗', '${statistics.attackChains}', 'Attack Chains', Colors.orange),
-                _buildStatCard(theme, '✅', '${(project.progress * 100).toInt()}%', 'Completion', Colors.green),
+                _buildStatCard(theme, '', '${statistics.totalFindings}', 'Total Findings', theme.colorScheme.primary),
+                _buildStatCard(theme, '', '${statistics.criticalIssues}', 'Critical Issues', Colors.red),
+                _buildStatCard(theme, '', '${statistics.screenshots}', 'Screenshots', theme.colorScheme.secondary),
+                _buildStatCard(theme, '', '${statistics.attackChains}', 'Attack Chains', Colors.orange),
+                _buildStatCard(theme, '', '${(project.progress * 100).toInt()}%', 'Completion', Colors.green),
               ],
             );
           },
@@ -822,11 +822,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
             children: [
-              _buildStatCard(theme, '📊', '0', 'Total Findings', theme.colorScheme.primary),
-              _buildStatCard(theme, '🎯', '0', 'Critical Issues', Colors.red),
-              _buildStatCard(theme, '📷', '0', 'Screenshots', theme.colorScheme.secondary),
-              _buildStatCard(theme, '🔗', '0', 'Attack Chains', Colors.orange),
-              _buildStatCard(theme, '✅', '${(project.progress * 100).toInt()}%', 'Completion', Colors.green),
+              _buildStatCard(theme, '', '0', 'Total Findings', theme.colorScheme.primary),
+              _buildStatCard(theme, '', '0', 'Critical Issues', Colors.red),
+              _buildStatCard(theme, '', '0', 'Screenshots', theme.colorScheme.secondary),
+              _buildStatCard(theme, '', '0', 'Attack Chains', Colors.orange),
+              _buildStatCard(theme, '', '${(project.progress * 100).toInt()}%', 'Completion', Colors.green),
             ],
           ),
         );

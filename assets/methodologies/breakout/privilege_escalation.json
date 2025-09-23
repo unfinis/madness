@@ -1,0 +1,196 @@
+{
+  "id": "privilege_escalation",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "Privilege Escalation Assessment",
+  "workstream": "breakout",
+  "author": "Breakout Testing Framework",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Assess privilege escalation opportunities in target environment",
+  "tags": ["privilege_escalation", "enumeration", "windows", "linux"],
+  "risk_level": "high",
+
+  "overview": {
+    "purpose": "Identify and assess privilege escalation vectors in target systems",
+    "scope": "System-level privilege escalation assessment across Windows and Linux platforms",
+    "prerequisites": [
+      "User-level access to target system",
+      "Basic system enumeration tools",
+      "Understanding of target OS architecture"
+    ],
+    "category": "Privilege Escalation"
+  },
+
+  "triggers": [
+    {
+      "name": "low_privilege_access",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "privilege_level": "user"
+        }
+      },
+      "description": "Trigger when user-level access is obtained on a system"
+    }
+  ],
+
+  "equipment": [
+    "System shell access",
+    "Enumeration scripts and tools",
+    "Privilege escalation testing utilities"
+  ],
+
+  "procedures": [
+    {
+      "id": "windows_privesc_enum",
+      "name": "Windows Privilege Escalation Enumeration",
+      "description": "Enumerate Windows system for privilege escalation opportunities",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "System enumeration may trigger EDR/AV detection",
+          "mitigation": "Use built-in Windows commands and avoid suspicious tools"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "cmd",
+          "command": "whoami /priv",
+          "description": "Check current user privileges",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "cmd",
+          "command": "net user %username%",
+          "description": "Get detailed user information",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "cmd",
+          "command": "systeminfo | findstr /B /C:\"OS Name\" /C:\"OS Version\" /C:\"System Type\"",
+          "description": "Get system information for exploit identification",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "powershell",
+          "command": "Get-Service | Where-Object {$_.Status -eq 'Running'} | Select-Object Name, StartType, ServiceType",
+          "description": "Enumerate running services",
+          "platforms": ["windows"]
+        }
+      ]
+    },
+    {
+      "id": "linux_privesc_enum",
+      "name": "Linux Privilege Escalation Enumeration",
+      "description": "Enumerate Linux system for privilege escalation opportunities",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "Enumeration commands may be logged",
+          "mitigation": "Use standard commands and avoid suspicious enumeration scripts"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "bash",
+          "command": "id && groups",
+          "description": "Check current user and group memberships",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "sudo -l",
+          "description": "Check sudo permissions",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "find / -perm -4000 -type f 2>/dev/null | head -20",
+          "description": "Find SUID binaries",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "ps aux | grep -E '^root' | head -10",
+          "description": "Check processes running as root",
+          "platforms": ["linux"]
+        }
+      ]
+    },
+    {
+      "id": "credential_hunting",
+      "name": "Credential Discovery",
+      "description": "Search for stored credentials and sensitive information",
+      "risk_level": "medium",
+      "risks": [
+        {
+          "risk": "File system searching may impact system performance",
+          "mitigation": "Limit search scope and use targeted searches"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "cmd",
+          "command": "dir /s /b C:\\*password*.txt C:\\*config*.ini 2>nul | head -10",
+          "description": "Search for configuration and password files",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "powershell",
+          "command": "Get-ChildItem -Path C:\\ -Recurse -Include *.xml,*.config,*.ini -ErrorAction SilentlyContinue | Select-String -Pattern 'password|credential' | Select-Object -First 5",
+          "description": "Search configuration files for credentials",
+          "platforms": ["windows"]
+        },
+        {
+          "tool": "bash",
+          "command": "find /home -name '.*history' -type f 2>/dev/null | head -5",
+          "description": "Find shell history files",
+          "platforms": ["linux"]
+        },
+        {
+          "tool": "bash",
+          "command": "find /etc -name '*.conf' -o -name '*.config' -type f 2>/dev/null | head -10",
+          "description": "Find configuration files",
+          "platforms": ["linux"]
+        }
+      ]
+    }
+  ],
+
+  "findings": [
+    {
+      "title": "Privilege Escalation Vectors Identified",
+      "severity": "high",
+      "description": "Multiple privilege escalation opportunities discovered",
+      "recommendation": "Implement least privilege principles and regular security patching"
+    },
+    {
+      "title": "Credential Exposure",
+      "severity": "medium",
+      "description": "Sensitive credentials found in accessible locations",
+      "recommendation": "Implement secure credential storage and access controls"
+    }
+  ],
+
+  "cleanup": [
+    {
+      "step": "Clear enumeration traces",
+      "description": "Remove evidence of privilege escalation enumeration",
+      "command": "Clear command history and temporary files"
+    }
+  ],
+
+  "troubleshooting": [
+    {
+      "issue": "Access denied errors during enumeration",
+      "solution": "Use alternative commands or paths with appropriate permissions"
+    },
+    {
+      "issue": "SUID enumeration taking too long",
+      "solution": "Limit search scope to specific directories like /usr/bin, /bin, /sbin"
+    }
+  ]
+}

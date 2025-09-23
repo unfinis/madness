@@ -192,7 +192,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                 ),
                                 AppSpacing.hGapSM,
                                 ScreenshotWidgets.filterChip(
-                                  label: '🌐 Web',
+                                  label: 'Web',
                                   value: 'web',
                                   currentValue: _filterCategory,
                                   onSelected: (value) => setState(() => _filterCategory = value),
@@ -200,7 +200,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                 ),
                                 AppSpacing.hGapSM,
                                 ScreenshotWidgets.filterChip(
-                                  label: '🔌 Network',
+                                  label: 'Network',
                                   value: 'network',
                                   currentValue: _filterCategory,
                                   onSelected: (value) => setState(() => _filterCategory = value),
@@ -216,7 +216,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                 ),
                                 AppSpacing.hGapSM,
                                 ScreenshotWidgets.filterChip(
-                                  label: '📱 Mobile',
+                                  label: 'Mobile',
                                   value: 'mobile',
                                   currentValue: _filterCategory,
                                   onSelected: (value) => setState(() => _filterCategory = value),

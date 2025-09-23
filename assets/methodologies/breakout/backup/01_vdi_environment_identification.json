@@ -1,0 +1,253 @@
+{
+  "id": "vdi_environment_identification",
+  "version": "1.0.0",
+  "template_version": "1.0",
+  "name": "VDI Environment Identification",
+  "workstream": "breakout",
+  "author": "Breakout Testing Framework",
+  "created": "2024-09-22T00:00:00Z",
+  "modified": "2024-09-22T00:00:00Z",
+  "status": "active",
+  "description": "Identify Virtual Desktop Infrastructure platform and configuration for breakout assessment",
+  "tags": ["vdi", "discovery", "environment", "breakout"],
+  "risk_level": "low",
+
+  "overview": {
+    "purpose": "Identify Virtual Desktop Infrastructure platform and configuration for breakout assessment",
+    "scope": "Discovery of VDI platform type, client capabilities, and security restrictions",
+    "prerequisites": [
+      "Active VDI session with user-level access",
+      "Basic command line access",
+      "Ability to execute system commands"
+    ],
+    "category": "Environment Detection"
+  },
+  "triggers": [
+    {
+      "name": "unknown_virtualization_platform",
+      "type": "simple",
+      "conditions": {
+        "asset_type": "host",
+        "properties": {
+          "virtualization_platform": ""
+        }
+      },
+      "description": "Trigger when host virtualization platform is unknown"
+    }
+  ],
+
+  "equipment": [
+    "VDI Client Access - Active VDI session with user-level access",
+    "PowerShell - 5.0+ for system enumeration and registry queries",
+    "Windows Registry access for VDI platform detection"
+  ],
+  "procedures": [
+    {
+      "id": "identify_vdi_platform",
+      "name": "Identify VDI Platform",
+      "description": "Detect the underlying VDI platform and client type",
+      "risk_level": "low",
+      "risks": [
+        {
+          "risk": "VDI platform identification may trigger monitoring alerts",
+          "mitigation": "Use built-in OS commands and avoid third-party tools"
+        },
+        {
+          "risk": "Registry queries may be logged by security products",
+          "mitigation": "Perform queries in small batches with delays"
+        }
+      ],
+      "commands": [
+        {
+          "tool": "powershell",
+          "command": "Get-Process | Where-Object {$_.ProcessName -match \"citrix\"} | Select-Object Name, Id, Path",
+          "description": "Check for Citrix-specific processes and services",
+          "platforms": ["windows"]
+        },
+        {
+          "id": "check_citrix_registry",
+          "name": "Check Citrix Registry Keys",
+          "description": "Examine registry for Citrix installation evidence",
+          "command": "reg query \"HKLM\\SOFTWARE\\Citrix\" /s",
+          "expectedOutput": "Citrix registry structure if installed",
+          "timeout": 30
+        },
+        {
+          "id": "check_vmware_horizon",
+          "name": "Check VMware Horizon",
+          "description": "Look for VMware Horizon client indicators",
+          "command": "Get-Process | Where-Object {$_.ProcessName -match \"vmware\"} | Select-Object Name, Id, Path",
+          "expectedOutput": "VMware processes if Horizon client present",
+          "timeout": 30
+        },
+        {
+          "id": "check_rds_session",
+          "name": "Check RDS Session Type",
+          "description": "Determine if running in RDS/Terminal Services",
+          "command": "qwinsta; query session; reg query \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\"",
+          "expectedOutput": "Session information and Terminal Server config",
+          "timeout": 30
+        },
+        {
+          "id": "check_azure_vd",
+          "name": "Check Azure Virtual Desktop",
+          "description": "Look for Azure Virtual Desktop indicators",
+          "command": "Get-Service | Where-Object {$_.Name -match \"RdAgent\"} | Select-Object Name, Status; reg query \"HKLM\\SOFTWARE\\Microsoft\\RDInfraAgent\"",
+          "expectedOutput": "Azure VD agent information if present",
+          "timeout": 30
+        },
+        {
+          "id": "check_virtualization_type",
+          "name": "Check Virtualization Type",
+          "description": "Determine if running in VM or container",
+          "command": "wmic computersystem get model; wmic bios get serialnumber; systemd-detect-virt 2>/dev/null || echo 'Not systemd'",
+          "expectedOutput": "Hardware/virtualization information",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "assess_client_capabilities",
+      "name": "Assess Client Capabilities",
+      "description": "Evaluate client redirection and access capabilities",
+      "order": 2,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "test_clipboard_access",
+          "name": "Test Clipboard Access",
+          "description": "Check if clipboard sharing is enabled",
+          "command": "echo 'Test clipboard data' | clip; powershell -c \"Get-Clipboard\"",
+          "expectedOutput": "Clipboard content if sharing enabled",
+          "timeout": 15
+        },
+        {
+          "id": "check_drive_mappings",
+          "name": "Check Drive Mappings",
+          "description": "Look for client drive redirections",
+          "command": "net use; Get-PSDrive; ls /mnt/ 2>/dev/null || dir C:\\ | findstr \"tsclient\"",
+          "expectedOutput": "List of mapped drives including client drives",
+          "timeout": 30
+        },
+        {
+          "id": "check_usb_redirection",
+          "name": "Check USB Redirection",
+          "description": "Test for USB device pass-through capability",
+          "command": "Get-WmiObject -Class Win32_USBHub | Select-Object Name, DeviceID; lsusb 2>/dev/null || echo 'No lsusb'",
+          "expectedOutput": "USB devices including redirected ones",
+          "timeout": 30
+        },
+        {
+          "id": "check_printer_redirection",
+          "name": "Check Printer Redirection",
+          "description": "Look for client printer redirection",
+          "command": "Get-Printer | Where-Object {$_.Name -match \"redirect\"} | Select-Object Name, DriverName; lpstat -p 2>/dev/null || echo 'No lpstat'",
+          "expectedOutput": "Redirected printers if present",
+          "timeout": 30
+        }
+      ]
+    },
+    {
+      "id": "enumerate_restrictions",
+      "name": "Enumerate Security Restrictions",
+      "description": "Identify security controls and restrictions in place",
+      "order": 3,
+      "riskLevel": "low",
+      "steps": [
+        {
+          "id": "check_applocker",
+          "name": "Check AppLocker Status",
+          "description": "Determine if AppLocker is enforced",
+          "command": "Get-AppLockerPolicy -Effective | Select-Object RuleCollections; reg query \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\SrpV2\"",
+          "expectedOutput": "AppLocker policy configuration",
+          "timeout": 30
+        },
+        {
+          "id": "check_execution_policy",
+          "name": "Check PowerShell Execution Policy",
+          "description": "Review PowerShell execution restrictions",
+          "command": "Get-ExecutionPolicy -List; reg query \"HKLM\\SOFTWARE\\Microsoft\\PowerShell\\1\\ShellIds\\Microsoft.PowerShell\"",
+          "expectedOutput": "PowerShell execution policy settings",
+          "timeout": 15
+        },
+        {
+          "id": "check_gpo_restrictions",
+          "name": "Check Group Policy Restrictions",
+          "description": "Identify GPO-enforced restrictions",
+          "command": "gpresult /r; reg query \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\"",
+          "expectedOutput": "Applied group policies and restrictions",
+          "timeout": 45
+        },
+        {
+          "id": "check_file_restrictions",
+          "name": "Check File System Restrictions",
+          "description": "Test file system access and restrictions",
+          "command": "icacls C:\\ /T /C | findstr \"DENY\"; ls -la / 2>/dev/null | head -20",
+          "expectedOutput": "File system permissions and access controls",
+          "timeout": 60
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk": "VDI platform identification may trigger monitoring alerts",
+      "mitigation": "Use built-in OS commands and avoid third-party tools"
+    },
+    {
+      "risk": "Registry queries may be logged by security products",
+      "mitigation": "Perform queries in small batches with delays"
+    },
+    {
+      "risk": "Process enumeration may alert EDR solutions",
+      "mitigation": "Use legitimate administrative tools where possible"
+    }
+  ],
+  "tools": [
+    {
+      "name": "PowerShell",
+      "version": "5.0+",
+      "required": true,
+      "purpose": "System enumeration and registry queries"
+    },
+    {
+      "name": "Windows Registry",
+      "version": "Any",
+      "required": true,
+      "purpose": "VDI platform detection"
+    },
+    {
+      "name": "WMI",
+      "version": "Any",
+      "required": false,
+      "purpose": "Hardware and system information"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "VDI Client Access",
+      "required": true,
+      "description": "Active VDI session with user-level access"
+    }
+  ],
+  "suggestedFindings": [
+    {
+      "title": "VDI Platform Identified",
+      "description": "Successfully identified the underlying VDI platform and configuration",
+      "severity": "informational",
+      "evidence": "Platform detection output, process lists, registry keys"
+    },
+    {
+      "title": "Client Redirection Capabilities",
+      "description": "Documented available client redirection features",
+      "severity": "informational",
+      "evidence": "Drive mappings, clipboard tests, USB enumeration"
+    },
+    {
+      "title": "Security Restrictions Enumerated",
+      "description": "Catalogued security controls and access restrictions",
+      "severity": "informational",
+      "evidence": "AppLocker policies, execution policies, GPO settings"
+    }
+  ]
+}

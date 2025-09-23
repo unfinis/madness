@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/scope.dart';
 import '../providers/scope_provider.dart';
-import '../widgets/scope_summary_widget.dart';
 import '../widgets/scope_filters_widget.dart';
 import '../widgets/scope_segment_card_widget.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
+import '../constants/app_spacing.dart';
 import '../dialogs/add_scope_segment_dialog.dart';
 import '../dialogs/scope_export_dialog.dart';
 import '../services/import_export_service.dart';
@@ -33,7 +33,7 @@ class _ScopeScreenState extends ConsumerState<ScopeScreen> {
     
     return ScreenWrapper(
       children: [
-        const ScopeSummaryWidget(compact: true),
+        _buildScopeStatsBar(context),
         SizedBox(height: CommonLayoutWidgets.sectionSpacing),
         
         ResponsiveCard(
@@ -333,4 +333,101 @@ class _ScopeScreenState extends ConsumerState<ScopeScreen> {
       }
     }
   }
+
+  Widget _buildScopeStatsBar(BuildContext context) {
+    final segments = ref.watch(filteredScopeSegmentsProvider);
+    final stats = _calculateScopeStats(segments);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildStatChip('Total', stats.total, Icons.track_changes, Theme.of(context).primaryColor),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('External', stats.external, Icons.public, Colors.teal),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Internal', stats.internal, Icons.business, Colors.blue),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Web App', stats.webapp, Icons.web, Colors.green),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Mobile', stats.mobile, Icons.phone_android, Colors.orange),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('API', stats.api, Icons.api, Colors.red),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Wireless', stats.wireless, Icons.wifi, Colors.purple),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ScopeStats _calculateScopeStats(List<ScopeSegment> segments) {
+    final external = segments.where((s) => s.type == ScopeSegmentType.external).length;
+    final internal = segments.where((s) => s.type == ScopeSegmentType.internal).length;
+    final webapp = segments.where((s) => s.type == ScopeSegmentType.webapp).length;
+    final mobile = segments.where((s) => s.type == ScopeSegmentType.mobile).length;
+    final api = segments.where((s) => s.type == ScopeSegmentType.api).length;
+    final wireless = segments.where((s) => s.type == ScopeSegmentType.wireless).length;
+
+    return ScopeStats(
+      total: segments.length,
+      external: external,
+      internal: internal,
+      webapp: webapp,
+      mobile: mobile,
+      api: api,
+      wireless: wireless,
+    );
+  }
+}
+
+class ScopeStats {
+  final int total;
+  final int external;
+  final int internal;
+  final int webapp;
+  final int mobile;
+  final int api;
+  final int wireless;
+
+  ScopeStats({
+    required this.total,
+    required this.external,
+    required this.internal,
+    required this.webapp,
+    required this.mobile,
+    required this.api,
+    required this.wireless,
+  });
 }

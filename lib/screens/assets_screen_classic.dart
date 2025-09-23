@@ -31,7 +31,39 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
       types: [
         AssetType.networkSegment,
         AssetType.host,
+      ],
+    ),
+    AssetPerspective(
+      name: 'Services',
+      icon: Icons.dns,
+      types: [
         AssetType.service,
+        AssetType.azureSqlDatabase,
+        AssetType.azureDevOpsOrganization,
+      ],
+    ),
+    AssetPerspective(
+      name: 'Web Services',
+      icon: Icons.web,
+      types: [
+        AssetType.azureWebApp,
+        AssetType.azureFunctionApp,
+        AssetType.azureLogicApp,
+        AssetType.azureContainerRegistry,
+      ],
+    ),
+    AssetPerspective(
+      name: 'Cloud Resources',
+      icon: Icons.cloud,
+      types: [
+        AssetType.azureTenant,
+        AssetType.azureSubscription,
+        AssetType.azureStorageAccount,
+        AssetType.azureVirtualMachine,
+        AssetType.azureKeyVault,
+        AssetType.azureAutomationAccount,
+        AssetType.azureServicePrincipal,
+        AssetType.azureManagedIdentity,
       ],
     ),
     AssetPerspective(
@@ -40,20 +72,37 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
       types: [
         AssetType.credential,
         AssetType.vulnerability,
+        AssetType.kerberosTicket,
       ],
     ),
     AssetPerspective(
-      name: 'Wireless',
+      name: 'Active Directory',
+      icon: Icons.domain_verification,
+      types: [
+        AssetType.activeDirectoryDomain,
+        AssetType.domainController,
+        AssetType.adUser,
+        AssetType.adComputer,
+      ],
+    ),
+    AssetPerspective(
+      name: 'PKI & Management',
+      icon: Icons.verified_user,
+      types: [
+        AssetType.certificateAuthority,
+        AssetType.certificateTemplate,
+        AssetType.sccmServer,
+        AssetType.smbShare,
+      ],
+    ),
+    AssetPerspective(
+      name: 'Wireless & Other',
       icon: Icons.wifi,
       types: [
         AssetType.wireless_network,
-      ],
-    ),
-    AssetPerspective(
-      name: 'Domain',
-      icon: Icons.domain,
-      types: [
         AssetType.domain,
+        AssetType.restrictedEnvironment,
+        AssetType.securityControl,
       ],
     ),
   ];
@@ -571,6 +620,57 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
         return 'Domain';
       case AssetType.wireless_network:
         return 'Wireless';
+      case AssetType.restrictedEnvironment:
+        return 'Restricted';
+      case AssetType.securityControl:
+        return 'Security Control';
+      case AssetType.activeDirectoryDomain:
+        return 'AD Domain';
+      case AssetType.domainController:
+        return 'Domain Controller';
+      case AssetType.adUser:
+        return 'AD User';
+      case AssetType.adComputer:
+        return 'AD Computer';
+      case AssetType.certificateAuthority:
+        return 'Certificate Authority';
+      case AssetType.certificateTemplate:
+        return 'Certificate Template';
+      case AssetType.sccmServer:
+        return 'SCCM Server';
+      case AssetType.smbShare:
+        return 'SMB Share';
+      case AssetType.kerberosTicket:
+        return 'Kerberos Ticket';
+      // Azure asset types
+      case AssetType.azureTenant:
+        return 'Azure Tenant';
+      case AssetType.azureSubscription:
+        return 'Azure Subscription';
+      case AssetType.azureStorageAccount:
+        return 'Storage Account';
+      case AssetType.azureVirtualMachine:
+        return 'Virtual Machine';
+      case AssetType.azureKeyVault:
+        return 'Key Vault';
+      case AssetType.azureWebApp:
+        return 'Web App';
+      case AssetType.azureFunctionApp:
+        return 'Function App';
+      case AssetType.azureDevOpsOrganization:
+        return 'DevOps Org';
+      case AssetType.azureSqlDatabase:
+        return 'SQL Database';
+      case AssetType.azureContainerRegistry:
+        return 'Container Registry';
+      case AssetType.azureLogicApp:
+        return 'Logic App';
+      case AssetType.azureAutomationAccount:
+        return 'Automation Account';
+      case AssetType.azureServicePrincipal:
+        return 'Service Principal';
+      case AssetType.azureManagedIdentity:
+        return 'Managed Identity';
     }
   }
 
@@ -605,6 +705,57 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
         return Icons.domain;
       case AssetType.wireless_network:
         return Icons.wifi;
+      case AssetType.restrictedEnvironment:
+        return Icons.lock;
+      case AssetType.securityControl:
+        return Icons.shield;
+      case AssetType.activeDirectoryDomain:
+        return Icons.domain_verification;
+      case AssetType.domainController:
+        return Icons.dns;
+      case AssetType.adUser:
+        return Icons.person;
+      case AssetType.adComputer:
+        return Icons.desktop_windows;
+      case AssetType.certificateAuthority:
+        return Icons.verified_user;
+      case AssetType.certificateTemplate:
+        return Icons.description;
+      case AssetType.sccmServer:
+        return Icons.settings_applications;
+      case AssetType.smbShare:
+        return Icons.folder_shared;
+      case AssetType.kerberosTicket:
+        return Icons.confirmation_number;
+      // Azure asset types
+      case AssetType.azureTenant:
+        return Icons.cloud;
+      case AssetType.azureSubscription:
+        return Icons.credit_card;
+      case AssetType.azureStorageAccount:
+        return Icons.storage;
+      case AssetType.azureVirtualMachine:
+        return Icons.computer;
+      case AssetType.azureKeyVault:
+        return Icons.vpn_key;
+      case AssetType.azureWebApp:
+        return Icons.web;
+      case AssetType.azureFunctionApp:
+        return Icons.functions;
+      case AssetType.azureDevOpsOrganization:
+        return Icons.work;
+      case AssetType.azureSqlDatabase:
+        return Icons.data_object;
+      case AssetType.azureContainerRegistry:
+        return Icons.inventory_2;
+      case AssetType.azureLogicApp:
+        return Icons.account_tree;
+      case AssetType.azureAutomationAccount:
+        return Icons.auto_awesome;
+      case AssetType.azureServicePrincipal:
+        return Icons.admin_panel_settings;
+      case AssetType.azureManagedIdentity:
+        return Icons.badge;
     }
   }
 
@@ -624,6 +775,57 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
         return Colors.purple;
       case AssetType.wireless_network:
         return Colors.amber;
+      case AssetType.restrictedEnvironment:
+        return Colors.grey;
+      case AssetType.securityControl:
+        return Colors.indigo;
+      case AssetType.activeDirectoryDomain:
+        return Colors.deepPurple;
+      case AssetType.domainController:
+        return Colors.indigo;
+      case AssetType.adUser:
+        return Colors.lightBlue;
+      case AssetType.adComputer:
+        return Colors.blue;
+      case AssetType.certificateAuthority:
+        return Colors.cyan;
+      case AssetType.certificateTemplate:
+        return Colors.teal;
+      case AssetType.sccmServer:
+        return Colors.brown;
+      case AssetType.smbShare:
+        return Colors.deepOrange;
+      case AssetType.kerberosTicket:
+        return Colors.pink;
+      // Azure asset types
+      case AssetType.azureTenant:
+        return Colors.lightBlue;
+      case AssetType.azureSubscription:
+        return Colors.blue;
+      case AssetType.azureStorageAccount:
+        return Colors.cyan;
+      case AssetType.azureVirtualMachine:
+        return Colors.deepOrange;
+      case AssetType.azureKeyVault:
+        return Colors.amber;
+      case AssetType.azureWebApp:
+        return Colors.green;
+      case AssetType.azureFunctionApp:
+        return Colors.lime;
+      case AssetType.azureDevOpsOrganization:
+        return Colors.indigo;
+      case AssetType.azureSqlDatabase:
+        return Colors.blueGrey;
+      case AssetType.azureContainerRegistry:
+        return Colors.tealAccent;
+      case AssetType.azureLogicApp:
+        return Colors.purple;
+      case AssetType.azureAutomationAccount:
+        return Colors.deepPurple;
+      case AssetType.azureServicePrincipal:
+        return Colors.brown;
+      case AssetType.azureManagedIdentity:
+        return Colors.grey;
     }
   }
 
