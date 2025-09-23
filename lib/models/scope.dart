@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum ScopeSegmentType {
   external,
   internal,
@@ -140,26 +142,26 @@ extension ScopeSegmentTypeExtension on ScopeSegmentType {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case ScopeSegmentType.external:
-        return '🌍';
+        return Icons.public;
       case ScopeSegmentType.internal:
-        return '🏢';
+        return Icons.home_work;
       case ScopeSegmentType.webapp:
-        return '🌐';
+        return Icons.web;
       case ScopeSegmentType.wireless:
-        return '📶';
+        return Icons.wifi;
       case ScopeSegmentType.mobile:
-        return '📱';
+        return Icons.phone_android;
       case ScopeSegmentType.api:
-        return '🔌';
+        return Icons.api;
       case ScopeSegmentType.cloud:
-        return '☁️';
+        return Icons.cloud;
       case ScopeSegmentType.activeDirectory:
-        return '🔐';
+        return Icons.folder_shared;
       case ScopeSegmentType.iot:
-        return '🌐';
+        return Icons.sensors;
     }
   }
 }
@@ -180,18 +182,18 @@ extension ScopeItemTypeExtension on ScopeItemType {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case ScopeItemType.url:
-        return '🔗';
+        return Icons.link;
       case ScopeItemType.domain:
-        return '🌐';
+        return Icons.domain;
       case ScopeItemType.ipRange:
-        return '📡';
+        return Icons.network_check;
       case ScopeItemType.host:
-        return '💻';
+        return Icons.computer;
       case ScopeItemType.network:
-        return '🌐';
+        return Icons.hub;
     }
   }
 }
@@ -210,16 +212,16 @@ extension ScopeSegmentStatusExtension on ScopeSegmentStatus {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case ScopeSegmentStatus.planned:
-        return '📋';
+        return Icons.schedule;
       case ScopeSegmentStatus.active:
-        return '🔄';
+        return Icons.play_circle;
       case ScopeSegmentStatus.completed:
-        return '✅';
+        return Icons.check_circle;
       case ScopeSegmentStatus.onHold:
-        return '⏸️';
+        return Icons.pause_circle;
     }
   }
 }

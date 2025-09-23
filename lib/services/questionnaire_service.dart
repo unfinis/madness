@@ -136,6 +136,12 @@ class QuestionnaireService {
       return _checkElementType(elementType, project);
     }
 
+    // Handle scope_segment conditions
+    if (condition.startsWith('scope_segment = ')) {
+      final scopeSegmentType = condition.substring('scope_segment = '.length);
+      return _checkScopeSegmentType(scopeSegmentType, project);
+    }
+
     // Handle engagement_type conditions (legacy)
     if (condition.startsWith('engagement_type = ')) {
       final engagementType = condition.substring('engagement_type = '.length);
@@ -194,6 +200,43 @@ class QuestionnaireService {
     }
 
     return false;
+  }
+
+  /// Check scope segment type
+  bool _checkScopeSegmentType(String scopeSegmentType, Project? project) {
+    if (project == null) return false;
+
+    // Map scope segment types to element types for backward compatibility
+    final segmentTypeMapping = {
+      'external': 'external_infrastructure',
+      'internal': 'internal_network',
+      'webapp': 'web_applications',
+      'mobile': 'mobile_app',
+      'wireless': 'wireless',
+      'api': 'api',
+      'cloud': 'cloud_services',
+      'activeDirectory': 'active_directory',
+      'iot': 'iot_devices',
+      'physical': 'physical',
+      'social': 'social',
+      'code': 'code_review',
+      'build': 'build_review',
+      'ai': 'ai',
+      'firewall': 'firewall',
+      'password': 'password',
+    };
+
+    // Check if the scope segment type is enabled in project assessment scope
+    final normalizedType = scopeSegmentType.toLowerCase().trim();
+
+    // Direct check for scope segment type
+    final mappedElementType = segmentTypeMapping[normalizedType];
+    if (mappedElementType != null) {
+      return project.assessmentScope[mappedElementType] == true;
+    }
+
+    // Also check direct element type matching for flexibility
+    return _checkElementType(normalizedType, project);
   }
 
   /// Check answer-based condition

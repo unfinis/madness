@@ -190,7 +190,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                           padding: const EdgeInsets.only(right: 8),
                           child: _buildFilterChip(
                             context,
-                            '${category.emoji} ${category.displayName}',
+                            category.displayName,
                             questionnaireState.selectedCategory == category,
                             () => ref.read(questionnaireNotifierProvider.notifier)
                                 .setSelectedCategory(category),
@@ -208,7 +208,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                       // Status filters
                       _buildFilterChip(
                         context,
-                        '✅ Completed',
+                        'Completed',
                         questionnaireState.selectedStatus == QuestionStatus.completed,
                         () => ref.read(questionnaireNotifierProvider.notifier)
                             .setSelectedStatus(
@@ -220,7 +220,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                       AppSpacing.hGapSM,
                       _buildFilterChip(
                         context,
-                        '🔄 In Progress',
+                        'In Progress',
                         questionnaireState.selectedStatus == QuestionStatus.inProgress,
                         () => ref.read(questionnaireNotifierProvider.notifier)
                             .setSelectedStatus(
@@ -232,7 +232,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                       AppSpacing.hGapSM,
                       _buildFilterChip(
                         context,
-                        '⏳ Pending',
+                        'Pending',
                         questionnaireState.selectedStatus == QuestionStatus.pending,
                         () => ref.read(questionnaireNotifierProvider.notifier)
                             .setSelectedStatus(
@@ -244,7 +244,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                       AppSpacing.hGapSM,
                       _buildFilterChip(
                         context,
-                        '🚫 Blockers',
+                        'Blockers',
                         questionnaireState.selectedStatus == QuestionStatus.blocked,
                         () => ref.read(questionnaireNotifierProvider.notifier)
                             .setSelectedStatus(

@@ -157,18 +157,18 @@ enum MethodologyCategory {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case MethodologyCategory.reconnaissance:
-        return '🔭';
+        return Icons.search;
       case MethodologyCategory.scanning:
-        return '🔍';
+        return Icons.radar;
       case MethodologyCategory.enumeration:
-        return '📋';
+        return Icons.list;
       case MethodologyCategory.exploitation:
-        return '💥';
+        return Icons.flash_on;
       case MethodologyCategory.postExploitation:
-        return '🚀';
+        return Icons.rocket_launch;
     }
   }
 

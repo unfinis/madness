@@ -133,20 +133,20 @@ enum ExecutionStatus {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case ExecutionStatus.pending:
-        return '⏳';
+        return Icons.schedule;
       case ExecutionStatus.inProgress:
-        return '🔄';
+        return Icons.play_circle;
       case ExecutionStatus.completed:
-        return '✅';
+        return Icons.check_circle;
       case ExecutionStatus.failed:
-        return '❌';
+        return Icons.error;
       case ExecutionStatus.suppressed:
-        return '🚫';
+        return Icons.block;
       case ExecutionStatus.blocked:
-        return '🚧';
+        return Icons.warning;
     }
   }
 
@@ -402,32 +402,32 @@ enum AssetType {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case AssetType.host:
-        return '🖥️';
+        return Icons.computer;
       case AssetType.service:
-        return '⚙️';
+        return Icons.settings;
       case AssetType.credential:
-        return '🔑';
+        return Icons.key;
       case AssetType.file:
-        return '📄';
+        return Icons.description;
       case AssetType.url:
-        return '🔗';
+        return Icons.link;
       case AssetType.vulnerability:
-        return '🚨';
+        return Icons.warning;
       case AssetType.network:
-        return '🌐';
+        return Icons.hub;
       case AssetType.user:
-        return '👤';
+        return Icons.person;
       case AssetType.domain:
-        return '🏷️';
+        return Icons.domain;
       case AssetType.database:
-        return '🗄️';
+        return Icons.storage;
       case AssetType.share:
-        return '📂';
+        return Icons.folder_shared;
       case AssetType.other:
-        return '📦';
+        return Icons.category;
     }
   }
 

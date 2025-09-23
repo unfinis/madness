@@ -93,27 +93,27 @@ class ExpenseFiltersWidget extends ConsumerWidget {
           'Category:',
           [
             _FilterChip(
-              label: '🚗 Travel',
+              label: 'Travel',
               isSelected: filters.activeFilters.contains(ExpenseFilter.travel),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.travel),
             ),
             _FilterChip(
-              label: '🏨 Accommodation',
+              label: 'Accommodation',
               isSelected: filters.activeFilters.contains(ExpenseFilter.accommodation),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.accommodation),
             ),
             _FilterChip(
-              label: '🍽️ Food',
+              label: 'Food',
               isSelected: filters.activeFilters.contains(ExpenseFilter.food),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.food),
             ),
             _FilterChip(
-              label: '💻 Equipment',
+              label: 'Equipment',
               isSelected: filters.activeFilters.contains(ExpenseFilter.equipment),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.equipment),
             ),
             _FilterChip(
-              label: '📦 Other',
+              label: 'Other',
               isSelected: filters.activeFilters.contains(ExpenseFilter.other),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.other),
             ),
@@ -173,27 +173,27 @@ class ExpenseFiltersWidget extends ConsumerWidget {
           'Category:',
           [
             _FilterChip(
-              label: '🚗 Travel',
+              label: 'Travel',
               isSelected: filters.activeFilters.contains(ExpenseFilter.travel),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.travel),
             ),
             _FilterChip(
-              label: '🏨 Accommodation',
+              label: 'Accommodation',
               isSelected: filters.activeFilters.contains(ExpenseFilter.accommodation),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.accommodation),
             ),
             _FilterChip(
-              label: '🍽️ Food',
+              label: 'Food',
               isSelected: filters.activeFilters.contains(ExpenseFilter.food),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.food),
             ),
             _FilterChip(
-              label: '💻 Equipment',
+              label: 'Equipment',
               isSelected: filters.activeFilters.contains(ExpenseFilter.equipment),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.equipment),
             ),
             _FilterChip(
-              label: '📦 Other',
+              label: 'Other',
               isSelected: filters.activeFilters.contains(ExpenseFilter.other),
               onSelected: (selected) => _toggleFilter(ref, ExpenseFilter.other),
             ),

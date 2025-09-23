@@ -204,7 +204,16 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/finding_template.dart lib/screens/finding_editor_screen.dart lib/models/finding.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/finding.dart lib/models/finding_template.dart lib/screens/finding_editor_screen.dart lib/screens/findings_screen.dart lib/dialogs/enhanced_finding_dialog.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/findings_screen.dart --fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/questionnaire_screen.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/questionnaire_screen.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/questionnaire/integrated_scope_confirmation_widget.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/questionnaire/integrated_scope_confirmation_widget.dart lib/widgets/questionnaire/question_widget_factory.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/questionnaire_service.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/scope_provider.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/scope_provider.dart lib/widgets/questionnaire/integrated_scope_confirmation_widget.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/add_task_dialog.dart lib/dialogs/add_scope_item_dialog.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/export_dialog.dart lib/dialogs/evidence_dialog.dart lib/widgets/dialogs/dialog_components.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/export_dialog.dart lib/dialogs/evidence_dialog.dart lib/widgets/dialogs/dialog_components.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/document.dart lib/models/questionnaire.dart lib/dialogs/evidence_dialog.dart lib/widgets/expense_item_widget.dart --fatal-warnings)"
     ],
     "deny": [],
     "ask": []

@@ -261,10 +261,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
   }
 
   void _showAddCredentialDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const AddCredentialDialog(),
-    );
+    showAddCredentialDialog(context);
   }
 
   void _testCredential(String credentialId, CredentialStatus status) {

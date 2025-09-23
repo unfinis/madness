@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum ExpenseType {
   billable,
   personal,
@@ -131,18 +133,18 @@ extension ExpenseCategoryExtension on ExpenseCategory {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case ExpenseCategory.travel:
-        return '🚗';
+        return Icons.flight;
       case ExpenseCategory.accommodation:
-        return '🏨';
+        return Icons.hotel;
       case ExpenseCategory.food:
-        return '🍽️';
+        return Icons.restaurant;
       case ExpenseCategory.equipment:
-        return '💻';
+        return Icons.hardware;
       case ExpenseCategory.other:
-        return '📦';
+        return Icons.more_horiz;
     }
   }
 }
@@ -161,16 +163,16 @@ extension EvidenceTypeExtension on EvidenceType {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case EvidenceType.receipt:
-        return '🧾';
+        return Icons.receipt;
       case EvidenceType.photo:
-        return '📷';
+        return Icons.photo;
       case EvidenceType.document:
-        return '📄';
+        return Icons.description;
       case EvidenceType.screenshot:
-        return '📸';
+        return Icons.screenshot;
     }
   }
 }

@@ -54,18 +54,26 @@ class AppSizes {
   static const double iconMD = 20.0;
   static const double iconLG = 24.0;
   static const double iconXL = 32.0;
+  static const double huge = 64.0;
 
   // Common widget constraints
   static const double cardMinHeight = 80.0;
   static const double cardMaxHeight = 120.0;
   static const double cardCompactMinHeight = 70.0;
   static const double cardCompactMaxHeight = 90.0;
-  
-  // Button sizes
-  static const double buttonRadius = 8.0;
+
+  // Border radius - Updated for dialog system
+  static const double buttonRadius = 12.0; // Updated from 8.0
   static const double cardRadius = 12.0;
   static const double chipRadius = 4.0;
-  static const double dialogRadius = 12.0;
+  static const double dialogRadius = 16.0; // Updated from 12.0
+  static const double fieldRadius = 12.0; // New for form fields
+
+  // Dialog specific sizes
+  static const double dialogHeaderHeight = 80.0;
+  static const double dialogActionHeight = 72.0;
+  static const double dialogMinWidth = 320.0;
+  static const double dialogMaxWidth = 1200.0;
 }
 
 extension ThemeTextStyles on TextTheme {

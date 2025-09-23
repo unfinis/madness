@@ -1,9 +1,9 @@
 enum ScreenshotCategory {
-  web('web', '🌐 Web'),
-  network('network', '🔌 Network'),
-  system('system', '💻 System'),
-  mobile('mobile', '📱 Mobile'),
-  other('other', '📁 Other');
+  web('web', 'Web'),
+  network('network', 'Network'),
+  system('system', 'System'),
+  mobile('mobile', 'Mobile'),
+  other('other', 'Other');
 
   const ScreenshotCategory(this.value, this.displayName);
 

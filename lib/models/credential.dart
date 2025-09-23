@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum CredentialType {
   user,
   admin,
@@ -112,16 +114,16 @@ extension CredentialTypeExtension on CredentialType {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case CredentialType.user:
-        return '👤';
+        return Icons.person;
       case CredentialType.admin:
-        return '👑';
+        return Icons.admin_panel_settings;
       case CredentialType.service:
-        return '⚙️';
+        return Icons.settings;
       case CredentialType.hash:
-        return '🔐';
+        return Icons.tag;
     }
   }
 }
@@ -138,14 +140,14 @@ extension CredentialStatusExtension on CredentialStatus {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case CredentialStatus.valid:
-        return '✅';
+        return Icons.check_circle;
       case CredentialStatus.invalid:
-        return '❌';
+        return Icons.cancel;
       case CredentialStatus.untested:
-        return '❓';
+        return Icons.help;
     }
   }
 }

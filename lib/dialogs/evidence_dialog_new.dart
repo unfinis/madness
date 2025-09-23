@@ -14,23 +14,21 @@ class EvidenceDialog extends StandardDialog {
     super.key,
     required this.onEvidenceAdded,
     this.existingEvidence = const [],
-  });
+  }) : super(
+          title: 'Add Evidence',
+          subtitle: 'Capture or upload evidence files for this expense',
+          icon: Icons.photo_library_rounded,
+          size: DialogSize.medium,
+        );
 
   @override
-  String get title => 'Add Evidence';
-
-  @override
-  String get subtitle => 'Capture or upload evidence files for this expense';
-
-  @override
-  IconData get headerIcon => Icons.photo_library_rounded;
-
-  @override
-  Widget buildContent(BuildContext context) {
-    return _EvidenceDialogContent(
-      onEvidenceAdded: onEvidenceAdded,
-      existingEvidence: existingEvidence,
-    );
+  List<Widget> buildContent(BuildContext context) {
+    return [
+      _EvidenceDialogContent(
+        onEvidenceAdded: onEvidenceAdded,
+        existingEvidence: existingEvidence,
+      ),
+    ];
   }
 }
 
@@ -230,9 +228,9 @@ class _EvidenceDialogContentState extends State<_EvidenceDialogContent> {
               color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             ),
-            child: Icon(
+            child: Text(
               evidence.type.icon,
-              size: 20,
+              style: const TextStyle(fontSize: 20),
             ),
           ),
           AppSpacing.hGapMD,

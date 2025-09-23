@@ -290,19 +290,19 @@ questions:
     question: "Is a network diagram available for review?"
     info: "A diagram helps understand network layout and potential attack paths"
     answer_type: yes_no
-    trigger: "element_type = internal_network OR element_type = external_infrastructure"
+    trigger: "scope_segment = internal OR scope_segment = external"
 
   - id: net_expected_services
     question: "What services should we expect to find on the infrastructure?"
     info: "Helps differentiate between expected services and potential suspicious findings"
     answer_type: free_text
-    trigger: "element_type = internal_network OR element_type = external_infrastructure"
+    trigger: "scope_segment = internal OR scope_segment = external"
 
   - id: net_segmentation_in_place
     question: "Is network segmentation in place?"
     info: "Determines if additional segmentation testing is relevant"
     answer_type: yes_no
-    trigger: "element_type = internal_network OR element_type = external_infrastructure"
+    trigger: "scope_segment = internal OR scope_segment = external"
 
   - id: net_segmentation_in_scope
     question: "Is segmentation testing in scope?"
@@ -323,7 +323,7 @@ questions:
     question: "Is Active Directory available and in scope?"
     info: "Determines if AD-specific testing is relevant"
     answer_type: yes_no
-    trigger: "element_type = internal_network"
+    trigger: "scope_segment = internal"
 
   - id: net_ad_credentials
     question: "Will standard domain user credentials be provided?"
@@ -335,7 +335,7 @@ questions:
     question: "Will privileged credentials be provided for any testing?"
     info: "Determines if privilege escalation testing will be simulated or actual"
     answer_type: yes_no
-    trigger: "element_type = internal_network OR element_type = build_review"
+    trigger: "scope_segment = internal OR scope_segment = build"
 
   - id: net_domain_count
     question: "How many domains are in the environment and are there trust relationships?"
@@ -347,7 +347,7 @@ questions:
     question: "Are any Network Access Control solutions in place?"
     info: "Identifies additional access controls that might affect testing"
     answer_type: yes_no
-    trigger: "engagement_type = Network Internal OR engagement_type = Wireless Assessment"
+    trigger: "scope_segment = internal OR scope_segment = wireless"
 
   - id: net_nac_bypass
     question: "How will access be granted to bypass these for testing?"
@@ -359,7 +359,7 @@ questions:
     question: "Are there any OT/SCADA systems on or connected to the network?"
     info: "Identifies high-risk systems requiring special handling"
     answer_type: yes_no
-    trigger: "engagement_type = Network Internal OR engagement_type = Network External"
+    trigger: "scope_segment = internal OR scope_segment = external"
 
   - id: net_ot_in_scope
     question: "Are these OT/SCADA systems in scope?"
@@ -378,13 +378,13 @@ questions:
     question: "What is the purpose and core functionality of the application?"
     info: "Provides context for testing and risk assessment"
     answer_type: free_text
-    trigger: "element_type = web_applications"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_tech_stack
     question: "What is the development framework/technology stack?"
     info: "Helps tailor testing to specific technologies and vulnerabilities"
     answer_type: free_text
-    trigger: "element_type = web_applications"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_auth_mechanism
     question: "What authentication mechanisms are used?"
@@ -396,7 +396,7 @@ questions:
       - "OAuth"
       - "MFA"
       - "Other (please specify)"
-    trigger: "element_type = web_applications"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_environment
     question: "Is testing being performed in production, staging, or development?"
@@ -406,7 +406,7 @@ questions:
       - "Production"
       - "Staging"
       - "Development"
-    trigger: "engagement_type = Web Application OR engagement_type = API Testing"
+    trigger: "scope_segment = webapp OR scope_segment = api"
 
   - id: web_app_real_users
     question: "Will testing affect real users or systems?"
@@ -418,49 +418,49 @@ questions:
     question: "What user roles exist in the application?"
     info: "Helps ensure testing covers all privilege levels and access controls"
     answer_type: free_text
-    trigger: "engagement_type = Web Application"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_accounts
     question: "Will accounts for each role be provided?"
     info: "Determines if role-based access control testing is feasible"
     answer_type: yes_no
-    trigger: "engagement_type = Web Application"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_registration
     question: "Is registration functionality in scope?"
     info: "Determines if account creation testing is relevant"
     answer_type: yes_no
-    trigger: "engagement_type = Web Application"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_api_docs
     question: "Is API documentation available?"
     info: "Helps understand application backend functioning"
     answer_type: yes_no
-    trigger: "engagement_type = Web Application OR engagement_type = API Testing"
+    trigger: "scope_segment = webapp OR scope_segment = api"
 
   - id: web_app_file_upload
     question: "Does the application include file upload functionality?"
     info: "File upload features often present security vulnerabilities"
     answer_type: yes_no
-    trigger: "engagement_type = Web Application"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_payment
     question: "Does the application include payment processing components?"
     info: "Payment systems require additional security considerations"
     answer_type: yes_no
-    trigger: "engagement_type = Web Application"
+    trigger: "scope_segment = webapp"
 
   - id: web_app_external_integration
     question: "Does the application integrate with external systems?"
     info: "Integration points often present security vulnerabilities"
     answer_type: yes_no
-    trigger: "engagement_type = Web Application OR engagement_type = API Testing"
+    trigger: "scope_segment = webapp OR scope_segment = api"
 
   - id: web_app_test_data
     question: "Are there any concerns with creating test data?"
     info: "Identifies limitations on data manipulation during testing"
     answer_type: free_text
-    trigger: "engagement_type = Web Application OR engagement_type = API Testing"
+    trigger: "scope_segment = webapp OR scope_segment = api"
 
   # Mobile Application Testing Questions
   - id: mobile_platform
@@ -472,13 +472,13 @@ questions:
       - "iOS"
       - "Both"
       - "Other (please specify)"
-    trigger: "element_type = mobile_app"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_min_os
     question: "What are the minimum supported OS versions?"
     info: "Helps set up appropriate testing environments"
     answer_type: free_text
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_distribution
     question: "Is the app publicly available or internal distribution?"
@@ -488,56 +488,56 @@ questions:
       - "Public app store"
       - "Internal distribution"
       - "Both"
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_app_provision
     question: "Will the app be provided as an APK/IPA file?"
     info: "Determines how the app will be acquired for testing"
     answer_type: yes_no
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_jailbreak
     question: "Is testing on jailbroken/rooted devices permitted?"
     info: "Affects depth of testing possible for the mobile app"
     answer_type: yes_no
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_backend_api
     question: "Is backend API testing in scope?"
     info: "Determines if testing should include mobile app's server communications"
     answer_type: yes_no
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_test_accounts
     question: "Will test accounts be provided for different permission levels?"
     info: "Necessary for testing role-based access controls"
     answer_type: yes_no
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_biometric
     question: "Does the app use biometric authentication?"
     info: "Biometric authentication requires specific testing approaches"
     answer_type: yes_no
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   - id: mobile_local_storage
     question: "Does the app store sensitive data locally?"
     info: "Local storage of sensitive data presents specific security concerns"
     answer_type: yes_no
-    trigger: "engagement_type = Mobile Application"
+    trigger: "scope_segment = mobile"
 
   # Wireless Assessment Questions
   - id: wifi_network_count
     question: "How many wireless networks are in scope?"
     info: "Determines scale of wireless testing required"
     answer_type: number
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_ssids
     question: "What are the SSIDs for all in-scope networks?"
     info: "Identifies specific networks to be tested"
     answer_type: free_text
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_auth_types
     question: "What authentication types are in place for each network?"
@@ -549,44 +549,44 @@ questions:
       - "WPA3"
       - "Open (no authentication)"
       - "Other (please specify)"
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_segmentation
     question: "Is network segmentation testing included for wireless networks?"
     info: "Determines if testing should include attempts to bypass wireless network isolation"
     answer_type: yes_no
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_device_spoofing
     question: "Is device spoofing in scope for wireless testing?"
     info: "Determines if MAC-based controls should be tested"
     answer_type: yes_no
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_rogue_ap
     question: "Is rogue AP detection testing in scope?"
     info: "Determines if testing should include setting up unauthorized access points"
     answer_type: yes_no
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_physical_access
     question: "Will physical access to premises be arranged for wireless testing?"
     info: "On-site access is typically required for effective wireless testing"
     answer_type: yes_no
-    trigger: "engagement_type = Wireless Assessment"
+    trigger: "scope_segment = wireless"
 
   - id: wifi_bluetooth
     question: "Are Bluetooth devices in scope for testing?"
     info: "Determines if Bluetooth-specific vulnerabilities should be assessed"
     answer_type: yes_no
-    trigger: "engagement_type = Wireless Assessment OR engagement_type = IoT"
+    trigger: "scope_segment = wireless OR scope_segment = iot"
 
   # Physical Assessment Questions
   - id: physical_locations
     question: "What are the addresses of all locations in scope?"
     info: "Identifies specific physical locations to be tested"
     answer_type: free_text
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_facility_type
     question: "What types of facilities are included? (Office, Data center, etc.)"
@@ -598,13 +598,13 @@ questions:
       - "Manufacturing facility"
       - "Retail location"
       - "Other (please specify)"
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_hours
     question: "What are the hours of operation for each facility?"
     info: "Determines timing for testing activities"
     answer_type: free_text
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_guards
     question: "Is there security guard presence at the facilities? If so, what hours?"
@@ -615,86 +615,86 @@ questions:
       - "Business hours only"
       - "No guards"
       - "Other (please specify)"
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_social_engineering
     question: "Is social engineering permitted during physical testing? (Tailgating, impersonation)"
     info: "Determines if human-focused security bypasses are in scope"
     answer_type: yes_no
-    trigger: "engagement_type = Physical Assessment OR engagement_type = Social Engineering"
+    trigger: "scope_segment = physical OR scope_segment = social"
 
   - id: physical_lockpicking
     question: "Are lockpicking/bypass techniques permitted?"
     info: "Determines if physical security mechanisms can be tested"
     answer_type: yes_no
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_dumpster
     question: "Is dumpster diving permitted?"
     info: "Determines if waste disposal security can be tested"
     answer_type: yes_no
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_afterhours
     question: "Is after-hours testing permitted?"
     info: "After-hours testing may reveal different security postures"
     answer_type: yes_no
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_safety_concerns
     question: "Are there dogs or armed guards on premises?"
     info: "Critical safety information for testing personnel"
     answer_type: yes_no
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_hazards
     question: "Are there any hazardous areas that should be avoided?"
     info: "Identifies areas that may present safety risks to testers"
     answer_type: free_text
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   - id: physical_facility_maps
     question: "Will facility maps be provided?"
     info: "Maps can help plan physical testing activities"
     answer_type: yes_no
-    trigger: "engagement_type = Physical Assessment"
+    trigger: "scope_segment = physical"
 
   # Social Engineering Questions
   - id: social_phishing
     question: "Are phishing campaigns permitted?"
     info: "Determines if email-based social engineering is in scope"
     answer_type: yes_no
-    trigger: "engagement_type = Social Engineering"
+    trigger: "scope_segment = social"
 
   - id: social_vishing
     question: "Are voice calls (vishing) permitted?"
     info: "Determines if telephone-based social engineering is in scope"
     answer_type: yes_no
-    trigger: "engagement_type = Social Engineering"
+    trigger: "scope_segment = social"
 
   - id: social_target_count
     question: "How many targets should be included in the campaign?"
     info: "Determines scale of social engineering testing"
     answer_type: number
-    trigger: "engagement_type = Social Engineering AND (social_phishing = yes OR social_vishing = yes)"
+    trigger: "scope_segment = social AND (social_phishing = yes OR social_vishing = yes)"
 
   - id: social_target_info
     question: "Will target information (names, emails, phones) be provided?"
     info: "Determines if target reconnaissance is part of the testing"
     answer_type: yes_no
-    trigger: "engagement_type = Social Engineering"
+    trigger: "scope_segment = social"
 
   - id: social_scenarios
     question: "Are there approved phishing scenarios/themes?"
     info: "Helps ensure scenarios are appropriate for the organization"
     answer_type: free_text
-    trigger: "engagement_type = Social Engineering AND social_phishing = yes"
+    trigger: "scope_segment = social AND social_phishing = yes"
 
   - id: social_current_events
     question: "Are there any recent/current company events we should leverage or avoid?"
     info: "Helps craft realistic scenarios while avoiding sensitive areas"
     answer_type: free_text
-    trigger: "engagement_type = Social Engineering"
+    trigger: "scope_segment = social"
 
   - id: social_landing_page
     question: "What should the phishing landing page functionality include?"
@@ -705,26 +705,26 @@ questions:
       - "Simulated malware"
       - "Awareness training"
       - "Other (please specify)"
-    trigger: "engagement_type = Social Engineering AND social_phishing = yes"
+    trigger: "scope_segment = social AND social_phishing = yes"
 
   # Code/Build Review Questions
   - id: code_languages
     question: "What programming languages and frameworks are used?"
     info: "Helps ensure proper expertise is applied to the review"
     answer_type: free_text
-    trigger: "engagement_type = Code Review OR engagement_type = Build Review"
+    trigger: "scope_segment = code OR scope_segment = build"
 
   - id: code_size
     question: "What is the approximate codebase size?"
     info: "Helps scope the effort required for review"
     answer_type: free_text
-    trigger: "engagement_type = Code Review"
+    trigger: "scope_segment = code"
 
   - id: code_build_files
     question: "Are build files/configurations in scope?"
     info: "Determines if build process security is part of the review"
     answer_type: yes_no
-    trigger: "engagement_type = Code Review OR engagement_type = Build Review"
+    trigger: "scope_segment = code OR scope_segment = build"
 
   - id: code_access_method
     question: "How will code be provided? (zip/archive, version control, etc.)"
@@ -735,19 +735,19 @@ questions:
       - "Access to version control"
       - "Development environment"
       - "Other (please specify)"
-    trigger: "engagement_type = Code Review OR engagement_type = Build Review"
+    trigger: "scope_segment = code OR scope_segment = build"
 
   - id: code_privileged_accounts
     question: "Have privileged accounts been provided for testing?"
     info: "Needed for build/deployment process testing"
     answer_type: yes_no
-    trigger: "engagement_type = Build Review"
+    trigger: "scope_segment = build"
 
   - id: code_architecture_docs
     question: "Is architectural documentation available?"
     info: "Documentation helps understand the system design and security controls"
     answer_type: yes_no
-    trigger: "engagement_type = Code Review OR engagement_type = Build Review"
+    trigger: "scope_segment = code OR scope_segment = build"
 
   # API Testing Questions
   - id: api_type
@@ -760,7 +760,7 @@ questions:
       - "GraphQL"
       - "gRPC"
       - "Other (please specify)"
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   - id: api_auth
     question: "What authentication mechanisms are used? (OAuth, API keys, JWT, etc.)"
@@ -772,25 +772,25 @@ questions:
       - "OAuth"
       - "JWT"
       - "Other (please specify)"
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   - id: api_rate_limiting
     question: "Is rate limiting in place for the API?"
     info: "Affects testing approach for API abuse cases"
     answer_type: yes_no
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   - id: api_documentation
     question: "Is API documentation available?"
     info: "Documentation helps understand expected API behavior"
     answer_type: yes_no
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   - id: api_swagger
     question: "Are Swagger/OpenAPI specifications available?"
     info: "Formal API specifications enable more thorough testing"
     answer_type: yes_no
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   - id: api_environment
     question: "Is testing against production, staging, or development?"
@@ -800,20 +800,20 @@ questions:
       - "Production"
       - "Staging"
       - "Development"
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   - id: api_consumers
     question: "What systems consume this API?"
     info: "Helps understand the impact and usage of the API"
     answer_type: free_text
-    trigger: "engagement_type = API Testing"
+    trigger: "scope_segment = api"
 
   # IoT Testing Questions
   - id: iot_device_types
     question: "What device types and models are in scope?"
     info: "Identifies specific devices to be tested"
     answer_type: free_text
-    trigger: "engagement_type = IoT"
+    trigger: "scope_segment = iot"
 
   - id: iot_protocols
     question: "What communication protocols are used by the devices?"
@@ -826,13 +826,13 @@ questions:
       - "Z-Wave"
       - "LoRaWAN"
       - "Other (please specify)"
-    trigger: "engagement_type = IoT"
+    trigger: "scope_segment = iot"
 
   - id: iot_firmware
     question: "Are operating system/firmware details available?"
     info: "Firmware information helps target known vulnerabilities"
     answer_type: yes_no
-    trigger: "engagement_type = IoT"
+    trigger: "scope_segment = iot"
 
   - id: iot_device_provision
     question: "Will devices be provided or will testing be on-site?"
@@ -842,19 +842,19 @@ questions:
       - "Devices provided to testers"
       - "On-site testing only"
       - "Both"
-    trigger: "engagement_type = IoT"
+    trigger: "scope_segment = iot"
 
   - id: iot_hardware_testing
     question: "Is hardware testing (physical device access) in scope?"
     info: "Determines if hardware-level vulnerabilities can be assessed"
     answer_type: yes_no
-    trigger: "engagement_type = IoT"
+    trigger: "scope_segment = iot"
 
   - id: iot_backend
     question: "Is cloud backend testing in scope?"
     info: "IoT devices often have cloud components with security implications"
     answer_type: yes_no
-    trigger: "engagement_type = IoT"
+    trigger: "scope_segment = iot"
 
   # AI Testing Questions
   - id: ai_system_type
@@ -866,7 +866,7 @@ questions:
       - "Large Language Model (LLM)"
       - "Computer vision system"
       - "Other (please specify)"
-    trigger: "engagement_type = AI"
+    trigger: "scope_segment = ai"
 
   - id: ai_deployment
     question: "How is the AI system deployed?"
@@ -877,25 +877,25 @@ questions:
       - "Embedded in application"
       - "On-premise system"
       - "Other (please specify)"
-    trigger: "engagement_type = AI"
+    trigger: "scope_segment = ai"
 
   - id: ai_prompt_injection
     question: "Is prompt injection testing in scope?"
     info: "Tests for manipulating AI through carefully crafted inputs"
     answer_type: yes_no
-    trigger: "engagement_type = AI"
+    trigger: "scope_segment = ai"
 
   - id: ai_data_extraction
     question: "Are data extraction attempts in scope?"
     info: "Tests for extracting training data or sensitive information"
     answer_type: yes_no
-    trigger: "engagement_type = AI"
+    trigger: "scope_segment = ai"
 
   - id: ai_model_evasion
     question: "Is model evasion testing in scope?"
     info: "Tests for bypassing AI content filters or controls"
     answer_type: yes_no
-    trigger: "engagement_type = AI"
+    trigger: "scope_segment = ai"
 
   - id: ai_access_method
     question: "How will access to the AI system be provided?"
@@ -906,44 +906,44 @@ questions:
       - "Application front-end only"
       - "Model weights/architecture access"
       - "Other (please specify)"
-    trigger: "engagement_type = AI"
+    trigger: "scope_segment = ai"
 
   # Firewall Testing Questions
   - id: firewall_vendor
     question: "What firewall vendor and model is being tested?"
     info: "Helps target testing to specific firewall types"
     answer_type: free_text
-    trigger: "engagement_type = Firewall"
+    trigger: "scope_segment = firewall"
 
   - id: firewall_nextgen
     question: "Is this a next-gen firewall with additional capabilities?"
     info: "Next-gen firewalls have additional features requiring testing"
     answer_type: yes_no
-    trigger: "engagement_type = Firewall"
+    trigger: "scope_segment = firewall"
 
   - id: firewall_rule_review
     question: "Is rule review in scope?"
     info: "Determines if firewall rule assessment is part of testing"
     answer_type: yes_no
-    trigger: "engagement_type = Firewall"
+    trigger: "scope_segment = firewall"
 
   - id: firewall_config_assessment
     question: "Is configuration assessment in scope?"
     info: "Determines if firewall configuration will be reviewed"
     answer_type: yes_no
-    trigger: "engagement_type = Firewall"
+    trigger: "scope_segment = firewall"
 
   - id: firewall_bypass
     question: "Is bypass testing in scope?"
     info: "Determines if active attempts to bypass the firewall are allowed"
     answer_type: yes_no
-    trigger: "engagement_type = Firewall"
+    trigger: "scope_segment = firewall"
 
   - id: firewall_access
     question: "Will read-only config access be provided?"
     info: "Necessary for thorough firewall configuration review"
     answer_type: yes_no
-    trigger: "engagement_type = Firewall"
+    trigger: "scope_segment = firewall"
 
   # Password Audit Questions
   - id: password_scope
@@ -954,37 +954,37 @@ questions:
       - "Active Directory passwords"
       - "Application passwords"
       - "Other (please specify)"
-    trigger: "engagement_type = Password Audit"
+    trigger: "scope_segment = password"
 
   - id: password_hash_format
     question: "What hash formats will be available for testing?"
     info: "Different hash formats require different cracking approaches"
     answer_type: free_text
-    trigger: "engagement_type = Password Audit"
+    trigger: "scope_segment = password"
 
   - id: password_online_testing
     question: "Is online password testing permitted (e.g., password spraying)?"
     info: "Determines if active authentication attempts are allowed"
     answer_type: yes_no
-    trigger: "engagement_type = Password Audit"
+    trigger: "scope_segment = password"
 
   - id: password_max_attempts
     question: "What is the maximum number of attempts permitted for online testing?"
     info: "Helps avoid account lockouts during testing"
     answer_type: number
-    trigger: "engagement_type = Password Audit AND password_online_testing = yes"
+    trigger: "scope_segment = password AND password_online_testing = yes"
 
   - id: password_policy
     question: "What are the current password policy details?"
     info: "Policy details help focus password cracking efforts"
     answer_type: free_text
-    trigger: "engagement_type = Password Audit"
+    trigger: "scope_segment = password"
 
   - id: password_lockout
     question: "What are the account lockout thresholds?"
     info: "Critical to avoid disruption during testing"
     answer_type: free_text
-    trigger: "engagement_type = Password Audit"
+    trigger: "scope_segment = password"
 
   # Final Questions (All Engagement Types)
   - id: final_additional_concerns

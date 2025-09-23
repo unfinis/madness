@@ -254,7 +254,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
                 value: type,
                 child: Row(
                   children: [
-                    Text(type.icon, style: const TextStyle(fontSize: 16)),
+                    Icon(type.icon, size: 16),
                     const SizedBox(width: 8),
                     Text(type.displayName),
                   ],
@@ -303,7 +303,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
                 value: status,
                 child: Row(
                   children: [
-                    Text(status.icon, style: const TextStyle(fontSize: 16)),
+                    Icon(status.icon, size: 16),
                     const SizedBox(width: 8),
                     Text(status.displayName),
                   ],

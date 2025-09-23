@@ -499,9 +499,9 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
             border: const OutlineInputBorder(),
           ),
           items: const [
-            DropdownMenuItem(value: null, child: Text('❓ Unknown')),
-            DropdownMenuItem(value: 'enabled', child: Text('✅ Enabled')),
-            DropdownMenuItem(value: 'disabled', child: Text('❌ Disabled')),
+            DropdownMenuItem(value: null, child: Text('Unknown')),
+            DropdownMenuItem(value: 'enabled', child: Text('Enabled')),
+            DropdownMenuItem(value: 'disabled', child: Text('Disabled')),
           ],
           onChanged: isViewMode ? null : onChanged,
         ),
@@ -919,10 +919,10 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'blocked', child: Text('🚫 Blocked')),
-                      DropdownMenuItem(value: 'limited', child: Text('⚠️ Limited/Quarantine')),
-                      DropdownMenuItem(value: 'partial', child: Text('🔶 Partial Access')),
-                      DropdownMenuItem(value: 'full', child: Text('✅ Full Access')),
+                      DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
+                      DropdownMenuItem(value: 'limited', child: Text('Limited/Quarantine')),
+                      DropdownMenuItem(value: 'partial', child: Text('Partial Access')),
+                      DropdownMenuItem(value: 'full', child: Text('Full Access')),
                     ],
                     onChanged: isViewMode ? null : (value) {
                       setState(() {
@@ -1097,9 +1097,9 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                           border: OutlineInputBorder(),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'windows', child: Text('🪟 Windows')),
-                          DropdownMenuItem(value: 'linux', child: Text('🐧 Linux')),
-                          DropdownMenuItem(value: 'macos', child: Text('🍎 macOS')),
+                          DropdownMenuItem(value: 'windows', child: Text('Windows')),
+                          DropdownMenuItem(value: 'linux', child: Text('Linux')),
+                          DropdownMenuItem(value: 'macos', child: Text('macOS')),
                           DropdownMenuItem(value: 'unix', child: Text('Unix')),
                           DropdownMenuItem(value: 'other', child: Text('Other')),
                         ],
@@ -1119,10 +1119,10 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                           border: OutlineInputBorder(),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'none', child: Text('🚫 No Access')),
-                          DropdownMenuItem(value: 'user', child: Text('👤 User Level')),
-                          DropdownMenuItem(value: 'admin', child: Text('👑 Administrator')),
-                          DropdownMenuItem(value: 'system', child: Text('⚙️ System Level')),
+                          DropdownMenuItem(value: 'none', child: Text('No Access')),
+                          DropdownMenuItem(value: 'user', child: Text('User Level')),
+                          DropdownMenuItem(value: 'admin', child: Text('Administrator')),
+                          DropdownMenuItem(value: 'system', child: Text('System Level')),
                         ],
                         onChanged: isViewMode ? null : (value) {
                           setState(() {

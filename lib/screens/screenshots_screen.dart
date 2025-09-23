@@ -208,7 +208,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                 ),
                                 AppSpacing.hGapSM,
                                 ScreenshotWidgets.filterChip(
-                                  label: '💻 System',
+                                  label: 'System',
                                   value: 'system',
                                   currentValue: _filterCategory,
                                   onSelected: (value) => setState(() => _filterCategory = value),
@@ -224,7 +224,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                 ),
                                 AppSpacing.hGapSM,
                                 ScreenshotWidgets.filterChip(
-                                  label: '📁 Other',
+                                  label: 'Other',
                                   value: 'other',
                                   currentValue: _filterCategory,
                                   onSelected: (value) => setState(() => _filterCategory = value),

@@ -54,7 +54,7 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(widget.segment.type.icon, style: const TextStyle(fontSize: 12)),
+                    Icon(widget.segment.type.icon, size: 16, color: typeColor),
                     const SizedBox(width: 4),
                     Text(
                       widget.segment.type.displayName,
@@ -78,7 +78,7 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(widget.segment.status.icon, style: const TextStyle(fontSize: 12)),
+                    Icon(widget.segment.status.icon, size: 16, color: statusColor),
                     const SizedBox(width: 4),
                     Text(
                       widget.segment.status.displayName,
@@ -300,7 +300,7 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(item.type.icon, style: const TextStyle(fontSize: 12)),
+                Icon(item.type.icon, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   item.type.displayName,

@@ -254,14 +254,14 @@ class CommandGenerator {
       for (final indicator in expected.successIndicators) {
         if (output.contains(indicator)) {
           success = true;
-          messages.add('✓ ${expected.type}: Success indicator found - $indicator');
+          messages.add('[SUCCESS] ${expected.type}: Success indicator found - $indicator');
         }
       }
 
       for (final indicator in expected.failureIndicators) {
         if (output.contains(indicator)) {
           failure = true;
-          messages.add('✗ ${expected.type}: Failure indicator found - $indicator');
+          messages.add('[FAILURE] ${expected.type}: Failure indicator found - $indicator');
         }
       }
 

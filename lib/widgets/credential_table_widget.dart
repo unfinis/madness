@@ -101,7 +101,7 @@ class CredentialTableWidget extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(credential.type.icon, style: const TextStyle(fontSize: 12)),
+                Icon(credential.type.icon, size: 16, color: _getTypeColor(credential.type)),
                 const SizedBox(width: 4),
                 Text(
                   credential.type.displayName,
@@ -171,7 +171,7 @@ class CredentialTableWidget extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(credential.status.icon, style: const TextStyle(fontSize: 12)),
+                Icon(credential.status.icon, size: 16, color: _getStatusColor(credential.status)),
                 const SizedBox(width: 4),
                 Text(
                   credential.status.displayName,

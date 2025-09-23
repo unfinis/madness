@@ -111,9 +111,10 @@ class ExpenseItemWidget extends ConsumerWidget {
               color: _getCategoryColor(context).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
+            child: Icon(
               expense.category.icon,
-              style: const TextStyle(fontSize: 20),
+              size: 20,
+              color: _getCategoryColor(context),
             ),
           ),
           const SizedBox(width: 12),
@@ -186,9 +187,10 @@ class ExpenseItemWidget extends ConsumerWidget {
                   color: _getCategoryColor(context).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
+                child: Icon(
                   expense.category.icon,
-                  style: const TextStyle(fontSize: 16),
+                  size: 16,
+                  color: _getCategoryColor(context),
                 ),
               ),
               const SizedBox(width: 10),

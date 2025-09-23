@@ -91,17 +91,17 @@ class ScopeFiltersWidget extends ConsumerWidget {
           'Type:',
           [
             _FilterChip(
-              label: '🌍 External',
+              label: 'External',
               isSelected: filters.activeFilters.contains(ScopeFilter.external),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.external),
             ),
             _FilterChip(
-              label: '🏢 Internal',
+              label: 'Internal',
               isSelected: filters.activeFilters.contains(ScopeFilter.internal),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.internal),
             ),
             _FilterChip(
-              label: '🌐 Web App',
+              label: 'Web App',
               isSelected: filters.activeFilters.contains(ScopeFilter.webapp),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.webapp),
             ),
@@ -113,12 +113,12 @@ class ScopeFiltersWidget extends ConsumerWidget {
           'Status:',
           [
             _FilterChip(
-              label: '✅ Completed',
+              label: 'Completed',
               isSelected: filters.activeFilters.contains(ScopeFilter.completed),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.completed),
             ),
             _FilterChip(
-              label: '⏸️ On Hold',
+              label: 'On Hold',
               isSelected: filters.activeFilters.contains(ScopeFilter.onHold),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.onHold),
             ),
@@ -161,17 +161,17 @@ class ScopeFiltersWidget extends ConsumerWidget {
           'Type:',
           [
             _FilterChip(
-              label: '🌍 External',
+              label: 'External',
               isSelected: filters.activeFilters.contains(ScopeFilter.external),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.external),
             ),
             _FilterChip(
-              label: '🏢 Internal',
+              label: 'Internal',
               isSelected: filters.activeFilters.contains(ScopeFilter.internal),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.internal),
             ),
             _FilterChip(
-              label: '🌐 Web App',
+              label: 'Web App',
               isSelected: filters.activeFilters.contains(ScopeFilter.webapp),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.webapp),
             ),
@@ -184,12 +184,12 @@ class ScopeFiltersWidget extends ConsumerWidget {
           'Status:',
           [
             _FilterChip(
-              label: '✅ Completed',
+              label: 'Completed',
               isSelected: filters.activeFilters.contains(ScopeFilter.completed),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.completed),
             ),
             _FilterChip(
-              label: '⏸️ On Hold',
+              label: 'On Hold',
               isSelected: filters.activeFilters.contains(ScopeFilter.onHold),
               onSelected: (selected) => _toggleFilter(ref, ScopeFilter.onHold),
             ),

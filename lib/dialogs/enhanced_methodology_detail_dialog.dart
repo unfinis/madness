@@ -399,28 +399,22 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
 
   Widget _buildDifficultyBadge(String difficulty) {
     Color color;
-    String emoji;
 
     switch (difficulty.toLowerCase()) {
       case 'beginner':
         color = Colors.green;
-        emoji = '🟢';
         break;
       case 'intermediate':
         color = Colors.yellow[700]!;
-        emoji = '🟡';
         break;
       case 'advanced':
         color = Colors.orange;
-        emoji = '🟠';
         break;
       case 'expert':
         color = Colors.red;
-        emoji = '🔴';
         break;
       default:
         color = Colors.grey;
-        emoji = '⚪';
     }
 
     return Container(
@@ -430,20 +424,13 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(emoji),
-          const SizedBox(width: 4),
-          Text(
-            difficulty.toUpperCase(),
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+      child: Text(
+        difficulty.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

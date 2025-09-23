@@ -290,10 +290,10 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
                       },
                       itemBuilder: (context) => [
                         const PopupMenuItem(value: 'all', child: Text('All Levels')),
-                        const PopupMenuItem(value: 'beginner', child: Text('🟢 Beginner')),
-                        const PopupMenuItem(value: 'intermediate', child: Text('🟡 Intermediate')),
-                        const PopupMenuItem(value: 'advanced', child: Text('🟠 Advanced')),
-                        const PopupMenuItem(value: 'expert', child: Text('🔴 Expert')),
+                        const PopupMenuItem(value: 'beginner', child: Text('Beginner')),
+                        const PopupMenuItem(value: 'intermediate', child: Text('Intermediate')),
+                        const PopupMenuItem(value: 'advanced', child: Text('Advanced')),
+                        const PopupMenuItem(value: 'expert', child: Text('Expert')),
                       ],
                     ),
 
@@ -686,28 +686,22 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
 
   Widget _buildDifficultyBadge(String difficulty) {
     Color color;
-    String emoji;
 
     switch (difficulty.toLowerCase()) {
       case 'beginner':
         color = Colors.green;
-        emoji = '🟢';
         break;
       case 'intermediate':
         color = Colors.yellow;
-        emoji = '🟡';
         break;
       case 'advanced':
         color = Colors.orange;
-        emoji = '🟠';
         break;
       case 'expert':
         color = Colors.red;
-        emoji = '🔴';
         break;
       default:
         color = Colors.grey;
-        emoji = '⚪';
     }
 
     return Container(
@@ -717,7 +711,7 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '$emoji ${difficulty.toUpperCase()}',
+        difficulty.toUpperCase(),
         style: TextStyle(
           color: color,
           fontSize: 10,

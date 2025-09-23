@@ -605,7 +605,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           return AlertDialog(
             title: Row(
               children: [
-                const Text('✏️ Edit Document'),
+                const Text('Edit Document'),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),

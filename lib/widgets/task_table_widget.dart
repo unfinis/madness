@@ -139,7 +139,7 @@ class _TaskTableWidgetState extends ConsumerState<TaskTableWidget> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(task.category.icon),
+              Icon(task.category.icon, size: 16),
               const SizedBox(width: 4),
               Text(task.category.displayName),
             ],
@@ -214,7 +214,7 @@ class _TaskTableWidgetState extends ConsumerState<TaskTableWidget> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(status.icon, style: const TextStyle(fontSize: 12)),
+          Icon(status.icon, size: 16),
           const SizedBox(width: 4),
           Text(
             status.displayName,
@@ -253,7 +253,7 @@ class _TaskTableWidgetState extends ConsumerState<TaskTableWidget> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(priority.icon, style: const TextStyle(fontSize: 12)),
+          Icon(priority.icon, size: 16),
           const SizedBox(width: 4),
           Text(
             priority.displayName,

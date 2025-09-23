@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 
 enum DocumentType {
   authorisationForms,
@@ -168,37 +169,37 @@ class Document {
 }
 
 extension DocumentTypeExtension on DocumentType {
-  String get icon {
+  IconData get icon {
     switch (this) {
       case DocumentType.authorisationForms:
-        return '📋';
+        return Icons.assignment;
       case DocumentType.statementOfWork:
-        return '📊';
+        return Icons.work;
       case DocumentType.presalesNotes:
-        return '📝';
+        return Icons.notes;
       case DocumentType.scopingDocuments:
-        return '🔍';
+        return Icons.track_changes;
       case DocumentType.technicalDocuments:
-        return '🛠️';
+        return Icons.engineering;
       case DocumentType.other:
-        return '📄';
+        return Icons.description;
     }
   }
 }
 
 extension DocumentStatusExtension on DocumentStatus {
-  String get icon {
+  IconData get icon {
     switch (this) {
       case DocumentStatus.draft:
-        return '✏️';
+        return Icons.edit;
       case DocumentStatus.inReview:
-        return '👀';
+        return Icons.rate_review;
       case DocumentStatus.approved:
-        return '✅';
+        return Icons.check_circle;
       case DocumentStatus.finalized:
-        return '🔒';
+        return Icons.lock;
       case DocumentStatus.archived:
-        return '📦';
+        return Icons.archive;
     }
   }
 }

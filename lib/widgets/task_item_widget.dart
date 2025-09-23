@@ -234,7 +234,7 @@ class TaskItemWidget extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(status.icon, style: const TextStyle(fontSize: 12)),
+          Icon(status.icon, size: 16, color: color),
           const SizedBox(width: 4),
           Text(
             status.displayName,
@@ -273,7 +273,7 @@ class TaskItemWidget extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(priority.icon, style: const TextStyle(fontSize: 12)),
+          Icon(priority.icon, size: 16, color: color),
           const SizedBox(width: 4),
           Text(
             priority.displayName,

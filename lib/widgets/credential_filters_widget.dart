@@ -74,22 +74,22 @@ class CredentialFiltersWidget extends ConsumerWidget {
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.all),
             ),
             _FilterChip(
-              label: '👤 User',
+              label: 'User',
               isSelected: filters.activeFilters.contains(CredentialFilter.user),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.user),
             ),
             _FilterChip(
-              label: '👑 Admin',
+              label: 'Admin',
               isSelected: filters.activeFilters.contains(CredentialFilter.admin),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.admin),
             ),
             _FilterChip(
-              label: '⚙️ Service',
+              label: 'Service',
               isSelected: filters.activeFilters.contains(CredentialFilter.service),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.service),
             ),
             _FilterChip(
-              label: '🔐 Hashes',
+              label: 'Hashes',
               isSelected: filters.activeFilters.contains(CredentialFilter.hash),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.hash),
             ),
@@ -158,22 +158,22 @@ class CredentialFiltersWidget extends ConsumerWidget {
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.all),
             ),
             _FilterChip(
-              label: '👤 User',
+              label: 'User',
               isSelected: filters.activeFilters.contains(CredentialFilter.user),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.user),
             ),
             _FilterChip(
-              label: '👑 Admin',
+              label: 'Admin',
               isSelected: filters.activeFilters.contains(CredentialFilter.admin),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.admin),
             ),
             _FilterChip(
-              label: '⚙️ Service',
+              label: 'Service',
               isSelected: filters.activeFilters.contains(CredentialFilter.service),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.service),
             ),
             _FilterChip(
-              label: '🔐 Hashes',
+              label: 'Hashes',
               isSelected: filters.activeFilters.contains(CredentialFilter.hash),
               onSelected: (selected) => _toggleFilter(ref, CredentialFilter.hash),
             ),

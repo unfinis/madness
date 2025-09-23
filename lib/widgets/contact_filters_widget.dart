@@ -74,32 +74,32 @@ class ContactFiltersWidget extends ConsumerWidget {
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.all),
             ),
             _FilterChip(
-              label: '⭐ Primary',
+              label: 'Primary',
               isSelected: filters.activeFilters.contains(ContactFilter.primary),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.primary),
             ),
             _FilterChip(
-              label: '🔧 Technical',
+              label: 'Technical',
               isSelected: filters.activeFilters.contains(ContactFilter.technical),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.technical),
             ),
             _FilterChip(
-              label: '🚨 Emergency',
+              label: 'Emergency',
               isSelected: filters.activeFilters.contains(ContactFilter.emergency),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.emergency),
             ),
             _FilterChip(
-              label: '📈 Escalation',
+              label: 'Escalation',
               isSelected: filters.activeFilters.contains(ContactFilter.escalation),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.escalation),
             ),
             _FilterChip(
-              label: '🔒 Security',
+              label: 'Security',
               isSelected: filters.activeFilters.contains(ContactFilter.securityConsultant),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.securityConsultant),
             ),
             _FilterChip(
-              label: '💼 Account Manager',
+              label: 'Account Manager',
               isSelected: filters.activeFilters.contains(ContactFilter.accountManager),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.accountManager),
             ),
@@ -111,7 +111,7 @@ class ContactFiltersWidget extends ConsumerWidget {
           'Special:',
           [
             _FilterChip(
-              label: '📊 Receive Report',
+              label: 'Receive Report',
               isSelected: filters.activeFilters.contains(ContactFilter.receiveReport),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.receiveReport),
             ),
@@ -136,32 +136,32 @@ class ContactFiltersWidget extends ConsumerWidget {
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.all),
             ),
             _FilterChip(
-              label: '⭐ Primary',
+              label: 'Primary',
               isSelected: filters.activeFilters.contains(ContactFilter.primary),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.primary),
             ),
             _FilterChip(
-              label: '🔧 Technical',
+              label: 'Technical',
               isSelected: filters.activeFilters.contains(ContactFilter.technical),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.technical),
             ),
             _FilterChip(
-              label: '🚨 Emergency',
+              label: 'Emergency',
               isSelected: filters.activeFilters.contains(ContactFilter.emergency),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.emergency),
             ),
             _FilterChip(
-              label: '📈 Escalation',
+              label: 'Escalation',
               isSelected: filters.activeFilters.contains(ContactFilter.escalation),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.escalation),
             ),
             _FilterChip(
-              label: '🔒 Security',
+              label: 'Security',
               isSelected: filters.activeFilters.contains(ContactFilter.securityConsultant),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.securityConsultant),
             ),
             _FilterChip(
-              label: '💼 Account Manager',
+              label: 'Account Manager',
               isSelected: filters.activeFilters.contains(ContactFilter.accountManager),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.accountManager),
             ),
@@ -174,7 +174,7 @@ class ContactFiltersWidget extends ConsumerWidget {
           'Special:',
           [
             _FilterChip(
-              label: '📊 Receive Report',
+              label: 'Receive Report',
               isSelected: filters.activeFilters.contains(ContactFilter.receiveReport),
               onSelected: (selected) => _toggleFilter(ref, ContactFilter.receiveReport),
             ),

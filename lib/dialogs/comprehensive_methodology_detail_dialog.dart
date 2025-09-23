@@ -370,22 +370,22 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildTroubleshootingItem(
-                    '🔧 Network Connectivity Issues',
+                    'Network Connectivity Issues',
                     'Problem: Cannot reach target system\nSolution: Check network path, firewall rules, and routing',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildTroubleshootingItem(
-                    '🔧 Authentication Failures',
+                    'Authentication Failures',
                     'Problem: Credentials not working as expected\nSolution: Verify credential format, check for account lockouts, try alternative authentication methods',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildTroubleshootingItem(
-                    '🔧 Tool Compatibility',
+                    'Tool Compatibility',
                     'Problem: Tools not working on target platform\nSolution: Check tool version compatibility, try alternative tools, adjust parameters',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildTroubleshootingItem(
-                    '🔧 Permission Issues',
+                    'Permission Issues',
                     'Problem: Insufficient privileges for operation\nSolution: Escalate privileges first, use alternative methods, or adjust approach',
                   ),
                 ],

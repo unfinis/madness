@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum TaskCategory {
   admin,
   legal,
@@ -100,16 +102,16 @@ extension TaskCategoryExtension on TaskCategory {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case TaskCategory.admin:
-        return '📋';
+        return Icons.admin_panel_settings;
       case TaskCategory.legal:
-        return '⚖️';
+        return Icons.gavel;
       case TaskCategory.setup:
-        return '🔧';
+        return Icons.build;
       case TaskCategory.communication:
-        return '📧';
+        return Icons.chat;
     }
   }
 }
@@ -128,16 +130,16 @@ extension TaskStatusExtension on TaskStatus {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case TaskStatus.pending:
-        return '⏳';
+        return Icons.schedule;
       case TaskStatus.inProgress:
-        return '🔄';
+        return Icons.play_circle;
       case TaskStatus.urgent:
-        return '🚨';
+        return Icons.priority_high;
       case TaskStatus.completed:
-        return '✅';
+        return Icons.check_circle;
     }
   }
 }
@@ -154,14 +156,14 @@ extension TaskPriorityExtension on TaskPriority {
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case TaskPriority.low:
-        return '🔵';
+        return Icons.keyboard_arrow_down;
       case TaskPriority.medium:
-        return '🟡';
+        return Icons.remove;
       case TaskPriority.high:
-        return '🔴';
+        return Icons.keyboard_arrow_up;
     }
   }
 }

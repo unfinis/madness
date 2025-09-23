@@ -470,7 +470,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         _buildActionButton(
           context,
-          '📥 Export Project',
+          'Export Project',
           () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Export project coming soon')),
           ),
@@ -478,7 +478,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         _buildActionButton(
           context,
-          '🗄 Archive',
+          'Archive',
           () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Archive project coming soon')),
           ),

@@ -12,23 +12,21 @@ class ExportDialog extends StandardDialog {
     super.key,
     required this.totalExpenses,
     required this.onExport,
-  });
+  }) : super(
+          title: 'Export Expenses',
+          subtitle: 'Export your expense data to file',
+          icon: Icons.download_rounded,
+          size: DialogSize.small,
+        );
 
   @override
-  String get title => 'Export Expenses';
-
-  @override
-  String get subtitle => 'Export your expense data to file';
-
-  @override
-  IconData get headerIcon => Icons.download_rounded;
-
-  @override
-  Widget buildContent(BuildContext context) {
-    return _ExportDialogContent(
-      totalExpenses: totalExpenses,
-      onExport: onExport,
-    );
+  List<Widget> buildContent(BuildContext context) {
+    return [
+      _ExportDialogContent(
+        totalExpenses: totalExpenses,
+        onExport: onExport,
+      ),
+    ];
   }
 }
 

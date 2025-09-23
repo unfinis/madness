@@ -1912,13 +1912,13 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
         hintText: 'What level of access do we have?',
       ),
       items: [
-        const DropdownMenuItem(value: 'none', child: Text('🚫 No Access')),
-        const DropdownMenuItem(value: 'external', child: Text('🌐 External (Internet/DMZ)')),
-        const DropdownMenuItem(value: 'adjacent', child: Text('🔗 Adjacent Network')),
-        const DropdownMenuItem(value: 'internal', child: Text('🏠 Internal Network')),
-        const DropdownMenuItem(value: 'pivoted', child: Text('🔄 Pivoted Access')),
-        const DropdownMenuItem(value: 'wireless', child: Text('📶 Wireless Access')),
-        const DropdownMenuItem(value: 'physical', child: Text('🔌 Physical Access')),
+        const DropdownMenuItem(value: 'none', child: Text('No Access')),
+        const DropdownMenuItem(value: 'external', child: Text('External (Internet/DMZ)')),
+        const DropdownMenuItem(value: 'adjacent', child: Text('Adjacent Network')),
+        const DropdownMenuItem(value: 'internal', child: Text('Internal Network')),
+        const DropdownMenuItem(value: 'pivoted', child: Text('Pivoted Access')),
+        const DropdownMenuItem(value: 'wireless', child: Text('Wireless Access')),
+        const DropdownMenuItem(value: 'physical', child: Text('Physical Access')),
       ],
       onChanged: widget.isEditMode ? (value) {
         if (value != null) {

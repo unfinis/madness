@@ -125,7 +125,7 @@ class ExpenseTableWidget extends ConsumerWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(expense.category.icon),
+                        Icon(expense.category.icon, size: 16),
                         const SizedBox(width: 4),
                         Text(expense.category.displayName),
                       ],

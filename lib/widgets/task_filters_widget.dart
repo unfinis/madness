@@ -74,22 +74,22 @@ class TaskFiltersWidget extends ConsumerWidget {
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.all),
             ),
             _FilterChip(
-              label: '📋 Admin',
+              label: 'Admin',
               isSelected: filters.activeFilters.contains(TaskFilter.admin),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.admin),
             ),
             _FilterChip(
-              label: '⚖️ Legal',
+              label: 'Legal',
               isSelected: filters.activeFilters.contains(TaskFilter.legal),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.legal),
             ),
             _FilterChip(
-              label: '🔧 Setup',
+              label: 'Setup',
               isSelected: filters.activeFilters.contains(TaskFilter.setup),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.setup),
             ),
             _FilterChip(
-              label: '📧 Communication',
+              label: 'Communication',
               isSelected: filters.activeFilters.contains(TaskFilter.communication),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.communication),
             ),
@@ -163,22 +163,22 @@ class TaskFiltersWidget extends ConsumerWidget {
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.all),
             ),
             _FilterChip(
-              label: '📋 Admin',
+              label: 'Admin',
               isSelected: filters.activeFilters.contains(TaskFilter.admin),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.admin),
             ),
             _FilterChip(
-              label: '⚖️ Legal',
+              label: 'Legal',
               isSelected: filters.activeFilters.contains(TaskFilter.legal),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.legal),
             ),
             _FilterChip(
-              label: '🔧 Setup',
+              label: 'Setup',
               isSelected: filters.activeFilters.contains(TaskFilter.setup),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.setup),
             ),
             _FilterChip(
-              label: '📧 Communication',
+              label: 'Communication',
               isSelected: filters.activeFilters.contains(TaskFilter.communication),
               onSelected: (selected) => _toggleFilter(ref, TaskFilter.communication),
             ),

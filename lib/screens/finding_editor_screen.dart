@@ -814,9 +814,9 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
               color: const Color(0xFF667EEA).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Text(
-              '📸',
-              style: TextStyle(fontSize: 32),
+            child: const Icon(
+              Icons.camera_alt,
+              size: 32,
             ),
           ),
           const SizedBox(height: 16),

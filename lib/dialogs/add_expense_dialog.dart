@@ -365,7 +365,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
           value: category,
           child: Row(
             children: [
-              Text(category.icon),
+              Icon(category.icon, size: 16),
               const SizedBox(width: 8),
               Text(category.displayName),
             ],
@@ -418,7 +418,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
             spacing: 8,
             runSpacing: 4,
             children: _evidenceFiles.map((evidence) => Chip(
-              avatar: Text(evidence.type.icon),
+              avatar: Icon(evidence.type.icon, size: 16),
               label: Text(
                 evidence.fileName.length > 20 
                     ? '${evidence.fileName.substring(0, 17)}...' 

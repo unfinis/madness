@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/scope.dart';
+import '../database/database.dart';
+import 'projects_provider.dart';
+import 'database_provider.dart';
 
 enum ScopeFilter {
   all,
@@ -42,51 +45,126 @@ class ScopeFilters {
 }
 
 class ScopeNotifier extends StateNotifier<List<ScopeSegment>> {
-  ScopeNotifier() : super(_mockScopeSegments());
+  final Ref ref;
+  final MadnessDatabase _database;
 
-  void addSegment(ScopeSegment segment) {
-    state = [...state, segment];
+  ScopeNotifier(this.ref, this._database) : super([]) {
+    _loadScopeSegments();
   }
 
-  void updateSegment(ScopeSegment segment) {
-    state = state.map((s) => s.id == segment.id ? segment : s).toList();
+  /// Load scope segments from database for current project
+  Future<void> _loadScopeSegments() async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) {
+      state = [];
+      return;
+    }
+
+    try {
+      final segments = await _database.getAllScopeSegments(currentProject.id);
+      state = segments;
+    } catch (e) {
+      // Handle error - for now just set empty state
+      state = [];
+    }
   }
 
-  void deleteSegment(String id) {
-    state = state.where((s) => s.id != id).toList();
+  /// Reload scope segments (useful when project changes)
+  Future<void> reload() async {
+    await _loadScopeSegments();
   }
 
-  void addItemToSegment(String segmentId, ScopeItem item) {
-    state = state.map((segment) {
-      if (segment.id == segmentId) {
-        return segment.copyWith(items: [...segment.items, item]);
-      }
-      return segment;
-    }).toList();
+  Future<void> addSegment(ScopeSegment segment) async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return;
+
+    try {
+      await _database.insertScopeSegment(segment, currentProject.id);
+      state = [...state, segment];
+    } catch (e) {
+      // Handle error - could show snackbar or throw
+      rethrow;
+    }
   }
 
-  void updateItemInSegment(String segmentId, ScopeItem item) {
-    state = state.map((segment) {
-      if (segment.id == segmentId) {
-        final updatedItems = segment.items.map((i) => i.id == item.id ? item : i).toList();
-        return segment.copyWith(items: updatedItems);
-      }
-      return segment;
-    }).toList();
+  Future<void> updateSegment(ScopeSegment segment) async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return;
+
+    try {
+      await _database.updateScopeSegment(segment, currentProject.id);
+      state = state.map((s) => s.id == segment.id ? segment : s).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  void deleteItemFromSegment(String segmentId, String itemId) {
-    state = state.map((segment) {
-      if (segment.id == segmentId) {
-        final updatedItems = segment.items.where((i) => i.id != itemId).toList();
-        return segment.copyWith(items: updatedItems);
-      }
-      return segment;
-    }).toList();
+  Future<void> deleteSegment(String id) async {
+    try {
+      await _database.deleteScopeSegment(id);
+      state = state.where((s) => s.id != id).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  static List<ScopeSegment> _mockScopeSegments() {
-    return [];
+  Future<void> addItemToSegment(String segmentId, ScopeItem item) async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return;
+
+    try {
+      // Find the segment and add the item
+      final segment = state.firstWhere((s) => s.id == segmentId);
+      final updatedSegment = segment.copyWith(items: [...segment.items, item]);
+
+      // Update the whole segment in the database
+      await _database.updateScopeSegment(updatedSegment, currentProject.id);
+
+      // Update local state
+      state = state.map((s) => s.id == segmentId ? updatedSegment : s).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateItemInSegment(String segmentId, ScopeItem item) async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return;
+
+    try {
+      // Find the segment and update the item
+      final segment = state.firstWhere((s) => s.id == segmentId);
+      final updatedItems = segment.items.map((i) => i.id == item.id ? item : i).toList();
+      final updatedSegment = segment.copyWith(items: updatedItems);
+
+      // Update the whole segment in the database
+      await _database.updateScopeSegment(updatedSegment, currentProject.id);
+
+      // Update local state
+      state = state.map((s) => s.id == segmentId ? updatedSegment : s).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteItemFromSegment(String segmentId, String itemId) async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return;
+
+    try {
+      // Find the segment and remove the item
+      final segment = state.firstWhere((s) => s.id == segmentId);
+      final updatedItems = segment.items.where((i) => i.id != itemId).toList();
+      final updatedSegment = segment.copyWith(items: updatedItems);
+
+      // Update the whole segment in the database
+      await _database.updateScopeSegment(updatedSegment, currentProject.id);
+
+      // Update local state
+      state = state.map((s) => s.id == segmentId ? updatedSegment : s).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 }
 
@@ -124,7 +202,17 @@ class ScopeFiltersNotifier extends StateNotifier<ScopeFilters> {
 }
 
 final scopeProvider = StateNotifierProvider<ScopeNotifier, List<ScopeSegment>>((ref) {
-  return ScopeNotifier();
+  final database = ref.watch(databaseProvider);
+  final notifier = ScopeNotifier(ref, database);
+
+  // Listen for project changes and reload scope segments
+  ref.listen(currentProjectProvider, (previous, next) {
+    if (previous?.id != next?.id) {
+      notifier.reload();
+    }
+  });
+
+  return notifier;
 });
 
 final scopeFiltersProvider = StateNotifierProvider<ScopeFiltersNotifier, ScopeFilters>((ref) {

@@ -1,6 +1,7 @@
 /// Pre-engagement questionnaire models and enums
 library;
 
+import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 
 /// Answer types for questionnaire questions
@@ -152,44 +153,44 @@ enum QuestionCategory {
     }
   }
 
-  String get emoji {
+  IconData get icon {
     switch (this) {
       case QuestionCategory.core:
-        return '🎯';
+        return Icons.center_focus_strong;
       case QuestionCategory.timing:
-        return '📅';
+        return Icons.schedule;
       case QuestionCategory.contacts:
-        return '👥';
+        return Icons.contacts;
       case QuestionCategory.scope:
-        return '🎯';
+        return Icons.track_changes;
       case QuestionCategory.technical:
-        return '⚙️';
+        return Icons.engineering;
       case QuestionCategory.logistics:
-        return '📋';
+        return Icons.inventory;
       case QuestionCategory.network:
-        return '🌐';
+        return Icons.hub;
       case QuestionCategory.webApp:
-        return '🌍';
+        return Icons.web;
       case QuestionCategory.mobile:
-        return '📱';
+        return Icons.phone_android;
       case QuestionCategory.wireless:
-        return '📶';
+        return Icons.wifi;
       case QuestionCategory.physical:
-        return '🏢';
+        return Icons.business;
       case QuestionCategory.social:
-        return '👤';
+        return Icons.people;
       case QuestionCategory.code:
-        return '💻';
+        return Icons.code;
       case QuestionCategory.api:
-        return '🔌';
+        return Icons.api;
       case QuestionCategory.iot:
-        return '🔗';
+        return Icons.sensors;
       case QuestionCategory.ai:
-        return '🤖';
+        return Icons.smart_toy;
       case QuestionCategory.firewall:
-        return '🛡️';
+        return Icons.security;
       case QuestionCategory.password:
-        return '🔐';
+        return Icons.lock;
     }
   }
 
