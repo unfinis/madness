@@ -130,7 +130,7 @@ class SubFinding {
         break;
       case 'informational':
       case 'info':
-        findingSeverity = FindingSeverity.info;
+        findingSeverity = FindingSeverity.informational;
         break;
       default:
         findingSeverity = FindingSeverity.medium;

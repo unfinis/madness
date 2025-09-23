@@ -108,37 +108,22 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                 
                 AppSpacing.vGapMD,
                 
-                // Statistics
-                Row(
-                  children: [
-                    _buildStatItem(
-                      context,
-                      'Total',
-                      statistics['total'] ?? 0,
-                      theme.colorScheme.onSurface,
-                    ),
-                    AppSpacing.hGapLG,
-                    _buildStatItem(
-                      context,
-                      'Completed',
-                      statistics['completed'] ?? 0,
-                      theme.colorScheme.primary,
-                    ),
-                    AppSpacing.hGapLG,
-                    _buildStatItem(
-                      context,
-                      'In Progress',
-                      statistics['inProgress'] ?? 0,
-                      theme.colorScheme.secondary,
-                    ),
-                    AppSpacing.hGapLG,
-                    _buildStatItem(
-                      context,
-                      'Blockers',
-                      statistics['blocked'] ?? 0,
-                      theme.colorScheme.error,
-                    ),
-                  ],
+                // Statistics - Pill Style Summary
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildStatChip('Total', statistics['total'] ?? 0, Icons.quiz, theme.colorScheme.primary),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildStatChip('Completed', statistics['completed'] ?? 0, Icons.check_circle, const Color(0xFF10b981)),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildStatChip('In Progress', statistics['inProgress'] ?? 0, Icons.access_time, const Color(0xFF3b82f6)),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildStatChip('Pending', statistics['pending'] ?? 0, Icons.radio_button_unchecked, const Color(0xFFf59e0b)),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildStatChip('Blockers', statistics['blocked'] ?? 0, Icons.block, const Color(0xFFef4444)),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -306,24 +291,32 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, int value, Color color) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Text(
-          value.toString(),
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
+  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '$label: $count',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

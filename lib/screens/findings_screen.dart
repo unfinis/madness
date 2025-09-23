@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/finding.dart';
 import '../providers/finding_provider.dart';
 import '../providers/projects_provider.dart';
-import '../widgets/finding_summary_widget.dart';
 import '../widgets/finding_filters_widget.dart';
 import '../widgets/finding_table_widget.dart';
 import '../widgets/sub_finding_template_dialog.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
 import '../constants/responsive_breakpoints.dart';
-import 'finding_editor_screen.dart';
+import '../constants/app_spacing.dart';
+import '../dialogs/enhanced_finding_dialog.dart';
 
 class FindingsScreen extends ConsumerStatefulWidget {
   const FindingsScreen({super.key});
@@ -58,9 +58,9 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const FindingSummaryWidget(compact: true),
+              _buildPillStyleSummary(),
               SizedBox(height: CommonLayoutWidgets.sectionSpacing),
-              
+
               ResponsiveCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,6 +72,7 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
                     
                     FindingTableWidget(
                       onRowTap: _handleFindingTap,
+                      onRowDoubleTap: _handleFindingEdit,
                       onEdit: _handleFindingEdit,
                       onDelete: _handleFindingDelete,
                     ),
@@ -242,13 +243,13 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
   }
 
   void _handleFindingTap(Finding finding) {
-    // Navigate to finding detail screen
-    _showFindingDetails(finding);
+    // Single tap - just select the finding for now
+    ref.read(findingProvider.notifier).selectFinding(finding);
   }
 
   void _handleFindingEdit(Finding finding) {
-    // Navigate to finding editor
-    _showFindingEditor(finding);
+    // Double tap or edit action - open enhanced finding dialog
+    _showEnhancedFindingDialog(finding);
   }
 
   void _handleFindingDelete(Finding finding) {
@@ -326,194 +327,104 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
   }
 
   void _createNewFinding() {
-    _showFindingEditor(null);
+    _showEnhancedFindingDialog(null);
   }
 
-  void _showFindingDetails(Finding finding) {
-    showDialog(
+  void _showEnhancedFindingDialog(Finding? finding) async {
+    final currentProject = ref.read(currentProjectProvider);
+    if (currentProject == null) return;
+
+    final result = await showDialog<Finding>(
       context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      finding.title,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: finding.severity.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: finding.severity.color.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      finding.severity.displayName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: finding.severity.color,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: finding.status.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: finding.status.color.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      finding.status.displayName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: finding.status.color,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: finding.severity.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'CVSS ${finding.cvssScore.toStringAsFixed(1)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: finding.severity.color,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (finding.description.isNotEmpty) ...[
-                        Text(
-                          'Description',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(finding.description),
-                        const SizedBox(height: 24),
-                      ],
-                      if (finding.components.isNotEmpty) ...[
-                        Text(
-                          'Affected Components',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...finding.components.map((component) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  component.type.displayName,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text('${component.name}: ${component.value}')),
-                            ],
-                          ),
-                        )),
-                        const SizedBox(height: 24),
-                      ],
-                      if (finding.links.isNotEmpty) ...[
-                        Text(
-                          'References',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...finding.links.map((link) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.link, size: 16),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  link.title,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      _showFindingEditor(finding);
-                    },
-                    child: const Text('Edit Finding'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+      builder: (context) => EnhancedFindingDialog(
+        projectId: currentProject.id,
+        finding: finding,
+      ),
+    );
+
+    if (result != null && mounted) {
+      // Refresh the findings list
+      ref.read(findingProvider.notifier).loadFindings(currentProject.id);
+    }
+  }
+
+  Widget _buildPillStyleSummary() {
+    final findingState = ref.watch(findingProvider);
+    final findings = findingState.findings;
+
+    if (findings.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Calculate statistics
+    final totalFindings = findings.length;
+    final criticalCount = findings.where((f) => f.severity == FindingSeverity.critical).length;
+    final highCount = findings.where((f) => f.severity == FindingSeverity.high).length;
+    final mediumCount = findings.where((f) => f.severity == FindingSeverity.medium).length;
+    final lowCount = findings.where((f) => f.severity == FindingSeverity.low).length;
+    final infoCount = findings.where((f) => f.severity == FindingSeverity.informational).length;
+    final activeCount = findings.where((f) => f.status == FindingStatus.active).length;
+    final resolvedCount = findings.where((f) => f.status == FindingStatus.resolved).length;
+    final highestCvss = findings.isEmpty ? 0.0 : findings.map((f) => f.cvssScore).reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildStatChip('Total', totalFindings, Icons.folder_outlined, Theme.of(context).primaryColor),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Critical', criticalCount, Icons.error, const Color(0xFFef4444)),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('High', highCount, Icons.warning, const Color(0xFFf59e0b)),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Medium', mediumCount, Icons.info, const Color(0xFFfbbf24)),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Low', lowCount, Icons.check_circle, const Color(0xFF10b981)),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Info', infoCount, Icons.info_outline, const Color(0xFF6b7280)),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Active', activeCount, Icons.play_circle, Colors.red),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Resolved', resolvedCount, Icons.check_circle, Colors.green),
+            const SizedBox(width: AppSpacing.sm),
+            _buildStatChip('Max CVSS', highestCvss.toStringAsFixed(1), Icons.speed, Colors.deepOrange),
+          ],
         ),
       ),
     );
   }
 
-  void _showFindingEditor(Finding? finding) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => FindingEditorScreen(finding: finding),
+  Widget _buildStatChip(String label, dynamic value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            '$label: $value',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -524,55 +435,59 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
       final jsonData = await ref.read(findingProvider.notifier).exportFindings(findingIds);
       
       // TODO: Implement file save functionality
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Exported ${findings.length} findings'),
-          action: SnackBarAction(
-            label: 'Preview',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => Dialog(
-                  child: Container(
-                    width: 600,
-                    height: 400,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            const Expanded(child: Text('Export Preview')),
-                            IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(Icons.close),
-                            ),
-                          ],
-                        ),
-                        const Divider(),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: SelectableText(
-                              jsonData,
-                              style: const TextStyle(fontFamily: 'monospace'),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Exported ${findings.length} findings'),
+            action: SnackBarAction(
+              label: 'Preview',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    child: Container(
+                      width: 600,
+                      height: 400,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Expanded(child: Text('Export Preview')),
+                              IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.close),
+                              ),
+                            ],
+                          ),
+                          const Divider(),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: SelectableText(
+                                jsonData,
+                                style: const TextStyle(fontFamily: 'monospace'),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Export failed: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 

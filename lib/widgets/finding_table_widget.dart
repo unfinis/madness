@@ -6,12 +6,14 @@ import '../constants/responsive_breakpoints.dart';
 
 class FindingTableWidget extends ConsumerStatefulWidget {
   final Function(Finding)? onRowTap;
+  final Function(Finding)? onRowDoubleTap;
   final Function(Finding)? onEdit;
   final Function(Finding)? onDelete;
 
   const FindingTableWidget({
     super.key,
     this.onRowTap,
+    this.onRowDoubleTap,
     this.onEdit,
     this.onDelete,
   });
@@ -378,8 +380,9 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
             onSelectChanged: (selected) => _toggleSelection(finding.id, selected ?? false),
             cells: [
               DataCell(
-                InkWell(
+                GestureDetector(
                   onTap: () => widget.onRowTap?.call(finding),
+                  onDoubleTap: () => widget.onRowDoubleTap?.call(finding),
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 200),
                     child: Column(

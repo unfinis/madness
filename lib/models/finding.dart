@@ -139,7 +139,7 @@ class Finding {
     cvssVector: json['cvssVector'],
     severity: FindingSeverity.values.firstWhere(
       (s) => s.name == json['severity'],
-      orElse: () => FindingSeverity.info,
+      orElse: () => FindingSeverity.informational,
     ),
     status: FindingStatus.values.firstWhere(
       (s) => s.name == json['status'],
@@ -172,7 +172,7 @@ enum FindingSeverity {
   high,
   medium,
   low,
-  info;
+  informational;
 
   String get displayName {
     switch (this) {
@@ -184,8 +184,8 @@ enum FindingSeverity {
         return 'Medium';
       case FindingSeverity.low:
         return 'Low';
-      case FindingSeverity.info:
-        return 'Info';
+      case FindingSeverity.informational:
+        return 'Informational';
     }
   }
 
@@ -199,7 +199,7 @@ enum FindingSeverity {
         return const Color(0xFFfbbf24);
       case FindingSeverity.low:
         return const Color(0xFF10b981); // --success
-      case FindingSeverity.info:
+      case FindingSeverity.informational:
         return const Color(0xFF6b7280);
     }
   }
@@ -209,7 +209,7 @@ enum FindingSeverity {
     if (score >= 7.0) return FindingSeverity.high;
     if (score >= 4.0) return FindingSeverity.medium;
     if (score >= 0.1) return FindingSeverity.low;
-    return FindingSeverity.info;
+    return FindingSeverity.informational;
   }
 }
 
@@ -514,7 +514,7 @@ class FindingSummaryStats {
       highCount: severityCounts[FindingSeverity.high] ?? 0,
       mediumCount: severityCounts[FindingSeverity.medium] ?? 0,
       lowCount: severityCounts[FindingSeverity.low] ?? 0,
-      infoCount: severityCounts[FindingSeverity.info] ?? 0,
+      infoCount: severityCounts[FindingSeverity.informational] ?? 0,
       highestCvssScore: highestScore,
       resolvedCount: statusCounts[FindingStatus.resolved] ?? 0,
       activeCount: statusCounts[FindingStatus.active] ?? 0,
@@ -572,7 +572,7 @@ class SubFindingData {
     cvssVector: json['cvssVector'],
     severity: FindingSeverity.values.firstWhere(
       (s) => s.name == json['severity'],
-      orElse: () => FindingSeverity.info,
+      orElse: () => FindingSeverity.informational,
     ),
     checkSteps: json['checkSteps'],
     recommendation: json['recommendation'],

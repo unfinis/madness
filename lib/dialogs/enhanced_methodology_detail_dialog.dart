@@ -22,7 +22,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -155,10 +155,13 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
             TabBar(
               controller: _tabController,
               tabs: const [
-                Tab(icon: Icon(Icons.info), text: 'Overview'),
-                Tab(icon: Icon(Icons.gps_fixed), text: 'Triggers'),
-                Tab(icon: Icon(Icons.code), text: 'Commands'),
-                Tab(icon: Icon(Icons.help), text: 'Documentation'),
+                Tab(text: 'Overview'),
+                Tab(text: 'Procedure'),
+                Tab(text: 'Tools & References'),
+                Tab(text: 'Trigger Context'),
+                Tab(text: 'Findings'),
+                Tab(text: 'Cleanup'),
+                Tab(text: 'Execution'),
               ],
             ),
 
@@ -168,9 +171,12 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
                 controller: _tabController,
                 children: [
                   _buildOverviewTab(methodology),
-                  _buildTriggersTab(methodology),
-                  _buildCommandsTab(methodology),
-                  _buildDocumentationTab(methodology),
+                  _buildProcedureTab(methodology),
+                  _buildToolsReferencesTab(methodology),
+                  _buildTriggerContextTab(methodology),
+                  _buildFindingsTab(methodology),
+                  _buildCleanupTab(methodology),
+                  _buildExecutionTab(methodology),
                 ],
               ),
             ),
@@ -306,257 +312,10 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     );
   }
 
-  Widget _buildTriggersTab(MethodologyTemplate methodology) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: methodology.triggers.length,
-      itemBuilder: (context, index) {
-        final trigger = methodology.triggers[index];
-        return _buildTriggerCard(trigger, index);
-      },
-    );
-  }
 
-  Widget _buildTriggerCard(dynamic trigger, int index) {
-    // Handle MethodologyTrigger from loader service
-    String condition = 'No condition';
-    int priority = 5;
-    String description = 'No description';
 
-    if (trigger is MethodologyTrigger) {
-      condition = trigger.conditions?.toString() ?? trigger.description;
-      priority = trigger.conditions?['priority'] as int? ?? 5;
-      description = trigger.description;
-    } else if (trigger is Map<String, dynamic>) {
-      condition = trigger['condition'] as String? ?? 'No condition';
-      priority = trigger['priority'] as int? ?? 5;
-      description = trigger['description'] as String? ?? 'No description';
-    }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: _getPriorityColor(null, priority: priority).withOpacity(0.1),
-          child: Text(
-            '${index + 1}',
-            style: TextStyle(
-              color: _getPriorityColor(null, priority: priority),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        title: Text('Trigger ${index + 1}'),
-        subtitle: Text(
-          description,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: _getPriorityColor(null, priority: priority).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            'P$priority',
-            style: TextStyle(
-              color: _getPriorityColor(null, priority: priority),
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Condition:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: SelectableText(
-                    condition,
-                    style: const TextStyle(fontFamily: 'monospace'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _copyToClipboard(condition),
-                      icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('Copy'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildCommandsTab(MethodologyTemplate methodology) {
-    final commands = _extractCommands(methodology);
-
-    return commands.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.terminal, size: 64, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'No commands defined',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'This methodology uses dynamic command generation',
-                  style: TextStyle(color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          )
-        : ListView.builder(
-            padding: const EdgeInsets.all(24),
-            itemCount: commands.length,
-            itemBuilder: (context, index) {
-              final command = commands[index];
-              return _buildCommandCard(command, index);
-            },
-          );
-  }
-
-  Widget _buildCommandCard(String command, int index) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.terminal, color: Colors.green[600]),
-                const SizedBox(width: 8),
-                Text(
-                  'Command ${index + 1}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () => _copyToClipboard(command),
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Copy'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SelectableText(
-                command,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  color: Colors.green,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDocumentationTab(MethodologyTemplate methodology) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSection(
-            'Description',
-            Icons.description,
-            Text(methodology.description),
-          ),
-
-          const SizedBox(height: 24),
-
-          _buildSection(
-            'Methodology Details',
-            Icons.info,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDetailRow('Name', methodology.name),
-                _buildDetailRow('Created', methodology.created.toString().substring(0, 16)),
-                _buildDetailRow('Version', methodology.version),
-                _buildDetailRow('Author', methodology.author),
-                _buildDetailRow('Category', _getCategory(methodology)),
-                _buildDetailRow('Difficulty', _getDifficulty(methodology)),
-                _buildDetailRow('Risk Level', _getRiskLevel(methodology)),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          if (methodology.tags.isNotEmpty)
-            _buildSection(
-              'Technical Details',
-              Icons.settings,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'This methodology contains ${methodology.triggers.length} triggers that will be evaluated against your assets. '
-                    'When triggered, it will execute a series of commands to achieve the methodology objectives.',
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Tags: ${methodology.tags.join(', ')}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSection(String title, IconData icon, Widget content) {
     return Column(
@@ -689,29 +448,6 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
-        ],
-      ),
-    );
-  }
 
   // Helper methods
   Color _getCategoryColor(MethodologyTemplate methodology) {
@@ -866,11 +602,343 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     }
   }
 
-  void _copyToClipboard(String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Copied to clipboard')),
+  Widget _buildProcedureTab(MethodologyTemplate methodology) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSection(
+            'Procedure Steps',
+            Icons.list,
+            Text(methodology.description),
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
+            'Commands',
+            Icons.code,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _extractCommands(methodology).map((command) =>
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: SelectableText(
+                    command,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+                  ),
+                )
+              ).toList(),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildToolsReferencesTab(MethodologyTemplate methodology) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSection(
+            'Tools Required',
+            Icons.build,
+            _buildToolsList(methodology),
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
+            'References',
+            Icons.link,
+            _buildReferencesList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTriggerContextTab(MethodologyTemplate methodology) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: methodology.triggers.length,
+      itemBuilder: (context, index) {
+        final trigger = methodology.triggers[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.gps_fixed, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Trigger ${index + 1}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text('Type: ${trigger.type}'),
+                const SizedBox(height: 8),
+                Text('Conditions: ${trigger.conditions?.entries.map((e) => '${e.key}=${e.value}').join(', ') ?? 'None'}'),
+                const SizedBox(height: 8),
+                Text('Description: ${trigger.description}'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFindingsTab(MethodologyTemplate methodology) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSection(
+            'Expected Findings',
+            Icons.search,
+            _buildExpectedFindings(),
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
+            'Output Analysis',
+            Icons.analytics,
+            Text('Review all command outputs for credentials, network information, vulnerabilities, and system details. Document all findings with appropriate risk levels and remediation recommendations.'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCleanupTab(MethodologyTemplate methodology) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSection(
+            'Cleanup Steps',
+            Icons.cleaning_services,
+            _buildCleanupSteps(),
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
+            'Reset Instructions',
+            Icons.refresh,
+            Text('1. Remove any temporary files created during execution\n2. Clear command history if sensitive commands were used\n3. Restore any modified configurations\n4. Verify no persistent network connections remain\n5. Document cleanup completion in engagement notes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExecutionTab(MethodologyTemplate methodology) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSection(
+            'Execution Status',
+            Icons.play_arrow,
+            Text('Current execution status and progress will be displayed here.'),
+          ),
+          const SizedBox(height: 24),
+          _buildSection(
+            'Actions',
+            Icons.settings,
+            Column(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _executeMethodology,
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Execute Methodology'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  label: const Text('Close'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildToolsList(MethodologyTemplate methodology) {
+    final tools = _extractTools(methodology);
+    if (tools.isEmpty) {
+      return Text('Standard penetration testing tools: nmap, nikto, gobuster, burp suite, metasploit framework');
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: tools.map((tool) =>
+        Chip(
+          label: Text(tool),
+          backgroundColor: Colors.blue.withOpacity(0.1),
+          avatar: const Icon(Icons.build, size: 16),
+        ),
+      ).toList(),
+    );
+  }
+
+  Widget _buildReferencesList() {
+    return Column(
+      children: [
+        _buildReferenceCard(
+          'MITRE ATT&CK Framework',
+          'Comprehensive knowledge base of adversary tactics and techniques',
+          'https://attack.mitre.org/',
+          Icons.security,
+        ),
+        _buildReferenceCard(
+          'OWASP Testing Guide',
+          'Web application security testing methodology',
+          'https://owasp.org/www-project-web-security-testing-guide/',
+          Icons.web,
+        ),
+        _buildReferenceCard(
+          'NIST Cybersecurity Framework',
+          'Risk management and cybersecurity standards',
+          'https://www.nist.gov/cyberframework',
+          Icons.policy,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReferenceCard(String title, String description, String url, IconData icon) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blue),
+        title: Text(title),
+        subtitle: Text(description),
+        trailing: const Icon(Icons.open_in_new),
+        onTap: () {
+          // TODO: Open URL
+        },
+      ),
+    );
+  }
+
+  Widget _buildExpectedFindings() {
+    return Column(
+      children: [
+        _buildFindingCard(
+          'Credentials',
+          'User accounts, passwords, API keys, or authentication tokens',
+          Icons.key,
+          Colors.orange,
+        ),
+        _buildFindingCard(
+          'Network Information',
+          'IP addresses, open ports, network topology, and service versions',
+          Icons.network_check,
+          Colors.blue,
+        ),
+        _buildFindingCard(
+          'System Information',
+          'Operating system details, installed software, and running processes',
+          Icons.computer,
+          Colors.green,
+        ),
+        _buildFindingCard(
+          'Vulnerabilities',
+          'Security weaknesses, misconfigurations, and potential exploits',
+          Icons.bug_report,
+          Colors.red,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFindingCard(String title, String description, IconData icon, Color color) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.2),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(title),
+        subtitle: Text(description),
+      ),
+    );
+  }
+
+  Widget _buildCleanupSteps() {
+    return Column(
+      children: [
+        _buildCleanupItem('1. Remove Temporary Files', 'Delete any files created during methodology execution'),
+        _buildCleanupItem('2. Clear Command History', 'Remove sensitive commands from shell history'),
+        _buildCleanupItem('3. Close Network Connections', 'Terminate any persistent connections or tunnels'),
+        _buildCleanupItem('4. Restore Configurations', 'Revert any system or application changes'),
+        _buildCleanupItem('5. Document Results', 'Save findings and ensure proper documentation'),
+      ],
+    );
+  }
+
+  Widget _buildCleanupItem(String title, String description) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const Icon(Icons.cleaning_services, color: Colors.orange),
+        title: Text(title),
+        subtitle: Text(description),
+      ),
+    );
+  }
+
+  List<String> _extractTools(MethodologyTemplate methodology) {
+    final tools = <String>[];
+    final description = methodology.description.toLowerCase();
+    final name = methodology.name.toLowerCase();
+
+    // Extract common tools based on methodology content
+    final commonTools = {
+      'nmap': ['nmap', 'port scan', 'network scan'],
+      'nikto': ['nikto', 'web scan', 'vulnerability scan'],
+      'gobuster': ['gobuster', 'directory', 'brute force'],
+      'burp': ['burp', 'proxy', 'web application'],
+      'metasploit': ['metasploit', 'exploit', 'payload'],
+      'wireshark': ['wireshark', 'packet', 'network capture'],
+      'sqlmap': ['sqlmap', 'sql injection'],
+      'john': ['john', 'password', 'crack'],
+      'hashcat': ['hashcat', 'hash', 'crack'],
+      'hydra': ['hydra', 'brute force', 'login'],
+    };
+
+    for (final entry in commonTools.entries) {
+      for (final keyword in entry.value) {
+        if (description.contains(keyword) || name.contains(keyword)) {
+          tools.add(entry.key);
+          break;
+        }
+      }
+    }
+
+    return tools;
   }
 
   void _executeMethodology() {

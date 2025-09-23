@@ -29,7 +29,7 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -45,198 +45,185 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
         height: MediaQuery.of(context).size.height * 0.9,
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Theme.of(context).colorScheme.surface,
+        ),
         child: Column(
           children: [
-            _buildHeader(),
-            const SizedBox(height: AppSpacing.md),
-            _buildTabBar(),
-            Expanded(
-              child: _buildTabBarView(),
+            // Header
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.methodology['name'] ?? 'Unknown Methodology',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    widget.methodology['id'] ?? 'unknown',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            _buildActions(),
+
+            // Tab bar
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabs: const [
+                Tab(text: 'Overview'),
+                Tab(text: 'Procedure'),
+                Tab(text: 'Tools & References'),
+                Tab(text: 'Trigger Context'),
+                Tab(text: 'Findings'),
+                Tab(text: 'Cleanup'),
+                Tab(text: 'Execution'),
+              ],
+            ),
+
+            // Tab content
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildOverviewTab(),
+                  _buildProcedureTab(),
+                  _buildToolsReferencesTab(),
+                  _buildTriggerContextTab(),
+                  _buildFindingsTab(),
+                  _buildCleanupTab(),
+                  _buildExecutionTab(),
+                ],
+              ),
+            ),
+
+            // Footer actions
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Theme.of(context).dividerColor),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor().withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      widget.isFromLibrary ? 'Library Template' : _stepStatus.toUpperCase(),
+                      style: TextStyle(
+                        color: _getStatusColor(),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _getRiskColor().withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      (widget.methodology['risk_level'] ?? 'low').toString().toUpperCase(),
+                      style: TextStyle(
+                        color: _getRiskColor(),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (!widget.isFromLibrary) ...[
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Save execution state
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Save & Execute'),
+                    ),
+                  ] else ...[
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.methodology['name'] ?? 'Unknown Methodology',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  _buildStatusChip(),
-                  const SizedBox(width: AppSpacing.sm),
-                  _buildCategoryChip(widget.methodology['category'] ?? 'unknown'),
-                  const SizedBox(width: AppSpacing.sm),
-                  _buildRiskBadge(widget.methodology['risk_level'] ?? 'low'),
-                ],
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
-    );
-  }
+  Color _getStatusColor() {
+    if (widget.isFromLibrary) {
+      return Theme.of(context).primaryColor;
+    }
 
-  Widget _buildStatusChip() {
-    final status = widget.isFromLibrary ? 'library' : _stepStatus;
-    Color color;
-    IconData icon;
-    String label;
-
-    switch (status) {
-      case 'library':
-        color = Theme.of(context).colorScheme.primary;
-        icon = Icons.library_books;
-        label = 'LIBRARY';
-        break;
-      case 'pending':
-        color = Theme.of(context).colorScheme.tertiary;
-        icon = Icons.schedule;
-        label = 'PENDING';
-        break;
+    switch (_stepStatus) {
       case 'in_progress':
-        color = Theme.of(context).colorScheme.secondary;
-        icon = Icons.play_circle;
-        label = 'IN PROGRESS';
-        break;
+        return Colors.orange;
       case 'completed':
-        color = Theme.of(context).colorScheme.primary;
-        icon = Icons.check_circle;
-        label = 'COMPLETED';
-        break;
+        return Colors.green;
       case 'skipped':
-        color = Theme.of(context).disabledColor;
-        icon = Icons.skip_next;
-        label = 'SKIPPED';
-        break;
+        return Colors.grey;
       default:
-        color = Theme.of(context).disabledColor;
-        icon = Icons.help;
-        label = 'UNKNOWN';
+        return Colors.blue;
     }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
-  Widget _buildCategoryChip(String category) {
-    return Chip(
-      label: Text(
-        category.replaceAll('_', ' ').toUpperCase(),
-        style: const TextStyle(fontSize: 10),
-      ),
-      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-      side: BorderSide(color: Theme.of(context).primaryColor),
-    );
-  }
-
-  Widget _buildRiskBadge(String riskLevel) {
-    Color color;
-    switch (riskLevel.toLowerCase()) {
-      case 'critical':
-        color = Theme.of(context).colorScheme.error;
-        break;
+  Color _getRiskColor() {
+    switch (widget.methodology['risk_level'] ?? 'low') {
       case 'high':
-        color = Theme.of(context).colorScheme.error.withOpacity(0.8);
-        break;
+        return Colors.red;
       case 'medium':
-        color = Theme.of(context).colorScheme.tertiary;
-        break;
-      case 'low':
-        color = Theme.of(context).colorScheme.primary;
-        break;
+        return Colors.orange;
       default:
-        color = Theme.of(context).disabledColor;
+        return Colors.green;
     }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        riskLevel.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
   }
 
-  Widget _buildTabBar() {
-    return TabBar(
-      controller: _tabController,
-      isScrollable: true,
-      tabs: const [
-        Tab(icon: Icon(Icons.description), text: 'Description'),
-        Tab(icon: Icon(Icons.code), text: 'Method'),
-        Tab(icon: Icon(Icons.build), text: 'Troubleshooting'),
-        Tab(icon: Icon(Icons.bug_report), text: 'Related Findings'),
-        Tab(icon: Icon(Icons.settings_input_component), text: 'Triggers'),
-        Tab(icon: Icon(Icons.assessment), text: 'Outcome'),
-      ],
-    );
-  }
 
-  Widget _buildTabBarView() {
-    return TabBarView(
-      controller: _tabController,
-      children: [
-        _buildDescriptionTab(),
-        _buildMethodTab(),
-        _buildTroubleshootingTab(),
-        _buildFindingsTab(),
-        _buildTriggersTab(),
-        _buildOutcomeTab(),
-      ],
-    );
-  }
 
-  Widget _buildDescriptionTab() {
+
+
+
+  Widget _buildOverviewTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -304,7 +291,7 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
     );
   }
 
-  Widget _buildMethodTab() {
+  Widget _buildProcedureTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Card(
@@ -364,7 +351,7 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
     );
   }
 
-  Widget _buildTroubleshootingTab() {
+  Widget _buildToolsReferencesTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -531,7 +518,7 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
     );
   }
 
-  Widget _buildTriggersTab() {
+  Widget _buildTriggerContextTab() {
     if (widget.isFromLibrary) {
       return _buildLibraryTriggersView();
     } else {
@@ -647,7 +634,85 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
     );
   }
 
-  Widget _buildOutcomeTab() {
+  Widget _buildCleanupTab() {
+    final cleanupSteps = widget.methodology['cleanup'] as List<dynamic>? ?? [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Cleanup Steps',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (cleanupSteps.isEmpty)
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  'No specific cleanup steps defined for this methodology.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            )
+          else
+            ...cleanupSteps.asMap().entries.map((entry) {
+              final index = entry.key;
+              final step = entry.value as Map<String, dynamic>;
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 12,
+                            child: Text('${index + 1}'),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              step['step'] ?? 'Unknown step',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (step['description'] != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(step['description'].toString()),
+                      ],
+                      if (step['command'] != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            step['command'].toString(),
+                            style: const TextStyle(fontFamily: 'monospace'),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExecutionTab() {
     if (widget.isFromLibrary) {
       return const Center(
         child: Text(
@@ -763,36 +828,6 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
     );
   }
 
-  Widget _buildActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        if (!widget.isFromLibrary) ...[
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          ElevatedButton.icon(
-            onPressed: () => _executeStep(),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Execute Step'),
-          ),
-        ] else ...[
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          ElevatedButton.icon(
-            onPressed: () => _addToAttackGraph(),
-            icon: const Icon(Icons.add_circle),
-            label: const Text('Add to Attack Graph'),
-          ),
-        ],
-      ],
-    );
-  }
 
   void _editTriggers() {
     // Create a sample trigger based on methodology context for editing
@@ -833,17 +868,4 @@ class _MethodologyDetailDialogState extends ConsumerState<MethodologyDetailDialo
     );
   }
 
-  void _executeStep() {
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Executing: ${widget.methodology['name']}')),
-    );
-  }
-
-  void _addToAttackGraph() {
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added ${widget.methodology['name']} to Attack Graph')),
-    );
-  }
 }

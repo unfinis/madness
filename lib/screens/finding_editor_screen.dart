@@ -1778,7 +1778,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           break;
         case 'informational':
         case 'info':
-          _selectedSeverity = FindingSeverity.info;
+          _selectedSeverity = FindingSeverity.informational;
           break;
       }
 

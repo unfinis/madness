@@ -18,7 +18,7 @@ import 'screens/agents_screen.dart';
 import 'screens/plugins_screen.dart';
 import 'screens/ingestors_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/findings_visual_screen.dart';
+import 'screens/findings_screen.dart';
 import 'screens/documents_screen.dart' as docs;
 import 'screens/screenshots_screen.dart';
 import 'screens/assets_screen_classic.dart';
@@ -62,7 +62,7 @@ class AppShell extends ConsumerWidget {
       case NavigationSection.history:
         return const HistoryScreen();
       case NavigationSection.findings:
-        return const FindingsVisualScreen();
+        return const FindingsScreen();
       case NavigationSection.attackChains:
         return const AttackPlanScreen();
       case NavigationSection.screenshots:
