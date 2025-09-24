@@ -111,7 +111,7 @@ class ScreenComponents {
         if (showDivider) ...[
           AppSpacing.vGapLG,
           Divider(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ],
       ],
@@ -137,7 +137,7 @@ class ScreenComponents {
         color: backgroundColor ?? Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -150,7 +150,7 @@ class ScreenComponents {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: (iconColor ?? Theme.of(context).colorScheme.primary)
-                        .withOpacity(0.1),
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSizes.cardRadius),
                   ),
                   child: Icon(
@@ -255,7 +255,7 @@ class ScreenComponents {
         color: stat.backgroundColor ?? Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(

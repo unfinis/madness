@@ -7,7 +7,7 @@ part 'methodology_trigger_builder.g.dart';
 // Trigger builder models for the visual trigger editor
 
 @freezed
-class TriggerCondition with _$TriggerCondition {
+sealed class TriggerCondition with _$TriggerCondition {
   const factory TriggerCondition({
     required String id,
     required AssetType assetType,
@@ -22,7 +22,7 @@ class TriggerCondition with _$TriggerCondition {
 }
 
 @freezed
-class TriggerValue with _$TriggerValue {
+sealed class TriggerValue with _$TriggerValue {
   const factory TriggerValue.string(String value) = StringTriggerValue;
   const factory TriggerValue.boolean(bool value) = BooleanTriggerValue;
   const factory TriggerValue.number(double value) = NumberTriggerValue;
@@ -97,7 +97,7 @@ enum TriggerOperator {
 }
 
 @freezed
-class TriggerGroup with _$TriggerGroup {
+sealed class TriggerGroup with _$TriggerGroup {
   const factory TriggerGroup({
     required String id,
     required List<TriggerCondition> conditions,
@@ -114,7 +114,7 @@ class TriggerGroup with _$TriggerGroup {
 }
 
 @freezed
-class MethodologyTriggerDefinition with _$MethodologyTriggerDefinition {
+sealed class MethodologyTriggerDefinition with _$MethodologyTriggerDefinition {
   const factory MethodologyTriggerDefinition({
     required String id,
     required String name,
@@ -147,7 +147,7 @@ enum PropertyType {
 }
 
 @freezed
-class AssetProperty with _$AssetProperty {
+sealed class AssetProperty with _$AssetProperty {
   const factory AssetProperty({
     required String name,
     required String displayName,
@@ -405,7 +405,7 @@ class AssetPropertyDefinition {
 
 // Predefined trigger templates for common scenarios
 @freezed
-class TriggerTemplate with _$TriggerTemplate {
+sealed class TriggerTemplate with _$TriggerTemplate {
   const factory TriggerTemplate({
     required String name,
     required String description,
@@ -555,7 +555,7 @@ class TriggerTemplate with _$TriggerTemplate {
 
 // Parameter mapping for methodology execution
 @freezed
-class MethodologyParameter with _$MethodologyParameter {
+sealed class MethodologyParameter with _$MethodologyParameter {
   const factory MethodologyParameter({
     required String name,
     required String type,

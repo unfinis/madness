@@ -38,7 +38,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -91,7 +91,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).colorScheme.primaryContainer,
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: const BorderRadius.only(
@@ -108,7 +108,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -136,7 +136,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
                 Text(
                   'Define a new scope segment for testing',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -146,7 +146,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+              backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
               foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -179,7 +179,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
               borderRadius: BorderRadius.circular(12),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            fillColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -216,7 +216,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
               borderRadius: BorderRadius.circular(12),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            fillColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           maxLines: 3,
           minLines: 2,
@@ -240,8 +240,8 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
-            color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+            color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           child: DropdownButtonFormField<ScopeSegmentType>(
             value: _selectedType,
@@ -289,8 +289,8 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
-            color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+            color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           child: DropdownButtonFormField<ScopeSegmentStatus>(
             value: _selectedStatus,
@@ -342,8 +342,8 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
-              color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+              border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+              color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
             ),
             child: Row(
               children: [
@@ -381,7 +381,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),

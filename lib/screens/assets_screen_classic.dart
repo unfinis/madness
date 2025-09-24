@@ -4,6 +4,7 @@ import '../models/asset.dart';
 import '../providers/projects_provider.dart';
 import '../providers/comprehensive_asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/enhanced_asset_dialog.dart';
 import 'package:uuid/uuid.dart';
@@ -132,80 +133,13 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
     final assetsAsync = ref.watch(assetsProvider(currentProject.id));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Assets'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.read(assetNotifierProvider(currentProject.id).notifier).refresh();
-            },
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'manual_asset':
-                  _showAddAssetDialog(context, currentProject.id);
-                  break;
-                case 'import_assets':
-                  _showImportDialog(context);
-                  break;
-                case 'export_assets':
-                  _showExportDialog(context);
-                  break;
-                case 'visualize_relationships':
-                  _showRelationshipVisualization(context);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'manual_asset',
-                child: ListTile(
-                  leading: Icon(Icons.add),
-                  title: Text('Add Asset'),
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'import_assets',
-                child: ListTile(
-                  leading: Icon(Icons.upload),
-                  title: Text('Import Assets'),
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'export_assets',
-                child: ListTile(
-                  leading: Icon(Icons.download),
-                  title: Text('Export Assets'),
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'visualize_relationships',
-                child: ListTile(
-                  leading: Icon(Icons.account_tree),
-                  title: Text('Visualize Relationships'),
-                ),
-              ),
-            ],
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: _perspectives.map((perspective) => Tab(
-            icon: Icon(perspective.icon),
-            text: perspective.name,
-          )).toList(),
-        ),
-      ),
       body: assetsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+              Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
               Text('Error loading assets: $error'),
               const SizedBox(height: 16),
@@ -216,21 +150,34 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
             ],
           ),
         ),
-        data: (assets) => Column(
-          children: [
-            _buildStatsBar(assets),
-            const Divider(height: 1),
-            _buildFilters(),
-            const Divider(height: 1),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _perspectives.map((perspective) =>
-                  _buildPerspectiveView(perspective, assets)
-                ).toList(),
+        data: (assets) => SafeArea(
+          child: Column(
+            children: [
+              _buildStatsBar(assets),
+              const Divider(height: 1),
+              _buildFilters(),
+              const Divider(height: 1),
+              Material(
+                child: TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  tabs: _perspectives.map((perspective) => Tab(
+                    icon: Icon(perspective.icon),
+                    text: perspective.name,
+                  )).toList(),
+                ),
               ),
-            ),
-          ],
+              const Divider(height: 1),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: _perspectives.map((perspective) =>
+                    _buildPerspectiveView(perspective, assets)
+                  ).toList(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -239,61 +186,60 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
   Widget _buildStatsBar(List<Asset> assets) {
     final stats = _calculateStats(assets);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatChip('Total', stats.total, Icons.folder_outlined, Theme.of(context).primaryColor),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Networks', stats.networks, Icons.network_wifi, Colors.teal),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Hosts', stats.hosts, Icons.computer, Colors.blue),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Services', stats.services, Icons.cloud, Colors.green),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Credentials', stats.credentials, Icons.key, Colors.orange),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Wireless', stats.wireless, Icons.wifi, Colors.amber),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Domains', stats.domains, Icons.domain, Colors.purple),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Vulnerabilities', stats.vulnerabilities, Icons.security, Colors.red),
-          ],
-        ),
+    final statsData = [
+      StatData(
+        label: 'Total',
+        count: stats.total,
+        icon: Icons.folder_outlined,
+        color: Theme.of(context).colorScheme.primary,
       ),
-    );
+      StatData(
+        label: 'Networks',
+        count: stats.networks,
+        icon: Icons.network_wifi,
+        color: Colors.teal,
+      ),
+      StatData(
+        label: 'Hosts',
+        count: stats.hosts,
+        icon: Icons.computer,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Services',
+        count: stats.services,
+        icon: Icons.cloud,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Credentials',
+        count: stats.credentials,
+        icon: Icons.key,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'Wireless',
+        count: stats.wireless,
+        icon: Icons.wifi,
+        color: Colors.amber,
+      ),
+      StatData(
+        label: 'Domains',
+        count: stats.domains,
+        icon: Icons.domain,
+        color: Colors.purple,
+      ),
+      StatData(
+        label: 'Vulnerabilities',
+        count: stats.vulnerabilities,
+        icon: Icons.security,
+        color: Colors.red,
+      ),
+    ];
+
+    return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFilters() {
     return Padding(
@@ -480,7 +426,7 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
             _formatAssetTypeName(asset.type),
             style: const TextStyle(fontSize: 9),
           ),
-          backgroundColor: _getAssetTypeColor(asset.type).withOpacity(0.1),
+          backgroundColor: _getAssetTypeColor(asset.type).withValues(alpha: 0.1),
           side: BorderSide(color: _getAssetTypeColor(asset.type)),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
@@ -489,7 +435,7 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
         Text(
           _formatDate(asset.discoveredAt),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -500,9 +446,9 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -531,25 +477,25 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
           Icon(
             perspective.icon,
             size: 64,
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'No ${perspective.name.toLowerCase()} assets found',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Assets will appear here as they are discovered or manually added',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.lg),
-          ElevatedButton.icon(
+          IconButton.filled(
             onPressed: () {
               final currentProject = ref.read(currentProjectProvider);
               if (currentProject != null) {
@@ -557,7 +503,8 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
               }
             },
             icon: const Icon(Icons.add),
-            label: const Text('Add Asset'),
+            tooltip: 'Add Asset',
+            iconSize: 32,
           ),
         ],
       ),
@@ -890,7 +837,7 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
               );
             },
             child: const Text('Delete'),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
           ),
         ],
       ),
@@ -908,17 +855,6 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
     );
   }
 
-  void _showImportDialog(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Import feature coming soon')),
-    );
-  }
-
-  void _showExportDialog(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export feature coming soon')),
-    );
-  }
 
   void _showRelationshipVisualization(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(

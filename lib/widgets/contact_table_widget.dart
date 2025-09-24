@@ -47,7 +47,7 @@ class ContactTableWidget extends ConsumerWidget {
           child: DataTable(
             columnSpacing: 20,
             headingRowColor: MaterialStateProperty.all(
-              Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             ),
             columns: const [
               DataColumn(
@@ -205,9 +205,9 @@ class ContactTableWidget extends ConsumerWidget {
     return Container(
       padding: AppSpacing.chipPadding,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Text(
         label,

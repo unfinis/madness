@@ -52,7 +52,7 @@ enum AccessLevel {
 
 // Generic property value that can hold different types
 @freezed
-class PropertyValue with _$PropertyValue {
+sealed class PropertyValue with _$PropertyValue {
   const factory PropertyValue.string(String value) = StringProperty;
   const factory PropertyValue.integer(int value) = IntegerProperty;
   const factory PropertyValue.boolean(bool value) = BooleanProperty;
@@ -65,7 +65,7 @@ class PropertyValue with _$PropertyValue {
 
 // Asset model with rich property system
 @freezed
-class Asset with _$Asset {
+sealed class Asset with _$Asset {
   const factory Asset({
     required String id,
     required AssetType type,
@@ -99,7 +99,7 @@ class Asset with _$Asset {
 
 // Result of a trigger execution
 @freezed
-class TriggerResult with _$TriggerResult {
+sealed class TriggerResult with _$TriggerResult {
   const factory TriggerResult({
     required String methodologyId,
     required DateTime executedAt,

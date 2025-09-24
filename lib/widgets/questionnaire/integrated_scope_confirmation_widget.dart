@@ -1,4 +1,5 @@
 /// Integrated scope confirmation widget that uses existing scope models
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -30,6 +31,31 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
   static const _uuid = Uuid();
   List<ScopeSegment> _previewSegments = [];
   bool _isConfirmed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeScope();
+    });
+  }
+
+  void _initializeScope() {
+    final existingSegments = ref.read(filteredScopeSegmentsProvider);
+    final currentProject = ref.read(currentProjectProvider);
+
+    if (existingSegments.isNotEmpty) {
+      // Use existing scope segments if they exist
+      setState(() {
+        _previewSegments = List.from(existingSegments);
+      });
+    } else if (currentProject != null) {
+      // Generate preview from project assessment scope if no existing segments
+      _updatePreviewSegments(currentProject.assessmentScope);
+    }
+
+    Future(() => _updateAnswer());
+  }
 
   // Mapping from questionnaire elements to scope segment types
   static const Map<String, ScopeSegmentType> _elementTypeMapping = {
@@ -102,25 +128,6 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
     ],
   };
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeScopeFromProject();
-  }
-
-  void _initializeScopeFromProject() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final project = ProviderScope.containerOf(context).read(currentProjectProvider);
-      if (project != null) {
-        // Initialize preview segments based on project assessment scope
-        _updatePreviewSegments(project.assessmentScope);
-      } else {
-        // Initialize with empty segments
-        _previewSegments = [];
-      }
-      setState(() {});
-    });
-  }
 
   void _updatePreviewSegments(Map<String, bool> assessmentScope) {
     final segments = <ScopeSegment>[];
@@ -158,7 +165,16 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scopeSegments = ref.watch(filteredScopeSegmentsProvider);
+
+    // Listen for external changes to scope segments and update preview
+    ref.listen<List<ScopeSegment>>(filteredScopeSegmentsProvider, (previous, next) {
+      if (previous != null && next != previous && !_isConfirmed) {
+        setState(() {
+          _previewSegments = List.from(next);
+        });
+        Future(() => _updateAnswer());
+      }
+    });
 
     return Container(
       decoration: BoxDecoration(
@@ -233,15 +249,6 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
                       ),
                     ),
                     const Spacer(),
-                    if (scopeSegments.isNotEmpty)
-                      TextButton.icon(
-                        onPressed: _loadExistingScope,
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Load Existing'),
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ),
                   ],
                 ),
                 AppSpacing.vGapMD,
@@ -258,28 +265,17 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
 
                 AppSpacing.vGapLG,
 
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _previewSegments.isNotEmpty ? _updateScope : null,
-                        icon: const Icon(Icons.update),
-                        label: const Text('Update Scope'),
-                      ),
+                // Confirmation button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _previewSegments.isNotEmpty && !_isConfirmed ? _confirmScope : null,
+                    icon: Icon(_isConfirmed ? Icons.check_circle : Icons.check),
+                    label: Text(_isConfirmed ? 'Scope Confirmed' : 'Confirm Scope'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _isConfirmed ? Colors.green : null,
                     ),
-                    AppSpacing.hGapMD,
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: _previewSegments.isNotEmpty ? _confirmScope : null,
-                        icon: Icon(_isConfirmed ? Icons.check_circle : Icons.check),
-                        label: Text(_isConfirmed ? 'Confirmed' : 'Confirm Scope'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _isConfirmed ? Colors.green : null,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -397,63 +393,6 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
     );
   }
 
-  void _loadExistingScope() {
-    final existingSegments = ref.read(filteredScopeSegmentsProvider);
-    setState(() {
-      _previewSegments = List.from(existingSegments);
-    });
-    _updateAnswer();
-  }
-
-  Future<void> _updateScope() async {
-    final scopeNotifier = ref.read(scopeProvider.notifier);
-    final projectsNotifier = ref.read(projectsProvider.notifier);
-    final currentProject = ref.read(currentProjectProvider);
-
-    try {
-      // Add preview segments to the database (they will persist now)
-      for (final segment in _previewSegments) {
-        await scopeNotifier.addSegment(segment);
-      }
-
-      // Update project assessment scope based on segments
-      if (currentProject != null) {
-        final updatedAssessmentScope = <String, bool>{};
-
-        // Map segments back to assessment scope elements
-        for (final segment in _previewSegments) {
-          final elementType = _segmentTypeToElementType(segment.type);
-          if (elementType != null) {
-            updatedAssessmentScope[elementType] = true;
-          }
-        }
-
-        // Update the project with new assessment scope
-        final updatedProject = currentProject.copyWith(
-          assessmentScope: updatedAssessmentScope,
-          updatedDate: DateTime.now(),
-        );
-
-        await projectsNotifier.updateProject(updatedProject);
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Updated ${_previewSegments.length} scope segments and project scope'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
-
-      _updateAnswer();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating scope: ${e.toString()}'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
-  }
 
   Future<void> _confirmScope() async {
     final scopeNotifier = ref.read(scopeProvider.notifier);
@@ -465,9 +404,14 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
     });
 
     try {
-      // Add scope segments to database first
+      // Ensure scope segments exist in database (only add if not already present)
+      final existingSegments = ref.read(filteredScopeSegmentsProvider);
+      final existingIds = existingSegments.map((s) => s.id).toSet();
+
       for (final segment in _previewSegments) {
-        await scopeNotifier.addSegment(segment);
+        if (!existingIds.contains(segment.id)) {
+          await scopeNotifier.addSegment(segment);
+        }
       }
 
       // Update project assessment scope when confirming
@@ -509,19 +453,23 @@ class _IntegratedScopeConfirmationWidgetState extends ConsumerState<IntegratedSc
         QuestionStatus.completed,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Scope confirmed and project updated successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Scope confirmed and project updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error confirming scope: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error confirming scope: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

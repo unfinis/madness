@@ -4,6 +4,7 @@ import '../models/asset.dart';
 import '../providers/projects_provider.dart';
 import '../providers/asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/asset_detail_dialog.dart';
 import '../dialogs/asset_type_selector_dialog.dart';
@@ -221,63 +222,66 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
   Widget _buildStatsBar(List<Asset> assets) {
     final stats = _calculateStats(assets);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatChip('Total', stats.total, Icons.folder_outlined, Theme.of(context).primaryColor),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Environments', stats.environments, Icons.public, Colors.purple),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Networks', stats.networks, Icons.network_wifi, Colors.teal),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Hosts', stats.hosts, Icons.computer, Colors.blue),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Services', stats.services, Icons.cloud, Colors.green),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Credentials', stats.credentials, Icons.key, Colors.orange),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Cloud', stats.cloud, Icons.cloud_outlined, Colors.indigo),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Wireless', stats.wireless, Icons.wifi, Colors.amber),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Compromised', stats.compromised, Icons.security, Colors.red),
-          ],
-        ),
+    final statsData = [
+      StatData(
+        label: 'Total',
+        count: stats.total,
+        icon: Icons.folder_outlined,
+        color: Theme.of(context).colorScheme.primary,
       ),
-    );
+      StatData(
+        label: 'Environments',
+        count: stats.environments,
+        icon: Icons.public,
+        color: Colors.purple,
+      ),
+      StatData(
+        label: 'Networks',
+        count: stats.networks,
+        icon: Icons.network_wifi,
+        color: Colors.teal,
+      ),
+      StatData(
+        label: 'Hosts',
+        count: stats.hosts,
+        icon: Icons.computer,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Services',
+        count: stats.services,
+        icon: Icons.cloud,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Credentials',
+        count: stats.credentials,
+        icon: Icons.key,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'Cloud',
+        count: stats.cloud,
+        icon: Icons.cloud_outlined,
+        color: Colors.indigo,
+      ),
+      StatData(
+        label: 'Wireless',
+        count: stats.wireless,
+        icon: Icons.wifi,
+        color: Colors.amber,
+      ),
+      StatData(
+        label: 'Compromised',
+        count: stats.compromised,
+        icon: Icons.security,
+        color: Colors.red,
+      ),
+    ];
+
+    return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFilters() {
     return Padding(
@@ -598,7 +602,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                 Flexible(
                   child: Chip(
                     label: Text('${asset.childAssetIds.length}'),
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -701,7 +705,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
         style: const TextStyle(fontSize: 9),
         overflow: TextOverflow.ellipsis,
       ),
-      backgroundColor: _getStatusColor(status).withOpacity(0.1),
+      backgroundColor: _getStatusColor(status).withValues(alpha: 0.1),
       side: BorderSide(color: _getStatusColor(status)),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
@@ -715,7 +719,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
         style: const TextStyle(fontSize: 9),
         overflow: TextOverflow.ellipsis,
       ),
-      backgroundColor: _getAccessLevelColor(level).withOpacity(0.1),
+      backgroundColor: _getAccessLevelColor(level).withValues(alpha: 0.1),
       side: BorderSide(color: _getAccessLevelColor(level)),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
@@ -726,9 +730,9 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

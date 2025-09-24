@@ -7,19 +7,20 @@ import '../widgets/dialogs/dialog_components.dart';
 import '../constants/app_spacing.dart';
 
 class AddCredentialDialog extends StandardDialog {
-  const AddCredentialDialog({super.key})
-      : super(
-          title: 'Add Credential',
-          subtitle: 'Add a new credential to your collection',
-          icon: Icons.key_rounded,
-          size: DialogSize.medium,
-        );
+  const AddCredentialDialog({super.key}) : super(size: DialogSize.medium);
 
   @override
-  List<Widget> buildContent(BuildContext context) {
-    return [
-      const _AddCredentialForm(),
-    ];
+  String get title => 'Add Credential';
+
+  @override
+  String? get subtitle => 'Add a new credential to your collection';
+
+  @override
+  IconData? get headerIcon => Icons.key_rounded;
+
+  @override
+  Widget buildContent(BuildContext context) {
+    return const _AddCredentialForm();
   }
 }
 

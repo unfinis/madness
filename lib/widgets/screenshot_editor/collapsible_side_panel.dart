@@ -168,7 +168,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
         color: theme.colorScheme.surfaceContainer,
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -246,7 +246,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
         height: 32,
         decoration: BoxDecoration(
           color: isSelected
-              ? theme.colorScheme.primary.withOpacity(0.1)
+              ? theme.colorScheme.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           border: Border(
             bottom: BorderSide(
@@ -265,7 +265,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
               size: 16,
               color: isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.7),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             const SizedBox(width: 4),
             Text(
@@ -273,7 +273,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.7),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -298,7 +298,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
         decoration: BoxDecoration(
           color: isCollapsed
               ? Colors.transparent
-              : theme.colorScheme.primary.withOpacity(0.1),
+              : theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -308,7 +308,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
               icon,
               size: 16,
               color: isCollapsed
-                  ? theme.colorScheme.onSurface.withOpacity(0.5)
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                   : theme.colorScheme.primary,
             ),
             const SizedBox(width: 4),
@@ -316,7 +316,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
               title,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isCollapsed
-                    ? theme.colorScheme.onSurface.withOpacity(0.5)
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                     : theme.colorScheme.primary,
                 fontWeight: isCollapsed ? FontWeight.normal : FontWeight.w600,
               ),
@@ -326,7 +326,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
               isCollapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
               size: 14,
               color: isCollapsed
-                  ? theme.colorScheme.onSurface.withOpacity(0.5)
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                   : theme.colorScheme.primary,
             ),
           ],
@@ -356,7 +356,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
       children.add(
         Container(
           height: 1,
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       );
     }
@@ -435,7 +435,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
           child: Center(
             child: Container(
               width: 1,
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
         ),
@@ -472,7 +472,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
           Container(
             width: 24,
             height: 1,
-            color: theme.colorScheme.outline.withOpacity(0.3),
+            color: theme.colorScheme.outline.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 8),
           IconButton(

@@ -4,7 +4,7 @@ part 'asset_relationship.freezed.dart';
 part 'asset_relationship.g.dart';
 
 @freezed
-class AssetRelationship with _$AssetRelationship {
+sealed class AssetRelationship with _$AssetRelationship {
   const factory AssetRelationship({
     required String id,
     required String parentAssetId,

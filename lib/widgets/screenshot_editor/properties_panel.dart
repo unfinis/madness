@@ -37,7 +37,7 @@ class PropertiesPanel extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: theme.colorScheme.outline.withOpacity(0.2),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -212,7 +212,7 @@ class PropertiesPanel extends StatelessWidget {
             ? toolConfig.secondaryColor 
             : (selectedTool == EditorTool.highlightRect 
                 ? const Color(0x88FFFF00) // Default yellow for highlights
-                : toolConfig.primaryColor.withOpacity(0.3))) : null,
+                : toolConfig.primaryColor.withValues(alpha: 0.3))) : null,
         (color) => onConfigChanged(
           toolConfig.copyWith(
             secondaryColor: color ?? Colors.transparent,
@@ -350,7 +350,7 @@ class PropertiesPanel extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.3),
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
               borderRadius: BorderRadius.circular(4),
             ),
@@ -577,11 +577,11 @@ class PropertiesPanel extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha: 0.1),
         foregroundColor: color,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: color.withOpacity(0.3)),
+          side: BorderSide(color: color.withValues(alpha: 0.3)),
         ),
       ),
       child: Text(
@@ -681,7 +681,7 @@ class PropertiesPanel extends StatelessWidget {
                     ),
                     child: color == Colors.white ? Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ) : null,
@@ -721,7 +721,7 @@ class PropertiesPanel extends StatelessWidget {
               color: currentColor == Colors.transparent ? Colors.white : currentColor,
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.3),
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             child: currentColor == Colors.transparent
@@ -897,7 +897,7 @@ class PropertiesPanel extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.3),
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             filled: true,

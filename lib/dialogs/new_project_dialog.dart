@@ -176,7 +176,7 @@ class _NewProjectDialogState extends ConsumerState<NewProjectDialog> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                fillColor: theme.colorScheme.surface.withOpacity(0.5),
+                                fillColor: theme.colorScheme.surface.withValues(alpha: 0.5),
                                 filled: true,
                               ),
                               readOnly: true,

@@ -320,6 +320,9 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
         return Icons.bug_report;
       case AssetType.wireless_network:
         return Icons.wifi;
+
+      default:
+        return Icons.device_unknown;
     }
   }
 
@@ -457,9 +460,9 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
       width: double.infinity,
       height: 200,
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5), width: 1.5),
         borderRadius: BorderRadius.circular(8),
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -477,7 +480,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
           Text(
             'Example: OPERATING_SYSTEM=WINDOWS HAS SERVICE=SMB',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).hintColor.withOpacity(0.7),
+              color: Theme.of(context).hintColor.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -493,7 +496,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Theme.of(context).colorScheme.primaryContainer),
           ),
@@ -604,7 +607,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
           return Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: Theme.of(context).dividerColor),
             ),
@@ -748,7 +751,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Theme.of(context).colorScheme.secondaryContainer),
           ),
@@ -831,7 +834,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Theme.of(context).dividerColor),
             ),

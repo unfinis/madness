@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 enum LayerType {
@@ -179,7 +180,7 @@ class VectorLayer extends EditorLayer {
     canvas.save();
     
     // Apply layer opacity and blend mode
-    paint.color = strokeColor.withOpacity(opacity);
+    paint.color = strokeColor.withValues(alpha: opacity);
     paint.strokeWidth = strokeWidth;
     paint.style = PaintingStyle.stroke;
 
@@ -284,7 +285,7 @@ class TextLayer extends EditorLayer {
     final textPainter = TextPainter(
       text: TextSpan(
         text: text,
-        style: textStyle.copyWith(color: textStyle.color?.withOpacity(opacity)),
+        style: textStyle.copyWith(color: textStyle.color?.withValues(alpha: opacity)),
       ),
       textAlign: textAlign,
       textDirection: TextDirection.ltr,
@@ -397,21 +398,35 @@ class RedactionLayer extends EditorLayer {
   void render(Canvas canvas, Paint paint) {
     switch (redactionType) {
       case RedactionType.blackout:
-        paint.color = redactionColor.withOpacity(opacity);
+        paint.color = redactionColor.withValues(alpha: opacity);
         paint.style = PaintingStyle.fill;
         canvas.drawRect(bounds, paint);
         break;
       case RedactionType.blur:
         // TODO: Implement blur effect
-        paint.color = redactionColor.withOpacity(opacity * 0.5);
+        paint.color = redactionColor.withValues(alpha: opacity * 0.5);
         paint.style = PaintingStyle.fill;
         canvas.drawRect(bounds, paint);
         break;
       case RedactionType.pixelate:
-        // TODO: Implement pixelation effect
-        paint.color = redactionColor.withOpacity(opacity);
-        paint.style = PaintingStyle.fill;
-        canvas.drawRect(bounds, paint);
+        // Draw pixelated effect using block-based rendering
+        final pixelSize = this.pixelSize.toDouble();
+        for (double x = bounds.left; x < bounds.right; x += pixelSize) {
+          for (double y = bounds.top; y < bounds.bottom; y += pixelSize) {
+            final pixelRect = Rect.fromLTWH(
+              x,
+              y,
+              math.min(pixelSize, bounds.right - x),
+              math.min(pixelSize, bounds.bottom - y),
+            );
+
+            // Use a position-based color for consistency with other implementations
+            final blockColor = _generateBlockColor(x.toInt(), y.toInt());
+            paint.color = blockColor.withValues(alpha: opacity);
+            paint.style = PaintingStyle.fill;
+            canvas.drawRect(pixelRect, paint);
+          }
+        }
         break;
     }
   }
@@ -473,6 +488,32 @@ class RedactionLayer extends EditorLayer {
       blurRadius: layerData['blurRadius'] as double,
       pixelSize: layerData['pixelSize'] as int,
     );
+  }
+
+  Color _generateBlockColor(int x, int y) {
+    // Generate consistent pixelated colors that match the other implementations
+    final normalizedX = x / 800.0; // Assume 800px width
+    final normalizedY = y / 600.0; // Assume 600px height
+
+    // Use sine functions to create natural color variation
+    final baseR = (math.sin(normalizedX * math.pi * 2) * 64 + 128).toInt().clamp(0, 255);
+    final baseG = (math.cos(normalizedY * math.pi * 1.5) * 64 + 128).toInt().clamp(0, 255);
+    final baseB = (math.sin((normalizedX + normalizedY) * math.pi) * 64 + 128).toInt().clamp(0, 255);
+
+    // Add variation and regional consistency
+    final hashValue = (x * 73 + y * 37) % 256;
+    final variation = (hashValue / 8 - 16).toInt(); // +/- 16 variation
+
+    final regionX = (x / 50).floor();
+    final regionY = (y / 50).floor();
+    final regionHash = (regionX * 31 + regionY * 17) % 256;
+    final regionBias = regionHash / 4; // 0-64 range
+
+    final r = (baseR + variation + regionBias / 4).clamp(0, 255);
+    final g = (baseG + variation + regionBias / 3).clamp(0, 255);
+    final b = (baseB + variation + regionBias / 2).clamp(0, 255);
+
+    return Color.fromRGBO(r.toInt(), g.toInt(), b.toInt(), 1.0);
   }
 }
 

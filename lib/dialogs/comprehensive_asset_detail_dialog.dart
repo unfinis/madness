@@ -212,6 +212,12 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
           'exclusions_discovered': const PropertyValue.stringList([]),
           'whitelisted_paths': const PropertyValue.stringList([]),
         };
+
+      default:
+        return {
+          'name': const PropertyValue.string(''),
+          'description': const PropertyValue.string(''),
+        };
     }
   }
 
@@ -799,6 +805,9 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
         return Icons.shield;
       case AssetType.securityControl:
         return Icons.security;
+
+      default:
+        return Icons.device_unknown;
     }
   }
 

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/contact.dart';
@@ -7,10 +6,10 @@ import '../providers/projects_provider.dart';
 import '../widgets/contact_table_widget.dart';
 import '../widgets/common_state_widgets.dart';
 import '../widgets/common_layout_widgets.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../dialogs/add_contact_dialog.dart';
 import '../constants/app_spacing.dart';
-import '../widgets/contact_filters_widget.dart';
-import '../services/contacts_export_service.dart';
+import '../widgets/unified_filter/unified_filter.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -71,93 +70,54 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Contacts',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                        // Title and main actions are now in the top bar
+                        // Keep view toggle here as it's screen-specific
+                        if (shouldShowTableToggle)
+                          SegmentedButton<bool>(
+                            segments: const [
+                              ButtonSegment<bool>(
+                                value: false,
+                                icon: Icon(Icons.view_agenda, size: 16),
+                                label: Text('Cards'),
+                              ),
+                              ButtonSegment<bool>(
+                                value: true,
+                                icon: Icon(Icons.table_rows, size: 16),
+                                label: Text('Table'),
+                              ),
+                            ],
+                            selected: {_useTableView},
+                            onSelectionChanged: (selection) {
+                              setState(() {
+                                _useTableView = selection.first;
+                              });
+                            },
+                            style: SegmentedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: CommonLayoutWidgets.itemSpacing),
-                        // Responsive button layout with view toggle
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            if (constraints.maxWidth > 600) {
-                              return Row(
-                                children: [
-                                  if (shouldShowTableToggle) ...[
-                                    SegmentedButton<bool>(
-                                      segments: const [
-                                        ButtonSegment<bool>(
-                                          value: false,
-                                          icon: Icon(Icons.view_agenda, size: 16),
-                                          label: Text('Cards'),
-                                        ),
-                                        ButtonSegment<bool>(
-                                          value: true,
-                                          icon: Icon(Icons.table_rows, size: 16),
-                                          label: Text('Table'),
-                                        ),
-                                      ],
-                                      selected: {_useTableView},
-                                      onSelectionChanged: (selection) {
-                                        setState(() {
-                                          _useTableView = selection.first;
-                                        });
-                                      },
-                                      style: SegmentedButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                  ] else
-                                    const Spacer(),
-                                  ..._buildActionButtons(context),
-                                ],
-                              );
-                            } else {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  if (shouldShowTableToggle) ...[
-                                    SegmentedButton<bool>(
-                                      segments: const [
-                                        ButtonSegment<bool>(
-                                          value: false,
-                                          icon: Icon(Icons.view_agenda, size: 16),
-                                        ),
-                                        ButtonSegment<bool>(
-                                          value: true,
-                                          icon: Icon(Icons.table_rows, size: 16),
-                                        ),
-                                      ],
-                                      selected: {_useTableView},
-                                      onSelectionChanged: (selection) {
-                                        setState(() {
-                                          _useTableView = selection.first;
-                                        });
-                                      },
-                                      style: SegmentedButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
-                                      ),
-                                    ),
-                                    SizedBox(height: CommonLayoutWidgets.compactSpacing),
-                                  ],
-                                  Wrap(
-                                    alignment: WrapAlignment.end,
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _buildActionButtons(context),
-                                  ),
-                                ],
-                              );
-                            }
-                          },
-                        ),
                       ],
                     ),
                     SizedBox(height: isWideDesktop ? 16 : 24),
                     
-                    ContactFiltersWidget(searchController: _searchController),
+                    UnifiedFilterBar(
+                      searchController: _searchController,
+                      searchHint: 'Search contacts, emails, roles...',
+                      primaryFilters: _buildPrimaryFilters(),
+                      advancedFilters: _buildAdvancedFilters(),
+                      advancedFiltersTitle: 'Contact Filters',
+                      onSearchChanged: (value) {
+                        ref.read(contactFiltersProvider.notifier).updateSearchQuery(value);
+                      },
+                      onSearchCleared: () {
+                        ref.read(contactFiltersProvider.notifier).updateSearchQuery('');
+                      },
+                      onAdvancedFiltersChanged: () {
+                        // Advanced filter changes are handled by individual filter callbacks
+                      },
+                      activeFilterCount: _getActiveFilterCount(),
+                      resultCount: filteredContactsAsync.value?.length,
+                    ),
                     SizedBox(height: isWideDesktop ? 16 : 24),
                     
                     filteredContactsAsync.when(
@@ -202,49 +162,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   }
 
 
-  List<Widget> _buildActionButtons(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final availableWidth = screenWidth * 0.3;
-    
-    if (availableWidth > 300) {
-      return [
-        OutlinedButton.icon(
-          onPressed: () => _exportContacts(context),
-          icon: const Icon(Icons.download, size: 18),
-          label: const Text('Export'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _showAddContactDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Contact'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-      ];
-    } else {
-      return [
-        IconButton.outlined(
-          onPressed: () => _exportContacts(context),
-          icon: const Icon(Icons.download, size: 18),
-          tooltip: 'Export',
-        ),
-        const SizedBox(width: 4),
-        FilledButton.icon(
-          onPressed: () => _showAddContactDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          ),
-        ),
-      ];
-    }
-  }
 
   Widget _buildContactsList(List<Contact> contacts) {
     final sortedContacts = [...contacts]
@@ -270,7 +187,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: InkWell(
@@ -294,7 +211,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                       padding: const EdgeInsets.all(12),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -353,7 +270,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -439,7 +356,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -610,86 +527,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     );
   }
 
-  void _exportContacts(BuildContext context) {
-    final contactsAsync = ref.read(contactProvider(widget.projectId));
-    final contacts = contactsAsync.asData?.value ?? [];
-    
-    if (contacts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No contacts to export'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-      return;
-    }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Export Contacts'),
-        content: const Text('Choose export format:'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _performExport(context, 'csv');
-            },
-            child: const Text('Export as CSV'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _performExport(context, 'excel');
-            },
-            child: const Text('Export as Excel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _performExport(BuildContext context, String format) async {
-    try {
-      final contactsAsync = ref.read(contactProvider(widget.projectId));
-      final contacts = contactsAsync.asData?.value ?? [];
-      late final File file;
-      
-      if (format == 'excel') {
-        file = await ContactsExportService.exportToExcel(contacts);
-      } else {
-        file = await ContactsExportService.exportToCSV(contacts);
-      }
-      
-      if (!context.mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Exported ${contacts.length} contacts to ${file.path}'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          action: SnackBarAction(
-            label: 'Open',
-            onPressed: () {
-              // Platform-specific file opening would go here
-            },
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Export failed: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
-  }
 
   Widget _buildContactsStatsBar(BuildContext context, String projectId) {
     final contactsAsync = ref.watch(contactProvider(projectId));
@@ -706,59 +544,50 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       data: (contacts) {
         final stats = _calculateContactStats(contacts);
 
-        return Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildStatChip('Total', stats.total, Icons.people_outline, Theme.of(context).primaryColor),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Emergency', stats.emergency, Icons.emergency, Colors.red),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Technical', stats.technical, Icons.engineering, Colors.blue),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Report Recipients', stats.reportRecipients, Icons.report, Colors.green),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Client Contacts', stats.clientContacts, Icons.business, Colors.orange),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Internal Team', stats.internalTeam, Icons.group, Colors.purple),
-              ],
-            ),
+        final statsData = [
+          StatData(
+            label: 'Total',
+            count: stats.total,
+            icon: Icons.people_outline,
+            color: Theme.of(context).colorScheme.primary,
           ),
-        );
+          StatData(
+            label: 'Emergency',
+            count: stats.emergency,
+            icon: Icons.emergency,
+            color: Colors.red,
+          ),
+          StatData(
+            label: 'Technical',
+            count: stats.technical,
+            icon: Icons.engineering,
+            color: Colors.blue,
+          ),
+          StatData(
+            label: 'Report Recipients',
+            count: stats.reportRecipients,
+            icon: Icons.report,
+            color: Colors.green,
+          ),
+          StatData(
+            label: 'Client Contacts',
+            count: stats.clientContacts,
+            icon: Icons.business,
+            color: Colors.orange,
+          ),
+          StatData(
+            label: 'Internal Team',
+            count: stats.internalTeam,
+            icon: Icons.group,
+            color: Colors.purple,
+          ),
+        ];
+
+        return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
       },
     );
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   ContactStats _calculateContactStats(List<Contact> contacts) {
     final emergency = contacts.where((c) => c.tags.contains('emergency')).length;
@@ -774,6 +603,263 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       reportRecipients: reportRecipients,
       clientContacts: clientContacts,
       internalTeam: internalTeam,
+    );
+  }
+
+  /// Build primary filters (most important ones shown on mobile)
+  List<PrimaryFilter> _buildPrimaryFilters() {
+    final filters = ref.watch(contactFiltersProvider);
+    final roleFilters = _getRoleFilters(filters.activeFilters);
+    final typeFilters = _getTypeFilters(filters.activeFilters);
+
+    return [
+      // Role filter (most important for contacts)
+      PrimaryFilter(
+        label: 'Role: ${_getRoleLabel(roleFilters)}',
+        isSelected: roleFilters.isNotEmpty,
+        onPressed: () => _showRoleOptions(),
+        icon: Icons.work,
+        badge: roleFilters.length > 1 ? roleFilters.length.toString() : null,
+      ),
+
+      // Type filter (second most important)
+      PrimaryFilter(
+        label: 'Type: ${_getTypeLabel(typeFilters)}',
+        isSelected: typeFilters.isNotEmpty,
+        onPressed: () => _showTypeOptions(),
+        icon: Icons.category,
+        badge: typeFilters.length > 1 ? typeFilters.length.toString() : null,
+      ),
+    ];
+  }
+
+  /// Build advanced filters for bottom sheet
+  List<FilterSection> _buildAdvancedFilters() {
+    final filters = ref.watch(contactFiltersProvider);
+
+    return [
+      // Contact Roles Section
+      FilterSection(
+        title: 'Contact Roles',
+        icon: Icons.work,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Primary Contact',
+                isSelected: filters.activeFilters.contains(ContactFilter.primary),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.primary),
+                icon: Icons.star,
+              ),
+              StandardFilterChip(
+                label: 'Technical Contact',
+                isSelected: filters.activeFilters.contains(ContactFilter.technical),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.technical),
+                icon: Icons.engineering,
+              ),
+              StandardFilterChip(
+                label: 'Emergency Contact',
+                isSelected: filters.activeFilters.contains(ContactFilter.emergency),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.emergency),
+                icon: Icons.emergency,
+              ),
+              StandardFilterChip(
+                label: 'Escalation Contact',
+                isSelected: filters.activeFilters.contains(ContactFilter.escalation),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.escalation),
+                icon: Icons.trending_up,
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Specialized Roles Section
+      FilterSection(
+        title: 'Specialized Roles',
+        icon: Icons.person_pin,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Security Consultant',
+                isSelected: filters.activeFilters.contains(ContactFilter.securityConsultant),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.securityConsultant),
+                icon: Icons.security,
+              ),
+              StandardFilterChip(
+                label: 'Account Manager',
+                isSelected: filters.activeFilters.contains(ContactFilter.accountManager),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.accountManager),
+                icon: Icons.account_circle,
+              ),
+              StandardFilterChip(
+                label: 'Report Recipients',
+                isSelected: filters.activeFilters.contains(ContactFilter.receiveReport),
+                onPressed: () => ref.read(contactFiltersProvider.notifier).toggleFilter(ContactFilter.receiveReport),
+                icon: Icons.report,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
+  }
+
+  // Filter helper methods
+  Set<ContactFilter> _getRoleFilters(Set<ContactFilter> activeFilters) {
+    return activeFilters.where((filter) => [
+      ContactFilter.primary,
+      ContactFilter.technical,
+      ContactFilter.emergency,
+      ContactFilter.escalation,
+    ].contains(filter)).toSet();
+  }
+
+  Set<ContactFilter> _getTypeFilters(Set<ContactFilter> activeFilters) {
+    return activeFilters.where((filter) => [
+      ContactFilter.securityConsultant,
+      ContactFilter.accountManager,
+      ContactFilter.receiveReport,
+    ].contains(filter)).toSet();
+  }
+
+  String _getRoleLabel(Set<ContactFilter> roleFilters) {
+    if (roleFilters.isEmpty) return 'All';
+    if (roleFilters.length == 1) {
+      final filter = roleFilters.first;
+      switch (filter) {
+        case ContactFilter.primary: return 'Primary';
+        case ContactFilter.technical: return 'Technical';
+        case ContactFilter.emergency: return 'Emergency';
+        case ContactFilter.escalation: return 'Escalation';
+        default: return 'All';
+      }
+    }
+    return 'Multiple (${roleFilters.length})';
+  }
+
+  String _getTypeLabel(Set<ContactFilter> typeFilters) {
+    if (typeFilters.isEmpty) return 'All';
+    if (typeFilters.length == 1) {
+      final filter = typeFilters.first;
+      switch (filter) {
+        case ContactFilter.securityConsultant: return 'Security';
+        case ContactFilter.accountManager: return 'Account Mgr';
+        case ContactFilter.receiveReport: return 'Reports';
+        default: return 'All';
+      }
+    }
+    return 'Multiple (${typeFilters.length})';
+  }
+
+  int _getActiveFilterCount() {
+    final filters = ref.read(contactFiltersProvider);
+    // Don't count 'all' as an active filter
+    return filters.activeFilters.contains(ContactFilter.all) ? 0 : filters.activeFilters.length;
+  }
+
+  void _showRoleOptions() {
+    // Show quick role filter options
+    final notifier = ref.read(contactFiltersProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter by Role'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.star, color: Colors.amber),
+              title: const Text('Primary Contact'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.primary);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.engineering, color: Colors.blue),
+              title: const Text('Technical Contact'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.technical);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.emergency, color: Colors.red),
+              title: const Text('Emergency Contact'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.emergency);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.trending_up, color: Colors.orange),
+              title: const Text('Escalation Contact'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.escalation);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTypeOptions() {
+    // Show quick type filter options
+    final notifier = ref.read(contactFiltersProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter by Type'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.security, color: Colors.purple),
+              title: const Text('Security Consultant'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.securityConsultant);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_circle, color: Colors.green),
+              title: const Text('Account Manager'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.accountManager);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.report, color: Colors.blue),
+              title: const Text('Report Recipients'),
+              onTap: () {
+                notifier.toggleFilter(ContactFilter.receiveReport);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 }

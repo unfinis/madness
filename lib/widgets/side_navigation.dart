@@ -207,7 +207,7 @@ class SideNavigation extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         selected: isSelected,
-                        selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                        selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                         onTap: () {
                           ref.read(navigationProvider.notifier).navigateTo(item.section);
                           if (!isDesktop) {

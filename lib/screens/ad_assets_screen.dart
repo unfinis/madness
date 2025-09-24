@@ -5,7 +5,7 @@ import '../providers/projects_provider.dart';
 import '../providers/comprehensive_asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
 import '../widgets/common_layout_widgets.dart';
-import '../constants/app_spacing.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../dialogs/ad_asset_detail_dialog.dart';
 
 class AdAssetsScreen extends ConsumerStatefulWidget {
@@ -162,65 +162,64 @@ class _AdAssetsScreenState extends ConsumerState<AdAssetsScreen>
         final adAssets = assets.where(_isAdAsset).toList();
         final stats = _calculateAdStats(adAssets);
 
-        return Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildStatChip('Total AD Assets', stats.total, Icons.domain_verification, Colors.deepPurple),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Domains', stats.domains, Icons.domain, Colors.purple),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Domain Controllers', stats.domainControllers, Icons.dns, Colors.indigo),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Users', stats.users, Icons.person, Colors.lightBlue),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Computers', stats.computers, Icons.desktop_windows, Colors.blue),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('ADCS', stats.adcs, Icons.verified_user, Colors.cyan),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('SCCM', stats.sccm, Icons.settings_applications, Colors.brown),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Tickets', stats.tickets, Icons.confirmation_number, Colors.pink),
-              ],
-            ),
+        final statsData = [
+          StatData(
+            label: 'Total AD Assets',
+            count: stats.total,
+            icon: Icons.domain_verification,
+            color: Colors.deepPurple,
           ),
-        );
+          StatData(
+            label: 'Domains',
+            count: stats.domains,
+            icon: Icons.domain,
+            color: Colors.purple,
+          ),
+          StatData(
+            label: 'Domain Controllers',
+            count: stats.domainControllers,
+            icon: Icons.dns,
+            color: Colors.indigo,
+          ),
+          StatData(
+            label: 'Users',
+            count: stats.users,
+            icon: Icons.person,
+            color: Colors.lightBlue,
+          ),
+          StatData(
+            label: 'Computers',
+            count: stats.computers,
+            icon: Icons.desktop_windows,
+            color: Colors.blue,
+          ),
+          StatData(
+            label: 'ADCS',
+            count: stats.adcs,
+            icon: Icons.verified_user,
+            color: Colors.cyan,
+          ),
+          StatData(
+            label: 'SCCM',
+            count: stats.sccm,
+            icon: Icons.settings_applications,
+            color: Colors.brown,
+          ),
+          StatData(
+            label: 'Tickets',
+            count: stats.tickets,
+            icon: Icons.confirmation_number,
+            color: Colors.pink,
+          ),
+        ];
+
+        return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildCategoryView(BuildContext context, String projectId, AdAssetCategory category) {
     final assetsAsync = ref.watch(assetsProvider(projectId));

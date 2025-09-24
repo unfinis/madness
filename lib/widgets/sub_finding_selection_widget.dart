@@ -107,7 +107,7 @@ class _SubFindingSelectionWidgetState extends State<SubFindingSelectionWidget> {
                 child: Text(
                   '${widget.template.title} - ${widget.template.subFindings.length} sub-findings available',
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.8),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ),

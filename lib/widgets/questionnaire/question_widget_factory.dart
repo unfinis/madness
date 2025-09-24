@@ -1,4 +1,5 @@
 /// Factory for creating question widgets based on answer type
+library;
 import 'package:flutter/material.dart';
 import '../../models/questionnaire.dart';
 import 'question_widget_base.dart';
@@ -8,7 +9,7 @@ import 'multiple_choice_question_widget.dart';
 import 'date_question_widget.dart';
 import 'number_question_widget.dart';
 import 'project_info_question_widget.dart';
-import 'project_dates_question_widget.dart';
+import 'simple_project_dates_widget.dart';
 import 'project_contacts_question_widget.dart';
 import 'integrated_scope_confirmation_widget.dart';
 import 'contact_validation_question_widget.dart';
@@ -64,7 +65,7 @@ class QuestionWidgetFactory {
         );
         
       case QuestionAnswerType.projectDates:
-        return ProjectDatesQuestionWidget(
+        return SimpleProjectDatesWidget(
           question: question,
           answer: answer,
           onAnswerChanged: onAnswerChanged,

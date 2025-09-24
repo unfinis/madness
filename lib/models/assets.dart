@@ -108,7 +108,7 @@ enum FirewallAction {
 
 /// Firewall rule for network segments
 @freezed
-class NetworkFirewallRule with _$NetworkFirewallRule {
+sealed class NetworkFirewallRule with _$NetworkFirewallRule {
   const factory NetworkFirewallRule({
     required String id,
     required String name,
@@ -127,7 +127,7 @@ class NetworkFirewallRule with _$NetworkFirewallRule {
 
 /// Network route information
 @freezed
-class NetworkRoute with _$NetworkRoute {
+sealed class NetworkRoute with _$NetworkRoute {
   const factory NetworkRoute({
     required String id,
     required String destinationNetwork,  // Target network CIDR
@@ -142,7 +142,7 @@ class NetworkRoute with _$NetworkRoute {
 
 /// Network access point - tracks how we can access this network
 @freezed
-class NetworkAccessPoint with _$NetworkAccessPoint {
+sealed class NetworkAccessPoint with _$NetworkAccessPoint {
   const factory NetworkAccessPoint({
     required String id,
     required String name,
@@ -162,7 +162,7 @@ class NetworkAccessPoint with _$NetworkAccessPoint {
 
 /// Host reference within network segment
 @freezed
-class NetworkHostReference with _$NetworkHostReference {
+sealed class NetworkHostReference with _$NetworkHostReference {
   const factory NetworkHostReference({
     required String hostAssetId,
     required String ipAddress,
@@ -247,7 +247,7 @@ enum BreakoutImpact {
 
 /// Restricted environment asset for breakout testing
 @freezed
-class RestrictedEnvironment with _$RestrictedEnvironment {
+sealed class RestrictedEnvironment with _$RestrictedEnvironment {
   const factory RestrictedEnvironment({
     required String id,
     required String name,
@@ -269,7 +269,7 @@ class RestrictedEnvironment with _$RestrictedEnvironment {
 
 /// Individual breakout attempt
 @freezed
-class BreakoutAttempt with _$BreakoutAttempt {
+sealed class BreakoutAttempt with _$BreakoutAttempt {
   const factory BreakoutAttempt({
     required String id,
     required String name,
@@ -296,7 +296,7 @@ class BreakoutAttempt with _$BreakoutAttempt {
 
 /// Reusable breakout technique
 @freezed
-class BreakoutTechnique with _$BreakoutTechnique {
+sealed class BreakoutTechnique with _$BreakoutTechnique {
   const factory BreakoutTechnique({
     required String id,
     required String name,
@@ -321,7 +321,7 @@ class BreakoutTechnique with _$BreakoutTechnique {
 
 /// Security control that prevents breakouts
 @freezed
-class SecurityControl with _$SecurityControl {
+sealed class SecurityControl with _$SecurityControl {
   const factory SecurityControl({
     required String id,
     required String name,
@@ -346,7 +346,7 @@ class SecurityControl with _$SecurityControl {
 // =============================================================================
 
 @freezed
-class AssetPropertyValue with _$AssetPropertyValue {
+sealed class AssetPropertyValue with _$AssetPropertyValue {
   const factory AssetPropertyValue.string(String value) = StringAssetProperty;
   const factory AssetPropertyValue.integer(int value) = IntegerAssetProperty;
   const factory AssetPropertyValue.double(double value) = DoubleAssetProperty;
@@ -364,7 +364,7 @@ class AssetPropertyValue with _$AssetPropertyValue {
 // =============================================================================
 
 @freezed
-class Asset with _$Asset {
+sealed class Asset with _$Asset {
   const factory Asset({
     required String id,
     required AssetType type,
@@ -404,7 +404,7 @@ class Asset with _$Asset {
 }
 
 @freezed
-class TriggerExecutionResult with _$TriggerExecutionResult {
+sealed class TriggerExecutionResult with _$TriggerExecutionResult {
   const factory TriggerExecutionResult({
     required String triggerId,
     required String methodologyId,
@@ -426,7 +426,7 @@ class TriggerExecutionResult with _$TriggerExecutionResult {
 
 /// Version information for software
 @freezed
-class SoftwareVersion with _$SoftwareVersion {
+sealed class SoftwareVersion with _$SoftwareVersion {
   const factory SoftwareVersion({
     required int major,
     required int minor,
@@ -441,7 +441,7 @@ class SoftwareVersion with _$SoftwareVersion {
 
 /// Network address information
 @freezed
-class NetworkAddress with _$NetworkAddress {
+sealed class NetworkAddress with _$NetworkAddress {
   const factory NetworkAddress({
     required String ip,
     String? subnet,
@@ -456,7 +456,7 @@ class NetworkAddress with _$NetworkAddress {
 
 /// Geographic location
 @freezed
-class PhysicalLocation with _$PhysicalLocation {
+sealed class PhysicalLocation with _$PhysicalLocation {
   const factory PhysicalLocation({
     String? address,
     String? city,
@@ -475,7 +475,7 @@ class PhysicalLocation with _$PhysicalLocation {
 
 /// Network interface information for hosts
 @freezed
-class NetworkInterface with _$NetworkInterface {
+sealed class NetworkInterface with _$NetworkInterface {
   const factory NetworkInterface({
     required String id,
     required String name,                // "eth0", "Ethernet", "Wi-Fi"
@@ -499,7 +499,7 @@ class NetworkInterface with _$NetworkInterface {
 
 /// Running service on a host
 @freezed
-class HostService with _$HostService {
+sealed class HostService with _$HostService {
   const factory HostService({
     required String id,
     required String name,
@@ -525,7 +525,7 @@ class HostService with _$HostService {
 
 /// Installed application on a host
 @freezed
-class HostApplication with _$HostApplication {
+sealed class HostApplication with _$HostApplication {
   const factory HostApplication({
     required String id,
     required String name,
@@ -554,7 +554,7 @@ class HostApplication with _$HostApplication {
 
 /// User account on a host
 @freezed
-class HostAccount with _$HostAccount {
+sealed class HostAccount with _$HostAccount {
   const factory HostAccount({
     required String id,
     required String username,
@@ -579,7 +579,7 @@ class HostAccount with _$HostAccount {
 
 /// Hardware component information
 @freezed
-class HardwareComponent with _$HardwareComponent {
+sealed class HardwareComponent with _$HardwareComponent {
   const factory HardwareComponent({
     required String id,
     required String type,                // "cpu", "memory", "disk", "gpu", "motherboard"
@@ -598,7 +598,7 @@ class HardwareComponent with _$HardwareComponent {
 
 /// Authentication information
 @freezed
-class AuthenticationInfo with _$AuthenticationInfo {
+sealed class AuthenticationInfo with _$AuthenticationInfo {
   const factory AuthenticationInfo({
     required String mechanism, // "password", "certificate", "kerberos", etc.
     Map<String, String>? details,

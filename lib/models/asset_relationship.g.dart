@@ -6,19 +6,19 @@ part of 'asset_relationship.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AssetRelationshipImpl _$$AssetRelationshipImplFromJson(
-        Map<String, dynamic> json) =>
-    _$AssetRelationshipImpl(
+_AssetRelationship _$AssetRelationshipFromJson(Map<String, dynamic> json) =>
+    _AssetRelationship(
       id: json['id'] as String,
       parentAssetId: json['parentAssetId'] as String,
       childAssetId: json['childAssetId'] as String,
-      relationshipType:
-          $enumDecode(_$AssetRelationshipTypeEnumMap, json['relationshipType']),
+      relationshipType: $enumDecode(
+        _$AssetRelationshipTypeEnumMap,
+        json['relationshipType'],
+      ),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
-Map<String, dynamic> _$$AssetRelationshipImplToJson(
-        _$AssetRelationshipImpl instance) =>
+Map<String, dynamic> _$AssetRelationshipToJson(_AssetRelationship instance) =>
     <String, dynamic>{
       'id': instance.id,
       'parentAssetId': instance.parentAssetId,

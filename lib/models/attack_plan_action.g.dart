@@ -6,8 +6,8 @@ part of 'attack_plan_action.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TriggerEventImpl _$$TriggerEventImplFromJson(Map<String, dynamic> json) =>
-    _$TriggerEventImpl(
+_TriggerEvent _$TriggerEventFromJson(Map<String, dynamic> json) =>
+    _TriggerEvent(
       triggerId: json['triggerId'] as String,
       assetId: json['assetId'] as String,
       assetName: json['assetName'] as String,
@@ -18,7 +18,7 @@ _$TriggerEventImpl _$$TriggerEventImplFromJson(Map<String, dynamic> json) =>
       confidence: (json['confidence'] as num?)?.toDouble() ?? 1.0,
     );
 
-Map<String, dynamic> _$$TriggerEventImplToJson(_$TriggerEventImpl instance) =>
+Map<String, dynamic> _$TriggerEventToJson(_TriggerEvent instance) =>
     <String, dynamic>{
       'triggerId': instance.triggerId,
       'assetId': instance.assetId,
@@ -30,19 +30,19 @@ Map<String, dynamic> _$$TriggerEventImplToJson(_$TriggerEventImpl instance) =>
       'confidence': instance.confidence,
     };
 
-_$ActionToolImpl _$$ActionToolImplFromJson(Map<String, dynamic> json) =>
-    _$ActionToolImpl(
-      name: json['name'] as String,
-      description: json['description'] as String,
-      installation: json['installation'] as String?,
-      required: json['required'] as bool? ?? true,
-      alternatives: (json['alternatives'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-    );
+_ActionTool _$ActionToolFromJson(Map<String, dynamic> json) => _ActionTool(
+  name: json['name'] as String,
+  description: json['description'] as String,
+  installation: json['installation'] as String?,
+  required: json['required'] as bool? ?? true,
+  alternatives:
+      (json['alternatives'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+);
 
-Map<String, dynamic> _$$ActionToolImplToJson(_$ActionToolImpl instance) =>
+Map<String, dynamic> _$ActionToolToJson(_ActionTool instance) =>
     <String, dynamic>{
       'name': instance.name,
       'description': instance.description,
@@ -51,17 +51,15 @@ Map<String, dynamic> _$$ActionToolImplToJson(_$ActionToolImpl instance) =>
       'alternatives': instance.alternatives,
     };
 
-_$ActionEquipmentImpl _$$ActionEquipmentImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ActionEquipmentImpl(
+_ActionEquipment _$ActionEquipmentFromJson(Map<String, dynamic> json) =>
+    _ActionEquipment(
       name: json['name'] as String,
       description: json['description'] as String,
       required: json['required'] as bool? ?? true,
       specifications: json['specifications'] as String?,
     );
 
-Map<String, dynamic> _$$ActionEquipmentImplToJson(
-        _$ActionEquipmentImpl instance) =>
+Map<String, dynamic> _$ActionEquipmentToJson(_ActionEquipment instance) =>
     <String, dynamic>{
       'name': instance.name,
       'description': instance.description,
@@ -69,17 +67,15 @@ Map<String, dynamic> _$$ActionEquipmentImplToJson(
       'specifications': instance.specifications,
     };
 
-_$ActionReferenceImpl _$$ActionReferenceImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ActionReferenceImpl(
+_ActionReference _$ActionReferenceFromJson(Map<String, dynamic> json) =>
+    _ActionReference(
       title: json['title'] as String,
       url: json['url'] as String,
       description: json['description'] as String?,
       type: json['type'] as String? ?? 'documentation',
     );
 
-Map<String, dynamic> _$$ActionReferenceImplToJson(
-        _$ActionReferenceImpl instance) =>
+Map<String, dynamic> _$ActionReferenceToJson(_ActionReference instance) =>
     <String, dynamic>{
       'title': instance.title,
       'url': instance.url,
@@ -87,16 +83,15 @@ Map<String, dynamic> _$$ActionReferenceImplToJson(
       'type': instance.type,
     };
 
-_$ActionRiskImpl _$$ActionRiskImplFromJson(Map<String, dynamic> json) =>
-    _$ActionRiskImpl(
-      risk: json['risk'] as String,
-      mitigation: json['mitigation'] as String,
-      severity:
-          $enumDecodeNullable(_$ActionRiskLevelEnumMap, json['severity']) ??
-              ActionRiskLevel.medium,
-    );
+_ActionRisk _$ActionRiskFromJson(Map<String, dynamic> json) => _ActionRisk(
+  risk: json['risk'] as String,
+  mitigation: json['mitigation'] as String,
+  severity:
+      $enumDecodeNullable(_$ActionRiskLevelEnumMap, json['severity']) ??
+      ActionRiskLevel.medium,
+);
 
-Map<String, dynamic> _$$ActionRiskImplToJson(_$ActionRiskImpl instance) =>
+Map<String, dynamic> _$ActionRiskToJson(_ActionRisk instance) =>
     <String, dynamic>{
       'risk': instance.risk,
       'mitigation': instance.mitigation,
@@ -111,8 +106,8 @@ const _$ActionRiskLevelEnumMap = {
   ActionRiskLevel.critical: 'critical',
 };
 
-_$ProcedureStepImpl _$$ProcedureStepImplFromJson(Map<String, dynamic> json) =>
-    _$ProcedureStepImpl(
+_ProcedureStep _$ProcedureStepFromJson(Map<String, dynamic> json) =>
+    _ProcedureStep(
       stepNumber: (json['stepNumber'] as num).toInt(),
       description: json['description'] as String,
       command: json['command'] as String?,
@@ -121,7 +116,7 @@ _$ProcedureStepImpl _$$ProcedureStepImplFromJson(Map<String, dynamic> json) =>
       mandatory: json['mandatory'] as bool? ?? true,
     );
 
-Map<String, dynamic> _$$ProcedureStepImplToJson(_$ProcedureStepImpl instance) =>
+Map<String, dynamic> _$ProcedureStepToJson(_ProcedureStep instance) =>
     <String, dynamic>{
       'stepNumber': instance.stepNumber,
       'description': instance.description,
@@ -131,20 +126,18 @@ Map<String, dynamic> _$$ProcedureStepImplToJson(_$ProcedureStepImpl instance) =>
       'mandatory': instance.mandatory,
     };
 
-_$SuggestedFindingImpl _$$SuggestedFindingImplFromJson(
-        Map<String, dynamic> json) =>
-    _$SuggestedFindingImpl(
+_SuggestedFinding _$SuggestedFindingFromJson(Map<String, dynamic> json) =>
+    _SuggestedFinding(
       title: json['title'] as String,
       description: json['description'] as String,
       severity:
           $enumDecodeNullable(_$ActionRiskLevelEnumMap, json['severity']) ??
-              ActionRiskLevel.medium,
+          ActionRiskLevel.medium,
       cvssScore: (json['cvssScore'] as num?)?.toDouble(),
       category: json['category'] as String?,
     );
 
-Map<String, dynamic> _$$SuggestedFindingImplToJson(
-        _$SuggestedFindingImpl instance) =>
+Map<String, dynamic> _$SuggestedFindingToJson(_SuggestedFinding instance) =>
     <String, dynamic>{
       'title': instance.title,
       'description': instance.description,
@@ -153,9 +146,8 @@ Map<String, dynamic> _$$SuggestedFindingImplToJson(
       'category': instance.category,
     };
 
-_$ActionExecutionImpl _$$ActionExecutionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ActionExecutionImpl(
+_ActionExecution _$ActionExecutionFromJson(Map<String, dynamic> json) =>
+    _ActionExecution(
       startedAt: json['startedAt'] == null
           ? null
           : DateTime.parse(json['startedAt'] as String),
@@ -163,19 +155,23 @@ _$ActionExecutionImpl _$$ActionExecutionImplFromJson(
           ? null
           : DateTime.parse(json['completedAt'] as String),
       executedBy: json['executedBy'] as String?,
-      executedCommands: (json['executedCommands'] as List<dynamic>?)
+      executedCommands:
+          (json['executedCommands'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      capturedOutputs: (json['capturedOutputs'] as List<dynamic>?)
+      capturedOutputs:
+          (json['capturedOutputs'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      evidenceFiles: (json['evidenceFiles'] as List<dynamic>?)
+      evidenceFiles:
+          (json['evidenceFiles'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      findingIds: (json['findingIds'] as List<dynamic>?)
+      findingIds:
+          (json['findingIds'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -184,8 +180,7 @@ _$ActionExecutionImpl _$$ActionExecutionImplFromJson(
       errorMessage: json['errorMessage'] as String?,
     );
 
-Map<String, dynamic> _$$ActionExecutionImplToJson(
-        _$ActionExecutionImpl instance) =>
+Map<String, dynamic> _$ActionExecutionToJson(_ActionExecution instance) =>
     <String, dynamic>{
       'startedAt': instance.startedAt?.toIso8601String(),
       'completedAt': instance.completedAt?.toIso8601String(),
@@ -199,56 +194,64 @@ Map<String, dynamic> _$$ActionExecutionImplToJson(
       'errorMessage': instance.errorMessage,
     };
 
-_$AttackPlanActionImpl _$$AttackPlanActionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$AttackPlanActionImpl(
+_AttackPlanAction _$AttackPlanActionFromJson(Map<String, dynamic> json) =>
+    _AttackPlanAction(
       id: json['id'] as String,
       projectId: json['projectId'] as String,
       title: json['title'] as String,
       objective: json['objective'] as String,
-      status: $enumDecodeNullable(_$ActionStatusEnumMap, json['status']) ??
+      status:
+          $enumDecodeNullable(_$ActionStatusEnumMap, json['status']) ??
           ActionStatus.pending,
       priority:
           $enumDecodeNullable(_$ActionPriorityEnumMap, json['priority']) ??
-              ActionPriority.medium,
+          ActionPriority.medium,
       riskLevel:
           $enumDecodeNullable(_$ActionRiskLevelEnumMap, json['riskLevel']) ??
-              ActionRiskLevel.medium,
-      triggerEvents: (json['triggerEvents'] as List<dynamic>?)
+          ActionRiskLevel.medium,
+      triggerEvents:
+          (json['triggerEvents'] as List<dynamic>?)
               ?.map((e) => TriggerEvent.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      risks: (json['risks'] as List<dynamic>?)
+      risks:
+          (json['risks'] as List<dynamic>?)
               ?.map((e) => ActionRisk.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      procedure: (json['procedure'] as List<dynamic>?)
+      procedure:
+          (json['procedure'] as List<dynamic>?)
               ?.map((e) => ProcedureStep.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      tools: (json['tools'] as List<dynamic>?)
+      tools:
+          (json['tools'] as List<dynamic>?)
               ?.map((e) => ActionTool.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      equipment: (json['equipment'] as List<dynamic>?)
+      equipment:
+          (json['equipment'] as List<dynamic>?)
               ?.map((e) => ActionEquipment.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      references: (json['references'] as List<dynamic>?)
+      references:
+          (json['references'] as List<dynamic>?)
               ?.map((e) => ActionReference.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      suggestedFindings: (json['suggestedFindings'] as List<dynamic>?)
+      suggestedFindings:
+          (json['suggestedFindings'] as List<dynamic>?)
               ?.map((e) => SuggestedFinding.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      cleanupSteps: (json['cleanupSteps'] as List<dynamic>?)
+      cleanupSteps:
+          (json['cleanupSteps'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              const [],
+          const [],
       execution: json['execution'] == null
           ? null
           : ActionExecution.fromJson(json['execution'] as Map<String, dynamic>),
@@ -261,8 +264,7 @@ _$AttackPlanActionImpl _$$AttackPlanActionImplFromJson(
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
     );
 
-Map<String, dynamic> _$$AttackPlanActionImplToJson(
-        _$AttackPlanActionImpl instance) =>
+Map<String, dynamic> _$AttackPlanActionToJson(_AttackPlanAction instance) =>
     <String, dynamic>{
       'id': instance.id,
       'projectId': instance.projectId,

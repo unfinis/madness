@@ -66,7 +66,7 @@ class _ExportDialogContentState extends State<_ExportDialogContent> {
           title: 'Export Summary',
           content: 'Export ${widget.totalExpenses} expense${widget.totalExpenses == 1 ? '' : 's'} to file',
           icon: Icons.summarize_rounded,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
         ),
 
         AppSpacing.vGapXL,
@@ -123,10 +123,10 @@ class _ExportDialogContentState extends State<_ExportDialogContent> {
         Container(
           padding: AppSpacing.cardPadding,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
           child: Row(

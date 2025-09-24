@@ -30,7 +30,7 @@ enum RunInstanceStatus {
 /// A run instance represents an active or completed execution of a methodology
 /// against a specific asset with resolved parameters
 @freezed
-class RunInstance with _$RunInstance {
+sealed class RunInstance with _$RunInstance {
   const factory RunInstance({
     /// Unique identifier for this run instance (RUN-YYYYMMDD-XXXX)
     required String runId,
@@ -90,7 +90,7 @@ class RunInstance with _$RunInstance {
 
 /// History entry for tracking changes to a run instance
 @freezed
-class HistoryEntry with _$HistoryEntry {
+sealed class HistoryEntry with _$HistoryEntry {
   const factory HistoryEntry({
     /// Unique identifier for this history entry
     required String id,

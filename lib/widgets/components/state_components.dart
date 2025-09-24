@@ -72,7 +72,7 @@ class StateComponents {
       duration: const Duration(milliseconds: 300),
       child: _ShimmerEffect(
         baseColor: Theme.of(context).colorScheme.surfaceContainer,
-        highlightColor: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5),
+        highlightColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5),
         child: child,
       ),
     );
@@ -224,7 +224,7 @@ class StateComponents {
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSizes.huge),
               ),
               child: Icon(
@@ -395,7 +395,7 @@ class StateComponents {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppSizes.huge),
             ),
             child: Icon(

@@ -87,10 +87,10 @@ class CommonSummaryWidget extends StatelessWidget {
     return Container(
       padding: AppSpacing.cardPadding,
       decoration: BoxDecoration(
-        color: item.color?.withOpacity(0.1),
+        color: item.color?.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         border: Border.all(
-          color: item.color?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3),
+          color: item.color?.withValues(alpha: 0.3) ?? Colors.grey.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

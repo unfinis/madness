@@ -230,7 +230,7 @@ class _MethodologyTemplateEditorDialogState
                       ? _currentMethodology.title
                       : 'New Methodology',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -241,7 +241,7 @@ class _MethodologyTemplateEditorDialogState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -484,8 +484,8 @@ class _MethodologyTemplateEditorDialogState
           _tags.remove(tag);
         });
       } : null,
-      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-      side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+      side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
     );
   }
 
@@ -527,9 +527,9 @@ class _MethodologyTemplateEditorDialogState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -557,7 +557,7 @@ class _MethodologyTemplateEditorDialogState
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               border: Border(
                 bottom: BorderSide(color: Theme.of(context).dividerColor),
               ),
@@ -674,7 +674,7 @@ class _MethodologyTemplateEditorDialogState
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: trigger.enabled ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+            color: trigger.enabled ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -736,9 +736,9 @@ class _MethodologyTemplateEditorDialogState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         text,
@@ -1032,7 +1032,7 @@ class _MethodologyTemplateEditorDialogState
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: trigger.type == 'complex' ? Colors.orange.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                        color: trigger.type == 'complex' ? Colors.orange.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: trigger.type == 'complex' ? Colors.orange : Colors.blue,
@@ -1238,7 +1238,7 @@ class _MethodologyTemplateEditorDialogState
                                         children: command.platforms!.map((platform) =>
                                           Chip(
                                             label: Text(platform),
-                                            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                            backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                                             labelStyle: const TextStyle(fontSize: 10),
                                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                           )
@@ -1353,7 +1353,7 @@ class _MethodologyTemplateEditorDialogState
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _getShellColor(command.defaultShell).withOpacity(0.1),
+            color: _getShellColor(command.defaultShell).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -1453,7 +1453,7 @@ class _MethodologyTemplateEditorDialogState
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -1656,7 +1656,7 @@ class _MethodologyTemplateEditorDialogState
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _getSeverityColor(finding.severity).withOpacity(0.1),
+            color: _getSeverityColor(finding.severity).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -1805,7 +1805,7 @@ class _MethodologyTemplateEditorDialogState
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _getCleanupPriorityColor(step.priority).withOpacity(0.1),
+            color: _getCleanupPriorityColor(step.priority).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -2564,8 +2564,8 @@ class _MethodologyTemplateEditorDialogState
           fontWeight: FontWeight.w600,
         ),
       ),
-      backgroundColor: color.withOpacity(0.1),
-      side: BorderSide(color: color.withOpacity(0.3)),
+      backgroundColor: color.withValues(alpha: 0.1),
+      side: BorderSide(color: color.withValues(alpha: 0.3)),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }

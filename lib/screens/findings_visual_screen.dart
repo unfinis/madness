@@ -148,8 +148,8 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
-              Theme.of(context).primaryColor.withOpacity(0.05),
+              Theme.of(context).primaryColor.withValues(alpha: 0.1),
+              Theme.of(context).primaryColor.withValues(alpha: 0.05),
             ],
           ),
           borderRadius: BorderRadius.circular(12),
@@ -343,7 +343,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
                     '${entry.key}: ${entry.value}',
                     style: const TextStyle(fontSize: 12),
                   ),
-                  backgroundColor: color.withOpacity(0.2),
+                  backgroundColor: color.withValues(alpha: 0.2),
                   side: BorderSide(color: color),
                 );
               }).toList(),
@@ -404,7 +404,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
 
         return Container(
           decoration: BoxDecoration(
-            color: _getRiskColor(riskLevel).withOpacity(0.3),
+            color: _getRiskColor(riskLevel).withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _getRiskColor(riskLevel)),
           ),
@@ -621,7 +621,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
                       finding.category,
                       style: const TextStyle(fontSize: 10),
                     ),
-                    backgroundColor: _getCategoryColor(finding.category).withOpacity(0.2),
+                    backgroundColor: _getCategoryColor(finding.category).withValues(alpha: 0.2),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
                   ),
@@ -649,7 +649,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: severityColor.withOpacity(0.1),
+          backgroundColor: severityColor.withValues(alpha: 0.1),
           child: Icon(
             _getSeverityIcon(finding.severity),
             color: severityColor,
@@ -676,7 +676,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
                     finding.severity.toUpperCase(),
                     style: const TextStyle(fontSize: 9),
                   ),
-                  backgroundColor: severityColor.withOpacity(0.2),
+                  backgroundColor: severityColor.withValues(alpha: 0.2),
                   side: BorderSide(color: severityColor),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -761,7 +761,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
                   border: Border.all(color: Colors.white, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: severityColor.withOpacity(0.3),
+                      color: severityColor.withValues(alpha: 0.3),
                       blurRadius: 4,
                     ),
                   ],
@@ -1237,7 +1237,7 @@ class RelationshipGraphPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.3)
+      ..color = Colors.blue.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 

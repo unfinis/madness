@@ -136,27 +136,33 @@ class _ContactValidationQuestionWidgetState extends QuestionWidgetBaseState<Cont
   }
 
   Widget _buildActionButtons(BuildContext context, String? projectId) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        OutlinedButton.icon(
-          onPressed: projectId != null ? () => _showAddContactDialog(context, projectId) : null,
-          icon: const Icon(Icons.person_add, size: 16),
-          label: const Text('Add Contact'),
-          style: OutlinedButton.styleFrom(
-            visualDensity: VisualDensity.compact,
+    return Flexible(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: OutlinedButton.icon(
+              onPressed: projectId != null ? () => _showAddContactDialog(context, projectId) : null,
+              icon: const Icon(Icons.person_add, size: 16),
+              label: const Text('Add Contact'),
+              style: OutlinedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
           ),
-        ),
-        AppSpacing.hGapSM,
-        FilledButton.icon(
-          onPressed: _allRolesValidated() ? () => _completeValidation() : null,
-          icon: const Icon(Icons.check, size: 16),
-          label: const Text('Validate All'),
-          style: FilledButton.styleFrom(
-            visualDensity: VisualDensity.compact,
+          AppSpacing.hGapSM,
+          Flexible(
+            child: FilledButton.icon(
+              onPressed: _allRolesValidated() ? () => _completeValidation() : null,
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Validate All'),
+              style: FilledButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -171,8 +177,8 @@ class _ContactValidationQuestionWidgetState extends QuestionWidgetBaseState<Cont
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isValidated 
-            ? theme.colorScheme.primaryContainer.withOpacity(0.5)
-            : theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isValidated 
@@ -227,9 +233,7 @@ class _ContactValidationQuestionWidgetState extends QuestionWidgetBaseState<Cont
                             ? theme.colorScheme.primary
                             : theme.colorScheme.onSurfaceVariant,
                       ),
-                      onPressed: assignedContact != null 
-                          ? () => _showContactDetails(context, assignedContact)
-                          : null,
+                      onPressed: () => _showContactDetails(context, assignedContact),
                     )
                   : null,
             ),
@@ -240,42 +244,50 @@ class _ContactValidationQuestionWidgetState extends QuestionWidgetBaseState<Cont
               ),
               ...contacts.map((contact) => DropdownMenuItem<String?>(
                 value: contact.id,
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      child: Text(
-                        contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        child: Text(
+                          contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ),
-                    ),
-                    AppSpacing.hGapSM,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            contact.name,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          if (contact.email.isNotEmpty)
+                      AppSpacing.hGapSM,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             Text(
-                              contact.email,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                              contact.name,
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                        ],
+                            if (contact.email.isNotEmpty)
+                              Text(
+                                contact.email,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )),
             ],
@@ -300,7 +312,7 @@ class _ContactValidationQuestionWidgetState extends QuestionWidgetBaseState<Cont
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

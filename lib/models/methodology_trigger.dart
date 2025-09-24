@@ -28,7 +28,7 @@ enum LogicalOperator {
 
 // A single trigger condition
 @freezed
-class TriggerCondition with _$TriggerCondition {
+sealed class TriggerCondition with _$TriggerCondition {
   const factory TriggerCondition({
     required String property,
     required TriggerOperator operator,
@@ -42,7 +42,7 @@ class TriggerCondition with _$TriggerCondition {
 
 // Group of conditions with logical operator
 @freezed
-class TriggerConditionGroup with _$TriggerConditionGroup {
+sealed class TriggerConditionGroup with _$TriggerConditionGroup {
   const factory TriggerConditionGroup({
     required LogicalOperator operator,
     required List<dynamic> conditions,  // Can be TriggerCondition or nested TriggerConditionGroup
@@ -54,7 +54,7 @@ class TriggerConditionGroup with _$TriggerConditionGroup {
 
 // Complete trigger definition for a methodology
 @freezed
-class MethodologyTrigger with _$MethodologyTrigger {
+sealed class MethodologyTrigger with _$MethodologyTrigger {
   const factory MethodologyTrigger({
     required String id,
     required String methodologyId,
@@ -99,7 +99,7 @@ class MethodologyTrigger with _$MethodologyTrigger {
 
 // Represents a triggered methodology ready for execution
 @freezed
-class TriggeredMethodology with _$TriggeredMethodology {
+sealed class TriggeredMethodology with _$TriggeredMethodology {
   const factory TriggeredMethodology({
     required String id,
     required String methodologyId,
@@ -132,7 +132,7 @@ class TriggeredMethodology with _$TriggeredMethodology {
 
 // Batch of triggered methodologies that can be executed together
 @freezed
-class BatchedTrigger with _$BatchedTrigger {
+sealed class BatchedTrigger with _$BatchedTrigger {
   const factory BatchedTrigger({
     required String id,
     required String methodologyId,

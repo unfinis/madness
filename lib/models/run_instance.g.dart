@@ -6,41 +6,43 @@ part of 'run_instance.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$RunInstanceImpl _$$RunInstanceImplFromJson(Map<String, dynamic> json) =>
-    _$RunInstanceImpl(
-      runId: json['runId'] as String,
-      templateId: json['templateId'] as String,
-      templateVersion: json['templateVersion'] as String,
-      triggerId: json['triggerId'] as String,
-      assetId: json['assetId'] as String,
-      matchedValues: json['matchedValues'] as Map<String, dynamic>,
-      parameters: json['parameters'] as Map<String, dynamic>,
-      status: $enumDecode(_$RunInstanceStatusEnumMap, json['status']),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      createdBy: json['createdBy'] as String,
-      evidenceIds: (json['evidenceIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      findingIds: (json['findingIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      history: (json['history'] as List<dynamic>?)
-              ?.map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      notes: json['notes'] as String?,
-      updatedAt: json['updatedAt'] == null
-          ? null
-          : DateTime.parse(json['updatedAt'] as String),
-      priority: (json['priority'] as num?)?.toInt() ?? 5,
-      tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              const [],
-    );
+_RunInstance _$RunInstanceFromJson(Map<String, dynamic> json) => _RunInstance(
+  runId: json['runId'] as String,
+  templateId: json['templateId'] as String,
+  templateVersion: json['templateVersion'] as String,
+  triggerId: json['triggerId'] as String,
+  assetId: json['assetId'] as String,
+  matchedValues: json['matchedValues'] as Map<String, dynamic>,
+  parameters: json['parameters'] as Map<String, dynamic>,
+  status: $enumDecode(_$RunInstanceStatusEnumMap, json['status']),
+  createdAt: DateTime.parse(json['createdAt'] as String),
+  createdBy: json['createdBy'] as String,
+  evidenceIds:
+      (json['evidenceIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  findingIds:
+      (json['findingIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  history:
+      (json['history'] as List<dynamic>?)
+          ?.map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  notes: json['notes'] as String?,
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
+  priority: (json['priority'] as num?)?.toInt() ?? 5,
+  tags:
+      (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+);
 
-Map<String, dynamic> _$$RunInstanceImplToJson(_$RunInstanceImpl instance) =>
+Map<String, dynamic> _$RunInstanceToJson(_RunInstance instance) =>
     <String, dynamic>{
       'runId': instance.runId,
       'templateId': instance.templateId,
@@ -69,8 +71,8 @@ const _$RunInstanceStatusEnumMap = {
   RunInstanceStatus.failed: 'failed',
 };
 
-_$HistoryEntryImpl _$$HistoryEntryImplFromJson(Map<String, dynamic> json) =>
-    _$HistoryEntryImpl(
+_HistoryEntry _$HistoryEntryFromJson(Map<String, dynamic> json) =>
+    _HistoryEntry(
       id: json['id'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
       performedBy: json['performedBy'] as String,
@@ -81,7 +83,7 @@ _$HistoryEntryImpl _$$HistoryEntryImplFromJson(Map<String, dynamic> json) =>
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
     );
 
-Map<String, dynamic> _$$HistoryEntryImplToJson(_$HistoryEntryImpl instance) =>
+Map<String, dynamic> _$HistoryEntryToJson(_HistoryEntry instance) =>
     <String, dynamic>{
       'id': instance.id,
       'timestamp': instance.timestamp.toIso8601String(),

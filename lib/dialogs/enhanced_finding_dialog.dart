@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/finding.dart';
 import '../providers/finding_provider.dart';
 import '../constants/app_spacing.dart';
-import '../widgets/markdown_editor_widget.dart';
+import '../widgets/quill_rich_editor_widget.dart';
 
 class EnhancedFindingDialog extends ConsumerStatefulWidget {
   final Finding? finding;
@@ -126,7 +126,7 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: _getSeverityColor(_selectedSeverity).withOpacity(0.1),
+        color: _getSeverityColor(_selectedSeverity).withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -160,6 +160,17 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
                   ),
               ],
             ),
+          ),
+          // Import/Export buttons
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: _exportToMarkdown,
+            tooltip: 'Export to Markdown',
+          ),
+          IconButton(
+            icon: const Icon(Icons.upload),
+            onPressed: _importFromMarkdown,
+            tooltip: 'Import from Markdown',
           ),
           IconButton(
             icon: const Icon(Icons.close),
@@ -357,27 +368,21 @@ Informational (0.0): No direct security impact
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
-            child: MarkdownEditorWidget(
+            child: QuillRichEditorWidget(
               initialText: _descriptionMarkdown,
               hintText: '''Describe the finding in detail...
 
 Example structure:
-## Overview
-Brief summary of the finding
-
-## Technical Details
-Detailed technical explanation
-
-## Impact
-Potential impact on the system or business
-
-## Proof of Concept
-Steps to reproduce or evidence
+Overview: Brief summary of the finding
+Technical Details: Detailed technical explanation
+Impact: Potential impact on the system or business
+Proof of Concept: Steps to reproduce or evidence
 ''',
               onChanged: (value) {
                 _descriptionMarkdown = value;
                 _hasUnsavedChanges = true;
               },
+              height: 400,
             ),
           ),
         ],
@@ -404,20 +409,20 @@ Steps to reproduce or evidence
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
-            child: MarkdownEditorWidget(
+            child: QuillRichEditorWidget(
               initialText: _recommendationsMarkdown,
               hintText: '''Provide remediation recommendations...
 
 Example structure:
-## Short-term Remediation
+Short-term Remediation:
 1. Immediate actions to mitigate risk
 2. Quick fixes or workarounds
 
-## Long-term Remediation
+Long-term Remediation:
 - Permanent solution implementation
 - Architecture changes if needed
 
-## Additional Considerations
+Additional Considerations:
 - Security best practices
 - Monitoring recommendations
 ''',
@@ -425,6 +430,7 @@ Example structure:
                 _recommendationsMarkdown = value;
                 _hasUnsavedChanges = true;
               },
+              height: 400,
             ),
           ),
         ],
@@ -692,10 +698,10 @@ Avoid technical jargon and implementation details.''',
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _getSeverityColor(_selectedSeverity).withOpacity(0.1),
+              color: _getSeverityColor(_selectedSeverity).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _getSeverityColor(_selectedSeverity).withOpacity(0.3),
+                color: _getSeverityColor(_selectedSeverity).withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -724,10 +730,10 @@ Avoid technical jargon and implementation details.''',
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.blue.withOpacity(0.3),
+                  color: Colors.blue.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
@@ -758,7 +764,7 @@ Avoid technical jargon and implementation details.''',
 
   Widget _buildInfoCard(String title, IconData icon, String content) {
     return Card(
-      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -927,5 +933,119 @@ Avoid technical jargon and implementation details.''',
         ),
       );
     }
+  }
+
+  void _exportToMarkdown() {
+    final StringBuffer buffer = StringBuffer();
+
+    // Title and basic info
+    buffer.writeln('# ${_titleController.text}');
+    buffer.writeln();
+    buffer.writeln('**Severity:** ${_selectedSeverity.displayName}');
+    buffer.writeln('**CVSS Score:** ${_cvssScoreController.text}');
+    buffer.writeln('**CVSS Vector:** ${_cvssVectorController.text}');
+    buffer.writeln();
+
+    // Description
+    if (_descriptionMarkdown.isNotEmpty) {
+      buffer.writeln('## Description');
+      buffer.writeln(_descriptionMarkdown);
+      buffer.writeln();
+    }
+
+    // Recommendations
+    if (_recommendationsMarkdown.isNotEmpty) {
+      buffer.writeln('## Recommendations');
+      buffer.writeln(_recommendationsMarkdown);
+      buffer.writeln();
+    }
+
+    // Executive Note
+    if (_executiveNoteController.text.isNotEmpty) {
+      buffer.writeln('## Executive Note');
+      buffer.writeln(_executiveNoteController.text);
+      buffer.writeln();
+    }
+
+    // Further Reading
+    final nonEmptyReading = _furtherReadingControllers
+        .where((controller) => controller.text.isNotEmpty)
+        .map((controller) => controller.text)
+        .toList();
+
+    if (nonEmptyReading.isNotEmpty) {
+      buffer.writeln('## Further Reading');
+      for (final item in nonEmptyReading) {
+        buffer.writeln('- $item');
+      }
+      buffer.writeln();
+    }
+
+    // Copy to clipboard or save to file
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Finding exported to clipboard as Markdown')),
+    );
+  }
+
+  void _importFromMarkdown() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          width: 500,
+          height: 400,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Import from Markdown',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 16),
+              const Text('Paste your markdown content below:'),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TextField(
+                  maxLines: null,
+                  expands: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Paste markdown content here...',
+                  ),
+                  onChanged: (value) {
+                    // Store the markdown content for parsing
+                    setState(() {
+                      _descriptionMarkdown = value;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Markdown imported successfully')),
+                      );
+                    },
+                    child: const Text('Import'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

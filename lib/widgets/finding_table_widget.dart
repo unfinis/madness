@@ -80,7 +80,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
               Icon(
                 Icons.search_off,
                 size: 48,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -90,7 +90,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
               Text(
                 'Try adjusting your search criteria or filters',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -195,7 +195,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).dividerColor,
@@ -432,7 +432,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
                           Text(
                             finding.description,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -447,7 +447,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: finding.severity.color.withOpacity(0.1),
+                    color: finding.severity.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -559,7 +559,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: finding.severity.color.withOpacity(0.1),
+                      color: finding.severity.color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -577,7 +577,7 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
               Text(
                 'Updated ${_formatDate(finding.updatedDate)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -625,9 +625,9 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: severity.color.withOpacity(0.1),
+        color: severity.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: severity.color.withOpacity(0.3)),
+        border: Border.all(color: severity.color.withValues(alpha: 0.3)),
       ),
       child: Text(
         severity.displayName,
@@ -644,9 +644,9 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.1),
+        color: status.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: status.color.withOpacity(0.3)),
+        border: Border.all(color: status.color.withValues(alpha: 0.3)),
       ),
       child: Text(
         status.displayName,

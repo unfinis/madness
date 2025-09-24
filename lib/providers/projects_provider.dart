@@ -2,25 +2,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/project.dart';
 import '../database/database.dart';
-
-// Database service provider
-final databaseServiceProvider = Provider<MadnessDatabase>((ref) {
-  return MadnessDatabase();
-});
+import 'database_provider.dart';
 
 // Current active project provider
 final currentProjectProvider = StateNotifierProvider<CurrentProjectNotifier, Project?>((ref) {
-  return CurrentProjectNotifier(ref.read(databaseServiceProvider));
+  return CurrentProjectNotifier(ref.read(databaseProvider));
 });
 
 // All projects provider
 final projectsProvider = StateNotifierProvider<ProjectsNotifier, AsyncValue<List<Project>>>((ref) {
-  return ProjectsNotifier(ref.read(databaseServiceProvider));
+  return ProjectsNotifier(ref.read(databaseProvider));
 });
 
 // Project statistics provider
 final projectStatisticsProvider = StateNotifierProvider.family<ProjectStatisticsNotifier, AsyncValue<ProjectStatistics?>, String>((ref, projectId) {
-  return ProjectStatisticsNotifier(ref.read(databaseServiceProvider), projectId);
+  return ProjectStatisticsNotifier(ref.read(databaseProvider), projectId);
 });
 
 class CurrentProjectNotifier extends StateNotifier<Project?> {

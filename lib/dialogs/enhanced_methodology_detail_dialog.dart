@@ -49,8 +49,8 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _getCategoryColor(methodology).withOpacity(0.1),
-                    _getCategoryColor(methodology).withOpacity(0.05),
+                    _getCategoryColor(methodology).withValues(alpha: 0.1),
+                    _getCategoryColor(methodology).withValues(alpha: 0.05),
                   ],
                 ),
                 border: Border(
@@ -63,7 +63,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: _getCategoryColor(methodology).withOpacity(0.1),
+                      color: _getCategoryColor(methodology).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -265,7 +265,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
               children: _getTargetAssetTypes(methodology).map((assetType) => Chip(
                 label: Text(assetType),
                 avatar: Icon(_getAssetTypeIcon(assetType), size: 16),
-                backgroundColor: Colors.blue.withOpacity(0.1),
+                backgroundColor: Colors.blue.withValues(alpha: 0.1),
               )).toList(),
             ),
           ),
@@ -303,7 +303,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
                 runSpacing: 8,
                 children: methodology.tags.map((tag) => Chip(
                   label: Text(tag),
-                  backgroundColor: Colors.grey.withOpacity(0.1),
+                  backgroundColor: Colors.grey.withValues(alpha: 0.1),
                 )).toList(),
               ),
             ),
@@ -344,9 +344,9 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -376,7 +376,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -420,9 +420,9 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         difficulty.toUpperCase(),
@@ -782,7 +782,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
       children: tools.map((tool) =>
         Chip(
           label: Text(tool),
-          backgroundColor: Colors.blue.withOpacity(0.1),
+          backgroundColor: Colors.blue.withValues(alpha: 0.1),
           avatar: const Icon(Icons.build, size: 16),
         ),
       ).toList(),
@@ -865,7 +865,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(icon, color: color),
         ),
         title: Text(title),

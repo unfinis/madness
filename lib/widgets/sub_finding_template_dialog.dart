@@ -290,7 +290,7 @@ class _SubFindingTemplateDialogState extends ConsumerState<SubFindingTemplateDia
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+                        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -314,7 +314,7 @@ class _SubFindingTemplateDialogState extends ConsumerState<SubFindingTemplateDia
                                   return Card(
                                     elevation: isSelected ? 2 : 0,
                                     color: isSelected
-                                        ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                                        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
                                         : null,
                                     child: ListTile(
                                       leading: CircleAvatar(
@@ -383,7 +383,7 @@ class _SubFindingTemplateDialogState extends ConsumerState<SubFindingTemplateDia
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+                        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: _loadedTemplate != null

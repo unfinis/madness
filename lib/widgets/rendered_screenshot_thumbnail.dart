@@ -54,7 +54,7 @@ class _RenderedScreenshotThumbnailState extends State<RenderedScreenshotThumbnai
       if (widget.screenshot.isPlaceholder) {
         // Generate placeholder thumbnail
         thumbnail = await ScreenshotThumbnailService.generatePlaceholderThumbnail(
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
           iconColor: Theme.of(context).colorScheme.secondary,
           icon: Icons.insert_photo_outlined,
           text: 'Placeholder',

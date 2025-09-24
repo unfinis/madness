@@ -5,9 +5,10 @@ import '../providers/task_provider.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/task_item_widget.dart';
 import '../widgets/task_table_widget.dart';
-import '../widgets/task_filters_widget.dart';
+import '../widgets/unified_filter/unified_filter.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/add_task_dialog.dart';
 
@@ -57,7 +58,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     return ScreenWrapper(
       children: [
         _buildTasksStatsBar(context, currentProject.id),
-        SizedBox(height: CommonLayoutWidgets.sectionSpacing),
+        const SizedBox(height: CommonLayoutWidgets.sectionSpacing),
         
         ResponsiveCard(
           child: Column(
@@ -67,94 +68,55 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Tasks',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  // Title and main actions are now in the top bar
+                  // Keep view toggle here as it's screen-specific
+                  if (shouldShowTableToggle)
+                    SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment<bool>(
+                          value: false,
+                          icon: Icon(Icons.view_agenda, size: 16),
+                          label: Text('Cards'),
+                        ),
+                        ButtonSegment<bool>(
+                          value: true,
+                          icon: Icon(Icons.table_rows, size: 16),
+                          label: Text('Table'),
+                        ),
+                      ],
+                      selected: {_useTableView},
+                      onSelectionChanged: (selection) {
+                        setState(() {
+                          _useTableView = selection.first;
+                        });
+                      },
+                      style: SegmentedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: CommonLayoutWidgets.itemSpacing),
-                  // Responsive button layout with view toggle
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (constraints.maxWidth > 600) {
-                        return Row(
-                          children: [
-                            if (shouldShowTableToggle) ...[
-                              SegmentedButton<bool>(
-                                segments: const [
-                                  ButtonSegment<bool>(
-                                    value: false,
-                                    icon: Icon(Icons.view_agenda, size: 16),
-                                    label: Text('Cards'),
-                                  ),
-                                  ButtonSegment<bool>(
-                                    value: true,
-                                    icon: Icon(Icons.table_rows, size: 16),
-                                    label: Text('Table'),
-                                  ),
-                                ],
-                                selected: {_useTableView},
-                                onSelectionChanged: (selection) {
-                                  setState(() {
-                                    _useTableView = selection.first;
-                                  });
-                                },
-                                style: SegmentedButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ),
-                              const Spacer(),
-                            ] else
-                              const Spacer(),
-                            ..._buildActionButtons(context),
-                          ],
-                        );
-                      } else {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            if (shouldShowTableToggle) ...[
-                              SegmentedButton<bool>(
-                                segments: const [
-                                  ButtonSegment<bool>(
-                                    value: false,
-                                    icon: Icon(Icons.view_agenda, size: 16),
-                                  ),
-                                  ButtonSegment<bool>(
-                                    value: true,
-                                    icon: Icon(Icons.table_rows, size: 16),
-                                  ),
-                                ],
-                                selected: {_useTableView},
-                                onSelectionChanged: (selection) {
-                                  setState(() {
-                                    _useTableView = selection.first;
-                                  });
-                                },
-                                style: SegmentedButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ),
-                              SizedBox(height: CommonLayoutWidgets.compactSpacing),
-                            ],
-                            Wrap(
-                              alignment: WrapAlignment.end,
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: _buildActionButtons(context),
-                            ),
-                          ],
-                        );
-                      }
-                    },
-                  ),
                 ],
               ),
-              SizedBox(height: CommonLayoutWidgets.sectionSpacing),
+              const SizedBox(height: CommonLayoutWidgets.sectionSpacing),
               
-              TaskFiltersWidget(searchController: _searchController),
-              SizedBox(height: CommonLayoutWidgets.sectionSpacing),
+              UnifiedFilterBar(
+                searchController: _searchController,
+                searchHint: 'Search tasks, descriptions, assignees...',
+                primaryFilters: _buildPrimaryFilters(),
+                advancedFilters: _buildAdvancedFilters(),
+                advancedFiltersTitle: 'Task Filters',
+                onSearchChanged: (value) {
+                  ref.read(taskFiltersProvider.notifier).updateSearchQuery(value);
+                },
+                onSearchCleared: () {
+                  ref.read(taskFiltersProvider.notifier).updateSearchQuery('');
+                },
+                onAdvancedFiltersChanged: () {
+                  // Advanced filter changes are handled by individual filter callbacks
+                },
+                activeFilterCount: _getActiveFilterCount(),
+                resultCount: filteredTasksAsync.value?.length,
+              ),
+              const SizedBox(height: CommonLayoutWidgets.sectionSpacing),
               
               filteredTasksAsync.when(
                 data: (filteredTasks) {
@@ -185,84 +147,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
 
-  List<Widget> _buildActionButtons(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final availableWidth = screenWidth * 0.3;
-    
-    if (availableWidth > 350) {
-      // Wide enough: All buttons in a row with labels
-      return [
-        OutlinedButton.icon(
-          onPressed: () => _exportTasks(context),
-          icon: const Icon(Icons.download, size: 18),
-          label: const Text('Export'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton.icon(
-          onPressed: () => _importTasks(context),
-          icon: const Icon(Icons.upload, size: 18),
-          label: const Text('Import'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _showAddTaskDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Task'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-      ];
-    } else if (availableWidth > 250) {
-      // Medium width: Icon buttons with tooltips + Add button
-      return [
-        IconButton.outlined(
-          onPressed: () => _exportTasks(context),
-          icon: const Icon(Icons.download, size: 18),
-          tooltip: 'Export',
-        ),
-        const SizedBox(width: 4),
-        IconButton.outlined(
-          onPressed: () => _importTasks(context),
-          icon: const Icon(Icons.upload, size: 18),
-          tooltip: 'Import',
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _showAddTaskDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-      ];
-    } else {
-      // Very narrow: Just essential buttons
-      return [
-        IconButton.outlined(
-          onPressed: () => _exportTasks(context),
-          icon: const Icon(Icons.download, size: 18),
-          tooltip: 'Export',
-        ),
-        const SizedBox(width: 4),
-        FilledButton.icon(
-          onPressed: () => _showAddTaskDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          ),
-        ),
-      ];
-    }
-  }
 
   Widget _buildTasksList(List<Task> tasks) {
     final sortedTasks = [...tasks];
@@ -286,44 +170,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     );
   }
 
-  void _exportTasks(BuildContext context) {
-    final currentProject = ref.read(currentProjectProvider);
-    if (currentProject == null) return;
-    
-    final filteredTasksAsync = ref.read(filteredTasksProvider(currentProject.id));
-    
-    filteredTasksAsync.whenOrNull(
-      data: (filteredTasks) {
-        if (filteredTasks.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('No tasks to export'),
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-            ),
-          );
-          return;
-        }
 
-        // TODO: Implement task export functionality
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export feature coming soon! Found ${filteredTasks.length} tasks to export.'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-      },
-    );
-  }
-
-  void _importTasks(BuildContext context) {
-    // TODO: Implement task import functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Import feature coming soon!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
-  }
 
   Widget _buildTasksStatsBar(BuildContext context, String projectId) {
     final tasksAsync = ref.watch(filteredTasksProvider(projectId));
@@ -340,59 +187,50 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       data: (tasks) {
         final stats = _calculateTaskStats(tasks);
 
-        return Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildStatChip('Total', stats.total, Icons.task_alt, Theme.of(context).primaryColor),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Pending', stats.pending, Icons.radio_button_unchecked, Colors.orange),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('In Progress', stats.inProgress, Icons.access_time, Colors.blue),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Completed', stats.completed, Icons.check_circle, Colors.green),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('High Priority', stats.highPriority, Icons.priority_high, Colors.red),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Overdue', stats.overdue, Icons.warning, Colors.deepOrange),
-              ],
-            ),
+        final statsData = [
+          StatData(
+            label: 'Total',
+            count: stats.total,
+            icon: Icons.task_alt,
+            color: Theme.of(context).colorScheme.primary,
           ),
-        );
+          StatData(
+            label: 'Pending',
+            count: stats.pending,
+            icon: Icons.radio_button_unchecked,
+            color: Colors.orange,
+          ),
+          StatData(
+            label: 'In Progress',
+            count: stats.inProgress,
+            icon: Icons.access_time,
+            color: Colors.blue,
+          ),
+          StatData(
+            label: 'Completed',
+            count: stats.completed,
+            icon: Icons.check_circle,
+            color: Colors.green,
+          ),
+          StatData(
+            label: 'High Priority',
+            count: stats.highPriority,
+            icon: Icons.priority_high,
+            color: Colors.red,
+          ),
+          StatData(
+            label: 'Overdue',
+            count: stats.overdue,
+            icon: Icons.warning,
+            color: Colors.deepOrange,
+          ),
+        ];
+
+        return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
       },
     );
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   TaskStats _calculateTaskStats(List<Task> tasks) {
     final now = DateTime.now();
@@ -409,6 +247,301 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       completed: completed,
       highPriority: highPriority,
       overdue: overdue,
+    );
+  }
+
+  /// Build primary filters (most important ones shown on mobile)
+  List<PrimaryFilter> _buildPrimaryFilters() {
+    final filters = ref.watch(taskFiltersProvider);
+    final statusFilters = _getStatusFilters(filters.activeFilters);
+    final priorityFilters = _getPriorityFilters(filters.activeFilters);
+
+    return [
+      // Status filter (most important for tasks)
+      PrimaryFilter(
+        label: 'Status: ${_getStatusLabel(statusFilters)}',
+        isSelected: statusFilters.isNotEmpty,
+        onPressed: () => _showStatusOptions(),
+        icon: Icons.task_alt,
+        badge: statusFilters.length > 1 ? statusFilters.length.toString() : null,
+      ),
+
+      // Priority filter (second most important)
+      PrimaryFilter(
+        label: 'Priority: ${_getPriorityLabel(priorityFilters)}',
+        isSelected: priorityFilters.isNotEmpty,
+        onPressed: () => _showPriorityOptions(),
+        icon: Icons.priority_high,
+        badge: priorityFilters.length > 1 ? priorityFilters.length.toString() : null,
+      ),
+    ];
+  }
+
+  /// Build advanced filters for bottom sheet
+  List<FilterSection> _buildAdvancedFilters() {
+    final filters = ref.watch(taskFiltersProvider);
+
+    return [
+      // Status Section
+      FilterSection(
+        title: 'Status',
+        icon: Icons.task_alt,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Pending',
+                isSelected: filters.activeFilters.contains(TaskFilter.pending),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.pending),
+                icon: Icons.radio_button_unchecked,
+              ),
+              StandardFilterChip(
+                label: 'In Progress',
+                isSelected: filters.activeFilters.contains(TaskFilter.inProgress),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.inProgress),
+                icon: Icons.access_time,
+              ),
+              StandardFilterChip(
+                label: 'Urgent',
+                isSelected: filters.activeFilters.contains(TaskFilter.urgent),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.urgent),
+                icon: Icons.warning,
+              ),
+              StandardFilterChip(
+                label: 'Completed',
+                isSelected: filters.activeFilters.contains(TaskFilter.completed),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.completed),
+                icon: Icons.check_circle,
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Priority Section
+      FilterSection(
+        title: 'Priority',
+        icon: Icons.priority_high,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'High',
+                isSelected: filters.activeFilters.contains(TaskFilter.high),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.high),
+                icon: Icons.keyboard_double_arrow_up,
+              ),
+              StandardFilterChip(
+                label: 'Medium',
+                isSelected: filters.activeFilters.contains(TaskFilter.medium),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.medium),
+                icon: Icons.keyboard_arrow_up,
+              ),
+              StandardFilterChip(
+                label: 'Low',
+                isSelected: filters.activeFilters.contains(TaskFilter.low),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.low),
+                icon: Icons.keyboard_arrow_down,
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Category Section
+      FilterSection(
+        title: 'Category',
+        icon: Icons.category,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Admin',
+                isSelected: filters.activeFilters.contains(TaskFilter.admin),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.admin),
+                icon: Icons.admin_panel_settings,
+              ),
+              StandardFilterChip(
+                label: 'Legal',
+                isSelected: filters.activeFilters.contains(TaskFilter.legal),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.legal),
+                icon: Icons.gavel,
+              ),
+              StandardFilterChip(
+                label: 'Setup',
+                isSelected: filters.activeFilters.contains(TaskFilter.setup),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.setup),
+                icon: Icons.build,
+              ),
+              StandardFilterChip(
+                label: 'Communication',
+                isSelected: filters.activeFilters.contains(TaskFilter.communication),
+                onPressed: () => ref.read(taskFiltersProvider.notifier).toggleFilter(TaskFilter.communication),
+                icon: Icons.chat,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
+  }
+
+  // Filter helper methods
+  Set<TaskFilter> _getStatusFilters(Set<TaskFilter> activeFilters) {
+    return activeFilters.where((filter) => [
+      TaskFilter.pending,
+      TaskFilter.inProgress,
+      TaskFilter.urgent,
+      TaskFilter.completed,
+    ].contains(filter)).toSet();
+  }
+
+  Set<TaskFilter> _getPriorityFilters(Set<TaskFilter> activeFilters) {
+    return activeFilters.where((filter) => [
+      TaskFilter.low,
+      TaskFilter.medium,
+      TaskFilter.high,
+    ].contains(filter)).toSet();
+  }
+
+  String _getStatusLabel(Set<TaskFilter> statusFilters) {
+    if (statusFilters.isEmpty) return 'All';
+    if (statusFilters.length == 1) {
+      final filter = statusFilters.first;
+      switch (filter) {
+        case TaskFilter.pending: return 'Pending';
+        case TaskFilter.inProgress: return 'In Progress';
+        case TaskFilter.urgent: return 'Urgent';
+        case TaskFilter.completed: return 'Completed';
+        default: return 'All';
+      }
+    }
+    return 'Multiple (${statusFilters.length})';
+  }
+
+  String _getPriorityLabel(Set<TaskFilter> priorityFilters) {
+    if (priorityFilters.isEmpty) return 'All';
+    if (priorityFilters.length == 1) {
+      final filter = priorityFilters.first;
+      switch (filter) {
+        case TaskFilter.high: return 'High';
+        case TaskFilter.medium: return 'Medium';
+        case TaskFilter.low: return 'Low';
+        default: return 'All';
+      }
+    }
+    return 'Multiple (${priorityFilters.length})';
+  }
+
+  int _getActiveFilterCount() {
+    final filters = ref.read(taskFiltersProvider);
+    // Don't count 'all' as an active filter
+    return filters.activeFilters.contains(TaskFilter.all) ? 0 : filters.activeFilters.length;
+  }
+
+  void _showStatusOptions() {
+    // Show quick status filter options
+    final notifier = ref.read(taskFiltersProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter by Status'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.radio_button_unchecked, color: Colors.orange),
+              title: const Text('Pending'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.pending);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.access_time, color: Colors.blue),
+              title: const Text('In Progress'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.inProgress);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.warning, color: Colors.red),
+              title: const Text('Urgent'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.urgent);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle, color: Colors.green),
+              title: const Text('Completed'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.completed);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPriorityOptions() {
+    // Show quick priority filter options
+    final notifier = ref.read(taskFiltersProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter by Priority'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.keyboard_double_arrow_up, color: Colors.red),
+              title: const Text('High Priority'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.high);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.keyboard_arrow_up, color: Colors.orange),
+              title: const Text('Medium Priority'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.medium);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.keyboard_arrow_down, color: Colors.green),
+              title: const Text('Low Priority'),
+              onTap: () {
+                notifier.toggleFilter(TaskFilter.low);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 }

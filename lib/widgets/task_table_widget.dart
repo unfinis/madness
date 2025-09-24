@@ -88,13 +88,13 @@ class _TaskTableWidgetState extends ConsumerState<TaskTableWidget> {
       selected: isSelected,
       color: WidgetStateProperty.resolveWith<Color?>((states) {
         if (isCompleted) {
-          return Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5);
+          return Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5);
         }
         if (isOverdue) {
-          return Theme.of(context).colorScheme.errorContainer.withOpacity(0.3);
+          return Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3);
         }
         if (isDueSoon) {
-          return Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3);
+          return Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3);
         }
         return null;
       }),
@@ -207,9 +207,9 @@ class _TaskTableWidgetState extends ConsumerState<TaskTableWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -246,9 +246,9 @@ class _TaskTableWidgetState extends ConsumerState<TaskTableWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

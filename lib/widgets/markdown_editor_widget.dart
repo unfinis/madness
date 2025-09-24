@@ -426,7 +426,7 @@ class _MarkdownEditorWidgetState extends State<MarkdownEditorWidget>
                 width: 3,
               ),
             ),
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
           ),
           child: Text(line.substring(2)),
         ));

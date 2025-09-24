@@ -65,7 +65,7 @@ class DialogComponents {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(DialogConstants.fieldBorderRadius),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -82,7 +82,7 @@ class DialogComponents {
               ),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            fillColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           keyboardType: keyboardType,
           obscureText: obscureText,
@@ -125,9 +125,9 @@ class DialogComponents {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DialogConstants.fieldBorderRadius),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
             ),
-            color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           child: DropdownButtonFormField<T>(
             value: value,
@@ -206,9 +206,9 @@ class DialogComponents {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(DialogConstants.fieldBorderRadius),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
               ),
-              color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
             ),
             child: Row(
               children: [
@@ -266,7 +266,7 @@ class DialogComponents {
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           AppSpacing.vGapSM,
@@ -526,7 +526,7 @@ class DialogComponents {
           borderRadius: BorderRadius.circular(DialogConstants.buttonBorderRadius),
         ),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -558,9 +558,9 @@ class DialogComponents {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.1),
+        color: chipColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.chipRadius * 3),
-        border: Border.all(color: chipColor.withOpacity(0.3)),
+        border: Border.all(color: chipColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

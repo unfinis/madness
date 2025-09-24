@@ -71,7 +71,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                             ? 'Choose one or more screenshots to link to this finding'
                             : 'Choose a screenshot to link to this finding',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -146,7 +146,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                           Icon(
                             Icons.photo,
                             size: 64,
-                            color: theme.colorScheme.onSurface.withOpacity(0.3),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -154,7 +154,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                               ? 'No screenshots available'
                               : 'No screenshots match your search',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                           if (screenshots.isEmpty) ...[
@@ -162,7 +162,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                             Text(
                               'Take screenshots first to link them to findings',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                             ),
                           ],
@@ -211,7 +211,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                       Text(
                         error.toString(),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -228,7 +228,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                 color: theme.colorScheme.surface,
                 border: Border(
                   top: BorderSide(
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -237,7 +237,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                   Text(
                     '${_selectedIds.length} selected',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const Spacer(),
@@ -343,8 +343,8 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                         screenshot.description,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isSelected 
-                            ? theme.colorScheme.onPrimaryContainer.withOpacity(0.8)
-                            : theme.colorScheme.onSurface.withOpacity(0.6),
+                            ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8)
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -358,7 +358,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.secondary.withOpacity(0.1),
+                            color: theme.colorScheme.secondary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -374,8 +374,8 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                           '${screenshot.width}x${screenshot.height}',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: isSelected 
-                              ? theme.colorScheme.onPrimaryContainer.withOpacity(0.6)
-                              : theme.colorScheme.onSurface.withOpacity(0.5),
+                              ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.6)
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -399,7 +399,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
         child: Icon(
           Icons.image,
           size: 48,
-          color: theme.colorScheme.onSurface.withOpacity(0.3),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
         ),
       );
     }
@@ -417,7 +417,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
               child: Icon(
                 Icons.broken_image,
                 size: 48,
-                color: theme.colorScheme.error.withOpacity(0.5),
+                color: theme.colorScheme.error.withValues(alpha: 0.5),
               ),
             );
           },
@@ -433,13 +433,13 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
           Icon(
             Icons.image_not_supported,
             size: 32,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 4),
           Text(
             'Image not found',
             style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],

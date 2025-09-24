@@ -71,7 +71,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -146,7 +146,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
               end: Alignment.bottomRight,
               colors: [
                 Theme.of(context).colorScheme.primaryContainer,
-                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+                Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
               ],
             ),
             borderRadius: const BorderRadius.only(
@@ -163,7 +163,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -191,7 +191,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
                     Text(
                       isEditing ? 'Update expense details' : 'Track a new business expense',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                        color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -201,7 +201,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close_rounded),
                 style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                  backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
                   foregroundColor: Theme.of(context).colorScheme.onSurface,
                 ),
               ),

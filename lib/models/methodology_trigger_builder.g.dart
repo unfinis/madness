@@ -6,9 +6,8 @@ part of 'methodology_trigger_builder.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TriggerConditionImpl _$$TriggerConditionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$TriggerConditionImpl(
+_TriggerCondition _$TriggerConditionFromJson(Map<String, dynamic> json) =>
+    _TriggerCondition(
       id: json['id'] as String,
       assetType: $enumDecode(_$AssetTypeEnumMap, json['assetType']),
       property: json['property'] as String,
@@ -17,8 +16,7 @@ _$TriggerConditionImpl _$$TriggerConditionImplFromJson(
       logicalOperator: json['logicalOperator'] as String?,
     );
 
-Map<String, dynamic> _$$TriggerConditionImplToJson(
-        _$TriggerConditionImpl instance) =>
+Map<String, dynamic> _$TriggerConditionToJson(_TriggerCondition instance) =>
     <String, dynamic>{
       'id': instance.id,
       'assetType': _$AssetTypeEnumMap[instance.assetType]!,
@@ -84,88 +82,58 @@ const _$TriggerOperatorEnumMap = {
   TriggerOperator.notRegex: 'notRegex',
 };
 
-_$StringTriggerValueImpl _$$StringTriggerValueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$StringTriggerValueImpl(
+StringTriggerValue _$StringTriggerValueFromJson(Map<String, dynamic> json) =>
+    StringTriggerValue(
       json['value'] as String,
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$StringTriggerValueImplToJson(
-        _$StringTriggerValueImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$StringTriggerValueToJson(StringTriggerValue instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$BooleanTriggerValueImpl _$$BooleanTriggerValueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$BooleanTriggerValueImpl(
+BooleanTriggerValue _$BooleanTriggerValueFromJson(Map<String, dynamic> json) =>
+    BooleanTriggerValue(
       json['value'] as bool,
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$BooleanTriggerValueImplToJson(
-        _$BooleanTriggerValueImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$BooleanTriggerValueToJson(
+  BooleanTriggerValue instance,
+) => <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$NumberTriggerValueImpl _$$NumberTriggerValueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NumberTriggerValueImpl(
+NumberTriggerValue _$NumberTriggerValueFromJson(Map<String, dynamic> json) =>
+    NumberTriggerValue(
       (json['value'] as num).toDouble(),
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$NumberTriggerValueImplToJson(
-        _$NumberTriggerValueImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$NumberTriggerValueToJson(NumberTriggerValue instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$ListTriggerValueImpl _$$ListTriggerValueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ListTriggerValueImpl(
+ListTriggerValue _$ListTriggerValueFromJson(Map<String, dynamic> json) =>
+    ListTriggerValue(
       (json['values'] as List<dynamic>).map((e) => e as String).toList(),
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$ListTriggerValueImplToJson(
-        _$ListTriggerValueImpl instance) =>
-    <String, dynamic>{
-      'values': instance.values,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$ListTriggerValueToJson(ListTriggerValue instance) =>
+    <String, dynamic>{'values': instance.values, 'runtimeType': instance.$type};
 
-_$NullTriggerValueImpl _$$NullTriggerValueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NullTriggerValueImpl(
-      $type: json['runtimeType'] as String?,
-    );
+NullTriggerValue _$NullTriggerValueFromJson(Map<String, dynamic> json) =>
+    NullTriggerValue($type: json['runtimeType'] as String?);
 
-Map<String, dynamic> _$$NullTriggerValueImplToJson(
-        _$NullTriggerValueImpl instance) =>
-    <String, dynamic>{
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$NullTriggerValueToJson(NullTriggerValue instance) =>
+    <String, dynamic>{'runtimeType': instance.$type};
 
-_$NotNullTriggerValueImpl _$$NotNullTriggerValueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NotNullTriggerValueImpl(
-      $type: json['runtimeType'] as String?,
-    );
+NotNullTriggerValue _$NotNullTriggerValueFromJson(Map<String, dynamic> json) =>
+    NotNullTriggerValue($type: json['runtimeType'] as String?);
 
-Map<String, dynamic> _$$NotNullTriggerValueImplToJson(
-        _$NotNullTriggerValueImpl instance) =>
-    <String, dynamic>{
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$NotNullTriggerValueToJson(
+  NotNullTriggerValue instance,
+) => <String, dynamic>{'runtimeType': instance.$type};
 
-_$TriggerGroupImpl _$$TriggerGroupImplFromJson(Map<String, dynamic> json) =>
-    _$TriggerGroupImpl(
+_TriggerGroup _$TriggerGroupFromJson(Map<String, dynamic> json) =>
+    _TriggerGroup(
       id: json['id'] as String,
       conditions: (json['conditions'] as List<dynamic>)
           .map((e) => TriggerCondition.fromJson(e as Map<String, dynamic>))
@@ -173,48 +141,47 @@ _$TriggerGroupImpl _$$TriggerGroupImplFromJson(Map<String, dynamic> json) =>
       logicalOperator: json['logicalOperator'] as String? ?? 'AND',
     );
 
-Map<String, dynamic> _$$TriggerGroupImplToJson(_$TriggerGroupImpl instance) =>
+Map<String, dynamic> _$TriggerGroupToJson(_TriggerGroup instance) =>
     <String, dynamic>{
       'id': instance.id,
       'conditions': instance.conditions,
       'logicalOperator': instance.logicalOperator,
     };
 
-_$MethodologyTriggerDefinitionImpl _$$MethodologyTriggerDefinitionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$MethodologyTriggerDefinitionImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      priority: (json['priority'] as num?)?.toInt() ?? 5,
-      enabled: json['enabled'] as bool? ?? true,
-      conditionGroups: (json['conditionGroups'] as List<dynamic>)
-          .map((e) => TriggerGroup.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      groupLogicalOperator: json['groupLogicalOperator'] as String? ?? 'AND',
-      parameterMappings:
-          (json['parameterMappings'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ),
-      defaultParameters: json['defaultParameters'] as Map<String, dynamic>?,
-    );
+_MethodologyTriggerDefinition _$MethodologyTriggerDefinitionFromJson(
+  Map<String, dynamic> json,
+) => _MethodologyTriggerDefinition(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  description: json['description'] as String,
+  priority: (json['priority'] as num?)?.toInt() ?? 5,
+  enabled: json['enabled'] as bool? ?? true,
+  conditionGroups: (json['conditionGroups'] as List<dynamic>)
+      .map((e) => TriggerGroup.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  groupLogicalOperator: json['groupLogicalOperator'] as String? ?? 'AND',
+  parameterMappings: (json['parameterMappings'] as Map<String, dynamic>?)?.map(
+    (k, e) => MapEntry(k, e as String),
+  ),
+  defaultParameters: json['defaultParameters'] as Map<String, dynamic>?,
+);
 
-Map<String, dynamic> _$$MethodologyTriggerDefinitionImplToJson(
-        _$MethodologyTriggerDefinitionImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'description': instance.description,
-      'priority': instance.priority,
-      'enabled': instance.enabled,
-      'conditionGroups': instance.conditionGroups,
-      'groupLogicalOperator': instance.groupLogicalOperator,
-      'parameterMappings': instance.parameterMappings,
-      'defaultParameters': instance.defaultParameters,
-    };
+Map<String, dynamic> _$MethodologyTriggerDefinitionToJson(
+  _MethodologyTriggerDefinition instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'description': instance.description,
+  'priority': instance.priority,
+  'enabled': instance.enabled,
+  'conditionGroups': instance.conditionGroups,
+  'groupLogicalOperator': instance.groupLogicalOperator,
+  'parameterMappings': instance.parameterMappings,
+  'defaultParameters': instance.defaultParameters,
+};
 
-_$AssetPropertyImpl _$$AssetPropertyImplFromJson(Map<String, dynamic> json) =>
-    _$AssetPropertyImpl(
+_AssetProperty _$AssetPropertyFromJson(Map<String, dynamic> json) =>
+    _AssetProperty(
       name: json['name'] as String,
       displayName: json['displayName'] as String,
       type: $enumDecode(_$PropertyTypeEnumMap, json['type']),
@@ -224,7 +191,7 @@ _$AssetPropertyImpl _$$AssetPropertyImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
     );
 
-Map<String, dynamic> _$$AssetPropertyImplToJson(_$AssetPropertyImpl instance) =>
+Map<String, dynamic> _$AssetPropertyToJson(_AssetProperty instance) =>
     <String, dynamic>{
       'name': instance.name,
       'displayName': instance.displayName,
@@ -240,39 +207,38 @@ const _$PropertyTypeEnumMap = {
   PropertyType.list: 'list',
 };
 
-_$TriggerTemplateImpl _$$TriggerTemplateImplFromJson(
-        Map<String, dynamic> json) =>
-    _$TriggerTemplateImpl(
+_TriggerTemplate _$TriggerTemplateFromJson(Map<String, dynamic> json) =>
+    _TriggerTemplate(
       name: json['name'] as String,
       description: json['description'] as String,
       trigger: MethodologyTriggerDefinition.fromJson(
-          json['trigger'] as Map<String, dynamic>),
+        json['trigger'] as Map<String, dynamic>,
+      ),
     );
 
-Map<String, dynamic> _$$TriggerTemplateImplToJson(
-        _$TriggerTemplateImpl instance) =>
+Map<String, dynamic> _$TriggerTemplateToJson(_TriggerTemplate instance) =>
     <String, dynamic>{
       'name': instance.name,
       'description': instance.description,
       'trigger': instance.trigger,
     };
 
-_$MethodologyParameterImpl _$$MethodologyParameterImplFromJson(
-        Map<String, dynamic> json) =>
-    _$MethodologyParameterImpl(
-      name: json['name'] as String,
-      type: json['type'] as String,
-      source: json['source'] as String,
-      defaultValue: json['defaultValue'] as String?,
-      description: json['description'] as String?,
-    );
+_MethodologyParameter _$MethodologyParameterFromJson(
+  Map<String, dynamic> json,
+) => _MethodologyParameter(
+  name: json['name'] as String,
+  type: json['type'] as String,
+  source: json['source'] as String,
+  defaultValue: json['defaultValue'] as String?,
+  description: json['description'] as String?,
+);
 
-Map<String, dynamic> _$$MethodologyParameterImplToJson(
-        _$MethodologyParameterImpl instance) =>
-    <String, dynamic>{
-      'name': instance.name,
-      'type': instance.type,
-      'source': instance.source,
-      'defaultValue': instance.defaultValue,
-      'description': instance.description,
-    };
+Map<String, dynamic> _$MethodologyParameterToJson(
+  _MethodologyParameter instance,
+) => <String, dynamic>{
+  'name': instance.name,
+  'type': instance.type,
+  'source': instance.source,
+  'defaultValue': instance.defaultValue,
+  'description': instance.description,
+};

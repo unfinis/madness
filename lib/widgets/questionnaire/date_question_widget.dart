@@ -71,7 +71,7 @@ class _DateQuestionWidgetState extends QuestionWidgetBaseState<DateQuestionWidge
         decoration: BoxDecoration(
           border: Border.all(color: theme.colorScheme.outline),
           borderRadius: BorderRadius.circular(8),
-          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         ),
         child: Row(
           children: [

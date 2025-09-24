@@ -47,9 +47,9 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.1),
+                  color: typeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: typeColor.withOpacity(0.3)),
+                  border: Border.all(color: typeColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -71,9 +71,9 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withOpacity(0.3)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -209,7 +209,7 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -293,9 +293,9 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: itemTypeColor.withOpacity(0.1),
+              color: itemTypeColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: itemTypeColor.withOpacity(0.3)),
+              border: Border.all(color: itemTypeColor.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -340,7 +340,7 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
                   icon: const Icon(Icons.link_rounded),
                   tooltip: 'Test URL',
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.withOpacity(0.1),
+                    backgroundColor: Colors.red.withValues(alpha: 0.1),
                     foregroundColor: Colors.red,
                     padding: const EdgeInsets.all(4),
                     minimumSize: const Size(32, 32),
@@ -354,7 +354,7 @@ class _ScopeSegmentCardWidgetState extends ConsumerState<ScopeSegmentCardWidget>
                   icon: const Icon(Icons.search_rounded),
                   tooltip: 'Scan Domain',
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.withOpacity(0.1),
+                    backgroundColor: Colors.red.withValues(alpha: 0.1),
                     foregroundColor: Colors.red,
                     padding: const EdgeInsets.all(4),
                     minimumSize: const Size(32, 32),

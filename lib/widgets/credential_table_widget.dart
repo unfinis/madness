@@ -58,7 +58,7 @@ class CredentialTableWidget extends StatelessWidget {
   DataRow _buildCredentialRow(BuildContext context, Credential credential) {
     final isSelected = selectedCredentials.contains(credential.id);
     final rowColor = credential.privilege.isCritical 
-        ? Colors.red.withOpacity(0.1) 
+        ? Colors.red.withValues(alpha: 0.1) 
         : null;
 
     return DataRow(
@@ -94,9 +94,9 @@ class CredentialTableWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _getTypeColor(credential.type).withOpacity(0.1),
+              color: _getTypeColor(credential.type).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _getTypeColor(credential.type).withOpacity(0.3)),
+              border: Border.all(color: _getTypeColor(credential.type).withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -133,13 +133,13 @@ class CredentialTableWidget extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: credential.privilege.isCritical 
-                  ? Colors.red.withOpacity(0.1)
-                  : Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  ? Colors.red.withValues(alpha: 0.1)
+                  : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: credential.privilege.isCritical 
-                    ? Colors.red.withOpacity(0.3)
-                    : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ? Colors.red.withValues(alpha: 0.3)
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Text(
@@ -164,9 +164,9 @@ class CredentialTableWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _getStatusColor(credential.status).withOpacity(0.1),
+              color: _getStatusColor(credential.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: _getStatusColor(credential.status).withOpacity(0.3)),
+              border: Border.all(color: _getStatusColor(credential.status).withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

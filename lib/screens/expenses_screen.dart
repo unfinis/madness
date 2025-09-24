@@ -7,7 +7,7 @@ import '../widgets/expense_table_widget.dart';
 import '../widgets/expense_filters_widget.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
-import '../constants/app_spacing.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../dialogs/add_expense_dialog.dart';
 import '../dialogs/export_dialog.dart';
 import '../services/import_export_service.dart';
@@ -502,59 +502,54 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final expenses = ref.watch(filteredExpensesProvider(projectId));
     final stats = _calculateExpenseStats(expenses);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatChip('Total', stats.total, Icons.receipt, Theme.of(context).primaryColor),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Billable', stats.billable, Icons.monetization_on, Colors.green),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Personal', stats.personal, Icons.person, Colors.blue),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Travel', stats.travel, Icons.flight, Colors.orange),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Accommodation', stats.accommodation, Icons.hotel, Colors.purple),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Food', stats.food, Icons.restaurant, Colors.red),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Equipment', stats.equipment, Icons.devices, Colors.teal),
-          ],
-        ),
+    final statsData = [
+      StatData(
+        label: 'Total',
+        count: stats.total,
+        icon: Icons.receipt,
+        color: Theme.of(context).colorScheme.primary,
       ),
-    );
+      StatData(
+        label: 'Billable',
+        count: stats.billable,
+        icon: Icons.monetization_on,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Personal',
+        count: stats.personal,
+        icon: Icons.person,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Travel',
+        count: stats.travel,
+        icon: Icons.flight,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'Accommodation',
+        count: stats.accommodation,
+        icon: Icons.hotel,
+        color: Colors.purple,
+      ),
+      StatData(
+        label: 'Food',
+        count: stats.food,
+        icon: Icons.restaurant,
+        color: Colors.red,
+      ),
+      StatData(
+        label: 'Equipment',
+        count: stats.equipment,
+        icon: Icons.devices,
+        color: Colors.teal,
+      ),
+    ];
+
+    return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   ExpenseStats _calculateExpenseStats(List<Expense> expenses) {
     final billable = expenses.where((e) => e.type == ExpenseType.billable).length;

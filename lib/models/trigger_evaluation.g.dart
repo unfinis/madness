@@ -6,8 +6,8 @@ part of 'trigger_evaluation.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TriggerMatchImpl _$$TriggerMatchImplFromJson(Map<String, dynamic> json) =>
-    _$TriggerMatchImpl(
+_TriggerMatch _$TriggerMatchFromJson(Map<String, dynamic> json) =>
+    _TriggerMatch(
       id: json['id'] as String,
       triggerId: json['triggerId'] as String,
       templateId: json['templateId'] as String,
@@ -21,7 +21,7 @@ _$TriggerMatchImpl _$$TriggerMatchImplFromJson(Map<String, dynamic> json) =>
       debugInfo: json['debugInfo'] as Map<String, dynamic>? ?? const {},
     );
 
-Map<String, dynamic> _$$TriggerMatchImplToJson(_$TriggerMatchImpl instance) =>
+Map<String, dynamic> _$TriggerMatchToJson(_TriggerMatch instance) =>
     <String, dynamic>{
       'id': instance.id,
       'triggerId': instance.triggerId,
@@ -36,9 +36,8 @@ Map<String, dynamic> _$$TriggerMatchImplToJson(_$TriggerMatchImpl instance) =>
       'debugInfo': instance.debugInfo,
     };
 
-_$ParameterResolutionImpl _$$ParameterResolutionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ParameterResolutionImpl(
+_ParameterResolution _$ParameterResolutionFromJson(Map<String, dynamic> json) =>
+    _ParameterResolution(
       name: json['name'] as String,
       type: $enumDecode(_$ParameterTypeEnumMap, json['type']),
       value: json['value'],
@@ -50,19 +49,19 @@ _$ParameterResolutionImpl _$$ParameterResolutionImplFromJson(
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
     );
 
-Map<String, dynamic> _$$ParameterResolutionImplToJson(
-        _$ParameterResolutionImpl instance) =>
-    <String, dynamic>{
-      'name': instance.name,
-      'type': _$ParameterTypeEnumMap[instance.type]!,
-      'value': instance.value,
-      'source': _$ParameterSourceEnumMap[instance.source]!,
-      'required': instance.required,
-      'resolved': instance.resolved,
-      'error': instance.error,
-      'resolvedAt': instance.resolvedAt.toIso8601String(),
-      'metadata': instance.metadata,
-    };
+Map<String, dynamic> _$ParameterResolutionToJson(
+  _ParameterResolution instance,
+) => <String, dynamic>{
+  'name': instance.name,
+  'type': _$ParameterTypeEnumMap[instance.type]!,
+  'value': instance.value,
+  'source': _$ParameterSourceEnumMap[instance.source]!,
+  'required': instance.required,
+  'resolved': instance.resolved,
+  'error': instance.error,
+  'resolvedAt': instance.resolvedAt.toIso8601String(),
+  'metadata': instance.metadata,
+};
 
 const _$ParameterTypeEnumMap = {
   ParameterType.ip: 'ip',
@@ -86,40 +85,40 @@ const _$ParameterSourceEnumMap = {
   ParameterSource.computed: 'computed',
 };
 
-_$TriggerConditionResultImpl _$$TriggerConditionResultImplFromJson(
-        Map<String, dynamic> json) =>
-    _$TriggerConditionResultImpl(
-      expression: json['expression'] as String,
-      result: json['result'] as bool,
-      variables: json['variables'] as Map<String, dynamic>,
-      executionTimeMs: (json['executionTimeMs'] as num?)?.toInt() ?? 0,
-      error: json['error'] as String?,
-      debugTrace: (json['debugTrace'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-    );
+_TriggerConditionResult _$TriggerConditionResultFromJson(
+  Map<String, dynamic> json,
+) => _TriggerConditionResult(
+  expression: json['expression'] as String,
+  result: json['result'] as bool,
+  variables: json['variables'] as Map<String, dynamic>,
+  executionTimeMs: (json['executionTimeMs'] as num?)?.toInt() ?? 0,
+  error: json['error'] as String?,
+  debugTrace:
+      (json['debugTrace'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+);
 
-Map<String, dynamic> _$$TriggerConditionResultImplToJson(
-        _$TriggerConditionResultImpl instance) =>
-    <String, dynamic>{
-      'expression': instance.expression,
-      'result': instance.result,
-      'variables': instance.variables,
-      'executionTimeMs': instance.executionTimeMs,
-      'error': instance.error,
-      'debugTrace': instance.debugTrace,
-    };
+Map<String, dynamic> _$TriggerConditionResultToJson(
+  _TriggerConditionResult instance,
+) => <String, dynamic>{
+  'expression': instance.expression,
+  'result': instance.result,
+  'variables': instance.variables,
+  'executionTimeMs': instance.executionTimeMs,
+  'error': instance.error,
+  'debugTrace': instance.debugTrace,
+};
 
-_$TriggerContextImpl _$$TriggerContextImplFromJson(Map<String, dynamic> json) =>
-    _$TriggerContextImpl(
+_TriggerContext _$TriggerContextFromJson(Map<String, dynamic> json) =>
+    _TriggerContext(
       variables: json['variables'] as Map<String, dynamic>? ?? const {},
       asset: json['asset'] as Map<String, dynamic>?,
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
     );
 
-Map<String, dynamic> _$$TriggerContextImplToJson(
-        _$TriggerContextImpl instance) =>
+Map<String, dynamic> _$TriggerContextToJson(_TriggerContext instance) =>
     <String, dynamic>{
       'variables': instance.variables,
       'asset': instance.asset,

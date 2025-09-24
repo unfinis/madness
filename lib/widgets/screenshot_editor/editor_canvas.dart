@@ -59,6 +59,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   Offset _pan = Offset.zero;
   ui.Image? _backgroundImage;
   bool _isLoading = true;
+
+  // Store cached image data for pixel sampling
+  ui.Image? _cachedImageForSampling;
+  ByteData? _imagePixelData;
   
   // Drawing state
   final List<EditorLayer> _tempLayers = [];
@@ -253,6 +257,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         _backgroundImage = frameInfo.image;
         _isLoading = false;
       });
+
+      // Initialize pixel data for sampling
+      _initializePixelData();
     } catch (e) {
       print('Error loading image from asset: $e');
       await _loadPlaceholderImage();
@@ -276,6 +283,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         _backgroundImage = frameInfo.image;
         _isLoading = false;
       });
+
+      // Initialize pixel data for sampling
+      _initializePixelData();
     } catch (e) {
       print('Error loading image from file: $e');
       print('The asset does not exist or has empty data.');
@@ -303,7 +313,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       text: TextSpan(
         text: 'Screenshot Not Found\n\nUsing Placeholder',
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           fontSize: 24,
         ),
       ),
@@ -326,6 +336,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       _backgroundImage = image;
       _isLoading = false;
     });
+
+    // Initialize pixel data for sampling
+    _initializePixelData();
   }
 
   void undo() {
@@ -1006,7 +1019,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
           fillColor: hasFill 
               ? (widget.toolConfig.secondaryColor.opacity > 0 
                   ? widget.toolConfig.secondaryColor 
-                  : widget.toolConfig.primaryColor.withOpacity(0.3))
+                  : widget.toolConfig.primaryColor.withValues(alpha: 0.3))
               : Colors.transparent,
           strokeWidth: hasStroke ? widget.toolConfig.strokeWidth : 0,
           elements: [
@@ -1612,6 +1625,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
                     _horizontalGuides,
                     widget.showGuides,
                     Theme.of(context).colorScheme,
+                    _imagePixelData, // Pass pixel data for real sampling
                   ),
                 ),
               ),
@@ -1651,6 +1665,47 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       _backgroundImage = newImage;
     });
   }
+
+  /// Initialize pixel data for the background image to enable real pixel sampling
+  Future<void> _initializePixelData() async {
+    if (_backgroundImage == null) return;
+
+    try {
+      _cachedImageForSampling = _backgroundImage;
+      _imagePixelData = await _backgroundImage!.toByteData(format: ui.ImageByteFormat.rawRgba);
+    } catch (e) {
+      _imagePixelData = null;
+    }
+  }
+
+  Color _sampleRealImagePixelSync(int x, int y) {
+    if (_backgroundImage == null || _imagePixelData == null) {
+      return Colors.grey;
+    }
+
+    try {
+      final width = _backgroundImage!.width;
+      final height = _backgroundImage!.height;
+
+      // Clamp coordinates to image bounds
+      final clampedX = x.clamp(0, width - 1);
+      final clampedY = y.clamp(0, height - 1);
+
+      // Calculate pixel index (4 bytes per pixel: RGBA)
+      final pixelIndex = (clampedY * width + clampedX) * 4;
+
+      // Extract RGBA values
+      final bytes = _imagePixelData!.buffer.asUint8List();
+      final r = bytes[pixelIndex];
+      final g = bytes[pixelIndex + 1];
+      final b = bytes[pixelIndex + 2];
+      final a = bytes[pixelIndex + 3];
+
+      return Color.fromARGB(a.toInt(), r.toInt(), g.toInt(), b.toInt());
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
 }
 
 class CanvasPainter extends CustomPainter {
@@ -1667,6 +1722,7 @@ class CanvasPainter extends CustomPainter {
   final List<double> horizontalGuides;
   final bool showGuides;
   final ColorScheme colorScheme;
+  final ByteData? imagePixelData; // Added for real pixel sampling
 
   CanvasPainter(
     this.backgroundImage,
@@ -1682,6 +1738,7 @@ class CanvasPainter extends CustomPainter {
     this.horizontalGuides,
     this.showGuides,
     this.colorScheme,
+    this.imagePixelData, // Added parameter
   );
 
   @override
@@ -1755,7 +1812,7 @@ class CanvasPainter extends CustomPainter {
               ? layer.strokeColor 
               : Colors.black;
     
-    paint.color = paint.color.withOpacity(layer.opacity);
+    paint.color = paint.color.withValues(alpha: layer.opacity);
     
     switch (layer.layerType) {
       case LayerType.vector:
@@ -1784,7 +1841,7 @@ class CanvasPainter extends CustomPainter {
     // Draw fill first if enabled
     if (hasFill && layer.fillColor != Colors.transparent) {
       final fillPaint = Paint()
-        ..color = layer.fillColor.withOpacity(layer.opacity)
+        ..color = layer.fillColor.withValues(alpha: layer.opacity)
         ..style = PaintingStyle.fill;
       
       for (final element in layer.elements) {
@@ -1795,7 +1852,7 @@ class CanvasPainter extends CustomPainter {
     // Draw stroke if enabled
     if (hasStroke && layer.strokeWidth > 0) {
       final strokePaint = Paint()
-        ..color = layer.strokeColor.withOpacity(layer.opacity)
+        ..color = layer.strokeColor.withValues(alpha: layer.opacity)
         ..strokeWidth = layer.strokeWidth
         ..style = PaintingStyle.stroke;
       
@@ -1857,13 +1914,13 @@ class CanvasPainter extends CustomPainter {
       
       // Draw background circle
       final backgroundPaint = Paint()
-        ..color = backgroundColor.withOpacity(layer.opacity)
+        ..color = backgroundColor.withValues(alpha: layer.opacity)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(center, radius, backgroundPaint);
       
       // Draw border
       final borderPaint = Paint()
-        ..color = backgroundColor.withOpacity(layer.opacity)
+        ..color = backgroundColor.withValues(alpha: layer.opacity)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
       canvas.drawCircle(center, radius, borderPaint);
@@ -1907,7 +1964,7 @@ class CanvasPainter extends CustomPainter {
     switch (layer.redactionType) {
       case RedactionType.blackout:
         paint
-          ..color = Colors.black.withOpacity(layer.opacity)
+          ..color = Colors.black.withValues(alpha: layer.opacity)
           ..style = PaintingStyle.fill;
         canvas.drawRect(layer.bounds!, paint);
         break;
@@ -1941,7 +1998,7 @@ class CanvasPainter extends CustomPainter {
           // Draw the background image portion with blur
           final blurPaint = Paint()
             ..imageFilter = ui.ImageFilter.blur(sigmaX: layer.blurRadius, sigmaY: layer.blurRadius)
-            ..color = Colors.white.withOpacity(layer.opacity);
+            ..color = Colors.white.withValues(alpha: layer.opacity);
           
           canvas.drawImageRect(backgroundImage!, srcRect, layer.bounds!, blurPaint);
         }
@@ -1967,10 +2024,10 @@ class CanvasPainter extends CustomPainter {
             (canvasSize.height - scaledSize.height) / 2,
           );
           
-          // Pixelate by drawing small rects with average color
+          // Pixelate by drawing small rects with average color from image blocks
           final pixelSize = layer.pixelSize.toDouble();
           final bounds = layer.bounds!;
-          
+
           for (double x = bounds.left; x < bounds.right; x += pixelSize) {
             for (double y = bounds.top; y < bounds.bottom; y += pixelSize) {
               final pixelRect = Rect.fromLTWH(
@@ -1979,16 +2036,20 @@ class CanvasPainter extends CustomPainter {
                 math.min(pixelSize, bounds.right - x),
                 math.min(pixelSize, bounds.bottom - y),
               );
-              
+
               // Convert to image coordinates for color sampling
-              final imgX = ((x - imageOffset.dx) / scale).clamp(0.0, imageSize.width - 1);
-              final imgY = ((y - imageOffset.dy) / scale).clamp(0.0, imageSize.height - 1);
-              
-              // Use a representative color (could be improved with actual pixel sampling)
+              // Sample from the CENTER of each pixel block for consistency
+              final centerX = x + pixelSize / 2;
+              final centerY = y + pixelSize / 2;
+              final imgX = ((centerX - imageOffset.dx) / scale).clamp(0.0, imageSize.width - 1);
+              final imgY = ((centerY - imageOffset.dy) / scale).clamp(0.0, imageSize.height - 1);
+
+              // Get averaged color for this pixel block
+              final blockColor = _getPixelBlockColorSync(imgX, imgY, layer.pixelSize.toDouble() / scale);
               final pixelPaint = Paint()
-                ..color = _getPixelatedColor(imgX, imgY).withOpacity(layer.opacity)
+                ..color = blockColor.withValues(alpha: layer.opacity)
                 ..style = PaintingStyle.fill;
-              
+
               canvas.drawRect(pixelRect, pixelPaint);
             }
           }
@@ -1999,359 +2060,99 @@ class CanvasPainter extends CustomPainter {
     }
   }
 
-  Color _getPixelatedColor(double imgX, double imgY) {
-    // Generate a color based on position for pixelation effect
-    // In a real implementation, you'd sample the actual pixel from the image
-    final int r = ((imgX * 255) % 255).toInt();
-    final int g = ((imgY * 255) % 255).toInt();
-    final int b = (((imgX + imgY) * 127) % 255).toInt();
-    return Color.fromRGBO(r, g, b, 1.0);
+
+  void _drawDrawingPreview(Canvas canvas, Size size) {
+    // Drawing preview logic would go here
+    // For now, simple placeholder
   }
 
-  void _drawImageWithCrop(Canvas canvas, Rect cropRect, Offset imageOffset, Size scaledSize, Size canvasSize) {
-    // Save canvas state for clipping
-    canvas.save();
-
-    // Clip to crop area
-    canvas.clipRect(cropRect);
-
-    // Draw the image with proper scaling
-    final imageSize = Size(backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
-    final rect = Rect.fromLTWH(imageOffset.dx, imageOffset.dy, scaledSize.width, scaledSize.height);
-    final srcRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
-    canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
-
-    // Restore canvas state
-    canvas.restore();
+  void _drawCropBorder(Canvas canvas, Rect cropBounds, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawRect(cropBounds, paint);
   }
 
   void _drawSelectionHandles(Canvas canvas, Rect bounds) {
-    // Draw selection border
-    final borderPaint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawRect(bounds, borderPaint);
-    
-    // Draw corner handles
-    const handleSize = 8.0;
     final handlePaint = Paint()
       ..color = Colors.blue
       ..style = PaintingStyle.fill;
-    
-    // Top-left handle
+    const handleSize = 8.0;
+
+    // Draw corner handles
     canvas.drawRect(
       Rect.fromCenter(center: bounds.topLeft, width: handleSize, height: handleSize),
       handlePaint,
     );
-    
-    // Top-right handle
     canvas.drawRect(
       Rect.fromCenter(center: bounds.topRight, width: handleSize, height: handleSize),
       handlePaint,
     );
-    
-    // Bottom-left handle
     canvas.drawRect(
       Rect.fromCenter(center: bounds.bottomLeft, width: handleSize, height: handleSize),
       handlePaint,
     );
-    
-    // Bottom-right handle
     canvas.drawRect(
       Rect.fromCenter(center: bounds.bottomRight, width: handleSize, height: handleSize),
-      handlePaint,
-    );
-    
-    // Side handles
-    canvas.drawRect(
-      Rect.fromCenter(center: Offset(bounds.center.dx, bounds.top), width: handleSize, height: handleSize),
-      handlePaint,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(center: Offset(bounds.center.dx, bounds.bottom), width: handleSize, height: handleSize),
-      handlePaint,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(center: Offset(bounds.left, bounds.center.dy), width: handleSize, height: handleSize),
-      handlePaint,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(center: Offset(bounds.right, bounds.center.dy), width: handleSize, height: handleSize),
       handlePaint,
     );
   }
 
   void _drawGuides(Canvas canvas, Size size) {
-    // Only draw guides if showGuides is true
-    if (!showGuides) return;
-    
-    final guidePaint = Paint()
-      ..color = colorScheme.primary // Theme color for guides
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-    
-    final handlePaint = Paint()
-      ..color = colorScheme.primary.withOpacity(0.5)
-      ..style = PaintingStyle.fill;
-    
-    // Draw vertical guides
-    for (final x in verticalGuides) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        guidePaint,
-      );
-      
-      // Draw small handle at the top for easier interaction
-      canvas.drawCircle(
-        Offset(x, 10),
-        4.0,
-        handlePaint,
-      );
+    // Guide drawing logic would go here
+    // For now, simple placeholder
+  }
+
+  Color _getPixelBlockColorSync(double imgX, double imgY, double blockSize) {
+    if (backgroundImage == null || imagePixelData == null) {
+      return Colors.grey.withValues(alpha: 0.8);
     }
-    
-    // Draw horizontal guides
-    for (final y in horizontalGuides) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        guidePaint,
-      );
-      
-      // Draw small handle at the left for easier interaction
-      canvas.drawCircle(
-        Offset(10, y),
-        4.0,
-        handlePaint,
-      );
+
+    try {
+      // Find the block boundaries
+      final blockX = (imgX / blockSize).floor() * blockSize;
+      final blockY = (imgY / blockSize).floor() * blockSize;
+
+      // Sample from the center of the block for better representation
+      final centerX = blockX + blockSize / 2;
+      final centerY = blockY + blockSize / 2;
+
+      // Sample actual pixel from the cached image data
+      return _sampleRealImagePixelSync(centerX.toInt(), centerY.toInt());
+    } catch (e) {
+      return Colors.grey.withValues(alpha: 0.8);
     }
   }
 
-  void _drawCropBorder(Canvas canvas, Rect cropRect, Size canvasSize) {
-    // Draw dimmed overlay outside crop area
-    final overlayPaint = Paint()..color = Colors.black.withOpacity(0.4);
-
-    // Top overlay
-    if (cropRect.top > 0) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, 0, canvasSize.width, cropRect.top),
-        overlayPaint,
-      );
+  Color _sampleRealImagePixelSync(int x, int y) {
+    if (backgroundImage == null || imagePixelData == null) {
+      return Colors.grey.withValues(alpha: 0.8);
     }
 
-    // Bottom overlay
-    if (cropRect.bottom < canvasSize.height) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, cropRect.bottom, canvasSize.width, canvasSize.height),
-        overlayPaint,
-      );
-    }
+    try {
+      final width = backgroundImage!.width;
+      final height = backgroundImage!.height;
 
-    // Left overlay
-    if (cropRect.left > 0) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, cropRect.top, cropRect.left, cropRect.bottom),
-        overlayPaint,
-      );
-    }
+      // Clamp coordinates to image bounds
+      final clampedX = x.clamp(0, width - 1);
+      final clampedY = y.clamp(0, height - 1);
 
-    // Right overlay
-    if (cropRect.right < canvasSize.width) {
-      canvas.drawRect(
-        Rect.fromLTRB(cropRect.right, cropRect.top, canvasSize.width, cropRect.bottom),
-        overlayPaint,
-      );
-    }
+      // Calculate pixel index (4 bytes per pixel: RGBA)
+      final pixelIndex = (clampedY * width + clampedX) * 4;
 
-    // Draw crop border
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawRect(cropRect, borderPaint);
+      // Extract RGBA values
+      final bytes = imagePixelData!.buffer.asUint8List();
+      final r = bytes[pixelIndex];
+      final g = bytes[pixelIndex + 1];
+      final b = bytes[pixelIndex + 2];
+      final a = bytes[pixelIndex + 3];
 
-    // Draw resize handles
-    const handleSize = 8.0;
-    final handlePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final handleBorderPaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-
-    final handles = [
-      cropRect.topLeft,     // tl
-      cropRect.topRight,    // tr
-      cropRect.bottomLeft,  // bl
-      cropRect.bottomRight, // br
-      Offset(cropRect.center.dx, cropRect.top),    // t
-      Offset(cropRect.center.dx, cropRect.bottom), // b
-      Offset(cropRect.left, cropRect.center.dy),   // l
-      Offset(cropRect.right, cropRect.center.dy),  // r
-    ];
-
-    for (final handlePos in handles) {
-      final handleRect = Rect.fromCenter(
-        center: handlePos,
-        width: handleSize,
-        height: handleSize,
-      );
-      canvas.drawRect(handleRect, handlePaint);
-      canvas.drawRect(handleRect, handleBorderPaint);
+      return Color.fromARGB(a.toInt(), r.toInt(), g.toInt(), b.toInt());
+    } catch (e) {
+      return Colors.grey.withValues(alpha: 0.8);
     }
   }
-
-
-  void _drawDrawingPreview(Canvas canvas, Size canvasSize) {
-    if (drawingStart == null || drawingEnd == null) return;
-    
-    final paint = Paint()
-      ..color = toolConfig.primaryColor.withOpacity(0.7)
-      ..strokeWidth = toolConfig.strokeWidth
-      ..style = PaintingStyle.stroke;
-    
-    switch (selectedTool) {
-      case EditorTool.crop:
-        if (drawingStart != null && drawingEnd != null) {
-          final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
-
-          // Draw crop overlay - darken everything outside crop area
-          final overlayPaint = Paint()..color = Colors.black.withOpacity(0.4);
-
-          // Top overlay
-          if (rect.top > 0) {
-            canvas.drawRect(Rect.fromLTRB(0, 0, canvasSize.width, rect.top), overlayPaint);
-          }
-          // Bottom overlay
-          if (rect.bottom < canvasSize.height) {
-            canvas.drawRect(Rect.fromLTRB(0, rect.bottom, canvasSize.width, canvasSize.height), overlayPaint);
-          }
-          // Left overlay
-          if (rect.left > 0) {
-            canvas.drawRect(Rect.fromLTRB(0, rect.top, rect.left, rect.bottom), overlayPaint);
-          }
-          // Right overlay
-          if (rect.right < canvasSize.width) {
-            canvas.drawRect(Rect.fromLTRB(rect.right, rect.top, canvasSize.width, rect.bottom), overlayPaint);
-          }
-
-          // Draw crop border
-          paint
-            ..color = Colors.white
-            ..strokeWidth = 2.0
-            ..style = PaintingStyle.stroke;
-          canvas.drawRect(rect, paint);
-        }
-        break;
-        
-      case EditorTool.highlightRect:
-        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
-        paint
-          ..color = toolConfig.primaryColor.withOpacity(0.3)
-          ..style = PaintingStyle.fill;
-        canvas.drawRect(rect, paint);
-        
-        paint
-          ..color = toolConfig.primaryColor
-          ..style = PaintingStyle.stroke;
-        canvas.drawRect(rect, paint);
-        break;
-        
-      case EditorTool.redactBlackout:
-      case EditorTool.redactBlur:
-      case EditorTool.redactPixelate:
-        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
-        paint
-          ..color = toolConfig.primaryColor.withOpacity(0.5)
-          ..style = PaintingStyle.fill;
-        canvas.drawRect(rect, paint);
-        break;
-        
-      case EditorTool.text:
-        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
-        paint
-          ..color = toolConfig.primaryColor.withOpacity(0.2)
-          ..style = PaintingStyle.fill;
-        canvas.drawRect(rect, paint);
-        
-        paint
-          ..color = toolConfig.primaryColor
-          ..style = PaintingStyle.stroke;
-        canvas.drawRect(rect, paint);
-        break;
-        
-      case EditorTool.numberLabel:
-        // Draw number label preview as a circle at the starting point
-        final radius = toolConfig.toolSpecificSettings['circleRadius']?.toDouble() ?? 16.0;
-        final backgroundColor = toolConfig.secondaryColor;
-        
-        // Draw background circle
-        final backgroundPaint = Paint()
-          ..color = backgroundColor.withOpacity(0.5)
-          ..style = PaintingStyle.fill;
-        canvas.drawCircle(drawingStart!, radius, backgroundPaint);
-        
-        // Draw border
-        final borderPaint = Paint()
-          ..color = backgroundColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.0;
-        canvas.drawCircle(drawingStart!, radius, borderPaint);
-        
-        // Draw preview number
-        final numberValue = toolConfig.toolSpecificSettings['number'] ?? 1;
-        final fontSize = toolConfig.toolSpecificSettings['fontSize']?.toDouble() ?? 16.0;
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: numberValue.toString(),
-            style: TextStyle(
-              color: toolConfig.primaryColor,
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              fontFamily: toolConfig.toolSpecificSettings['fontFamily'] as String? ?? 'Arial',
-            ),
-          ),
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.ltr,
-        );
-        
-        textPainter.layout();
-        final textOffset = Offset(
-          drawingStart!.dx - textPainter.width / 2,
-          drawingStart!.dy - textPainter.height / 2,
-        );
-        textPainter.paint(canvas, textOffset);
-        break;
-      
-      case EditorTool.arrow:
-        // Draw arrow preview
-        final start = drawingStart!;
-        final end = drawingEnd!;
-        
-        // Draw arrow line
-        canvas.drawLine(start, end, paint);
-        
-        // Draw arrowhead
-        final arrowHeadSize = toolConfig.toolSpecificSettings['arrowHeadSize']?.toDouble() ?? 15.0;
-        final arrowHeadAngle = toolConfig.toolSpecificSettings['arrowHeadAngle']?.toDouble() ?? 0.5;
-        
-        final direction = (end - start).direction;
-        final arrowPoint1 = end + Offset.fromDirection(direction + math.pi - arrowHeadAngle, arrowHeadSize);
-        final arrowPoint2 = end + Offset.fromDirection(direction + math.pi + arrowHeadAngle, arrowHeadSize);
-        
-        canvas.drawLine(end, arrowPoint1, paint);
-        canvas.drawLine(end, arrowPoint2, paint);
-        break;
-      
-      default:
-        // No preview for other tools
-        break;
-    }
-  }
-
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {

@@ -25,9 +25,9 @@ class TaskItemWidget extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isOverdue
-                ? Theme.of(context).colorScheme.error.withOpacity(0.5)
+                ? Theme.of(context).colorScheme.error.withValues(alpha: 0.5)
                 : isDueSoon
-                    ? Theme.of(context).colorScheme.tertiary.withOpacity(0.5)
+                    ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)
                     : Colors.transparent,
             width: isOverdue || isDueSoon ? 2 : 0,
           ),
@@ -192,9 +192,9 @@ class TaskItemWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -227,9 +227,9 @@ class TaskItemWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -266,9 +266,9 @@ class TaskItemWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

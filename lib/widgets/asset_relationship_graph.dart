@@ -409,7 +409,7 @@ class _AssetRelationshipGraphState extends ConsumerState<AssetRelationshipGraph>
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: _getAssetTypeColor(node.asset.type).withOpacity(isFocused ? 1.0 : 0.8),
+          color: _getAssetTypeColor(node.asset.type).withValues(alpha: isFocused ? 1.0 : 0.8),
           shape: BoxShape.circle,
           border: Border.all(
             color: isFocused ? Colors.white : Colors.transparent,
@@ -417,7 +417,7 @@ class _AssetRelationshipGraphState extends ConsumerState<AssetRelationshipGraph>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: isFocused ? 8 : 4,
               offset: const Offset(0, 2),
             ),
@@ -458,7 +458,7 @@ class _AssetRelationshipGraphState extends ConsumerState<AssetRelationshipGraph>
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor.withOpacity(0.9),
+          color: Theme.of(context).cardColor.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Theme.of(context).dividerColor),
         ),
@@ -743,14 +743,14 @@ class AssetGraphPainter extends CustomPainter {
 
     switch (relationship.type) {
       case RelationshipType.parentChild:
-        paint.color = Colors.blue.withOpacity(0.7 * animationValue);
+        paint.color = Colors.blue.withValues(alpha: 0.7 * animationValue);
         break;
       case RelationshipType.related:
-        paint.color = Colors.orange.withOpacity(0.7 * animationValue);
+        paint.color = Colors.orange.withValues(alpha: 0.7 * animationValue);
         paint.pathEffect = null; // Could implement dashed lines here
         break;
       case RelationshipType.dependency:
-        paint.color = Colors.red.withOpacity(0.7 * animationValue);
+        paint.color = Colors.red.withValues(alpha: 0.7 * animationValue);
         break;
     }
 

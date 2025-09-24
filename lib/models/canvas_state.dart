@@ -67,15 +67,15 @@ class CanvasState {
 
   Matrix4 get transformMatrix {
     final matrix = Matrix4.identity();
-    matrix.translate(pan.dx, pan.dy);
-    matrix.scale(zoom);
+    matrix.translateByDouble(pan.dx, pan.dy, 0, 1);
+    matrix.scaleByDouble(zoom, zoom, 1, 1);
     return matrix;
   }
 
   Matrix4 get inverseTransformMatrix {
     final matrix = Matrix4.identity();
-    matrix.scale(1.0 / zoom);
-    matrix.translate(-pan.dx / zoom, -pan.dy / zoom);
+    matrix.scaleByDouble(1.0 / zoom, 1.0 / zoom, 1, 1);
+    matrix.translateByDouble(-pan.dx / zoom, -pan.dy / zoom, 0, 1);
     return matrix;
   }
 

@@ -326,8 +326,8 @@ class _ConfirmationDialog extends StandardDialog {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDestructive
-              ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.3)
-              : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+              ? Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3)
+              : Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -402,7 +402,7 @@ class _ErrorDialog extends StandardDialog {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

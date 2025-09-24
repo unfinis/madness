@@ -78,7 +78,7 @@ class _ProjectTransferLinkDialogState extends ConsumerState<ProjectTransferLinkD
                         Text(
                           project?.name ?? 'Unknown Project',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+                            color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -167,7 +167,7 @@ class _ProjectTransferLinkDialogState extends ConsumerState<ProjectTransferLinkD
                     Container(
                       padding: AppSpacing.cardPadding,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
                       ),
                       child: Column(
@@ -217,7 +217,7 @@ class _ProjectTransferLinkDialogState extends ConsumerState<ProjectTransferLinkD
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),

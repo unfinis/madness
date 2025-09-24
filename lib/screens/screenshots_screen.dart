@@ -7,7 +7,6 @@ import '../models/screenshot_category.dart';
 import '../providers/screenshot_providers.dart';
 import '../providers/database_provider.dart';
 import '../screens/screenshot_editor_screen.dart';
-import '../dialogs/upload_screenshot_dialog.dart';
 import '../services/screenshot_upload_service.dart';
 import '../constants/responsive_breakpoints.dart';
 import '../constants/app_spacing.dart';
@@ -54,7 +53,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                     color: theme.colorScheme.primary,
                     width: 2,
                   ),
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
                 )
               : null,
           child: Padding(
@@ -62,46 +61,6 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            isDesktop 
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: ScreenshotWidgets.sectionHeader(
-                          title: 'Screenshots',
-                          subtitle: 'Manage and edit screenshot evidence',
-                          icon: Icons.photo_camera,
-                          theme: theme,
-                        ),
-                      ),
-                      FilledButton.icon(
-                        onPressed: () => _createNewScreenshot(),
-                        icon: const Icon(Icons.upload),
-                        label: const Text('Upload Screenshot'),
-                      ),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ScreenshotWidgets.sectionHeader(
-                        title: 'Screenshots',
-                        subtitle: 'Manage and edit screenshot evidence',
-                        icon: Icons.photo_camera,
-                        theme: theme,
-                      ),
-                      AppSpacing.vGapLG,
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: () => _createNewScreenshot(),
-                          icon: const Icon(Icons.upload),
-                          label: const Text('Upload Screenshot'),
-                        ),
-                      ),
-                    ],
-                  ),
-            AppSpacing.vGapXL,
             
             // Filters and Search Panel
             Card(
@@ -512,7 +471,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
           Icon(
             Icons.photo_library_outlined,
             size: 64,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -525,14 +484,8 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
           Text(
             'Upload your first screenshot to get started',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => _createNewScreenshot(),
-            icon: const Icon(Icons.upload),
-            label: const Text('Upload Screenshot'),
           ),
         ],
       ),
@@ -667,7 +620,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                 height: isDesktop ? 60 : 45,
                 decoration: BoxDecoration(
                   color: screenshot.isPlaceholder 
-                      ? theme.colorScheme.secondaryContainer.withOpacity(0.3)
+                      ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.3)
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -877,7 +830,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
               flex: 3,
               child: Container(
                 color: screenshot.isPlaceholder
-                    ? theme.colorScheme.secondaryContainer.withOpacity(0.3)
+                    ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.3)
                     : Colors.grey.shade100,
                 child: Stack(
                   children: [
@@ -1096,7 +1049,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                               color: theme.colorScheme.errorContainer,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.error.withOpacity(0.5),
+                                color: theme.colorScheme.error.withValues(alpha: 0.5),
                                 width: 1,
                               ),
                             ),
@@ -1155,21 +1108,6 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
   }
 
 
-  void _createNewScreenshot() async {
-    final result = await showDialog<Screenshot>(
-      context: context,
-      builder: (context) => UploadScreenshotDialog(
-        projectId: widget.projectId,
-      ),
-    );
-
-    // The dialog handles success feedback and provider invalidation
-    // No additional action needed here
-    if (result != null) {
-      // Optionally navigate to editor for the new screenshot
-      // _openScreenshotEditor(result);
-    }
-  }
 
   void _openScreenshotEditor(Screenshot screenshot) {
     Navigator.of(context).push(

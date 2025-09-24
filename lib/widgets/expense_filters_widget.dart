@@ -43,7 +43,7 @@ class ExpenseFiltersWidget extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+              fillColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
             ),
             onChanged: (value) {
               ref.read(expenseFiltersProvider(projectId).notifier).updateSearchQuery(value);

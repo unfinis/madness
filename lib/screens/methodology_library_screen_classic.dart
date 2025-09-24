@@ -4,6 +4,7 @@ import '../providers/projects_provider.dart';
 import '../providers/storage_provider.dart';
 import '../services/methodology_loader.dart';
 import '../widgets/common_state_widgets.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/enhanced_methodology_detail_dialog.dart';
 import '../dialogs/methodology_template_editor_dialog.dart';
@@ -133,57 +134,48 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
   Widget _buildStatsBar(List<MethodologyTemplate> filtered, List<MethodologyTemplate> total) {
     final stats = _calculateStats(total);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatChip('Total', total.length, Icons.library_books, Theme.of(context).primaryColor),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Filtered', filtered.length, Icons.filter_list, Colors.blue),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Low Risk', stats.lowRisk, Icons.info, Colors.green),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Medium Risk', stats.mediumRisk, Icons.warning, Colors.orange),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('High Risk', stats.highRisk, Icons.error, Colors.red),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Critical', stats.critical, Icons.dangerous, Colors.purple),
-          ],
-        ),
+    final statsData = [
+      StatData(
+        label: 'Total',
+        count: total.length,
+        icon: Icons.library_books,
+        color: Theme.of(context).colorScheme.primary,
       ),
-    );
+      StatData(
+        label: 'Filtered',
+        count: filtered.length,
+        icon: Icons.filter_list,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Low Risk',
+        count: stats.lowRisk,
+        icon: Icons.info,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Medium Risk',
+        count: stats.mediumRisk,
+        icon: Icons.warning,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'High Risk',
+        count: stats.highRisk,
+        icon: Icons.error,
+        color: Colors.red,
+      ),
+      StatData(
+        label: 'Critical',
+        count: stats.critical,
+        icon: Icons.dangerous,
+        color: Colors.purple,
+      ),
+    ];
+
+    return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSearchAndFilters() {
     return Padding(
@@ -359,10 +351,10 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Theme.of(context).primaryColor
-                        : Theme.of(context).primaryColor.withOpacity(0.1),
+                        : Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
@@ -420,7 +412,7 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: riskColor.withOpacity(0.3)),
+            border: Border.all(color: riskColor.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +421,7 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: riskColor.withOpacity(0.1),
+                  color: riskColor.withValues(alpha: 0.1),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -492,7 +484,7 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -588,7 +580,7 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(

@@ -65,7 +65,7 @@ class _FindingFiltersWidgetState extends ConsumerState<FindingFiltersWidget> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                         ),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
@@ -124,9 +124,9 @@ class _FindingFiltersWidgetState extends ConsumerState<FindingFiltersWidget> {
                           backgroundColor: severity.color,
                           radius: 6,
                         ),
-                        selectedColor: severity.color.withOpacity(0.2),
+                        selectedColor: severity.color.withValues(alpha: 0.2),
                         side: BorderSide(
-                          color: severity.color.withOpacity(0.5),
+                          color: severity.color.withValues(alpha: 0.5),
                         ),
                       );
                     }).toList(),
@@ -148,9 +148,9 @@ class _FindingFiltersWidgetState extends ConsumerState<FindingFiltersWidget> {
                         onSelected: (selected) {
                           _toggleStatusFilter(status, selected);
                         },
-                        selectedColor: status.color.withOpacity(0.2),
+                        selectedColor: status.color.withValues(alpha: 0.2),
                         side: BorderSide(
-                          color: status.color.withOpacity(0.5),
+                          color: status.color.withValues(alpha: 0.5),
                         ),
                       );
                     }).toList(),
@@ -276,10 +276,10 @@ class _FindingFiltersWidgetState extends ConsumerState<FindingFiltersWidget> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

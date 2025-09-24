@@ -5,10 +5,9 @@ import '../providers/finding_provider.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/finding_filters_widget.dart';
 import '../widgets/finding_table_widget.dart';
-import '../widgets/sub_finding_template_dialog.dart';
-import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
-import '../constants/responsive_breakpoints.dart';
+import '../widgets/standard_stats_bar.dart';
+import '../widgets/perspective_tab_view.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/enhanced_finding_dialog.dart';
 
@@ -20,7 +19,7 @@ class FindingsScreen extends ConsumerStatefulWidget {
 }
 
 class _FindingsScreenState extends ConsumerState<FindingsScreen> {
-  bool _showFilters = true;
+  final bool _showFilters = true;
 
   @override
   void initState() {
@@ -37,210 +36,49 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
   @override
   Widget build(BuildContext context) {
     final currentProject = ref.watch(currentProjectProvider);
-    
+
     if (currentProject == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Findings'),
-        ),
         body: CommonStateWidgets.noProjectSelected(),
       );
     }
 
-    return Scaffold(
-      appBar: _buildAppBar(context, currentProject),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(findingProvider.notifier).loadFindings(currentProject.id);
-        },
-        child: SingleChildScrollView(
-          padding: CommonLayoutWidgets.getScreenPadding(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildPillStyleSummary(),
-              SizedBox(height: CommonLayoutWidgets.sectionSpacing),
-
-              ResponsiveCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_showFilters) ...[
-                      const FindingFiltersWidget(),
-                      SizedBox(height: CommonLayoutWidgets.sectionSpacing),
-                    ],
-                    
-                    FindingTableWidget(
-                      onRowTap: _handleFindingTap,
-                      onRowDoubleTap: _handleFindingEdit,
-                      onEdit: _handleFindingEdit,
-                      onDelete: _handleFindingDelete,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: _buildFloatingActionButton(context),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context, dynamic currentProject) {
     final findingState = ref.watch(findingProvider);
-    final filteredCount = findingState.filteredFindings.length;
-    final totalCount = findingState.findings.length;
+    final findings = findingState.findings;
 
-    return AppBar(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Findings'),
-          if (filteredCount != totalCount)
-            Text(
-              '$filteredCount of $totalCount findings',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-            ),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(findingProvider.notifier).loadFindings(currentProject.id);
+      },
+      child: PerspectiveTabView(
+        header: _buildStandardStatsBar(findings),
+        filters: _showFilters ? const FindingFiltersWidget() : null,
+        tabs: [
+          PerspectiveTab(
+            name: 'All',
+            icon: Icons.list,
+            content: _buildFindingsList(findings),
+          ),
+          PerspectiveTab(
+            name: 'Critical',
+            icon: Icons.warning,
+            content: _buildFindingsList(findings.where((f) => f.severity == FindingSeverity.critical).toList()),
+          ),
+          PerspectiveTab(
+            name: 'Active',
+            icon: Icons.radio_button_checked,
+            content: _buildFindingsList(findings.where((f) => f.status == FindingStatus.active).toList()),
+          ),
+          PerspectiveTab(
+            name: 'Resolved',
+            icon: Icons.check_circle,
+            content: _buildFindingsList(findings.where((f) => f.status == FindingStatus.resolved).toList()),
+          ),
         ],
       ),
-      actions: [
-        // Template button
-        IconButton(
-          icon: const Icon(Icons.account_tree_outlined),
-          onPressed: () async {
-            final result = await showSubFindingTemplateDialog(context);
-            if (result == true) {
-              // Refresh the findings list
-              ref.read(findingProvider.notifier).loadFindings(currentProject.id);
-            }
-          },
-          tooltip: 'Create from Template',
-        ),
-        
-        // Filter toggle
-        IconButton(
-          icon: Icon(_showFilters ? Icons.filter_list : Icons.filter_list_off),
-          onPressed: () {
-            setState(() {
-              _showFilters = !_showFilters;
-            });
-          },
-          tooltip: _showFilters ? 'Hide Filters' : 'Show Filters',
-        ),
-        
-        // Export menu
-        PopupMenuButton(
-          icon: const Icon(Icons.download),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'export_all',
-              child: Row(
-                children: [
-                  Icon(Icons.file_download, size: 16),
-                  SizedBox(width: 8),
-                  Text('Export All Findings'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'export_filtered',
-              child: Row(
-                children: [
-                  Icon(Icons.filter_alt, size: 16),
-                  SizedBox(width: 8),
-                  Text('Export Filtered'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'import',
-              child: Row(
-                children: [
-                  Icon(Icons.file_upload, size: 16),
-                  SizedBox(width: 8),
-                  Text('Import Findings'),
-                ],
-              ),
-            ),
-          ],
-          onSelected: (value) {
-            switch (value) {
-              case 'export_all':
-                _exportFindings(findingState.findings);
-                break;
-              case 'export_filtered':
-                _exportFindings(findingState.filteredFindings);
-                break;
-              case 'import':
-                _importFindings();
-                break;
-            }
-          },
-        ),
-        
-        // More options
-        PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'refresh',
-              child: Row(
-                children: [
-                  Icon(Icons.refresh, size: 16),
-                  SizedBox(width: 8),
-                  Text('Refresh'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'clear_filters',
-              child: Row(
-                children: [
-                  Icon(Icons.clear, size: 16),
-                  SizedBox(width: 8),
-                  Text('Clear All Filters'),
-                ],
-              ),
-            ),
-          ],
-          onSelected: (value) {
-            switch (value) {
-              case 'refresh':
-                ref.read(findingProvider.notifier).loadFindings(currentProject.id);
-                break;
-              case 'clear_filters':
-                ref.read(findingProvider.notifier).clearFilters();
-                break;
-            }
-          },
-        ),
-      ],
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = ResponsiveBreakpoints.isDesktop(constraints.maxWidth);
-        
-        if (isDesktop) {
-          return FloatingActionButton.extended(
-            onPressed: _createNewFinding,
-            icon: const Icon(Icons.add),
-            label: const Text('New Finding'),
-          );
-        } else {
-          return FloatingActionButton(
-            onPressed: _createNewFinding,
-            child: const Icon(Icons.add),
-            tooltip: 'New Finding',
-          );
-        }
-      },
-    );
-  }
 
   void _handleFindingTap(Finding finding) {
     // Single tap - just select the finding for now
@@ -261,7 +99,7 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to delete this finding?'),
+            const Text('Are you sure you want to delete this finding?'),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
@@ -348,10 +186,9 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
     }
   }
 
-  Widget _buildPillStyleSummary() {
-    final findingState = ref.watch(findingProvider);
-    final findings = findingState.findings;
 
+
+  Widget _buildStandardStatsBar(List<Finding> findings) {
     if (findings.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -365,136 +202,80 @@ class _FindingsScreenState extends ConsumerState<FindingsScreen> {
     final infoCount = findings.where((f) => f.severity == FindingSeverity.informational).length;
     final activeCount = findings.where((f) => f.status == FindingStatus.active).length;
     final resolvedCount = findings.where((f) => f.status == FindingStatus.resolved).length;
-    final highestCvss = findings.isEmpty ? 0.0 : findings.map((f) => f.cvssScore).reduce((a, b) => a > b ? a : b);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
+    final stats = [
+      StatData(
+        label: 'Total',
+        count: totalFindings,
+        icon: Icons.list,
+        color: Theme.of(context).colorScheme.primary,
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatChip('Total', totalFindings, Icons.folder_outlined, Theme.of(context).primaryColor),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Critical', criticalCount, Icons.error, const Color(0xFFef4444)),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('High', highCount, Icons.warning, const Color(0xFFf59e0b)),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Medium', mediumCount, Icons.info, const Color(0xFFfbbf24)),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Low', lowCount, Icons.check_circle, const Color(0xFF10b981)),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Info', infoCount, Icons.info_outline, const Color(0xFF6b7280)),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Active', activeCount, Icons.play_circle, Colors.red),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Resolved', resolvedCount, Icons.check_circle, Colors.green),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Max CVSS', highestCvss.toStringAsFixed(1), Icons.speed, Colors.deepOrange),
-          ],
-        ),
+      StatData(
+        label: 'Critical',
+        count: criticalCount,
+        icon: Icons.warning,
+        color: Colors.red,
       ),
-    );
+      StatData(
+        label: 'High',
+        count: highCount,
+        icon: Icons.priority_high,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'Medium',
+        count: mediumCount,
+        icon: Icons.remove,
+        color: Colors.yellow.shade700,
+      ),
+      StatData(
+        label: 'Low',
+        count: lowCount,
+        icon: Icons.low_priority,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Info',
+        count: infoCount,
+        icon: Icons.info,
+        color: Colors.grey,
+      ),
+      StatData(
+        label: 'Active',
+        count: activeCount,
+        icon: Icons.radio_button_checked,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Resolved',
+        count: resolvedCount,
+        icon: Icons.check_circle,
+        color: Colors.teal,
+      ),
+    ];
+
+    return StandardStatsBar(chips: StatsHelper.buildChips(stats));
   }
 
-  Widget _buildStatChip(String label, dynamic value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            '$label: $value',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _exportFindings(List<Finding> findings) async {
-    try {
-      final findingIds = findings.map((f) => f.id).toList();
-      final jsonData = await ref.read(findingProvider.notifier).exportFindings(findingIds);
-      
-      // TODO: Implement file save functionality
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Exported ${findings.length} findings'),
-            action: SnackBarAction(
-              label: 'Preview',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => Dialog(
-                    child: Container(
-                      width: 600,
-                      height: 400,
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              const Expanded(child: Text('Export Preview')),
-                              IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon: const Icon(Icons.close),
-                              ),
-                            ],
-                          ),
-                          const Divider(),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: SelectableText(
-                                jsonData,
-                                style: const TextStyle(fontFamily: 'monospace'),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+  Widget _buildFindingsList(List<Finding> findings) {
+    if (findings.isEmpty) {
+      return PerspectiveEmptyState(
+        title: 'No findings available',
+        subtitle: 'Findings will appear here as they are discovered and documented',
+        icon: Icons.search,
+        onAction: () => _createNewFinding(),
+        actionLabel: 'Add Finding',
+      );
     }
-  }
 
-  void _importFindings() {
-    // TODO: Implement file picker and import functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Import functionality coming soon...')),
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: FindingTableWidget(
+        onRowTap: _handleFindingTap,
+        onRowDoubleTap: _handleFindingEdit,
+        onEdit: _handleFindingEdit,
+        onDelete: _handleFindingDelete,
+      ),
     );
   }
 }

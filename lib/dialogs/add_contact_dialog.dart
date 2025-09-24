@@ -73,7 +73,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -176,12 +176,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
         border: OutlineInputBorder(),
         prefixIcon: Icon(Icons.work),
       ),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Role is required';
-        }
-        return null;
-      },
+      validator: null,
     );
   }
 
@@ -195,11 +190,10 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
       ),
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Email is required';
-        }
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Please enter a valid email';
+        if (value != null && value.trim().isNotEmpty) {
+          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+            return 'Please enter a valid email';
+          }
         }
         return null;
       },
@@ -215,12 +209,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
         prefixIcon: Icon(Icons.phone),
       ),
       keyboardType: TextInputType.phone,
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Phone is required';
-        }
-        return null;
-      },
+      validator: null,
     );
   }
 
@@ -383,7 +372,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).colorScheme.primaryContainer,
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: const BorderRadius.only(
@@ -400,7 +389,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -428,7 +417,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
                 Text(
                   isEditing ? 'Update contact information' : 'Add a new contact to your directory',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -438,7 +427,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+              backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
               foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -451,7 +440,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -468,7 +457,7 @@ class _AddContactDialogState extends ConsumerState<AddContactDialog> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                 ),
               ),
               child: Text(

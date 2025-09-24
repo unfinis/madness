@@ -47,7 +47,7 @@ class ExpenseTableWidget extends ConsumerWidget {
           child: DataTable(
             columnSpacing: 20,
             headingRowColor: MaterialStateProperty.all(
-              Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             ),
             columns: const [
               DataColumn(
@@ -139,13 +139,13 @@ class ExpenseTableWidget extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: expense.type == ExpenseType.billable
-                            ? Theme.of(context).colorScheme.secondary.withOpacity(0.1)
-                            : Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                            ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1)
+                            : Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: expense.type == ExpenseType.billable
-                              ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
-                              : Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+                              ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3)
+                              : Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(

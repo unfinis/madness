@@ -1,10 +1,11 @@
 /// Pre-engagement questionnaire screen
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/questionnaire.dart';
 import '../providers/questionnaire_provider.dart';
-import '../providers/projects_provider.dart';
 import '../widgets/questionnaire/question_widget_factory.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 
 class QuestionnaireScreen extends ConsumerStatefulWidget {
@@ -35,42 +36,12 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentProject = ref.watch(currentProjectProvider);
     final questionnaireState = ref.watch(questionnaireNotifierProvider);
     final statistics = ref.watch(sessionStatisticsProvider);
     final progress = ref.watch(sessionProgressProvider);
     final filteredQuestions = ref.watch(filteredQuestionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pre-Engagement Checklist'),
-        backgroundColor: theme.colorScheme.surface,
-        scrolledUnderElevation: 1,
-        actions: [
-          // Export button
-          IconButton(
-            onPressed: _exportQuestionnaire,
-            icon: const Icon(Icons.download),
-            tooltip: 'Export Questionnaire',
-          ),
-          // Import button
-          IconButton(
-            onPressed: _importQuestionnaire,
-            icon: const Icon(Icons.upload),
-            tooltip: 'Import Questionnaire',
-          ),
-          // Schedule kickoff call button
-          FilledButton.icon(
-            onPressed: currentProject != null ? _scheduleKickoffCall : null,
-            icon: const Icon(Icons.calendar_month),
-            label: const Text('Schedule KO Call'),
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-            ),
-          ),
-          AppSpacing.hGapMD,
-        ],
-      ),
       body: Column(
         children: [
           // Header with progress and stats
@@ -109,21 +80,39 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                 AppSpacing.vGapMD,
                 
                 // Statistics - Pill Style Summary
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildStatChip('Total', statistics['total'] ?? 0, Icons.quiz, theme.colorScheme.primary),
-                      const SizedBox(width: AppSpacing.sm),
-                      _buildStatChip('Completed', statistics['completed'] ?? 0, Icons.check_circle, const Color(0xFF10b981)),
-                      const SizedBox(width: AppSpacing.sm),
-                      _buildStatChip('In Progress', statistics['inProgress'] ?? 0, Icons.access_time, const Color(0xFF3b82f6)),
-                      const SizedBox(width: AppSpacing.sm),
-                      _buildStatChip('Pending', statistics['pending'] ?? 0, Icons.radio_button_unchecked, const Color(0xFFf59e0b)),
-                      const SizedBox(width: AppSpacing.sm),
-                      _buildStatChip('Blockers', statistics['blocked'] ?? 0, Icons.block, const Color(0xFFef4444)),
-                    ],
-                  ),
+                StandardStatsBar(
+                  chips: StatsHelper.buildChips([
+                    StatData(
+                      label: 'Total',
+                      count: statistics['total'] ?? 0,
+                      icon: Icons.quiz,
+                      color: theme.colorScheme.primary,
+                    ),
+                    StatData(
+                      label: 'Completed',
+                      count: statistics['completed'] ?? 0,
+                      icon: Icons.check_circle,
+                      color: const Color(0xFF10b981),
+                    ),
+                    StatData(
+                      label: 'In Progress',
+                      count: statistics['inProgress'] ?? 0,
+                      icon: Icons.access_time,
+                      color: const Color(0xFF3b82f6),
+                    ),
+                    StatData(
+                      label: 'Pending',
+                      count: statistics['pending'] ?? 0,
+                      icon: Icons.radio_button_unchecked,
+                      color: const Color(0xFFf59e0b),
+                    ),
+                    StatData(
+                      label: 'Blockers',
+                      count: statistics['blocked'] ?? 0,
+                      icon: Icons.block,
+                      color: const Color(0xFFef4444),
+                    ),
+                  ]),
                 ),
               ],
             ),
@@ -291,34 +280,6 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
     );
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFilterChip(BuildContext context, String label, bool isSelected, VoidCallback onPressed) {
     final theme = Theme.of(context);
@@ -427,25 +388,4 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
         .updateAnswer(questionId, answer, status);
   }
 
-  void _exportQuestionnaire() {
-    final data = ref.read(questionnaireNotifierProvider.notifier).exportSession();
-    // TODO: Implement export functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export functionality coming soon')),
-    );
-  }
-
-  void _importQuestionnaire() {
-    // TODO: Implement import functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Import functionality coming soon')),
-    );
-  }
-
-  void _scheduleKickoffCall() {
-    // TODO: Implement scheduling functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Schedule KO Call functionality coming soon')),
-    );
-  }
 }

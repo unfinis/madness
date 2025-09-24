@@ -215,7 +215,7 @@ class _MethodologyBrowserState extends ConsumerState<MethodologyBrowser> {
         color = Theme.of(context).colorScheme.error;
         break;
       case 'high':
-        color = Theme.of(context).colorScheme.error.withOpacity(0.8);
+        color = Theme.of(context).colorScheme.error.withValues(alpha: 0.8);
         break;
       case 'medium':
         color = Theme.of(context).colorScheme.tertiary;
@@ -230,7 +230,7 @@ class _MethodologyBrowserState extends ConsumerState<MethodologyBrowser> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
@@ -251,7 +251,7 @@ class _MethodologyBrowserState extends ConsumerState<MethodologyBrowser> {
         category.replaceAll('_', ' ').toUpperCase(),
         style: const TextStyle(fontSize: 10),
       ),
-      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       side: BorderSide(color: Theme.of(context).primaryColor),
     );
   }

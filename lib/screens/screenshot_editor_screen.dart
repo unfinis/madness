@@ -1056,7 +1056,7 @@ class _ScreenshotEditorScreenState
                 style: FilledButton.styleFrom(
                   backgroundColor: _hasPendingCrop
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.surfaceVariant,
+                      : theme.colorScheme.surfaceContainerHighest,
                   foregroundColor: _hasPendingCrop
                       ? theme.colorScheme.onPrimary
                       : theme.colorScheme.onSurfaceVariant,
@@ -1132,7 +1132,7 @@ class _ScreenshotEditorScreenState
                 Container(
                   height: EditorConstants.zoomBarHeight,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  color: theme.colorScheme.surface.withOpacity(0.9),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.9),
                   child: Row(
                     children: [
                       IconButton(
@@ -1352,10 +1352,10 @@ class _ScreenshotEditorScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.9),
+        color: theme.colorScheme.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: InkWell(
@@ -1368,7 +1368,7 @@ class _ScreenshotEditorScreenState
               size: 16,
               color: isEnabled 
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 4),
             Text(
@@ -1376,7 +1376,7 @@ class _ScreenshotEditorScreenState
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isEnabled 
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.6),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: isEnabled ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

@@ -343,7 +343,7 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
         ),
         borderRadius: BorderRadius.circular(8),
         color: _selectedFile != null || _fileBytes != null
-            ? theme.colorScheme.primaryContainer.withOpacity(0.1)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
             : theme.colorScheme.surface,
       ),
       child: _selectedFile != null || _fileBytes != null

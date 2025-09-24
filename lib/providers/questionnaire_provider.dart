@@ -4,11 +4,13 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/questionnaire.dart';
 import '../services/questionnaire_service.dart';
+import '../services/question_templating_service.dart';
 import 'projects_provider.dart';
 
 // Service provider
 final questionnaireServiceProvider = Provider<QuestionnaireService>((ref) {
-  return QuestionnaireService();
+  final templatingService = ref.read(questionTemplatingServiceProvider);
+  return QuestionnaireService(templatingService: templatingService);
 });
 
 // Configuration provider

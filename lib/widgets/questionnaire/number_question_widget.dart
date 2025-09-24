@@ -54,7 +54,7 @@ class _NumberQuestionWidgetState extends QuestionWidgetBaseState<NumberQuestionW
           borderRadius: BorderRadius.circular(8),
         ),
         filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         prefixIcon: Icon(
           Icons.numbers,
           color: theme.colorScheme.onSurfaceVariant,

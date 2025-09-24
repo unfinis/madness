@@ -402,8 +402,8 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          category.color.withOpacity(0.1),
-                          category.color.withOpacity(0.05),
+                          category.color.withValues(alpha: 0.1),
+                          category.color.withValues(alpha: 0.05),
                         ],
                       ),
                     ),
@@ -426,7 +426,7 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: category.color.withOpacity(0.2),
+                                  color: category.color.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -641,7 +641,7 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: categoryInfo?.color.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1),
+          backgroundColor: categoryInfo?.color.withValues(alpha: 0.1) ?? Colors.grey.withValues(alpha: 0.1),
           child: Icon(
             categoryInfo?.icon ?? Icons.code,
             color: categoryInfo?.color ?? Colors.grey,
@@ -707,7 +707,7 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

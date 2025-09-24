@@ -74,7 +74,7 @@ enum ActionRiskLevel {
 
 /// A triggered event that led to this action
 @freezed
-class TriggerEvent with _$TriggerEvent {
+sealed class TriggerEvent with _$TriggerEvent {
   const factory TriggerEvent({
     /// ID of the trigger that fired
     required String triggerId,
@@ -107,7 +107,7 @@ class TriggerEvent with _$TriggerEvent {
 
 /// A tool required for an action
 @freezed
-class ActionTool with _$ActionTool {
+sealed class ActionTool with _$ActionTool {
   const factory ActionTool({
     /// Name of the tool
     required String name,
@@ -131,7 +131,7 @@ class ActionTool with _$ActionTool {
 
 /// Equipment needed for an action
 @freezed
-class ActionEquipment with _$ActionEquipment {
+sealed class ActionEquipment with _$ActionEquipment {
   const factory ActionEquipment({
     /// Name of the equipment
     required String name,
@@ -152,7 +152,7 @@ class ActionEquipment with _$ActionEquipment {
 
 /// A reference for further reading
 @freezed
-class ActionReference with _$ActionReference {
+sealed class ActionReference with _$ActionReference {
   const factory ActionReference({
     /// Title of the reference
     required String title,
@@ -173,7 +173,7 @@ class ActionReference with _$ActionReference {
 
 /// A risk associated with an action and its mitigation
 @freezed
-class ActionRisk with _$ActionRisk {
+sealed class ActionRisk with _$ActionRisk {
   const factory ActionRisk({
     /// Description of the risk
     required String risk,
@@ -191,7 +191,7 @@ class ActionRisk with _$ActionRisk {
 
 /// A procedure step with commands
 @freezed
-class ProcedureStep with _$ProcedureStep {
+sealed class ProcedureStep with _$ProcedureStep {
   const factory ProcedureStep({
     /// Step number
     required int stepNumber,
@@ -218,7 +218,7 @@ class ProcedureStep with _$ProcedureStep {
 
 /// A suggested finding from this action
 @freezed
-class SuggestedFinding with _$SuggestedFinding {
+sealed class SuggestedFinding with _$SuggestedFinding {
   const factory SuggestedFinding({
     /// Title of the finding
     required String title,
@@ -242,7 +242,7 @@ class SuggestedFinding with _$SuggestedFinding {
 
 /// Execution data for tracking completion
 @freezed
-class ActionExecution with _$ActionExecution {
+sealed class ActionExecution with _$ActionExecution {
   const factory ActionExecution({
     /// When execution started
     DateTime? startedAt,
@@ -281,7 +281,7 @@ class ActionExecution with _$ActionExecution {
 
 /// Main attack plan action model
 @freezed
-class AttackPlanAction with _$AttackPlanAction {
+sealed class AttackPlanAction with _$AttackPlanAction {
   const factory AttackPlanAction({
     /// Unique identifier
     required String id,

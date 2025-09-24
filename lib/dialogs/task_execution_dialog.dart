@@ -81,7 +81,7 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
@@ -151,7 +151,7 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Theme.of(context).primaryColor.withOpacity(0.1)
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                         : null,
                     border: Border(
                       bottom: BorderSide(color: Colors.grey.shade200),

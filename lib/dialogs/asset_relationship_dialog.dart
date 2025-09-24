@@ -255,7 +255,7 @@ class _AssetRelationshipDialogState extends ConsumerState<AssetRelationshipDialo
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            initialValue: _selectedRelationshipType,
+            value: _selectedRelationshipType,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'Select relationship type',
@@ -392,6 +392,56 @@ class _AssetRelationshipDialogState extends ConsumerState<AssetRelationshipDialo
         return Colors.indigo;
       case AssetType.wireless_network:
         return Colors.cyan;
+      case AssetType.restrictedEnvironment:
+        return Colors.deepOrange;
+      case AssetType.securityControl:
+        return Colors.teal;
+      case AssetType.activeDirectoryDomain:
+        return Colors.deepPurple;
+      case AssetType.domainController:
+        return Colors.indigo.shade700;
+      case AssetType.adUser:
+        return Colors.lightBlue;
+      case AssetType.adComputer:
+        return Colors.blueGrey;
+      case AssetType.certificateAuthority:
+        return Colors.amber;
+      case AssetType.certificateTemplate:
+        return Colors.amber.shade300;
+      case AssetType.sccmServer:
+        return Colors.pink;
+      case AssetType.smbShare:
+        return Colors.brown;
+      case AssetType.kerberosTicket:
+        return Colors.deepOrange.shade300;
+      case AssetType.azureTenant:
+        return Colors.lightBlue.shade800;
+      case AssetType.azureSubscription:
+        return Colors.lightBlue.shade700;
+      case AssetType.azureVirtualMachine:
+        return Colors.green.shade300;
+      case AssetType.azureStorageAccount:
+        return Colors.orange.shade300;
+      case AssetType.azureKeyVault:
+        return Colors.deepPurple.shade300;
+      case AssetType.azureWebApp:
+        return Colors.teal.shade300;
+      case AssetType.azureFunctionApp:
+        return Colors.green.shade600;
+      case AssetType.azureDevOpsOrganization:
+        return Colors.blue.shade600;
+      case AssetType.azureSqlDatabase:
+        return Colors.blue.shade700;
+      case AssetType.azureContainerRegistry:
+        return Colors.indigo.shade400;
+      case AssetType.azureLogicApp:
+        return Colors.purple.shade400;
+      case AssetType.azureAutomationAccount:
+        return Colors.grey.shade600;
+      case AssetType.azureServicePrincipal:
+        return Colors.cyan.shade600;
+      case AssetType.azureManagedIdentity:
+        return Colors.cyan.shade400;
     }
   }
 
@@ -411,6 +461,56 @@ class _AssetRelationshipDialogState extends ConsumerState<AssetRelationshipDialo
         return Icons.domain;
       case AssetType.wireless_network:
         return Icons.wifi;
+      case AssetType.restrictedEnvironment:
+        return Icons.security;
+      case AssetType.securityControl:
+        return Icons.shield;
+      case AssetType.activeDirectoryDomain:
+        return Icons.domain_verification;
+      case AssetType.domainController:
+        return Icons.dns;
+      case AssetType.adUser:
+        return Icons.person;
+      case AssetType.adComputer:
+        return Icons.desktop_windows;
+      case AssetType.certificateAuthority:
+        return Icons.verified;
+      case AssetType.certificateTemplate:
+        return Icons.card_membership;
+      case AssetType.sccmServer:
+        return Icons.settings_system_daydream;
+      case AssetType.smbShare:
+        return Icons.folder_shared;
+      case AssetType.kerberosTicket:
+        return Icons.confirmation_num;
+      case AssetType.azureTenant:
+        return Icons.cloud_outlined;
+      case AssetType.azureSubscription:
+        return Icons.cloud;
+      case AssetType.azureVirtualMachine:
+        return Icons.computer;
+      case AssetType.azureStorageAccount:
+        return Icons.storage;
+      case AssetType.azureKeyVault:
+        return Icons.lock;
+      case AssetType.azureWebApp:
+        return Icons.web;
+      case AssetType.azureFunctionApp:
+        return Icons.functions;
+      case AssetType.azureDevOpsOrganization:
+        return Icons.engineering;
+      case AssetType.azureSqlDatabase:
+        return Icons.storage;
+      case AssetType.azureContainerRegistry:
+        return Icons.inventory_2;
+      case AssetType.azureLogicApp:
+        return Icons.schema;
+      case AssetType.azureAutomationAccount:
+        return Icons.settings;
+      case AssetType.azureServicePrincipal:
+        return Icons.account_box;
+      case AssetType.azureManagedIdentity:
+        return Icons.fingerprint;
     }
   }
 

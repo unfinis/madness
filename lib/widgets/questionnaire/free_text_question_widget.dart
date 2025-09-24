@@ -50,7 +50,7 @@ class _FreeTextQuestionWidgetState extends QuestionWidgetBaseState<FreeTextQuest
           borderRadius: BorderRadius.circular(8),
         ),
         filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       ),
       onChanged: (value) {
         updateAnswer(value.trim().isEmpty ? null : value.trim());

@@ -1,11 +1,18 @@
 /// Service for loading and managing questionnaire configurations
+library;
+
 import 'package:flutter/services.dart';
 import 'package:yaml/yaml.dart';
 import '../models/questionnaire.dart';
 import '../models/project.dart';
+import 'question_templating_service.dart';
 
 class QuestionnaireService {
   static const String _defaultConfigPath = 'assets/questionnaire/kickoff-template.yaml';
+  final QuestionTemplatingService? _templatingService;
+
+  QuestionnaireService({QuestionTemplatingService? templatingService})
+      : _templatingService = templatingService;
   
   /// Load questionnaire configuration from YAML file
   Future<QuestionnaireConfiguration> loadConfiguration({
@@ -48,7 +55,9 @@ class QuestionnaireService {
 
     for (final question in allQuestions) {
       if (_shouldShowQuestion(question, project, answers)) {
-        visibleQuestions.add(question);
+        // Apply templating to the question if templating service is available
+        final templatedQuestion = _templatingService?.applyTemplating(question) ?? question;
+        visibleQuestions.add(templatedQuestion);
       }
     }
 
@@ -292,37 +301,29 @@ class QuestionnaireService {
   }
 
   /// Interpolate project variables in question text
+  /// @deprecated Use QuestionTemplatingService.applyTemplating() instead for more comprehensive templating
   String interpolateQuestionText(String text, Project? project) {
+    if (_templatingService != null) {
+      // Use the new templating service if available
+      final dummyQuestion = QuestionDefinition(
+        id: 'temp',
+        question: text,
+        answerType: QuestionAnswerType.freeText,
+        trigger: 'always',
+      );
+      return _templatingService.applyTemplating(dummyQuestion).question;
+    }
+
+    // Fallback to basic implementation for backward compatibility
     if (project == null) return text;
 
     var result = text;
-
-    // Replace common project variables
     result = result.replaceAll('{project.name}', project.name);
-    result = result.replaceAll('{project.startDate}', project.startDate?.toString().substring(0, 10) ?? 'TBD');
-    result = result.replaceAll('{project.endDate}', project.endDate?.toString().substring(0, 10) ?? 'TBD');
-    
-    // Calculate duration
-    if (project.startDate != null && project.endDate != null) {
-      final duration = project.endDate!.difference(project.startDate!).inDays;
-      result = result.replaceAll('{project.duration}', '$duration days');
-    } else {
-      result = result.replaceAll('{project.duration}', 'TBD');
-    }
+    result = result.replaceAll('{project.startDate}', project.startDate.toString().substring(0, 10));
+    result = result.replaceAll('{project.endDate}', project.endDate.toString().substring(0, 10));
 
-    // Contact count (using available contact fields)
-    int contactCount = 0;
-    if (project.contactPerson?.isNotEmpty == true) contactCount++;
-    if (project.contactEmail?.isNotEmpty == true) contactCount++;
-    result = result.replaceAll('{project.contactCount}', contactCount.toString());
-
-    // Phase count (using project status as phase indicator)
-    int phaseCount = 1; // Default single phase
-    result = result.replaceAll('{project.phaseCount}', phaseCount.toString());
-
-    // Scope items count (using assessment scope)
-    final scopeItemsCount = project.assessmentScope.values.where((enabled) => enabled).length;
-    result = result.replaceAll('{project.scopeItems}', scopeItemsCount.toString());
+    final duration = project.endDate.difference(project.startDate).inDays;
+    result = result.replaceAll('{project.duration}', '$duration days');
 
     return result;
   }

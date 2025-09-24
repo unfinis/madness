@@ -83,7 +83,7 @@ abstract class StandardDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(DialogConstants.borderRadius),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -133,7 +133,7 @@ abstract class StandardDialog extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             headerColor,
-            headerColor.withOpacity(0.8),
+            headerColor.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: const BorderRadius.only(
@@ -151,7 +151,7 @@ abstract class StandardDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(DialogConstants.fieldBorderRadius),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -182,7 +182,7 @@ abstract class StandardDialog extends StatelessWidget {
                     subtitle!,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onPrimaryContainer
-                          .withOpacity(0.7),
+                          .withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -195,7 +195,7 @@ abstract class StandardDialog extends StatelessWidget {
               icon: const Icon(Icons.close_rounded),
               style: IconButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.surface
-                    .withOpacity(0.9),
+                    .withValues(alpha: 0.9),
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
               ),
               tooltip: 'Close',
@@ -211,7 +211,7 @@ abstract class StandardDialog extends StatelessWidget {
     return Container(
       padding: AppSpacing.dialogActionsPadding,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.5),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(DialogConstants.borderRadius),
           bottomRight: Radius.circular(DialogConstants.borderRadius),

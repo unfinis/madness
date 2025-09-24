@@ -220,7 +220,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             style: TextStyle(
               color: _hasUnsavedChanges 
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -422,7 +422,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'Step-by-step instructions for identifying and auditing this issue.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -447,7 +447,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'PowerShell, bash, or other scripts to automatically check for this issue.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -473,7 +473,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'Additional information, remediation steps, or context.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -518,7 +518,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'Components affected by this security finding.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -538,7 +538,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   Icon(
                     Icons.computer,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -549,7 +549,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   Text(
                     'Add components like URLs, hostnames, or services affected by this finding',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -566,7 +566,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   leading: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -616,7 +616,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'External references and documentation links.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -636,7 +636,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   Icon(
                     Icons.link,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -647,7 +647,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   Text(
                     'Add reference links to external documentation, advisories, or remediation guides',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -698,7 +698,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'Steps to verify that remediation has been successfully implemented.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -811,7 +811,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF667EEA).withOpacity(0.1),
+              color: const Color(0xFF667EEA).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -955,7 +955,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                       right: 8,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -1046,7 +1046,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF667EEA).withOpacity(0.1),
+                          color: const Color(0xFF667EEA).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -1068,7 +1068,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF28A745).withOpacity(0.1),
+                          color: const Color(0xFF28A745).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -1123,7 +1123,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
         child: Icon(
           Icons.image,
           size: 48,
-          color: theme.colorScheme.onSurface.withOpacity(0.3),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
         ),
       );
     }
@@ -1138,7 +1138,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             child: Icon(
               Icons.broken_image,
               size: 48,
-              color: theme.colorScheme.error.withOpacity(0.5),
+              color: theme.colorScheme.error.withValues(alpha: 0.5),
             ),
           );
         },
@@ -1152,13 +1152,13 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Icon(
             Icons.image_not_supported,
             size: 32,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 4),
           Text(
             'Not found',
             style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -1240,7 +1240,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           Text(
             'This main finding was created from multiple sub-findings. View details below.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 24),
@@ -1260,7 +1260,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   Icon(
                     Icons.info_outline,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1271,7 +1271,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   Text(
                     'This finding may have been created manually rather than from a template',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1288,9 +1288,9 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                   leading: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: subFinding.severity.color.withOpacity(0.1),
+                      color: subFinding.severity.color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: subFinding.severity.color.withOpacity(0.3)),
+                      border: Border.all(color: subFinding.severity.color.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       subFinding.severity.displayName,
@@ -1314,7 +1314,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: subFinding.severity.color.withOpacity(0.1),
+                          color: subFinding.severity.color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -1334,7 +1334,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         )
                       : null,

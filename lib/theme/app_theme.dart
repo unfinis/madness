@@ -31,7 +31,7 @@ class AppTheme {
     onBackground: Color(0xFF1A1C1E),
     surface: Color(0xFFFDFCFF),
     onSurface: Color(0xFF1A1C1E),
-    surfaceVariant: Color(0xFFDFE2EB),
+    surfaceContainerHighest: Color(0xFFDFE2EB),
     onSurfaceVariant: Color(0xFF43474E),
     inverseSurface: Color(0xFF2F3133),
     onInverseSurface: Color(0xFFF1F0F4),
@@ -66,7 +66,7 @@ class AppTheme {
     onBackground: Color(0xFFE2E2E6),
     surface: Color(0xFF111318),
     onSurface: Color(0xFFE2E2E6),
-    surfaceVariant: Color(0xFF43474E),
+    surfaceContainerHighest: Color(0xFF43474E),
     onSurfaceVariant: Color(0xFFC3C7CF),
     inverseSurface: Color(0xFFE2E2E6),
     onInverseSurface: Color(0xFF2F3133),
@@ -109,7 +109,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
       ),
       color: _lightColorScheme.surface,
-      shadowColor: _lightColorScheme.shadow.withOpacity(0.1),
+      shadowColor: _lightColorScheme.shadow.withValues(alpha: 0.1),
     ),
 
     // Button Themes
@@ -141,7 +141,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
         ),
         side: BorderSide(
-          color: _lightColorScheme.outline.withOpacity(0.5),
+          color: _lightColorScheme.outline.withValues(alpha: 0.5),
         ),
         textStyle: _lightTextTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
@@ -178,7 +178,7 @@ class AppTheme {
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: _lightColorScheme.surfaceContainer.withOpacity(0.3),
+      fillColor: _lightColorScheme.surfaceContainer.withValues(alpha: 0.3),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,
@@ -190,7 +190,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppSizes.fieldRadius),
         borderSide: BorderSide(
-          color: _lightColorScheme.outline.withOpacity(0.5),
+          color: _lightColorScheme.outline.withValues(alpha: 0.5),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -285,7 +285,7 @@ class AppTheme {
       ),
       dataRowColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return _lightColorScheme.primaryContainer.withOpacity(0.3);
+          return _lightColorScheme.primaryContainer.withValues(alpha: 0.3);
         }
         return null;
       }),
@@ -346,7 +346,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
       ),
       color: _darkColorScheme.surface,
-      shadowColor: _darkColorScheme.shadow.withOpacity(0.2),
+      shadowColor: _darkColorScheme.shadow.withValues(alpha: 0.2),
     ),
 
     // Button Themes (similar to light theme but with dark colors)
@@ -378,7 +378,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
         ),
         side: BorderSide(
-          color: _darkColorScheme.outline.withOpacity(0.5),
+          color: _darkColorScheme.outline.withValues(alpha: 0.5),
         ),
         textStyle: _darkTextTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
@@ -415,7 +415,7 @@ class AppTheme {
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: _darkColorScheme.surfaceContainer.withOpacity(0.3),
+      fillColor: _darkColorScheme.surfaceContainer.withValues(alpha: 0.3),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,
@@ -427,7 +427,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppSizes.fieldRadius),
         borderSide: BorderSide(
-          color: _darkColorScheme.outline.withOpacity(0.5),
+          color: _darkColorScheme.outline.withValues(alpha: 0.5),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -522,7 +522,7 @@ class AppTheme {
       ),
       dataRowColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return _darkColorScheme.primaryContainer.withOpacity(0.3);
+          return _darkColorScheme.primaryContainer.withValues(alpha: 0.3);
         }
         return null;
       }),
@@ -816,8 +816,8 @@ enum AppThemeMode {
 /// Theme extensions for additional customization
 extension AppThemeExtension on ThemeData {
   /// Get shadow color with appropriate opacity
-  Color get shadowColor => colorScheme.shadow.withOpacity(
-    brightness == Brightness.light ? 0.1 : 0.2,
+  Color get shadowColor => colorScheme.shadow.withValues(
+    alpha: brightness == Brightness.light ? 0.1 : 0.2,
   );
 
   /// Get card elevation based on theme

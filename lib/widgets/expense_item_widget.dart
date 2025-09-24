@@ -25,7 +25,7 @@ class ExpenseItemWidget extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: InkWell(
@@ -49,7 +49,7 @@ class ExpenseItemWidget extends ConsumerWidget {
                       padding: const EdgeInsets.all(12),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -108,7 +108,7 @@ class ExpenseItemWidget extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _getCategoryColor(context).withOpacity(0.1),
+              color: _getCategoryColor(context).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -184,7 +184,7 @@ class ExpenseItemWidget extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(context).withOpacity(0.1),
+                  color: _getCategoryColor(context).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -250,13 +250,13 @@ class ExpenseItemWidget extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: expense.type == ExpenseType.billable
-            ? Theme.of(context).colorScheme.secondary.withOpacity(0.1)
-            : Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+            ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: expense.type == ExpenseType.billable
-              ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
-              : Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
+              ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3)
+              : Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
         ),
       ),
       child: Text(
@@ -281,7 +281,7 @@ class ExpenseItemWidget extends ConsumerWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),

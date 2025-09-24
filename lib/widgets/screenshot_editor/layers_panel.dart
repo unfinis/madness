@@ -39,7 +39,7 @@ class LayersPanel extends ConsumerWidget {
         color: theme.colorScheme.surfaceContainer,
         border: Border(
           top: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -50,10 +50,10 @@ class LayersPanel extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withOpacity(0.5),
+              color: theme.colorScheme.surface.withValues(alpha: 0.5),
               border: Border(
                 bottom: BorderSide(
-                  color: theme.colorScheme.outline.withOpacity(0.1),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -70,6 +70,15 @@ class LayersPanel extends ConsumerWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '(Top → Bottom)',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
                 const Spacer(),
@@ -94,7 +103,7 @@ class LayersPanel extends ConsumerWidget {
                         Icon(
                           Icons.layers,
                           size: 48,
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -112,17 +121,24 @@ class LayersPanel extends ConsumerWidget {
                     onReorder: onLayerReorder != null
                         ? (oldIndex, newIndex) {
                             if (newIndex > oldIndex) newIndex -= 1;
-                            final layer = layers[oldIndex];
-                            onLayerReorder!(layer.id, oldIndex, newIndex);
+                            // Convert UI indices back to actual layer indices (reverse the order)
+                            final actualOldIndex = layers.length - 1 - oldIndex;
+                            final actualNewIndex = layers.length - 1 - newIndex;
+                            final layer = layers[actualOldIndex];
+                            onLayerReorder!(layer.id, actualOldIndex, actualNewIndex);
                           }
-                        : (_, __) {},
+                        : (_, _) {},
                     itemBuilder: (context, index) {
-                      final layer = layers[index];
+                      // Reverse the order so topmost layer appears at top of panel
+                      final reversedIndex = layers.length - 1 - index;
+                      final layer = layers[reversedIndex];
                       final isSelected = layer.id == selectedLayerId;
-                      
+
                       return _LayerTile(
                         key: ValueKey(layer.id),
                         layer: layer,
+                        index: index, // Pass the UI index for drag handling
+                        totalLayers: layers.length,
                         isSelected: isSelected,
                         onTap: () => onLayerSelected(layer.id),
                         onVisibilityToggle: () => onLayerVisibilityToggle(layer.id),
@@ -137,10 +153,10 @@ class LayersPanel extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withOpacity(0.5),
+              color: theme.colorScheme.surface.withValues(alpha: 0.5),
               border: Border(
                 top: BorderSide(
-                  color: theme.colorScheme.outline.withOpacity(0.1),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -309,6 +325,8 @@ class LayersPanel extends ConsumerWidget {
 
 class _LayerTile extends StatefulWidget {
   final EditorLayer layer;
+  final int index; // Added index for proper drag handling
+  final int totalLayers; // Added to show correct Z-order
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback onVisibilityToggle;
@@ -318,6 +336,8 @@ class _LayerTile extends StatefulWidget {
   const _LayerTile({
     super.key,
     required this.layer,
+    required this.index,
+    required this.totalLayers,
     required this.isSelected,
     required this.onTap,
     required this.onVisibilityToggle,
@@ -369,7 +389,7 @@ class _LayerTileState extends State<_LayerTile> {
       margin: const EdgeInsets.symmetric(vertical: 1),
       decoration: BoxDecoration(
         color: widget.isSelected 
-            ? theme.colorScheme.primaryContainer.withOpacity(0.4)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
             : null,
         borderRadius: BorderRadius.circular(6),
         border: widget.isSelected
@@ -383,11 +403,11 @@ class _LayerTileState extends State<_LayerTile> {
             // Drag handle (optional)
             if (widget.showDragHandle) ...[
               ReorderableDragStartListener(
-                index: 0,
+                index: widget.index, // Use the correct index for drag handling
                 child: Icon(
                   Icons.drag_indicator,
                   size: 18,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(width: 8),
@@ -398,8 +418,8 @@ class _LayerTileState extends State<_LayerTile> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: widget.isSelected 
-                    ? theme.colorScheme.primary.withOpacity(0.1)
-                    : theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                    : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Icon(
@@ -450,12 +470,25 @@ class _LayerTileState extends State<_LayerTile> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 1),
-                            Text(
-                              _getLayerTypeText(),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                                fontSize: 11,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  _getLayerTypeText(),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '• Z${widget.totalLayers - widget.index}', // Show correct Z-order (topmost = highest)
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -478,7 +511,7 @@ class _LayerTileState extends State<_LayerTile> {
                     size: 18,
                     color: widget.layer.visible 
                         ? theme.colorScheme.primary 
-                        : theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                 ),
               ),

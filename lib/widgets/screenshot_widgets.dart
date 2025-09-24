@@ -45,7 +45,7 @@ class ScreenshotWidgets {
         color: theme.colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(AppSizes.chipRadius * 3),
         border: Border.all(
-          color: theme.colorScheme.error.withOpacity(0.5),
+          color: theme.colorScheme.error.withValues(alpha: 0.5),
           width: 1,
         ),
       ),

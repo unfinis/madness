@@ -6,9 +6,8 @@ part of 'assets.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$NetworkFirewallRuleImpl _$$NetworkFirewallRuleImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NetworkFirewallRuleImpl(
+_NetworkFirewallRule _$NetworkFirewallRuleFromJson(Map<String, dynamic> json) =>
+    _NetworkFirewallRule(
       id: json['id'] as String,
       name: json['name'] as String,
       action: $enumDecode(_$FirewallActionEnumMap, json['action']),
@@ -23,20 +22,20 @@ _$NetworkFirewallRuleImpl _$$NetworkFirewallRuleImplFromJson(
           : DateTime.parse(json['lastModified'] as String),
     );
 
-Map<String, dynamic> _$$NetworkFirewallRuleImplToJson(
-        _$NetworkFirewallRuleImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'action': _$FirewallActionEnumMap[instance.action]!,
-      'sourceNetwork': instance.sourceNetwork,
-      'destinationNetwork': instance.destinationNetwork,
-      'protocol': instance.protocol,
-      'ports': instance.ports,
-      'description': instance.description,
-      'enabled': instance.enabled,
-      'lastModified': instance.lastModified?.toIso8601String(),
-    };
+Map<String, dynamic> _$NetworkFirewallRuleToJson(
+  _NetworkFirewallRule instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'action': _$FirewallActionEnumMap[instance.action]!,
+  'sourceNetwork': instance.sourceNetwork,
+  'destinationNetwork': instance.destinationNetwork,
+  'protocol': instance.protocol,
+  'ports': instance.ports,
+  'description': instance.description,
+  'enabled': instance.enabled,
+  'lastModified': instance.lastModified?.toIso8601String(),
+};
 
 const _$FirewallActionEnumMap = {
   FirewallAction.allow: 'allow',
@@ -45,8 +44,8 @@ const _$FirewallActionEnumMap = {
   FirewallAction.drop: 'drop',
 };
 
-_$NetworkRouteImpl _$$NetworkRouteImplFromJson(Map<String, dynamic> json) =>
-    _$NetworkRouteImpl(
+_NetworkRoute _$NetworkRouteFromJson(Map<String, dynamic> json) =>
+    _NetworkRoute(
       id: json['id'] as String,
       destinationNetwork: json['destinationNetwork'] as String,
       nextHop: json['nextHop'] as String,
@@ -55,7 +54,7 @@ _$NetworkRouteImpl _$$NetworkRouteImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
     );
 
-Map<String, dynamic> _$$NetworkRouteImplToJson(_$NetworkRouteImpl instance) =>
+Map<String, dynamic> _$NetworkRouteToJson(_NetworkRoute instance) =>
     <String, dynamic>{
       'id': instance.id,
       'destinationNetwork': instance.destinationNetwork,
@@ -65,9 +64,8 @@ Map<String, dynamic> _$$NetworkRouteImplToJson(_$NetworkRouteImpl instance) =>
       'description': instance.description,
     };
 
-_$NetworkAccessPointImpl _$$NetworkAccessPointImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NetworkAccessPointImpl(
+_NetworkAccessPoint _$NetworkAccessPointFromJson(Map<String, dynamic> json) =>
+    _NetworkAccessPoint(
       id: json['id'] as String,
       name: json['name'] as String,
       accessType: $enumDecode(_$NetworkAccessTypeEnumMap, json['accessType']),
@@ -87,8 +85,7 @@ _$NetworkAccessPointImpl _$$NetworkAccessPointImplFromJson(
           : DateTime.parse(json['lastTested'] as String),
     );
 
-Map<String, dynamic> _$$NetworkAccessPointImplToJson(
-        _$NetworkAccessPointImpl instance) =>
+Map<String, dynamic> _$NetworkAccessPointToJson(_NetworkAccessPoint instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -113,93 +110,95 @@ const _$NetworkAccessTypeEnumMap = {
   NetworkAccessType.physical: 'physical',
 };
 
-_$NetworkHostReferenceImpl _$$NetworkHostReferenceImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NetworkHostReferenceImpl(
-      hostAssetId: json['hostAssetId'] as String,
-      ipAddress: json['ipAddress'] as String,
-      hostname: json['hostname'] as String?,
-      macAddress: json['macAddress'] as String?,
-      isGateway: json['isGateway'] as bool? ?? false,
-      isDhcpServer: json['isDhcpServer'] as bool? ?? false,
-      isDnsServer: json['isDnsServer'] as bool? ?? false,
-      isCompromised: json['isCompromised'] as bool? ?? false,
-      openPorts: (json['openPorts'] as List<dynamic>?)
+_NetworkHostReference _$NetworkHostReferenceFromJson(
+  Map<String, dynamic> json,
+) => _NetworkHostReference(
+  hostAssetId: json['hostAssetId'] as String,
+  ipAddress: json['ipAddress'] as String,
+  hostname: json['hostname'] as String?,
+  macAddress: json['macAddress'] as String?,
+  isGateway: json['isGateway'] as bool? ?? false,
+  isDhcpServer: json['isDhcpServer'] as bool? ?? false,
+  isDnsServer: json['isDnsServer'] as bool? ?? false,
+  isCompromised: json['isCompromised'] as bool? ?? false,
+  openPorts: (json['openPorts'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  lastSeen: json['lastSeen'] == null
+      ? null
+      : DateTime.parse(json['lastSeen'] as String),
+);
+
+Map<String, dynamic> _$NetworkHostReferenceToJson(
+  _NetworkHostReference instance,
+) => <String, dynamic>{
+  'hostAssetId': instance.hostAssetId,
+  'ipAddress': instance.ipAddress,
+  'hostname': instance.hostname,
+  'macAddress': instance.macAddress,
+  'isGateway': instance.isGateway,
+  'isDhcpServer': instance.isDhcpServer,
+  'isDnsServer': instance.isDnsServer,
+  'isCompromised': instance.isCompromised,
+  'openPorts': instance.openPorts,
+  'lastSeen': instance.lastSeen?.toIso8601String(),
+};
+
+_RestrictedEnvironment _$RestrictedEnvironmentFromJson(
+  Map<String, dynamic> json,
+) => _RestrictedEnvironment(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  environmentType: $enumDecode(
+    _$EnvironmentTypeEnumMap,
+    json['environmentType'],
+  ),
+  restrictions: (json['restrictions'] as List<dynamic>)
+      .map((e) => $enumDecode(_$RestrictionMechanismEnumMap, e))
+      .toList(),
+  hostAssetId: json['hostAssetId'] as String,
+  applicationAssetId: json['applicationAssetId'] as String?,
+  networkAssetId: json['networkAssetId'] as String?,
+  description: json['description'] as String?,
+  securityControlIds:
+      (json['securityControlIds'] as List<dynamic>?)
           ?.map((e) => e as String)
-          .toList(),
-      lastSeen: json['lastSeen'] == null
-          ? null
-          : DateTime.parse(json['lastSeen'] as String),
-    );
+          .toList() ??
+      const [],
+  breakoutAttemptIds:
+      (json['breakoutAttemptIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  environmentDetails: (json['environmentDetails'] as Map<String, dynamic>?)
+      ?.map((k, e) => MapEntry(k, e as String)),
+  discoveredAt: json['discoveredAt'] == null
+      ? null
+      : DateTime.parse(json['discoveredAt'] as String),
+  lastTested: json['lastTested'] == null
+      ? null
+      : DateTime.parse(json['lastTested'] as String),
+);
 
-Map<String, dynamic> _$$NetworkHostReferenceImplToJson(
-        _$NetworkHostReferenceImpl instance) =>
-    <String, dynamic>{
-      'hostAssetId': instance.hostAssetId,
-      'ipAddress': instance.ipAddress,
-      'hostname': instance.hostname,
-      'macAddress': instance.macAddress,
-      'isGateway': instance.isGateway,
-      'isDhcpServer': instance.isDhcpServer,
-      'isDnsServer': instance.isDnsServer,
-      'isCompromised': instance.isCompromised,
-      'openPorts': instance.openPorts,
-      'lastSeen': instance.lastSeen?.toIso8601String(),
-    };
-
-_$RestrictedEnvironmentImpl _$$RestrictedEnvironmentImplFromJson(
-        Map<String, dynamic> json) =>
-    _$RestrictedEnvironmentImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      environmentType:
-          $enumDecode(_$EnvironmentTypeEnumMap, json['environmentType']),
-      restrictions: (json['restrictions'] as List<dynamic>)
-          .map((e) => $enumDecode(_$RestrictionMechanismEnumMap, e))
-          .toList(),
-      hostAssetId: json['hostAssetId'] as String,
-      applicationAssetId: json['applicationAssetId'] as String?,
-      networkAssetId: json['networkAssetId'] as String?,
-      description: json['description'] as String?,
-      securityControlIds: (json['securityControlIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      breakoutAttemptIds: (json['breakoutAttemptIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      environmentDetails:
-          (json['environmentDetails'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ),
-      discoveredAt: json['discoveredAt'] == null
-          ? null
-          : DateTime.parse(json['discoveredAt'] as String),
-      lastTested: json['lastTested'] == null
-          ? null
-          : DateTime.parse(json['lastTested'] as String),
-    );
-
-Map<String, dynamic> _$$RestrictedEnvironmentImplToJson(
-        _$RestrictedEnvironmentImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'environmentType': _$EnvironmentTypeEnumMap[instance.environmentType]!,
-      'restrictions': instance.restrictions
-          .map((e) => _$RestrictionMechanismEnumMap[e]!)
-          .toList(),
-      'hostAssetId': instance.hostAssetId,
-      'applicationAssetId': instance.applicationAssetId,
-      'networkAssetId': instance.networkAssetId,
-      'description': instance.description,
-      'securityControlIds': instance.securityControlIds,
-      'breakoutAttemptIds': instance.breakoutAttemptIds,
-      'environmentDetails': instance.environmentDetails,
-      'discoveredAt': instance.discoveredAt?.toIso8601String(),
-      'lastTested': instance.lastTested?.toIso8601String(),
-    };
+Map<String, dynamic> _$RestrictedEnvironmentToJson(
+  _RestrictedEnvironment instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'environmentType': _$EnvironmentTypeEnumMap[instance.environmentType]!,
+  'restrictions': instance.restrictions
+      .map((e) => _$RestrictionMechanismEnumMap[e]!)
+      .toList(),
+  'hostAssetId': instance.hostAssetId,
+  'applicationAssetId': instance.applicationAssetId,
+  'networkAssetId': instance.networkAssetId,
+  'description': instance.description,
+  'securityControlIds': instance.securityControlIds,
+  'breakoutAttemptIds': instance.breakoutAttemptIds,
+  'environmentDetails': instance.environmentDetails,
+  'discoveredAt': instance.discoveredAt?.toIso8601String(),
+  'lastTested': instance.lastTested?.toIso8601String(),
+};
 
 const _$EnvironmentTypeEnumMap = {
   EnvironmentType.application: 'application',
@@ -227,9 +226,8 @@ const _$RestrictionMechanismEnumMap = {
   RestrictionMechanism.fileSystem: 'fileSystem',
 };
 
-_$BreakoutAttemptImpl _$$BreakoutAttemptImplFromJson(
-        Map<String, dynamic> json) =>
-    _$BreakoutAttemptImpl(
+_BreakoutAttempt _$BreakoutAttemptFromJson(Map<String, dynamic> json) =>
+    _BreakoutAttempt(
       id: json['id'] as String,
       name: json['name'] as String,
       restrictedEnvironmentId: json['restrictedEnvironmentId'] as String,
@@ -258,8 +256,7 @@ _$BreakoutAttemptImpl _$$BreakoutAttemptImplFromJson(
       notes: json['notes'] as String?,
     );
 
-Map<String, dynamic> _$$BreakoutAttemptImplToJson(
-        _$BreakoutAttemptImpl instance) =>
+Map<String, dynamic> _$BreakoutAttemptToJson(_BreakoutAttempt instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -300,9 +297,8 @@ const _$BreakoutImpactEnumMap = {
   BreakoutImpact.persistent: 'persistent',
 };
 
-_$BreakoutTechniqueImpl _$$BreakoutTechniqueImplFromJson(
-        Map<String, dynamic> json) =>
-    _$BreakoutTechniqueImpl(
+_BreakoutTechnique _$BreakoutTechniqueFromJson(Map<String, dynamic> json) =>
+    _BreakoutTechnique(
       id: json['id'] as String,
       name: json['name'] as String,
       category: $enumDecode(_$TechniqueCategoryEnumMap, json['category']),
@@ -337,8 +333,7 @@ _$BreakoutTechniqueImpl _$$BreakoutTechniqueImplFromJson(
           : DateTime.parse(json['lastUpdated'] as String),
     );
 
-Map<String, dynamic> _$$BreakoutTechniqueImplToJson(
-        _$BreakoutTechniqueImpl instance) =>
+Map<String, dynamic> _$BreakoutTechniqueToJson(_BreakoutTechnique instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -374,9 +369,8 @@ const _$TechniqueCategoryEnumMap = {
   TechniqueCategory.environment: 'environment',
 };
 
-_$SecurityControlImpl _$$SecurityControlImplFromJson(
-        Map<String, dynamic> json) =>
-    _$SecurityControlImpl(
+_SecurityControl _$SecurityControlFromJson(Map<String, dynamic> json) =>
+    _SecurityControl(
       id: json['id'] as String,
       name: json['name'] as String,
       type: json['type'] as String,
@@ -385,11 +379,13 @@ _$SecurityControlImpl _$$SecurityControlImplFromJson(
       version: json['version'] as String?,
       configuration: json['configuration'] as String?,
       enabled: json['enabled'] as bool? ?? true,
-      protectedAssets: (json['protectedAssets'] as List<dynamic>?)
+      protectedAssets:
+          (json['protectedAssets'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      bypassTechniques: (json['bypassTechniques'] as List<dynamic>?)
+      bypassTechniques:
+          (json['bypassTechniques'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -404,8 +400,7 @@ _$SecurityControlImpl _$$SecurityControlImplFromJson(
           : DateTime.parse(json['lastUpdated'] as String),
     );
 
-Map<String, dynamic> _$$SecurityControlImplToJson(
-        _$SecurityControlImpl instance) =>
+Map<String, dynamic> _$SecurityControlToJson(_SecurityControl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -422,189 +417,169 @@ Map<String, dynamic> _$$SecurityControlImplToJson(
       'lastUpdated': instance.lastUpdated?.toIso8601String(),
     };
 
-_$StringAssetPropertyImpl _$$StringAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$StringAssetPropertyImpl(
+StringAssetProperty _$StringAssetPropertyFromJson(Map<String, dynamic> json) =>
+    StringAssetProperty(
       json['value'] as String,
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$StringAssetPropertyImplToJson(
-        _$StringAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$StringAssetPropertyToJson(
+  StringAssetProperty instance,
+) => <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$IntegerAssetPropertyImpl _$$IntegerAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$IntegerAssetPropertyImpl(
-      (json['value'] as num).toInt(),
-      $type: json['runtimeType'] as String?,
-    );
+IntegerAssetProperty _$IntegerAssetPropertyFromJson(
+  Map<String, dynamic> json,
+) => IntegerAssetProperty(
+  (json['value'] as num).toInt(),
+  $type: json['runtimeType'] as String?,
+);
 
-Map<String, dynamic> _$$IntegerAssetPropertyImplToJson(
-        _$IntegerAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$IntegerAssetPropertyToJson(
+  IntegerAssetProperty instance,
+) => <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$DoubleAssetPropertyImpl _$$DoubleAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$DoubleAssetPropertyImpl(
+DoubleAssetProperty _$DoubleAssetPropertyFromJson(Map<String, dynamic> json) =>
+    DoubleAssetProperty(
       (json['value'] as num).toDouble(),
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$DoubleAssetPropertyImplToJson(
-        _$DoubleAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$DoubleAssetPropertyToJson(
+  DoubleAssetProperty instance,
+) => <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$BooleanAssetPropertyImpl _$$BooleanAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$BooleanAssetPropertyImpl(
-      json['value'] as bool,
-      $type: json['runtimeType'] as String?,
-    );
+BooleanAssetProperty _$BooleanAssetPropertyFromJson(
+  Map<String, dynamic> json,
+) => BooleanAssetProperty(
+  json['value'] as bool,
+  $type: json['runtimeType'] as String?,
+);
 
-Map<String, dynamic> _$$BooleanAssetPropertyImplToJson(
-        _$BooleanAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$BooleanAssetPropertyToJson(
+  BooleanAssetProperty instance,
+) => <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$StringListAssetPropertyImpl _$$StringListAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$StringListAssetPropertyImpl(
-      (json['values'] as List<dynamic>).map((e) => e as String).toList(),
-      $type: json['runtimeType'] as String?,
-    );
+StringListAssetProperty _$StringListAssetPropertyFromJson(
+  Map<String, dynamic> json,
+) => StringListAssetProperty(
+  (json['values'] as List<dynamic>).map((e) => e as String).toList(),
+  $type: json['runtimeType'] as String?,
+);
 
-Map<String, dynamic> _$$StringListAssetPropertyImplToJson(
-        _$StringListAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'values': instance.values,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$StringListAssetPropertyToJson(
+  StringListAssetProperty instance,
+) => <String, dynamic>{
+  'values': instance.values,
+  'runtimeType': instance.$type,
+};
 
-_$DateTimeAssetPropertyImpl _$$DateTimeAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$DateTimeAssetPropertyImpl(
-      DateTime.parse(json['value'] as String),
-      $type: json['runtimeType'] as String?,
-    );
+DateTimeAssetProperty _$DateTimeAssetPropertyFromJson(
+  Map<String, dynamic> json,
+) => DateTimeAssetProperty(
+  DateTime.parse(json['value'] as String),
+  $type: json['runtimeType'] as String?,
+);
 
-Map<String, dynamic> _$$DateTimeAssetPropertyImplToJson(
-        _$DateTimeAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value.toIso8601String(),
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$DateTimeAssetPropertyToJson(
+  DateTimeAssetProperty instance,
+) => <String, dynamic>{
+  'value': instance.value.toIso8601String(),
+  'runtimeType': instance.$type,
+};
 
-_$MapAssetPropertyImpl _$$MapAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$MapAssetPropertyImpl(
+MapAssetProperty _$MapAssetPropertyFromJson(Map<String, dynamic> json) =>
+    MapAssetProperty(
       json['value'] as Map<String, dynamic>,
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$MapAssetPropertyImplToJson(
-        _$MapAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$MapAssetPropertyToJson(MapAssetProperty instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$ObjectListAssetPropertyImpl _$$ObjectListAssetPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ObjectListAssetPropertyImpl(
-      (json['objects'] as List<dynamic>)
-          .map((e) => e as Map<String, dynamic>)
-          .toList(),
-      $type: json['runtimeType'] as String?,
-    );
+ObjectListAssetProperty _$ObjectListAssetPropertyFromJson(
+  Map<String, dynamic> json,
+) => ObjectListAssetProperty(
+  (json['objects'] as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList(),
+  $type: json['runtimeType'] as String?,
+);
 
-Map<String, dynamic> _$$ObjectListAssetPropertyImplToJson(
-        _$ObjectListAssetPropertyImpl instance) =>
-    <String, dynamic>{
-      'objects': instance.objects,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$ObjectListAssetPropertyToJson(
+  ObjectListAssetProperty instance,
+) => <String, dynamic>{
+  'objects': instance.objects,
+  'runtimeType': instance.$type,
+};
 
-_$AssetImpl _$$AssetImplFromJson(Map<String, dynamic> json) => _$AssetImpl(
-      id: json['id'] as String,
-      type: $enumDecode(_$AssetTypeEnumMap, json['type']),
-      projectId: json['projectId'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      properties: (json['properties'] as Map<String, dynamic>).map(
-        (k, e) =>
-            MapEntry(k, AssetPropertyValue.fromJson(e as Map<String, dynamic>)),
-      ),
-      discoveryStatus:
-          $enumDecode(_$AssetDiscoveryStatusEnumMap, json['discoveryStatus']),
-      discoveredAt: DateTime.parse(json['discoveredAt'] as String),
-      lastUpdated: json['lastUpdated'] == null
-          ? null
-          : DateTime.parse(json['lastUpdated'] as String),
-      discoveryMethod: json['discoveryMethod'] as String?,
-      confidence: (json['confidence'] as num?)?.toDouble() ?? 1.0,
-      parentAssetIds: (json['parentAssetIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      childAssetIds: (json['childAssetIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      relatedAssetIds: (json['relatedAssetIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      completedTriggers: (json['completedTriggers'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      triggerResults: (json['triggerResults'] as Map<String, dynamic>).map(
-        (k, e) => MapEntry(
-            k, TriggerExecutionResult.fromJson(e as Map<String, dynamic>)),
-      ),
-      tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
-      metadata: (json['metadata'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ),
-      accessLevel:
-          $enumDecodeNullable(_$AccessLevelEnumMap, json['accessLevel']),
-      securityControls: (json['securityControls'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-    );
+_Asset _$AssetFromJson(Map<String, dynamic> json) => _Asset(
+  id: json['id'] as String,
+  type: $enumDecode(_$AssetTypeEnumMap, json['type']),
+  projectId: json['projectId'] as String,
+  name: json['name'] as String,
+  description: json['description'] as String?,
+  properties: (json['properties'] as Map<String, dynamic>).map(
+    (k, e) =>
+        MapEntry(k, AssetPropertyValue.fromJson(e as Map<String, dynamic>)),
+  ),
+  discoveryStatus: $enumDecode(
+    _$AssetDiscoveryStatusEnumMap,
+    json['discoveryStatus'],
+  ),
+  discoveredAt: DateTime.parse(json['discoveredAt'] as String),
+  lastUpdated: json['lastUpdated'] == null
+      ? null
+      : DateTime.parse(json['lastUpdated'] as String),
+  discoveryMethod: json['discoveryMethod'] as String?,
+  confidence: (json['confidence'] as num?)?.toDouble() ?? 1.0,
+  parentAssetIds: (json['parentAssetIds'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  childAssetIds: (json['childAssetIds'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  relatedAssetIds: (json['relatedAssetIds'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  completedTriggers: (json['completedTriggers'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  triggerResults: (json['triggerResults'] as Map<String, dynamic>).map(
+    (k, e) =>
+        MapEntry(k, TriggerExecutionResult.fromJson(e as Map<String, dynamic>)),
+  ),
+  tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+  metadata: (json['metadata'] as Map<String, dynamic>?)?.map(
+    (k, e) => MapEntry(k, e as String),
+  ),
+  accessLevel: $enumDecodeNullable(_$AccessLevelEnumMap, json['accessLevel']),
+  securityControls: (json['securityControls'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+);
 
-Map<String, dynamic> _$$AssetImplToJson(_$AssetImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'type': _$AssetTypeEnumMap[instance.type]!,
-      'projectId': instance.projectId,
-      'name': instance.name,
-      'description': instance.description,
-      'properties': instance.properties,
-      'discoveryStatus':
-          _$AssetDiscoveryStatusEnumMap[instance.discoveryStatus]!,
-      'discoveredAt': instance.discoveredAt.toIso8601String(),
-      'lastUpdated': instance.lastUpdated?.toIso8601String(),
-      'discoveryMethod': instance.discoveryMethod,
-      'confidence': instance.confidence,
-      'parentAssetIds': instance.parentAssetIds,
-      'childAssetIds': instance.childAssetIds,
-      'relatedAssetIds': instance.relatedAssetIds,
-      'completedTriggers': instance.completedTriggers,
-      'triggerResults': instance.triggerResults,
-      'tags': instance.tags,
-      'metadata': instance.metadata,
-      'accessLevel': _$AccessLevelEnumMap[instance.accessLevel],
-      'securityControls': instance.securityControls,
-    };
+Map<String, dynamic> _$AssetToJson(_Asset instance) => <String, dynamic>{
+  'id': instance.id,
+  'type': _$AssetTypeEnumMap[instance.type]!,
+  'projectId': instance.projectId,
+  'name': instance.name,
+  'description': instance.description,
+  'properties': instance.properties,
+  'discoveryStatus': _$AssetDiscoveryStatusEnumMap[instance.discoveryStatus]!,
+  'discoveredAt': instance.discoveredAt.toIso8601String(),
+  'lastUpdated': instance.lastUpdated?.toIso8601String(),
+  'discoveryMethod': instance.discoveryMethod,
+  'confidence': instance.confidence,
+  'parentAssetIds': instance.parentAssetIds,
+  'childAssetIds': instance.childAssetIds,
+  'relatedAssetIds': instance.relatedAssetIds,
+  'completedTriggers': instance.completedTriggers,
+  'triggerResults': instance.triggerResults,
+  'tags': instance.tags,
+  'metadata': instance.metadata,
+  'accessLevel': _$AccessLevelEnumMap[instance.accessLevel],
+  'securityControls': instance.securityControls,
+};
 
 const _$AssetTypeEnumMap = {
   AssetType.environment: 'environment',
@@ -652,45 +627,44 @@ const _$AccessLevelEnumMap = {
   AccessLevel.system: 'system',
 };
 
-_$TriggerExecutionResultImpl _$$TriggerExecutionResultImplFromJson(
-        Map<String, dynamic> json) =>
-    _$TriggerExecutionResultImpl(
-      triggerId: json['triggerId'] as String,
-      methodologyId: json['methodologyId'] as String,
-      executedAt: DateTime.parse(json['executedAt'] as String),
-      success: json['success'] as bool,
-      output: json['output'] as String?,
-      error: json['error'] as String?,
-      discoveredProperties:
-          (json['discoveredProperties'] as Map<String, dynamic>?)?.map(
+_TriggerExecutionResult _$TriggerExecutionResultFromJson(
+  Map<String, dynamic> json,
+) => _TriggerExecutionResult(
+  triggerId: json['triggerId'] as String,
+  methodologyId: json['methodologyId'] as String,
+  executedAt: DateTime.parse(json['executedAt'] as String),
+  success: json['success'] as bool,
+  output: json['output'] as String?,
+  error: json['error'] as String?,
+  discoveredProperties: (json['discoveredProperties'] as Map<String, dynamic>?)
+      ?.map(
         (k, e) =>
             MapEntry(k, AssetPropertyValue.fromJson(e as Map<String, dynamic>)),
       ),
-      discoveredAssets: (json['discoveredAssets'] as List<dynamic>?)
-          ?.map((e) => Asset.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      triggeredMethodologies: (json['triggeredMethodologies'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-    );
+  discoveredAssets: (json['discoveredAssets'] as List<dynamic>?)
+      ?.map((e) => Asset.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  triggeredMethodologies: (json['triggeredMethodologies'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+);
 
-Map<String, dynamic> _$$TriggerExecutionResultImplToJson(
-        _$TriggerExecutionResultImpl instance) =>
-    <String, dynamic>{
-      'triggerId': instance.triggerId,
-      'methodologyId': instance.methodologyId,
-      'executedAt': instance.executedAt.toIso8601String(),
-      'success': instance.success,
-      'output': instance.output,
-      'error': instance.error,
-      'discoveredProperties': instance.discoveredProperties,
-      'discoveredAssets': instance.discoveredAssets,
-      'triggeredMethodologies': instance.triggeredMethodologies,
-    };
+Map<String, dynamic> _$TriggerExecutionResultToJson(
+  _TriggerExecutionResult instance,
+) => <String, dynamic>{
+  'triggerId': instance.triggerId,
+  'methodologyId': instance.methodologyId,
+  'executedAt': instance.executedAt.toIso8601String(),
+  'success': instance.success,
+  'output': instance.output,
+  'error': instance.error,
+  'discoveredProperties': instance.discoveredProperties,
+  'discoveredAssets': instance.discoveredAssets,
+  'triggeredMethodologies': instance.triggeredMethodologies,
+};
 
-_$SoftwareVersionImpl _$$SoftwareVersionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$SoftwareVersionImpl(
+_SoftwareVersion _$SoftwareVersionFromJson(Map<String, dynamic> json) =>
+    _SoftwareVersion(
       major: (json['major'] as num).toInt(),
       minor: (json['minor'] as num).toInt(),
       patch: (json['patch'] as num).toInt(),
@@ -701,8 +675,7 @@ _$SoftwareVersionImpl _$$SoftwareVersionImplFromJson(
           : DateTime.parse(json['releaseDate'] as String),
     );
 
-Map<String, dynamic> _$$SoftwareVersionImplToJson(
-        _$SoftwareVersionImpl instance) =>
+Map<String, dynamic> _$SoftwareVersionToJson(_SoftwareVersion instance) =>
     <String, dynamic>{
       'major': instance.major,
       'minor': instance.minor,
@@ -712,8 +685,8 @@ Map<String, dynamic> _$$SoftwareVersionImplToJson(
       'releaseDate': instance.releaseDate?.toIso8601String(),
     };
 
-_$NetworkAddressImpl _$$NetworkAddressImplFromJson(Map<String, dynamic> json) =>
-    _$NetworkAddressImpl(
+_NetworkAddress _$NetworkAddressFromJson(Map<String, dynamic> json) =>
+    _NetworkAddress(
       ip: json['ip'] as String,
       subnet: json['subnet'] as String?,
       gateway: json['gateway'] as String?,
@@ -724,8 +697,7 @@ _$NetworkAddressImpl _$$NetworkAddressImplFromJson(Map<String, dynamic> json) =>
       isStatic: json['isStatic'] as bool?,
     );
 
-Map<String, dynamic> _$$NetworkAddressImplToJson(
-        _$NetworkAddressImpl instance) =>
+Map<String, dynamic> _$NetworkAddressToJson(_NetworkAddress instance) =>
     <String, dynamic>{
       'ip': instance.ip,
       'subnet': instance.subnet,
@@ -735,9 +707,8 @@ Map<String, dynamic> _$$NetworkAddressImplToJson(
       'isStatic': instance.isStatic,
     };
 
-_$PhysicalLocationImpl _$$PhysicalLocationImplFromJson(
-        Map<String, dynamic> json) =>
-    _$PhysicalLocationImpl(
+_PhysicalLocation _$PhysicalLocationFromJson(Map<String, dynamic> json) =>
+    _PhysicalLocation(
       address: json['address'] as String?,
       city: json['city'] as String?,
       state: json['state'] as String?,
@@ -750,8 +721,7 @@ _$PhysicalLocationImpl _$$PhysicalLocationImplFromJson(
       room: json['room'] as String?,
     );
 
-Map<String, dynamic> _$$PhysicalLocationImplToJson(
-        _$PhysicalLocationImpl instance) =>
+Map<String, dynamic> _$PhysicalLocationToJson(_PhysicalLocation instance) =>
     <String, dynamic>{
       'address': instance.address,
       'city': instance.city,
@@ -765,9 +735,8 @@ Map<String, dynamic> _$$PhysicalLocationImplToJson(
       'room': instance.room,
     };
 
-_$NetworkInterfaceImpl _$$NetworkInterfaceImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NetworkInterfaceImpl(
+_NetworkInterface _$NetworkInterfaceFromJson(Map<String, dynamic> json) =>
+    _NetworkInterface(
       id: json['id'] as String,
       name: json['name'] as String,
       type: json['type'] as String,
@@ -791,8 +760,7 @@ _$NetworkInterfaceImpl _$$NetworkInterfaceImplFromJson(
           : DateTime.parse(json['lastSeen'] as String),
     );
 
-Map<String, dynamic> _$$NetworkInterfaceImplToJson(
-        _$NetworkInterfaceImpl instance) =>
+Map<String, dynamic> _$NetworkInterfaceToJson(_NetworkInterface instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -811,38 +779,37 @@ Map<String, dynamic> _$$NetworkInterfaceImplToJson(
       'lastSeen': instance.lastSeen?.toIso8601String(),
     };
 
-_$HostServiceImpl _$$HostServiceImplFromJson(Map<String, dynamic> json) =>
-    _$HostServiceImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      port: (json['port'] as num).toInt(),
-      protocol: json['protocol'] as String,
-      state: json['state'] as String,
-      version: json['version'] as String?,
-      banner: json['banner'] as String?,
-      productName: json['productName'] as String?,
-      productVersion: json['productVersion'] as String?,
-      extraInfo: (json['extraInfo'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ),
-      vulnerabilities: (json['vulnerabilities'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      requiresAuthentication: json['requiresAuthentication'] as bool?,
-      authenticationMethods: (json['authenticationMethods'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      sslVersion: json['sslVersion'] as String?,
-      sslCiphers: (json['sslCiphers'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      lastChecked: json['lastChecked'] == null
-          ? null
-          : DateTime.parse(json['lastChecked'] as String),
-      confidence: json['confidence'] as String?,
-    );
+_HostService _$HostServiceFromJson(Map<String, dynamic> json) => _HostService(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  port: (json['port'] as num).toInt(),
+  protocol: json['protocol'] as String,
+  state: json['state'] as String,
+  version: json['version'] as String?,
+  banner: json['banner'] as String?,
+  productName: json['productName'] as String?,
+  productVersion: json['productVersion'] as String?,
+  extraInfo: (json['extraInfo'] as Map<String, dynamic>?)?.map(
+    (k, e) => MapEntry(k, e as String),
+  ),
+  vulnerabilities: (json['vulnerabilities'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  requiresAuthentication: json['requiresAuthentication'] as bool?,
+  authenticationMethods: (json['authenticationMethods'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  sslVersion: json['sslVersion'] as String?,
+  sslCiphers: (json['sslCiphers'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  lastChecked: json['lastChecked'] == null
+      ? null
+      : DateTime.parse(json['lastChecked'] as String),
+  confidence: json['confidence'] as String?,
+);
 
-Map<String, dynamic> _$$HostServiceImplToJson(_$HostServiceImpl instance) =>
+Map<String, dynamic> _$HostServiceToJson(_HostService instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -863,9 +830,8 @@ Map<String, dynamic> _$$HostServiceImplToJson(_$HostServiceImpl instance) =>
       'confidence': instance.confidence,
     };
 
-_$HostApplicationImpl _$$HostApplicationImplFromJson(
-        Map<String, dynamic> json) =>
-    _$HostApplicationImpl(
+_HostApplication _$HostApplicationFromJson(Map<String, dynamic> json) =>
+    _HostApplication(
       id: json['id'] as String,
       name: json['name'] as String,
       type: json['type'] as String,
@@ -904,8 +870,7 @@ _$HostApplicationImpl _$$HostApplicationImplFromJson(
       ),
     );
 
-Map<String, dynamic> _$$HostApplicationImplToJson(
-        _$HostApplicationImpl instance) =>
+Map<String, dynamic> _$HostApplicationToJson(_HostApplication instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -929,36 +894,34 @@ Map<String, dynamic> _$$HostApplicationImplToJson(
       'metadata': instance.metadata,
     };
 
-_$HostAccountImpl _$$HostAccountImplFromJson(Map<String, dynamic> json) =>
-    _$HostAccountImpl(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      type: json['type'] as String,
-      isEnabled: json['isEnabled'] as bool,
-      fullName: json['fullName'] as String?,
-      description: json['description'] as String?,
-      groups:
-          (json['groups'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      homeDirectory: json['homeDirectory'] as String?,
-      shell: json['shell'] as String?,
-      lastLogin: json['lastLogin'] == null
-          ? null
-          : DateTime.parse(json['lastLogin'] as String),
-      passwordLastSet: json['passwordLastSet'] == null
-          ? null
-          : DateTime.parse(json['passwordLastSet'] as String),
-      passwordNeverExpires: json['passwordNeverExpires'] as bool?,
-      accountLocked: json['accountLocked'] as bool?,
-      isAdmin: json['isAdmin'] as bool?,
-      privileges: (json['privileges'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      environment: (json['environment'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ),
-    );
+_HostAccount _$HostAccountFromJson(Map<String, dynamic> json) => _HostAccount(
+  id: json['id'] as String,
+  username: json['username'] as String,
+  type: json['type'] as String,
+  isEnabled: json['isEnabled'] as bool,
+  fullName: json['fullName'] as String?,
+  description: json['description'] as String?,
+  groups: (json['groups'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  homeDirectory: json['homeDirectory'] as String?,
+  shell: json['shell'] as String?,
+  lastLogin: json['lastLogin'] == null
+      ? null
+      : DateTime.parse(json['lastLogin'] as String),
+  passwordLastSet: json['passwordLastSet'] == null
+      ? null
+      : DateTime.parse(json['passwordLastSet'] as String),
+  passwordNeverExpires: json['passwordNeverExpires'] as bool?,
+  accountLocked: json['accountLocked'] as bool?,
+  isAdmin: json['isAdmin'] as bool?,
+  privileges: (json['privileges'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  environment: (json['environment'] as Map<String, dynamic>?)?.map(
+    (k, e) => MapEntry(k, e as String),
+  ),
+);
 
-Map<String, dynamic> _$$HostAccountImplToJson(_$HostAccountImpl instance) =>
+Map<String, dynamic> _$HostAccountToJson(_HostAccount instance) =>
     <String, dynamic>{
       'id': instance.id,
       'username': instance.username,
@@ -978,9 +941,8 @@ Map<String, dynamic> _$$HostAccountImplToJson(_$HostAccountImpl instance) =>
       'environment': instance.environment,
     };
 
-_$HardwareComponentImpl _$$HardwareComponentImplFromJson(
-        Map<String, dynamic> json) =>
-    _$HardwareComponentImpl(
+_HardwareComponent _$HardwareComponentFromJson(Map<String, dynamic> json) =>
+    _HardwareComponent(
       id: json['id'] as String,
       type: json['type'] as String,
       name: json['name'] as String,
@@ -997,8 +959,7 @@ _$HardwareComponentImpl _$$HardwareComponentImplFromJson(
           : DateTime.parse(json['lastChecked'] as String),
     );
 
-Map<String, dynamic> _$$HardwareComponentImplToJson(
-        _$HardwareComponentImpl instance) =>
+Map<String, dynamic> _$HardwareComponentToJson(_HardwareComponent instance) =>
     <String, dynamic>{
       'id': instance.id,
       'type': instance.type,
@@ -1012,9 +973,8 @@ Map<String, dynamic> _$$HardwareComponentImplToJson(
       'lastChecked': instance.lastChecked?.toIso8601String(),
     };
 
-_$AuthenticationInfoImpl _$$AuthenticationInfoImplFromJson(
-        Map<String, dynamic> json) =>
-    _$AuthenticationInfoImpl(
+_AuthenticationInfo _$AuthenticationInfoFromJson(Map<String, dynamic> json) =>
+    _AuthenticationInfo(
       mechanism: json['mechanism'] as String,
       details: (json['details'] as Map<String, dynamic>?)?.map(
         (k, e) => MapEntry(k, e as String),
@@ -1029,8 +989,7 @@ _$AuthenticationInfoImpl _$$AuthenticationInfoImplFromJson(
       isServiceAccount: json['isServiceAccount'] as bool?,
     );
 
-Map<String, dynamic> _$$AuthenticationInfoImplToJson(
-        _$AuthenticationInfoImpl instance) =>
+Map<String, dynamic> _$AuthenticationInfoToJson(_AuthenticationInfo instance) =>
     <String, dynamic>{
       'mechanism': instance.mechanism,
       'details': instance.details,

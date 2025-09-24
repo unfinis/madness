@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/document.dart';
 import '../providers/document_provider.dart';
 import '../services/document_service.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../constants/responsive_breakpoints.dart';
 
@@ -64,48 +65,49 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   }
 
   Widget _buildAssetsHeader(BuildContext context, Map<String, int> summary) {
+    final statsData = [
+      StatData(
+        label: 'Total',
+        count: summary['total'] ?? 0,
+        icon: Icons.folder_outlined,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      StatData(
+        label: 'Signed',
+        count: summary['approved'] ?? 0,
+        icon: Icons.check_circle,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Pending',
+        count: summary['drafts'] ?? 0,
+        icon: Icons.pending,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'Confidential',
+        count: summary['confidential'] ?? 0,
+        icon: Icons.security,
+        color: Colors.red,
+      ),
+      StatData(
+        label: 'Authorization',
+        count: summary['authorization'] ?? 0,
+        icon: Icons.verified_user,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Technical',
+        count: summary['technical'] ?? 0,
+        icon: Icons.engineering,
+        color: Colors.purple,
+      ),
+    ];
+
     return Column(
       children: [
-        // Assets-style chip summary
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildStatChip('Total', summary['total'] ?? 0, Icons.folder_outlined, Theme.of(context).primaryColor),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Signed', summary['approved'] ?? 0, Icons.check_circle, Colors.green),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Pending', summary['drafts'] ?? 0, Icons.pending, Colors.orange),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Confidential', summary['confidential'] ?? 0, Icons.security, Colors.red),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Authorization', summary['authorization'] ?? 0, Icons.verified_user, Colors.blue),
-                const SizedBox(width: AppSpacing.sm),
-                _buildStatChip('Technical', summary['technical'] ?? 0, Icons.engineering, Colors.purple),
-              ],
-            ),
-          ),
-        ),
+        StandardStatsBar(chips: StatsHelper.buildChips(statsData)),
         const Divider(height: 1),
-        // Action Buttons
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FilledButton.icon(
-                onPressed: () => _showUploadDialog(context),
-                icon: const Icon(Icons.upload),
-                label: const Text('Upload'),
-                style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -276,7 +278,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               vertical: AppSpacing.xs / 2,
             ),
             decoration: BoxDecoration(
-              color: _getCategoryColor(document.type).withOpacity(0.1),
+              color: _getCategoryColor(document.type).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppSizes.chipRadius),
             ),
             child: Text(
@@ -300,10 +302,10 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               vertical: AppSpacing.xs / 2,
             ),
             decoration: BoxDecoration(
-              color: _getStatusColor(document.status).withOpacity(0.1),
+              color: _getStatusColor(document.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppSizes.chipRadius),
               border: Border.all(
-                color: _getStatusColor(document.status).withOpacity(0.3),
+                color: _getStatusColor(document.status).withValues(alpha: 0.3),
               ),
             ),
             child: Text(
@@ -677,10 +679,10 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                       ),
                       borderRadius: BorderRadius.circular(8),
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
                     ),
                     child: Row(
                       children: [
@@ -911,14 +913,14 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         border: Border.all(
                           color: _isDragging 
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                           style: BorderStyle.solid,
                           width: _isDragging ? 2 : 1,
                         ),
                         borderRadius: BorderRadius.circular(8),
                         color: _isDragging
-                          ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                          : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                          : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       ),
                       child: Column(
                         children: [
@@ -1140,33 +1142,5 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     }
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
 }

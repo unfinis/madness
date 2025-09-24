@@ -6,139 +6,111 @@ part of 'asset.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$StringPropertyImpl _$$StringPropertyImplFromJson(Map<String, dynamic> json) =>
-    _$StringPropertyImpl(
+StringProperty _$StringPropertyFromJson(Map<String, dynamic> json) =>
+    StringProperty(
       json['value'] as String,
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$StringPropertyImplToJson(
-        _$StringPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$StringPropertyToJson(StringProperty instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$IntegerPropertyImpl _$$IntegerPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$IntegerPropertyImpl(
+IntegerProperty _$IntegerPropertyFromJson(Map<String, dynamic> json) =>
+    IntegerProperty(
       (json['value'] as num).toInt(),
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$IntegerPropertyImplToJson(
-        _$IntegerPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$IntegerPropertyToJson(IntegerProperty instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$BooleanPropertyImpl _$$BooleanPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$BooleanPropertyImpl(
+BooleanProperty _$BooleanPropertyFromJson(Map<String, dynamic> json) =>
+    BooleanProperty(
       json['value'] as bool,
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$BooleanPropertyImplToJson(
-        _$BooleanPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$BooleanPropertyToJson(BooleanProperty instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$StringListPropertyImpl _$$StringListPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$StringListPropertyImpl(
+StringListProperty _$StringListPropertyFromJson(Map<String, dynamic> json) =>
+    StringListProperty(
       (json['values'] as List<dynamic>).map((e) => e as String).toList(),
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$StringListPropertyImplToJson(
-        _$StringListPropertyImpl instance) =>
-    <String, dynamic>{
-      'values': instance.values,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$StringListPropertyToJson(StringListProperty instance) =>
+    <String, dynamic>{'values': instance.values, 'runtimeType': instance.$type};
 
-_$MapPropertyImpl _$$MapPropertyImplFromJson(Map<String, dynamic> json) =>
-    _$MapPropertyImpl(
-      json['value'] as Map<String, dynamic>,
-      $type: json['runtimeType'] as String?,
-    );
+MapProperty _$MapPropertyFromJson(Map<String, dynamic> json) => MapProperty(
+  json['value'] as Map<String, dynamic>,
+  $type: json['runtimeType'] as String?,
+);
 
-Map<String, dynamic> _$$MapPropertyImplToJson(_$MapPropertyImpl instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'runtimeType': instance.$type,
-    };
+Map<String, dynamic> _$MapPropertyToJson(MapProperty instance) =>
+    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
 
-_$ObjectListPropertyImpl _$$ObjectListPropertyImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ObjectListPropertyImpl(
+ObjectListProperty _$ObjectListPropertyFromJson(Map<String, dynamic> json) =>
+    ObjectListProperty(
       (json['objects'] as List<dynamic>)
           .map((e) => e as Map<String, dynamic>)
           .toList(),
       $type: json['runtimeType'] as String?,
     );
 
-Map<String, dynamic> _$$ObjectListPropertyImplToJson(
-        _$ObjectListPropertyImpl instance) =>
+Map<String, dynamic> _$ObjectListPropertyToJson(ObjectListProperty instance) =>
     <String, dynamic>{
       'objects': instance.objects,
       'runtimeType': instance.$type,
     };
 
-_$AssetImpl _$$AssetImplFromJson(Map<String, dynamic> json) => _$AssetImpl(
-      id: json['id'] as String,
-      type: $enumDecode(_$AssetTypeEnumMap, json['type']),
-      projectId: json['projectId'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      properties: (json['properties'] as Map<String, dynamic>).map(
-        (k, e) =>
-            MapEntry(k, PropertyValue.fromJson(e as Map<String, dynamic>)),
-      ),
-      completedTriggers: (json['completedTriggers'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      triggerResults: (json['triggerResults'] as Map<String, dynamic>).map(
-        (k, e) =>
-            MapEntry(k, TriggerResult.fromJson(e as Map<String, dynamic>)),
-      ),
-      parentAssetIds: (json['parentAssetIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      childAssetIds: (json['childAssetIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      discoveredAt: DateTime.parse(json['discoveredAt'] as String),
-      lastUpdated: json['lastUpdated'] == null
-          ? null
-          : DateTime.parse(json['lastUpdated'] as String),
-      discoveryMethod: json['discoveryMethod'] as String?,
-      confidence: (json['confidence'] as num?)?.toDouble(),
-      tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
-    );
+_Asset _$AssetFromJson(Map<String, dynamic> json) => _Asset(
+  id: json['id'] as String,
+  type: $enumDecode(_$AssetTypeEnumMap, json['type']),
+  projectId: json['projectId'] as String,
+  name: json['name'] as String,
+  description: json['description'] as String?,
+  properties: (json['properties'] as Map<String, dynamic>).map(
+    (k, e) => MapEntry(k, PropertyValue.fromJson(e as Map<String, dynamic>)),
+  ),
+  completedTriggers: (json['completedTriggers'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  triggerResults: (json['triggerResults'] as Map<String, dynamic>).map(
+    (k, e) => MapEntry(k, TriggerResult.fromJson(e as Map<String, dynamic>)),
+  ),
+  parentAssetIds: (json['parentAssetIds'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  childAssetIds: (json['childAssetIds'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  discoveredAt: DateTime.parse(json['discoveredAt'] as String),
+  lastUpdated: json['lastUpdated'] == null
+      ? null
+      : DateTime.parse(json['lastUpdated'] as String),
+  discoveryMethod: json['discoveryMethod'] as String?,
+  confidence: (json['confidence'] as num?)?.toDouble(),
+  tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+);
 
-Map<String, dynamic> _$$AssetImplToJson(_$AssetImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'type': _$AssetTypeEnumMap[instance.type]!,
-      'projectId': instance.projectId,
-      'name': instance.name,
-      'description': instance.description,
-      'properties': instance.properties,
-      'completedTriggers': instance.completedTriggers,
-      'triggerResults': instance.triggerResults,
-      'parentAssetIds': instance.parentAssetIds,
-      'childAssetIds': instance.childAssetIds,
-      'discoveredAt': instance.discoveredAt.toIso8601String(),
-      'lastUpdated': instance.lastUpdated?.toIso8601String(),
-      'discoveryMethod': instance.discoveryMethod,
-      'confidence': instance.confidence,
-      'tags': instance.tags,
-    };
+Map<String, dynamic> _$AssetToJson(_Asset instance) => <String, dynamic>{
+  'id': instance.id,
+  'type': _$AssetTypeEnumMap[instance.type]!,
+  'projectId': instance.projectId,
+  'name': instance.name,
+  'description': instance.description,
+  'properties': instance.properties,
+  'completedTriggers': instance.completedTriggers,
+  'triggerResults': instance.triggerResults,
+  'parentAssetIds': instance.parentAssetIds,
+  'childAssetIds': instance.childAssetIds,
+  'discoveredAt': instance.discoveredAt.toIso8601String(),
+  'lastUpdated': instance.lastUpdated?.toIso8601String(),
+  'discoveryMethod': instance.discoveryMethod,
+  'confidence': instance.confidence,
+  'tags': instance.tags,
+};
 
 const _$AssetTypeEnumMap = {
   AssetType.networkSegment: 'networkSegment',
@@ -175,8 +147,8 @@ const _$AssetTypeEnumMap = {
   AssetType.azureManagedIdentity: 'azureManagedIdentity',
 };
 
-_$TriggerResultImpl _$$TriggerResultImplFromJson(Map<String, dynamic> json) =>
-    _$TriggerResultImpl(
+_TriggerResult _$TriggerResultFromJson(Map<String, dynamic> json) =>
+    _TriggerResult(
       methodologyId: json['methodologyId'] as String,
       executedAt: DateTime.parse(json['executedAt'] as String),
       success: json['success'] as bool,
@@ -191,7 +163,7 @@ _$TriggerResultImpl _$$TriggerResultImplFromJson(Map<String, dynamic> json) =>
       error: json['error'] as String?,
     );
 
-Map<String, dynamic> _$$TriggerResultImplToJson(_$TriggerResultImpl instance) =>
+Map<String, dynamic> _$TriggerResultToJson(_TriggerResult instance) =>
     <String, dynamic>{
       'methodologyId': instance.methodologyId,
       'executedAt': instance.executedAt.toIso8601String(),

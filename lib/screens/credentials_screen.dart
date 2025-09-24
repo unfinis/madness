@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/credential.dart';
 import '../providers/credential_provider.dart';
-import '../widgets/credential_filters_widget.dart';
 import '../widgets/credential_table_widget.dart';
 import '../widgets/common_layout_widgets.dart';
 import '../widgets/common_state_widgets.dart';
+import '../widgets/unified_filter/unified_filter.dart';
+import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/add_credential_dialog.dart';
+import '../widgets/dynamic_top_bar.dart';
 
 class CredentialsScreen extends ConsumerStatefulWidget {
   const CredentialsScreen({super.key});
@@ -16,7 +18,7 @@ class CredentialsScreen extends ConsumerStatefulWidget {
   ConsumerState<CredentialsScreen> createState() => _CredentialsScreenState();
 }
 
-class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
+class _CredentialsScreenState extends ConsumerState<CredentialsScreen> with HasTopBarConfig {
   final _searchController = TextEditingController();
   final Set<String> _selectedCredentials = {};
 
@@ -27,13 +29,41 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
   }
 
   @override
+  TopBarConfig getTopBarConfig(BuildContext context) {
+    return TopBarConfig(
+      title: 'Credentials',
+      actions: [
+        TopBarAction(
+          icon: Icons.upload,
+          label: 'Import',
+          onPressed: () => _importCredentials(context),
+          tooltip: 'Import credentials',
+        ),
+        TopBarAction(
+          icon: Icons.download,
+          label: 'Export',
+          onPressed: () => _exportCredentials(context),
+          tooltip: 'Export credentials',
+        ),
+        TopBarAction(
+          icon: Icons.add,
+          label: 'Add Credential',
+          onPressed: () => _showAddCredentialDialog(context),
+          tooltip: 'Add new credential',
+          isPrimary: true,
+        ),
+      ],
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final filteredCredentials = ref.watch(filteredCredentialsProvider);
     
     return ScreenWrapper(
       children: [
         _buildCredentialsStatsBar(context),
-        SizedBox(height: CommonLayoutWidgets.sectionSpacing),
+        const SizedBox(height: CommonLayoutWidgets.sectionSpacing),
         
         ResponsiveCard(
                 child: Column(
@@ -42,45 +72,32 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     // Header with responsive buttons
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Credentials',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: CommonLayoutWidgets.itemSpacing),
-                        // Responsive button layout
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            if (constraints.maxWidth > 400) {
-                              return Row(
-                                children: [
-                                  const Spacer(),
-                                  ..._buildActionButtons(context),
-                                ],
-                              );
-                            } else {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Wrap(
-                                    alignment: WrapAlignment.end,
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _buildActionButtons(context),
-                                  ),
-                                ],
-                              );
-                            }
-                          },
-                        ),
+                      children: const [
+                        // Title and buttons are now in the top bar
                       ],
                     ),
-                    SizedBox(height: CommonLayoutWidgets.sectionSpacing),
+                    const SizedBox(height: CommonLayoutWidgets.sectionSpacing),
                     
-                    CredentialFiltersWidget(searchController: _searchController),
-                    SizedBox(height: CommonLayoutWidgets.sectionSpacing),
+                    // NEW: Unified Filter Bar
+                    UnifiedFilterBar(
+                      searchController: _searchController,
+                      searchHint: 'Search usernames, targets, sources...',
+                      primaryFilters: _buildPrimaryFilters(),
+                      advancedFilters: _buildAdvancedFilters(),
+                      advancedFiltersTitle: 'Credential Filters',
+                      onSearchChanged: (value) {
+                        ref.read(credentialFiltersProvider.notifier).updateSearchQuery(value);
+                      },
+                      onSearchCleared: () {
+                        ref.read(credentialFiltersProvider.notifier).updateSearchQuery('');
+                      },
+                      onAdvancedFiltersChanged: () {
+                        // Advanced filter changes are handled by individual filter callbacks
+                      },
+                      activeFilterCount: _getActiveFilterCount(),
+                      resultCount: filteredCredentials.length,
+                    ),
+                    AppSpacing.vGapLG,
                     
                     if (filteredCredentials.isEmpty)
                       CommonStateWidgets.noData(
@@ -109,106 +126,16 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
   }
 
 
-  List<Widget> _buildActionButtons(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final availableWidth = screenWidth * 0.3;
-    
-    if (availableWidth > 400) {
-      // Wide enough: All buttons in a row with labels
-      return [
-        OutlinedButton.icon(
-          onPressed: () => _importCredentials(context),
-          icon: const Icon(Icons.upload, size: 18),
-          label: const Text('Import'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton.icon(
-          onPressed: () => _exportCredentials(context),
-          icon: const Icon(Icons.download, size: 18),
-          label: const Text('Export'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _showAddCredentialDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Credential'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-      ];
-    } else if (availableWidth > 300) {
-      // Medium width: Icon buttons with tooltips + Add button
-      return [
-        IconButton.outlined(
-          onPressed: () => _importCredentials(context),
-          icon: const Icon(Icons.upload, size: 18),
-          tooltip: 'Import',
-        ),
-        const SizedBox(width: 4),
-        IconButton.outlined(
-          onPressed: () => _exportCredentials(context),
-          icon: const Icon(Icons.download, size: 18),
-          tooltip: 'Export',
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _showAddCredentialDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-      ];
-    } else if (availableWidth > 200) {
-      // Narrow: Export and Add only
-      return [
-        IconButton.outlined(
-          onPressed: () => _exportCredentials(context),
-          icon: const Icon(Icons.download, size: 18),
-          tooltip: 'Export',
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _showAddCredentialDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-      ];
-    } else {
-      // Very narrow: Just essential buttons
-      return [
-        FilledButton.icon(
-          onPressed: () => _showAddCredentialDialog(context),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          ),
-        ),
-      ];
-    }
-  }
 
   Widget _buildBulkActions(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -392,57 +319,48 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
     final credentials = ref.watch(filteredCredentialsProvider);
     final stats = _calculateCredentialStats(credentials);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatChip('Total', stats.total, Icons.key, Theme.of(context).primaryColor),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Valid', stats.valid, Icons.check_circle, Colors.green),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Invalid', stats.invalid, Icons.cancel, Colors.red),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Untested', stats.untested, Icons.help_outline, Colors.orange),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('User Accounts', stats.userAccounts, Icons.person, Colors.blue),
-            const SizedBox(width: AppSpacing.sm),
-            _buildStatChip('Admin Accounts', stats.adminAccounts, Icons.admin_panel_settings, Colors.purple),
-          ],
-        ),
+    final statsData = [
+      StatData(
+        label: 'Total',
+        count: stats.total,
+        icon: Icons.key,
+        color: Theme.of(context).colorScheme.primary,
       ),
-    );
+      StatData(
+        label: 'Valid',
+        count: stats.valid,
+        icon: Icons.check_circle,
+        color: Colors.green,
+      ),
+      StatData(
+        label: 'Invalid',
+        count: stats.invalid,
+        icon: Icons.cancel,
+        color: Colors.red,
+      ),
+      StatData(
+        label: 'Untested',
+        count: stats.untested,
+        icon: Icons.help_outline,
+        color: Colors.orange,
+      ),
+      StatData(
+        label: 'User Accounts',
+        count: stats.userAccounts,
+        icon: Icons.person,
+        color: Colors.blue,
+      ),
+      StatData(
+        label: 'Admin Accounts',
+        count: stats.adminAccounts,
+        icon: Icons.admin_panel_settings,
+        color: Colors.purple,
+      ),
+    ];
+
+    return StandardStatsBar(chips: StatsHelper.buildChips(statsData));
   }
 
-  Widget _buildStatChip(String label, int count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              '$label: $count',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   CredentialStats _calculateCredentialStats(List<Credential> credentials) {
     final valid = credentials.where((c) => c.status == CredentialStatus.valid).length;
@@ -458,6 +376,322 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
       untested: untested,
       userAccounts: userAccounts,
       adminAccounts: adminAccounts,
+    );
+  }
+
+  /// Build primary filters (most important ones shown on mobile)
+  List<PrimaryFilter> _buildPrimaryFilters() {
+    final filters = ref.watch(credentialFiltersProvider);
+    final typeFilters = _getTypeFilters(filters.activeFilters);
+    final statusFilters = _getStatusFilters(filters.activeFilters);
+
+    return [
+      // Status filter (most important for credentials)
+      PrimaryFilter(
+        label: 'Status: ${_getStatusLabel(statusFilters)}',
+        isSelected: statusFilters.isNotEmpty,
+        onPressed: () => _showStatusOptions(),
+        icon: Icons.verified,
+        badge: statusFilters.length > 1 ? statusFilters.length.toString() : null,
+      ),
+
+      // Type filter (second most important)
+      PrimaryFilter(
+        label: 'Type: ${_getTypeLabel(typeFilters)}',
+        isSelected: typeFilters.isNotEmpty,
+        onPressed: () => _showTypeOptions(),
+        icon: Icons.category,
+        badge: typeFilters.length > 1 ? typeFilters.length.toString() : null,
+      ),
+    ];
+  }
+
+  /// Build advanced filters for bottom sheet
+  List<FilterSection> _buildAdvancedFilters() {
+    final filters = ref.watch(credentialFiltersProvider);
+
+    return [
+      // Credential Types Section
+      FilterSection(
+        title: 'Credential Types',
+        icon: Icons.category,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'User Accounts',
+                isSelected: filters.activeFilters.contains(CredentialFilter.user),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.user),
+                icon: Icons.person,
+              ),
+              StandardFilterChip(
+                label: 'Admin Accounts',
+                isSelected: filters.activeFilters.contains(CredentialFilter.admin),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.admin),
+                icon: Icons.admin_panel_settings,
+              ),
+              StandardFilterChip(
+                label: 'Service Accounts',
+                isSelected: filters.activeFilters.contains(CredentialFilter.service),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.service),
+                icon: Icons.settings,
+              ),
+              StandardFilterChip(
+                label: 'Hashes',
+                isSelected: filters.activeFilters.contains(CredentialFilter.hash),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.hash),
+                icon: Icons.tag,
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Status Section
+      FilterSection(
+        title: 'Status',
+        icon: Icons.info,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Valid',
+                isSelected: filters.activeFilters.contains(CredentialFilter.valid),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.valid),
+                icon: Icons.check_circle,
+              ),
+              StandardFilterChip(
+                label: 'Invalid',
+                isSelected: filters.activeFilters.contains(CredentialFilter.invalid),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.invalid),
+                icon: Icons.cancel,
+              ),
+              StandardFilterChip(
+                label: 'Untested',
+                isSelected: filters.activeFilters.contains(CredentialFilter.untested),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.untested),
+                icon: Icons.help_outline,
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Source Section
+      FilterSection(
+        title: 'Source',
+        icon: Icons.source,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Client Provided',
+                isSelected: filters.activeFilters.contains(CredentialFilter.clientProvided),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.clientProvided),
+                icon: Icons.business,
+              ),
+              StandardFilterChip(
+                label: 'Password Spray',
+                isSelected: filters.activeFilters.contains(CredentialFilter.passwordSpray),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.passwordSpray),
+                icon: Icons.water_drop,
+              ),
+              StandardFilterChip(
+                label: 'Kerberoasting',
+                isSelected: filters.activeFilters.contains(CredentialFilter.kerberoasting),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.kerberoasting),
+                icon: Icons.security,
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Privilege Level Section
+      FilterSection(
+        title: 'Privilege Level',
+        icon: Icons.admin_panel_settings,
+        initiallyExpanded: false,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              StandardFilterChip(
+                label: 'Local Admin',
+                isSelected: filters.activeFilters.contains(CredentialFilter.localAdmin),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.localAdmin),
+                icon: Icons.computer,
+              ),
+              StandardFilterChip(
+                label: 'Domain Admin',
+                isSelected: filters.activeFilters.contains(CredentialFilter.domainAdmin),
+                onPressed: () => ref.read(credentialFiltersProvider.notifier).toggleFilter(CredentialFilter.domainAdmin),
+                icon: Icons.domain,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
+  }
+
+  // Filter helper methods
+  Set<CredentialFilter> _getStatusFilters(Set<CredentialFilter> activeFilters) {
+    return activeFilters.where((filter) => [
+      CredentialFilter.valid,
+      CredentialFilter.invalid,
+      CredentialFilter.untested,
+    ].contains(filter)).toSet();
+  }
+
+  Set<CredentialFilter> _getTypeFilters(Set<CredentialFilter> activeFilters) {
+    return activeFilters.where((filter) => [
+      CredentialFilter.user,
+      CredentialFilter.admin,
+      CredentialFilter.service,
+      CredentialFilter.hash,
+    ].contains(filter)).toSet();
+  }
+
+  String _getStatusLabel(Set<CredentialFilter> statusFilters) {
+    if (statusFilters.isEmpty) return 'All';
+    if (statusFilters.length == 1) {
+      final filter = statusFilters.first;
+      switch (filter) {
+        case CredentialFilter.valid: return 'Valid';
+        case CredentialFilter.invalid: return 'Invalid';
+        case CredentialFilter.untested: return 'Untested';
+        default: return 'All';
+      }
+    }
+    return 'Multiple (${statusFilters.length})';
+  }
+
+  String _getTypeLabel(Set<CredentialFilter> typeFilters) {
+    if (typeFilters.isEmpty) return 'All';
+    if (typeFilters.length == 1) {
+      final filter = typeFilters.first;
+      switch (filter) {
+        case CredentialFilter.user: return 'User';
+        case CredentialFilter.admin: return 'Admin';
+        case CredentialFilter.service: return 'Service';
+        case CredentialFilter.hash: return 'Hash';
+        default: return 'All';
+      }
+    }
+    return 'Multiple (${typeFilters.length})';
+  }
+
+  int _getActiveFilterCount() {
+    final filters = ref.read(credentialFiltersProvider);
+    // Don't count 'all' as an active filter
+    return filters.activeFilters.contains(CredentialFilter.all) ? 0 : filters.activeFilters.length;
+  }
+
+  void _showStatusOptions() {
+    // Show quick status filter options
+    final notifier = ref.read(credentialFiltersProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter by Status'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.check_circle, color: Colors.green),
+              title: const Text('Valid'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.valid);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel, color: Colors.red),
+              title: const Text('Invalid'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.invalid);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.help_outline, color: Colors.orange),
+              title: const Text('Untested'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.untested);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTypeOptions() {
+    // Show quick type filter options
+    final notifier = ref.read(credentialFiltersProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter by Type'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('User Accounts'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.user);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings),
+              title: const Text('Admin Accounts'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.admin);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Service Accounts'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.service);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.tag),
+              title: const Text('Hashes'),
+              onTap: () {
+                notifier.toggleFilter(CredentialFilter.hash);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 }

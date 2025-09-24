@@ -44,55 +44,19 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Attack Plan'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // Refresh actions
-            },
-            tooltip: 'Refresh Actions',
-          ),
-          PopupMenuButton<String>(
-            onSelected: _handleMenuAction,
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'generate_actions',
-                child: ListTile(
-                  leading: Icon(Icons.auto_fix_high),
-                  title: Text('Generate New Actions'),
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'export_plan',
-                child: ListTile(
-                  leading: Icon(Icons.file_download),
-                  title: Text('Export Plan'),
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'settings',
-                child: ListTile(
-                  leading: Icon(Icons.settings),
-                  title: Text('Plan Settings'),
-                ),
-              ),
-            ],
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.list), text: 'All Actions'),
-            Tab(icon: Icon(Icons.schedule), text: 'Pending'),
-            Tab(icon: Icon(Icons.play_arrow), text: 'In Progress'),
-            Tab(icon: Icon(Icons.check_circle), text: 'Completed'),
-          ],
-        ),
-      ),
       body: Column(
         children: [
+          // Tab bar
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.list), text: 'All Actions'),
+              Tab(icon: Icon(Icons.schedule), text: 'Pending'),
+              Tab(icon: Icon(Icons.play_arrow), text: 'In Progress'),
+              Tab(icon: Icon(Icons.check_circle), text: 'Completed'),
+            ],
+          ),
+
           // Search and filter bar
           _buildSearchAndFilterBar(),
 
@@ -157,7 +121,7 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
           // Priority filter
           Expanded(
             child: DropdownButtonFormField<String>(
-              initialValue: _selectedFilter,
+              value: _selectedFilter,
               decoration: InputDecoration(
                 labelText: 'Priority',
                 border: OutlineInputBorder(
@@ -522,24 +486,4 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
     }
   }
 
-  void _handleMenuAction(String action) {
-    switch (action) {
-      case 'generate_actions':
-        final currentProject = ref.read(currentProjectProvider);
-        if (currentProject != null) {
-          _generateNewActions(currentProject.id);
-        }
-        break;
-      case 'export_plan':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Export plan coming soon...')),
-        );
-        break;
-      case 'settings':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Plan settings coming soon...')),
-        );
-        break;
-    }
-  }
 }

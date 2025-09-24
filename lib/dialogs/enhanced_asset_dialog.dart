@@ -487,7 +487,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 8),
@@ -528,7 +528,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
@@ -557,7 +557,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                         Text(
                           _nameController.text.isNotEmpty ? _nameController.text : 'New Asset',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -595,7 +595,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
               isScrollable: true,
               indicatorColor: Theme.of(context).colorScheme.primary,
               labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
 
             // Tab Content

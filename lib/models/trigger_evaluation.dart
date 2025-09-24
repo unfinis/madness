@@ -5,7 +5,7 @@ part 'trigger_evaluation.g.dart';
 
 /// Result of evaluating a trigger against an asset
 @freezed
-class TriggerMatch with _$TriggerMatch {
+sealed class TriggerMatch with _$TriggerMatch {
   const factory TriggerMatch({
     /// Unique identifier for this trigger match
     required String id,
@@ -47,7 +47,7 @@ class TriggerMatch with _$TriggerMatch {
 
 /// Parameter resolution for a methodology instance
 @freezed
-class ParameterResolution with _$ParameterResolution {
+sealed class ParameterResolution with _$ParameterResolution {
   const factory ParameterResolution({
     /// Name of the parameter
     required String name,
@@ -149,7 +149,7 @@ enum ParameterSource {
 
 /// Trigger condition evaluation result
 @freezed
-class TriggerConditionResult with _$TriggerConditionResult {
+sealed class TriggerConditionResult with _$TriggerConditionResult {
   const factory TriggerConditionResult({
     /// The original condition expression
     required String expression,
@@ -176,7 +176,7 @@ class TriggerConditionResult with _$TriggerConditionResult {
 
 /// DSL expression parser state and context
 @freezed
-class TriggerContext with _$TriggerContext {
+sealed class TriggerContext with _$TriggerContext {
   const factory TriggerContext({
     /// Variables available in the context
     @Default({}) Map<String, dynamic> variables,

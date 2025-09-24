@@ -47,7 +47,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
@@ -125,7 +125,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(widget.action.status).withOpacity(0.1),
+                      color: _getStatusColor(widget.action.status).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -141,7 +141,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(widget.action.priority).withOpacity(0.1),
+                      color: _getPriorityColor(widget.action.priority).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -261,7 +261,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
               runSpacing: AppSpacing.sm,
               children: widget.action.tags.map((tag) => Chip(
                 label: Text(tag),
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               )).toList(),
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -418,7 +418,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
+                              color: Colors.orange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
@@ -493,7 +493,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -694,7 +694,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                 ),
                 trailing: Chip(
                   label: Text(reference.type),
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   labelStyle: TextStyle(color: Colors.blue[600]),
                 ),
                 onTap: () {
@@ -731,7 +731,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -794,7 +794,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -815,7 +815,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -986,7 +986,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getRiskColor(finding.severity).withOpacity(0.1),
+                            color: _getRiskColor(finding.severity).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -1029,7 +1029,7 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
                       const SizedBox(height: AppSpacing.sm),
                       Chip(
                         label: Text(finding.category!),
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                         labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                       ),
                     ],
@@ -1113,9 +1113,9 @@ class _AttackPlanActionDetailDialogState extends State<AttackPlanActionDetailDia
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
+              color: Colors.orange.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [

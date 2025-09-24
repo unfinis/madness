@@ -175,7 +175,7 @@ class _TemplateSelectionDialogState extends ConsumerState<TemplateSelectionDialo
                         margin: const EdgeInsets.only(bottom: 8),
                         elevation: isSelected ? 2 : 0,
                         color: isSelected 
-                            ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
                             : null,
                         child: ListTile(
                           leading: CircleAvatar(

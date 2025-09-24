@@ -100,20 +100,20 @@ class UnifiedSummaryWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            item.color.withOpacity(0.08),
-            item.color.withOpacity(0.03),
+            item.color.withValues(alpha: 0.08),
+            item.color.withValues(alpha: 0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: item.color.withOpacity(0.15),
+          color: item.color.withValues(alpha: 0.15),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: item.color.withOpacity(0.03),
+            color: item.color.withValues(alpha: 0.03),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),
@@ -130,7 +130,7 @@ class UnifiedSummaryWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(compact ? 3 : 4),
                 decoration: BoxDecoration(
-                  color: item.color.withOpacity(0.1),
+                  color: item.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Icon(

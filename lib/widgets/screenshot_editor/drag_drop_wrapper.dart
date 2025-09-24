@@ -61,7 +61,7 @@ class _DragDropWrapperState extends State<DragDropWrapper> {
           if (_isDragging)
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary,
                   width: 2,
@@ -77,7 +77,7 @@ class _DragDropWrapperState extends State<DragDropWrapper> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),

@@ -301,10 +301,10 @@ class _CVSSCalculatorDialogState extends State<CVSSCalculatorDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -409,7 +409,7 @@ class _CVSSCalculatorDialogState extends State<CVSSCalculatorDialog> {
                 side: BorderSide(
                   color: isSelected
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                 ),
               );
             }).toList(),
