@@ -238,6 +238,7 @@ class ScreenshotsTable extends Table {
   TextColumn get tags => text().withDefault(const Constant(''))();
   BoolColumn get hasRedactions => boolean().named('has_redactions').withDefault(const Constant(false))();
   BoolColumn get isProcessed => boolean().named('is_processed').withDefault(const Constant(false))();
+  BoolColumn get isPlaceholder => boolean().named('is_placeholder').withDefault(const Constant(false))();
   TextColumn get metadata => text().withDefault(const Constant('{}'))();
 
   @override

@@ -119,10 +119,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerCondition():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -181,10 +178,7 @@ return $default(_that.property,_that.operator,_that.value,_that.description);cas
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String property,  TriggerOperator operator,  dynamic value,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerCondition():
-return $default(_that.property,_that.operator,_that.value,_that.description);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.property,_that.operator,_that.value,_that.description);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -390,10 +384,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerConditionGroup():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -452,10 +443,7 @@ return $default(_that.operator,_that.conditions);case _:
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LogicalOperator operator,  List<dynamic> conditions)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerConditionGroup():
-return $default(_that.operator,_that.conditions);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.operator,_that.conditions);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -696,10 +684,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _MethodologyTrigger():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -758,10 +743,7 @@ return $default(_that.id,_that.methodologyId,_that.name,_that.description,_that.
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String methodologyId,  String name,  String? description,  AssetType assetType,  dynamic conditions,  int priority,  bool batchCapable,  String? batchCriteria,  String? batchCommand,  int? maxBatchSize,  String deduplicationKeyTemplate,  Duration? cooldownPeriod,  String? individualCommand,  Map<String, String>? commandVariants,  List<String>? expectedPropertyUpdates,  List<AssetType>? expectedAssetDiscovery,  List<String> tags,  bool enabled)  $default,) {final _that = this;
 switch (_that) {
 case _MethodologyTrigger():
-return $default(_that.id,_that.methodologyId,_that.name,_that.description,_that.assetType,_that.conditions,_that.priority,_that.batchCapable,_that.batchCriteria,_that.batchCommand,_that.maxBatchSize,_that.deduplicationKeyTemplate,_that.cooldownPeriod,_that.individualCommand,_that.commandVariants,_that.expectedPropertyUpdates,_that.expectedAssetDiscovery,_that.tags,_that.enabled);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.methodologyId,_that.name,_that.description,_that.assetType,_that.conditions,_that.priority,_that.batchCapable,_that.batchCriteria,_that.batchCommand,_that.maxBatchSize,_that.deduplicationKeyTemplate,_that.cooldownPeriod,_that.individualCommand,_that.commandVariants,_that.expectedPropertyUpdates,_that.expectedAssetDiscovery,_that.tags,_that.enabled);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1079,10 +1061,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggeredMethodology():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1141,10 +1120,7 @@ return $default(_that.id,_that.methodologyId,_that.triggerId,_that.asset,_that.d
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String methodologyId,  String triggerId,  Asset asset,  String deduplicationKey,  Map<String, dynamic> variables,  String? command,  bool? isPartOfBatch,  String? batchId,  List<Asset>? batchAssets,  DateTime triggeredAt,  DateTime? executedAt,  DateTime? completedAt,  String? status,  int priority)  $default,) {final _that = this;
 switch (_that) {
 case _TriggeredMethodology():
-return $default(_that.id,_that.methodologyId,_that.triggerId,_that.asset,_that.deduplicationKey,_that.variables,_that.command,_that.isPartOfBatch,_that.batchId,_that.batchAssets,_that.triggeredAt,_that.executedAt,_that.completedAt,_that.status,_that.priority);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.methodologyId,_that.triggerId,_that.asset,_that.deduplicationKey,_that.variables,_that.command,_that.isPartOfBatch,_that.batchId,_that.batchAssets,_that.triggeredAt,_that.executedAt,_that.completedAt,_that.status,_that.priority);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1408,10 +1384,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _BatchedTrigger():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1470,10 +1443,7 @@ return $default(_that.id,_that.methodologyId,_that.triggers,_that.batchCommand,_
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String methodologyId,  List<TriggeredMethodology> triggers,  String batchCommand,  Map<String, dynamic> batchVariables,  int priority,  DateTime? scheduledFor)  $default,) {final _that = this;
 switch (_that) {
 case _BatchedTrigger():
-return $default(_that.id,_that.methodologyId,_that.triggers,_that.batchCommand,_that.batchVariables,_that.priority,_that.scheduledFor);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.methodologyId,_that.triggers,_that.batchCommand,_that.batchVariables,_that.priority,_that.scheduledFor);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

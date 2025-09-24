@@ -73,6 +73,7 @@ class Screenshot {
     Set<String>? tags,
     bool? hasRedactions,
     bool? isProcessed,
+    bool? isPlaceholder,
     Map<String, dynamic>? metadata,
     List<EditorLayer>? layers,
   }) {
@@ -97,6 +98,7 @@ class Screenshot {
       tags: tags ?? this.tags,
       hasRedactions: hasRedactions ?? this.hasRedactions,
       isProcessed: isProcessed ?? this.isProcessed,
+      isPlaceholder: isPlaceholder ?? this.isPlaceholder,
       metadata: metadata ?? this.metadata,
       layers: layers ?? this.layers,
     );

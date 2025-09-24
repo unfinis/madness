@@ -148,10 +148,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _RunInstance():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -210,10 +207,7 @@ return $default(_that.runId,_that.templateId,_that.templateVersion,_that.trigger
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String runId,  String templateId,  String templateVersion,  String triggerId,  String assetId,  Map<String, dynamic> matchedValues,  Map<String, dynamic> parameters,  RunInstanceStatus status,  DateTime createdAt,  String createdBy,  List<String> evidenceIds,  List<String> findingIds,  List<HistoryEntry> history,  String? notes,  DateTime? updatedAt,  int priority,  List<String> tags)  $default,) {final _that = this;
 switch (_that) {
 case _RunInstance():
-return $default(_that.runId,_that.templateId,_that.templateVersion,_that.triggerId,_that.assetId,_that.matchedValues,_that.parameters,_that.status,_that.createdAt,_that.createdBy,_that.evidenceIds,_that.findingIds,_that.history,_that.notes,_that.updatedAt,_that.priority,_that.tags);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.runId,_that.templateId,_that.templateVersion,_that.triggerId,_that.assetId,_that.matchedValues,_that.parameters,_that.status,_that.createdAt,_that.createdBy,_that.evidenceIds,_that.findingIds,_that.history,_that.notes,_that.updatedAt,_that.priority,_that.tags);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -517,10 +511,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HistoryEntry():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -579,10 +570,7 @@ return $default(_that.id,_that.timestamp,_that.performedBy,_that.action,_that.de
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String performedBy,  HistoryActionType action,  String description,  String? previousValue,  String? newValue,  Map<String, dynamic> metadata)  $default,) {final _that = this;
 switch (_that) {
 case _HistoryEntry():
-return $default(_that.id,_that.timestamp,_that.performedBy,_that.action,_that.description,_that.previousValue,_that.newValue,_that.metadata);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.timestamp,_that.performedBy,_that.action,_that.description,_that.previousValue,_that.newValue,_that.metadata);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

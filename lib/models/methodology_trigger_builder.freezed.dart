@@ -129,10 +129,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerCondition():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -191,10 +188,7 @@ return $default(_that.id,_that.assetType,_that.property,_that.operator,_that.val
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  AssetType assetType,  String property,  TriggerOperator operator,  TriggerValue value,  String? logicalOperator)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerCondition():
-return $default(_that.id,_that.assetType,_that.property,_that.operator,_that.value,_that.logicalOperator);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.assetType,_that.property,_that.operator,_that.value,_that.logicalOperator);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -429,10 +423,7 @@ return boolean(_that);case NumberTriggerValue():
 return number(_that);case ListTriggerValue():
 return list(_that);case NullTriggerValue():
 return isNull(_that);case NotNullTriggerValue():
-return notNull(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return notNull(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -506,10 +497,7 @@ return boolean(_that.value);case NumberTriggerValue():
 return number(_that.value);case ListTriggerValue():
 return list(_that.values);case NullTriggerValue():
 return isNull();case NotNullTriggerValue():
-return notNull();case _:
-  throw StateError('Unexpected subclass');
-
-}
+return notNull();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1021,10 +1009,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerGroup():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1083,10 +1068,7 @@ return $default(_that.id,_that.conditions,_that.logicalOperator);case _:
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  List<TriggerCondition> conditions,  String logicalOperator)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerGroup():
-return $default(_that.id,_that.conditions,_that.logicalOperator);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.conditions,_that.logicalOperator);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1302,10 +1284,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _MethodologyTriggerDefinition():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1364,10 +1343,7 @@ return $default(_that.id,_that.name,_that.description,_that.priority,_that.enabl
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String description,  int priority,  bool enabled,  List<TriggerGroup> conditionGroups,  String groupLogicalOperator,  Map<String, String>? parameterMappings,  Map<String, dynamic>? defaultParameters)  $default,) {final _that = this;
 switch (_that) {
 case _MethodologyTriggerDefinition():
-return $default(_that.id,_that.name,_that.description,_that.priority,_that.enabled,_that.conditionGroups,_that.groupLogicalOperator,_that.parameterMappings,_that.defaultParameters);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.description,_that.priority,_that.enabled,_that.conditionGroups,_that.groupLogicalOperator,_that.parameterMappings,_that.defaultParameters);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1607,10 +1583,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _AssetProperty():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1669,10 +1642,7 @@ return $default(_that.name,_that.displayName,_that.type,_that.allowedValues,_tha
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String displayName,  PropertyType type,  List<String>? allowedValues,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _AssetProperty():
-return $default(_that.name,_that.displayName,_that.type,_that.allowedValues,_that.description);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.name,_that.displayName,_that.type,_that.allowedValues,_that.description);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1897,10 +1867,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerTemplate():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1959,10 +1926,7 @@ return $default(_that.name,_that.description,_that.trigger);case _:
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String description,  MethodologyTriggerDefinition trigger)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerTemplate():
-return $default(_that.name,_that.description,_that.trigger);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.name,_that.description,_that.trigger);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2178,10 +2142,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _MethodologyParameter():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2240,10 +2201,7 @@ return $default(_that.name,_that.type,_that.source,_that.defaultValue,_that.desc
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String type,  String source,  String? defaultValue,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _MethodologyParameter():
-return $default(_that.name,_that.type,_that.source,_that.defaultValue,_that.description);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.name,_that.type,_that.source,_that.defaultValue,_that.description);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

@@ -133,10 +133,7 @@ return integer(_that);case BooleanProperty():
 return boolean(_that);case StringListProperty():
 return stringList(_that);case MapProperty():
 return map(_that);case ObjectListProperty():
-return objectList(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return objectList(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -210,10 +207,7 @@ return integer(_that.value);case BooleanProperty():
 return boolean(_that.value);case StringListProperty():
 return stringList(_that.values);case MapProperty():
 return map(_that.value);case ObjectListProperty():
-return objectList(_that.objects);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return objectList(_that.objects);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -823,10 +817,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _Asset():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -885,10 +876,7 @@ return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, PropertyValue> properties,  List<String> completedTriggers,  Map<String, TriggerResult> triggerResults,  List<String> parentAssetIds,  List<String> childAssetIds,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double? confidence,  List<String> tags)  $default,) {final _that = this;
 switch (_that) {
 case _Asset():
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.completedTriggers,_that.triggerResults,_that.parentAssetIds,_that.childAssetIds,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.tags);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.completedTriggers,_that.triggerResults,_that.parentAssetIds,_that.childAssetIds,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.tags);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1167,10 +1155,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerResult():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1229,10 +1214,7 @@ return $default(_that.methodologyId,_that.executedAt,_that.success,_that.output,
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String methodologyId,  DateTime executedAt,  bool success,  String? output,  Map<String, PropertyValue>? propertyUpdates,  List<Asset>? discoveredAssets,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerResult():
-return $default(_that.methodologyId,_that.executedAt,_that.success,_that.output,_that.propertyUpdates,_that.discoveredAssets,_that.error);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.methodologyId,_that.executedAt,_that.success,_that.output,_that.propertyUpdates,_that.discoveredAssets,_that.error);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

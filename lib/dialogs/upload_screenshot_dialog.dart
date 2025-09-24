@@ -36,7 +36,6 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
   String? _fileName;
   String _screenshotId = '';
   ScreenshotCategory _selectedCategory = ScreenshotCategory.other;
-  Set<String> _selectedFindings = <String>{};
   bool _autoDetectSensitive = false;
   bool _isUploading = false;
   String? _errorMessage;
@@ -68,13 +67,13 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
       title: Row(
         children: [
           Icon(
-            Icons.upload,
+            Icons.add_photo_alternate,
             color: theme.colorScheme.primary,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Upload Screenshot or Create Placeholder',
+              'Create Screenshot or Placeholder',
               style: theme.textTheme.titleLarge,
             ),
           ),
@@ -94,6 +93,40 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Add explanatory header
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: theme.colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'You can either upload an existing image or create an empty placeholder for future capture.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
               // File Selection Area
               _buildFileSelectionArea(theme),
               
@@ -135,25 +168,44 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                 const SizedBox(height: 16),
               ],
               
-              // Always show essential fields for both upload and placeholder creation
+              // Screenshot ID field (read-only) - the only required field
+              TextFormField(
+                initialValue: _screenshotId,
+                enabled: false,
+                decoration: InputDecoration(
+                  labelText: 'Screenshot ID (Auto-generated) *',
+                  hintText: 'Auto-generated unique identifier',
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Optional fields header
+              Text(
+                'Optional Information',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
               // Name field
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Screenshot Name *',
-                  hintText: 'Enter a name for this screenshot or placeholder',
+                  labelText: 'Screenshot Name',
+                  hintText: 'Optional: Enter a name (defaults to Screenshot ID if empty)',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Description field
               TextFormField(
                 controller: _descriptionController,
@@ -164,24 +216,9 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                   border: OutlineInputBorder(),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Screenshot ID field (read-only)
-              TextFormField(
-                initialValue: _screenshotId,
-                enabled: false,
-                decoration: InputDecoration(
-                  labelText: 'Screenshot ID',
-                  hintText: 'Auto-generated',
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest,
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
+
               // Caption field
               TextFormField(
                 controller: _captionController,
@@ -192,9 +229,9 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                   border: OutlineInputBorder(),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Capture Instructions field - especially important for placeholders
               TextFormField(
                 controller: _instructionsController,
@@ -205,12 +242,12 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                   border: OutlineInputBorder(),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Category dropdown
               DropdownButtonFormField<ScreenshotCategory>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
@@ -230,10 +267,6 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                 },
               ),
               
-              const SizedBox(height: 16),
-              
-              // Associated Findings section
-              _buildFindingsSection(theme),
               
               // Only show auto-detect for actual file uploads
               if (_selectedFile != null || _fileBytes != null) ...[
@@ -267,25 +300,22 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: !_isUploading && _nameController.text.trim().isNotEmpty
-                          ? _createPlaceholder
-                          : null,
-                      icon: const Icon(Icons.insert_photo_outlined),
-                      label: const Text('Create Placeholder'),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: (_selectedFile != null || _fileBytes != null) && !_isUploading
-                          ? _uploadScreenshot
-                          : null,
-                      child: _isUploading
+                    FilledButton.icon(
+                      onPressed: !_isUploading ? _handleCreateScreenshot : null,
+                      icon: _isUploading
                           ? const SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Upload'),
+                          : Icon(_selectedFile != null || _fileBytes != null
+                              ? Icons.upload
+                              : Icons.add_photo_alternate_outlined),
+                      label: _isUploading
+                          ? const Text('Processing...')
+                          : Text(_selectedFile != null || _fileBytes != null
+                              ? 'Create with Image'
+                              : 'Create Empty Screenshot'),
                     ),
                     const SizedBox(height: 8),
                     TextButton(
@@ -302,25 +332,23 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
                 onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
-              OutlinedButton.icon(
-                onPressed: !_isUploading && _nameController.text.trim().isNotEmpty
-                    ? _createPlaceholder
-                    : null,
-                icon: const Icon(Icons.insert_photo_outlined),
-                label: const Text('Create Placeholder'),
-              ),
               const SizedBox(width: 8),
-              FilledButton(
-                onPressed: (_selectedFile != null || _fileBytes != null) && !_isUploading
-                    ? _uploadScreenshot
-                    : null,
-                child: _isUploading
+              FilledButton.icon(
+                onPressed: !_isUploading ? _handleCreateScreenshot : null,
+                icon: _isUploading
                     ? const SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Upload'),
+                    : Icon(_selectedFile != null || _fileBytes != null
+                        ? Icons.upload
+                        : Icons.add_photo_alternate_outlined),
+                label: _isUploading
+                    ? const Text('Processing...')
+                    : Text(_selectedFile != null || _fileBytes != null
+                        ? 'Create with Image'
+                        : 'Create Empty Screenshot'),
               ),
             ],
     );
@@ -366,30 +394,45 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
           ),
           const SizedBox(height: 8),
           Text(
-            'Click to select screenshot',
+            'Click to select an existing image file',
             style: theme.textTheme.titleSmall?.copyWith(
               color: theme.colorScheme.onSurface,
             ),
           ),
           Text(
-            'Supported: PNG, JPG, JPEG',
+            'Supported: PNG, JPG, JPEG, GIF, BMP, WebP',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'or create placeholder below',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSecondaryContainer,
-                fontStyle: FontStyle.italic,
+              color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.5),
+                width: 1,
               ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 16,
+                  color: theme.colorScheme.tertiary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'This step is completely optional',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.tertiary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -489,76 +532,6 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
     );
   }
 
-  Widget _buildFindingsSection(ThemeData theme) {
-    // Sample findings for demo - in real app this would come from database
-    final availableFindings = [
-      'FIND-001', 'FIND-002', 'FIND-003', 'FIND-004',
-      'FIND-005', 'FIND-006', 'FIND-007', 'FIND-008'
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Associated Findings',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: theme.colorScheme.outline),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: availableFindings.isEmpty
-              ? Text(
-                  'No findings available',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                  ),
-                )
-              : Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: availableFindings.map((finding) {
-                    final isSelected = _selectedFindings.contains(finding);
-                    return FilterChip(
-                      label: Text(finding),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            _selectedFindings.add(finding);
-                          } else {
-                            _selectedFindings.remove(finding);
-                          }
-                        });
-                      },
-                      backgroundColor: isSelected 
-                          ? theme.colorScheme.primaryContainer
-                          : null,
-                      selectedColor: theme.colorScheme.primaryContainer,
-                      checkmarkColor: theme.colorScheme.onPrimaryContainer,
-                    );
-                  }).toList(),
-                ),
-        ),
-        if (_selectedFindings.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            '${_selectedFindings.length} findings selected',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
 
   void _showFileSelectionOptions() {
     showModalBottomSheet(
@@ -696,9 +669,17 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
     });
   }
 
-  Future<void> _createPlaceholder() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _handleCreateScreenshot() async {
+    if (_selectedFile != null || _fileBytes != null) {
+      // User has selected a file, upload it
+      await _uploadScreenshot();
+    } else {
+      // No file selected, create placeholder
+      await _createPlaceholder();
+    }
+  }
 
+  Future<void> _createPlaceholder() async {
     setState(() {
       _isUploading = true;
       _errorMessage = null;
@@ -707,12 +688,17 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
     try {
       final database = ref.read(databaseProvider);
       final now = DateTime.now();
-      
+
+      // Generate default name if none provided
+      final name = _nameController.text.trim().isEmpty
+          ? 'Screenshot $_screenshotId'
+          : _nameController.text.trim();
+
       // Create placeholder screenshot with required fields
       final placeholder = Screenshot(
         id: _screenshotId,
         projectId: widget.projectId,
-        name: _nameController.text.trim(),
+        name: name,
         description: _descriptionController.text.trim(),
         caption: _captionController.text.trim(),
         instructions: _instructionsController.text.trim(),
@@ -727,7 +713,7 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
         createdDate: now,
         modifiedDate: now,
         category: _selectedCategory.value,
-        tags: _selectedFindings,
+        tags: <String>{},
         hasRedactions: false,
         isProcessed: false,
         isPlaceholder: true, // Mark as placeholder
@@ -738,6 +724,8 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
         },
         layers: [],
       );
+
+      print('DEBUG: Creating placeholder screenshot with isPlaceholder = ${placeholder.isPlaceholder}');
 
       await database.insertScreenshot(placeholder, widget.projectId);
       
@@ -768,7 +756,6 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
   }
 
   Future<void> _uploadScreenshot() async {
-    if (!_formKey.currentState!.validate()) return;
     if (_selectedFile == null && _fileBytes == null) return;
 
     setState(() {
@@ -778,13 +765,18 @@ class _UploadScreenshotDialogState extends ConsumerState<UploadScreenshotDialog>
 
     try {
       final database = ref.read(databaseProvider);
-      
+
+      // Generate default name if none provided
+      final name = _nameController.text.trim().isEmpty
+          ? 'Screenshot $_screenshotId'
+          : _nameController.text.trim();
+
       final screenshot = await _screenshotUploadService.createScreenshotFromFileExtended(
         projectId: widget.projectId,
         file: _selectedFile,
         fileBytes: _fileBytes,
         fileName: _fileName!,
-        name: _nameController.text.trim(),
+        name: name,
         description: _descriptionController.text.trim(),
         caption: _captionController.text.trim(),
         instructions: _instructionsController.text.trim(),

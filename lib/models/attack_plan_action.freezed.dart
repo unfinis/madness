@@ -130,10 +130,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerEvent():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -192,10 +189,7 @@ return $default(_that.triggerId,_that.assetId,_that.assetName,_that.assetType,_t
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String triggerId,  String assetId,  String assetName,  String assetType,  Map<String, dynamic> matchedConditions,  Map<String, dynamic> extractedValues,  DateTime evaluatedAt,  double confidence)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerEvent():
-return $default(_that.triggerId,_that.assetId,_that.assetName,_that.assetType,_that.matchedConditions,_that.extractedValues,_that.evaluatedAt,_that.confidence);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.triggerId,_that.assetId,_that.assetName,_that.assetType,_that.matchedConditions,_that.extractedValues,_that.evaluatedAt,_that.confidence);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -438,10 +432,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ActionTool():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -500,10 +491,7 @@ return $default(_that.name,_that.description,_that.installation,_that.required,_
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String description,  String? installation,  bool required,  List<String> alternatives)  $default,) {final _that = this;
 switch (_that) {
 case _ActionTool():
-return $default(_that.name,_that.description,_that.installation,_that.required,_that.alternatives);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.name,_that.description,_that.installation,_that.required,_that.alternatives);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -728,10 +716,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ActionEquipment():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -790,10 +775,7 @@ return $default(_that.name,_that.description,_that.required,_that.specifications
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String description,  bool required,  String? specifications)  $default,) {final _that = this;
 switch (_that) {
 case _ActionEquipment():
-return $default(_that.name,_that.description,_that.required,_that.specifications);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.name,_that.description,_that.required,_that.specifications);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1008,10 +990,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ActionReference():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1070,10 +1049,7 @@ return $default(_that.title,_that.url,_that.description,_that.type);case _:
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String url,  String? description,  String type)  $default,) {final _that = this;
 switch (_that) {
 case _ActionReference():
-return $default(_that.title,_that.url,_that.description,_that.type);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.title,_that.url,_that.description,_that.type);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1286,10 +1262,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ActionRisk():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1348,10 +1321,7 @@ return $default(_that.risk,_that.mitigation,_that.severity);case _:
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String risk,  String mitigation,  ActionRiskLevel severity)  $default,) {final _that = this;
 switch (_that) {
 case _ActionRisk():
-return $default(_that.risk,_that.mitigation,_that.severity);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.risk,_that.mitigation,_that.severity);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1567,10 +1537,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ProcedureStep():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1629,10 +1596,7 @@ return $default(_that.stepNumber,_that.description,_that.command,_that.expectedO
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int stepNumber,  String description,  String? command,  String? expectedOutput,  String? notes,  bool mandatory)  $default,) {final _that = this;
 switch (_that) {
 case _ProcedureStep():
-return $default(_that.stepNumber,_that.description,_that.command,_that.expectedOutput,_that.notes,_that.mandatory);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.stepNumber,_that.description,_that.command,_that.expectedOutput,_that.notes,_that.mandatory);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1855,10 +1819,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _SuggestedFinding():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1917,10 +1878,7 @@ return $default(_that.title,_that.description,_that.severity,_that.cvssScore,_th
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String description,  ActionRiskLevel severity,  double? cvssScore,  String? category)  $default,) {final _that = this;
 switch (_that) {
 case _SuggestedFinding():
-return $default(_that.title,_that.description,_that.severity,_that.cvssScore,_that.category);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.title,_that.description,_that.severity,_that.cvssScore,_that.category);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2150,10 +2108,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ActionExecution():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2212,10 +2167,7 @@ return $default(_that.startedAt,_that.completedAt,_that.executedBy,_that.execute
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime? startedAt,  DateTime? completedAt,  String? executedBy,  List<String> executedCommands,  List<String> capturedOutputs,  List<String> evidenceFiles,  List<String> findingIds,  String? executionNotes,  bool? successful,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _ActionExecution():
-return $default(_that.startedAt,_that.completedAt,_that.executedBy,_that.executedCommands,_that.capturedOutputs,_that.evidenceFiles,_that.findingIds,_that.executionNotes,_that.successful,_that.errorMessage);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.startedAt,_that.completedAt,_that.executedBy,_that.executedCommands,_that.capturedOutputs,_that.evidenceFiles,_that.findingIds,_that.executionNotes,_that.successful,_that.errorMessage);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2524,10 +2476,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _AttackPlanAction():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2586,10 +2535,7 @@ return $default(_that.id,_that.projectId,_that.title,_that.objective,_that.statu
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String projectId,  String title,  String objective,  ActionStatus status,  ActionPriority priority,  ActionRiskLevel riskLevel,  List<TriggerEvent> triggerEvents,  List<ActionRisk> risks,  List<ProcedureStep> procedure,  List<ActionTool> tools,  List<ActionEquipment> equipment,  List<ActionReference> references,  List<SuggestedFinding> suggestedFindings,  List<String> cleanupSteps,  List<String> tags,  ActionExecution? execution,  DateTime createdAt,  DateTime? updatedAt,  String createdBy,  String? templateId,  Map<String, dynamic> metadata)  $default,) {final _that = this;
 switch (_that) {
 case _AttackPlanAction():
-return $default(_that.id,_that.projectId,_that.title,_that.objective,_that.status,_that.priority,_that.riskLevel,_that.triggerEvents,_that.risks,_that.procedure,_that.tools,_that.equipment,_that.references,_that.suggestedFindings,_that.cleanupSteps,_that.tags,_that.execution,_that.createdAt,_that.updatedAt,_that.createdBy,_that.templateId,_that.metadata);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.projectId,_that.title,_that.objective,_that.status,_that.priority,_that.riskLevel,_that.triggerEvents,_that.risks,_that.procedure,_that.tools,_that.equipment,_that.references,_that.suggestedFindings,_that.cleanupSteps,_that.tags,_that.execution,_that.createdAt,_that.updatedAt,_that.createdBy,_that.templateId,_that.metadata);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

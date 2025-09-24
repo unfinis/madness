@@ -5,9 +5,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../models/editor_tool.dart';
 import '../../models/editor_layer.dart';
+import '../../models/screenshot.dart';
 import '../../providers/screenshot_providers.dart';
+import '../../providers/database_provider.dart';
 import '../../services/image_replacement_service.dart';
 
 class EditorCanvas extends ConsumerStatefulWidget {
@@ -255,7 +258,19 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       // Get the screenshot data first
       final screenshot = await ref.read(screenshotProvider(widget.screenshotId).future);
 
-      if (screenshot != null && screenshot.originalPath.isNotEmpty) {
+      print('DEBUG: Loading screenshot ${widget.screenshotId}');
+      print('DEBUG: screenshot != null: ${screenshot != null}');
+      if (screenshot != null) {
+        print('DEBUG: isPlaceholder: ${screenshot.isPlaceholder}');
+        print('DEBUG: originalPath: "${screenshot.originalPath}"');
+        print('DEBUG: name: "${screenshot.name}"');
+      }
+
+      if (screenshot != null && screenshot.isPlaceholder) {
+        print('DEBUG: Loading empty screenshot display');
+        // Load empty screenshot display with capture instructions - priority over file loading
+        await _loadEmptyScreenshotDisplay(screenshot);
+      } else if (screenshot != null && screenshot.originalPath.isNotEmpty) {
         // Check if this is an asset path or a file path
         if (screenshot.originalPath.startsWith('assets/')) {
           await _loadImageFromAsset(screenshot.originalPath);
@@ -315,6 +330,287 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       print('Error loading image from file: $e');
       print('The asset does not exist or has empty data.');
       await _loadPlaceholderImage();
+    }
+  }
+
+  Future<void> _loadEmptyScreenshotDisplay(Screenshot screenshot) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 1200, 800));
+
+    // Draw background with subtle pattern
+    final bgPaint = Paint()..color = Theme.of(context).colorScheme.surface;
+    canvas.drawRect(const Rect.fromLTWH(0, 0, 1200, 800), bgPaint);
+
+    // Draw dashed border to indicate drop zone
+    _drawDashedRect(canvas, const Rect.fromLTWH(40, 40, 1120, 720),
+        Theme.of(context).colorScheme.primary.withValues(alpha: 0.4), 4, 12, 8);
+
+    // Draw upload icon
+    final iconPaint = Paint()
+      ..color = Theme.of(context).colorScheme.primary.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6;
+
+    // Upload icon (cloud with arrow)
+    final centerX = 600.0;
+    final centerY = 300.0;
+
+    // Cloud shape
+    final cloudPath = Path()
+      ..addOval(Rect.fromCenter(center: Offset(centerX - 30, centerY - 10), width: 40, height: 30))
+      ..addOval(Rect.fromCenter(center: Offset(centerX, centerY - 20), width: 60, height: 40))
+      ..addOval(Rect.fromCenter(center: Offset(centerX + 30, centerY - 10), width: 40, height: 30))
+      ..addRect(Rect.fromLTRB(centerX - 50, centerY - 5, centerX + 50, centerY + 15));
+
+    canvas.drawPath(cloudPath, iconPaint);
+
+    // Upload arrow
+    final arrowPaint = Paint()
+      ..color = Theme.of(context).colorScheme.primary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    canvas.drawLine(Offset(centerX, centerY + 20), Offset(centerX, centerY + 60), arrowPaint);
+    canvas.drawLine(Offset(centerX - 15, centerY + 45), Offset(centerX, centerY + 30), arrowPaint);
+    canvas.drawLine(Offset(centerX + 15, centerY + 45), Offset(centerX, centerY + 30), arrowPaint);
+
+    // Title text
+    final titlePainter = TextPainter(
+      text: TextSpan(
+        text: screenshot.name.isNotEmpty ? screenshot.name : 'Empty Screenshot',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 32,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    titlePainter.layout(maxWidth: 1000);
+    titlePainter.paint(canvas, Offset((1200 - titlePainter.width) / 2, 380));
+
+    // Instructions text
+    final instructions = screenshot.instructions.isNotEmpty
+        ? screenshot.instructions
+        : 'Drag and drop an image here to add it to this screenshot.\n\nDouble-click to browse for files.\n\nCtrl+V to paste from clipboard.';
+
+    final instructionsPainter = TextPainter(
+      text: TextSpan(
+        text: instructions,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          fontSize: 18,
+          height: 1.5,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    instructionsPainter.layout(maxWidth: 800);
+    instructionsPainter.paint(canvas, Offset((1200 - instructionsPainter.width) / 2, 440));
+
+    // Caption if available
+    if (screenshot.caption.isNotEmpty) {
+      final captionPainter = TextPainter(
+        text: TextSpan(
+          text: 'Caption: ${screenshot.caption}',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 16,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      captionPainter.layout(maxWidth: 800);
+      captionPainter.paint(canvas, Offset((1200 - captionPainter.width) / 2, 600));
+    }
+
+    // Footer text
+    final footerPainter = TextPainter(
+      text: TextSpan(
+        text: 'Supported formats: PNG, JPG, JPEG • Created: ${screenshot.createdDate.day}/${screenshot.createdDate.month}/${screenshot.createdDate.year}',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          fontSize: 14,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    footerPainter.layout(maxWidth: 800);
+    footerPainter.paint(canvas, Offset((1200 - footerPainter.width) / 2, 720));
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(1200, 800);
+
+    setState(() {
+      _backgroundImage = image;
+      _isLoading = false;
+    });
+  }
+
+  void _drawDashedRect(Canvas canvas, Rect rect, Color color, double strokeWidth, double dashLength, double gapLength) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+
+    // Top edge
+    double startX = rect.left;
+    while (startX < rect.right) {
+      final endX = (startX + dashLength).clamp(rect.left, rect.right);
+      path.moveTo(startX, rect.top);
+      path.lineTo(endX, rect.top);
+      startX = endX + gapLength;
+    }
+
+    // Right edge
+    double startY = rect.top;
+    while (startY < rect.bottom) {
+      final endY = (startY + dashLength).clamp(rect.top, rect.bottom);
+      path.moveTo(rect.right, startY);
+      path.lineTo(rect.right, endY);
+      startY = endY + gapLength;
+    }
+
+    // Bottom edge
+    startX = rect.right;
+    while (startX > rect.left) {
+      final endX = (startX - dashLength).clamp(rect.left, rect.right);
+      path.moveTo(startX, rect.bottom);
+      path.lineTo(endX, rect.bottom);
+      startX = endX - gapLength;
+    }
+
+    // Left edge
+    startY = rect.bottom;
+    while (startY > rect.top) {
+      final endY = (startY - dashLength).clamp(rect.top, rect.bottom);
+      path.moveTo(rect.left, startY);
+      path.lineTo(rect.left, endY);
+      startY = endY - gapLength;
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  Future<void> _handleFileUpload() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
+        withData: false, // We'll read the file ourselves for better control
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        if (file.path != null) {
+          final image = await ImageReplacementService.loadImageFromPath(file.path!);
+          if (image != null) {
+            await _replaceBackgroundImage(image, file.path!);
+          }
+        }
+      }
+    } catch (e) {
+      print('Error picking file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load image: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleClipboardPaste() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (data?.text != null) {
+        // Try to handle clipboard text as a file path (basic implementation)
+        final text = data!.text!.trim();
+        if (text.toLowerCase().endsWith('.png') ||
+            text.toLowerCase().endsWith('.jpg') ||
+            text.toLowerCase().endsWith('.jpeg')) {
+          final file = File(text);
+          if (await file.exists()) {
+            final image = await ImageReplacementService.loadImageFromPath(text);
+            if (image != null) {
+              await _replaceBackgroundImage(image, text);
+              return;
+            }
+          }
+        }
+      }
+
+      // Note: Direct image clipboard support would require platform-specific implementation
+      // For now, we show a helpful message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Clipboard paste: Copy a file path or drag and drop an image file instead'),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error handling clipboard: $e');
+    }
+  }
+
+  Future<void> _replaceBackgroundImage(ui.Image newImage, String imagePath) async {
+    try {
+      setState(() {
+        _backgroundImage = newImage;
+        _isLoading = false;
+      });
+
+      // Update the screenshot in the database
+      final screenshot = await ref.read(screenshotProvider(widget.screenshotId).future);
+      if (screenshot != null) {
+        final updatedScreenshot = screenshot.copyWith(
+          originalPath: imagePath,
+          width: newImage.width,
+          height: newImage.height,
+          fileFormat: imagePath.split('.').last.toLowerCase(),
+          isPlaceholder: false, // No longer a placeholder
+          modifiedDate: DateTime.now(),
+        );
+
+        // Update in database
+        final database = ref.read(databaseProvider);
+        await database.updateScreenshot(updatedScreenshot, widget.projectId);
+
+        // Invalidate provider to refresh
+        ref.invalidate(screenshotProvider(widget.screenshotId));
+      }
+
+      // Initialize pixel data for tools like pixelate
+      _initializePixelData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Image loaded successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error replacing background image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to replace image: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -1245,22 +1541,58 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     if (event is KeyDownEvent) {
       final isCtrlPressed = HardwareKeyboard.instance.isControlPressed;
 
-      // Handle Ctrl+V for paste image (disabled for now)
+      // Handle Ctrl+V for paste image
       if (isCtrlPressed && event.logicalKey == LogicalKeyboardKey.keyV) {
-        // await _pasteImageFromClipboard();
-        debugPrint('Ctrl+V paste not yet implemented - use Replace Image button instead');
+        await _pasteImageFromClipboard();
       }
     }
   }
 
   Future<void> _pasteImageFromClipboard() async {
     try {
-      final image = await ImageReplacementService.getImageFromClipboard();
-      if (image != null) {
-        _onImageReplaced(image);
+      print('DEBUG: Attempting to paste image from clipboard');
+      final result = await ImageReplacementService.getImageFromClipboardWithSave();
+      if (result != null && result['image'] != null && result['filePath'] != null) {
+        final image = result['image'] as ui.Image;
+        final filePath = result['filePath'] as String;
+        print('DEBUG: Successfully got image from clipboard, size: ${image.width}x${image.height}');
+        print('DEBUG: Saved clipboard image to: $filePath');
+        await _replaceBackgroundImage(image, filePath);
+      } else {
+        print('DEBUG: No image found in clipboard or failed to save');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Clipboard paste detected but no image found.',
+                             style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text('Try this instead:'),
+                  const Text('• Take a screenshot (Windows key + Shift + S)'),
+                  const Text('• Right-click an image → "Copy Image"'),
+                  const Text('• Then paste here, or drag & drop the file'),
+                ],
+              ),
+              duration: const Duration(seconds: 6),
+              backgroundColor: Colors.orange.shade800,
+            ),
+          );
+        }
       }
     } catch (e) {
       debugPrint('Error pasting image from clipboard: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error pasting from clipboard: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -1368,7 +1700,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
           // For guides, we need the last tap position
           // This is handled in onDoubleTapDown
         },
-        onDoubleTapDown: (details) {
+        onDoubleTapDown: (details) async {
+          // Check if this is an empty screenshot and handle file upload
+          final screenshot = await ref.read(screenshotProvider(widget.screenshotId).future);
+          if (screenshot != null && screenshot.isPlaceholder && screenshot.originalPath.isEmpty) {
+            await _handleFileUpload();
+            return;
+          }
+
           final canvasPoint = _screenToCanvasCoords(details.localPosition);
 
           // Check for guide deletion only with select or guide tools

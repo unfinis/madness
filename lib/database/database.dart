@@ -52,7 +52,7 @@ class MadnessDatabase extends _$MadnessDatabase {
   MadnessDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration {
@@ -63,7 +63,10 @@ class MadnessDatabase extends _$MadnessDatabase {
       onUpgrade: (Migrator m, int from, int to) async {
         // For now, we recreate all tables on schema changes
         // as per CLAUDE.md instructions
-        if (to >= 12) {
+        if (to >= 14) {
+          // Add isPlaceholder column to screenshots table
+          await m.addColumn(screenshotsTable, screenshotsTable.isPlaceholder);
+        } else if (to >= 12) {
           // Drop and recreate assets table to include new schema
           await m.deleteTable('assets');
           await m.deleteTable('asset_relationships');
@@ -805,14 +808,23 @@ class MadnessDatabase extends _$MadnessDatabase {
   Future<Screenshot?> getScreenshot(String id) async {
     final query = select(screenshotsTable)..where((s) => s.id.equals(id));
     final row = await query.getSingleOrNull();
-    if (row == null) return null;
-    
+    if (row == null) {
+      print('DEBUG: No screenshot found with id $id');
+      return null;
+    }
+
+    print('DEBUG: Found screenshot row with isPlaceholder = ${row.isPlaceholder}');
     final layers = await _getLayersForScreenshot(id);
-    return _screenshotRowToModel(row, layers);
+    final screenshot = _screenshotRowToModel(row, layers);
+    print('DEBUG: Converted to model with isPlaceholder = ${screenshot.isPlaceholder}');
+    return screenshot;
   }
 
   Future<void> insertScreenshot(Screenshot screenshot, String projectId) async {
-    await into(screenshotsTable).insert(_modelToScreenshotRow(screenshot, projectId));
+    print('DEBUG: Inserting screenshot with isPlaceholder = ${screenshot.isPlaceholder}');
+    final row = _modelToScreenshotRow(screenshot, projectId);
+    print('DEBUG: Database row isPlaceholder = ${row.isPlaceholder.value}');
+    await into(screenshotsTable).insert(row);
     
     // Insert layers
     for (int i = 0; i < screenshot.layers.length; i++) {
@@ -869,6 +881,7 @@ class MadnessDatabase extends _$MadnessDatabase {
       modifiedDate: row.modifiedDate,
       hasRedactions: row.hasRedactions,
       isProcessed: row.isProcessed,
+      isPlaceholder: row.isPlaceholder,
       metadata: row.metadata.isEmpty ? <String, dynamic>{} : json.decode(row.metadata),
     );
   }
@@ -895,6 +908,7 @@ class MadnessDatabase extends _$MadnessDatabase {
       tags: Value(screenshot.tags.join('|')),
       hasRedactions: Value(screenshot.hasRedactions),
       isProcessed: Value(screenshot.isProcessed),
+      isPlaceholder: Value(screenshot.isPlaceholder),
       metadata: Value(json.encode(screenshot.metadata)),
     );
   }

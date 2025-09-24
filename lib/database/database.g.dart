@@ -7104,6 +7104,21 @@ class $ScreenshotsTableTable extends ScreenshotsTable
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isPlaceholderMeta = const VerificationMeta(
+    'isPlaceholder',
+  );
+  @override
+  late final GeneratedColumn<bool> isPlaceholder = GeneratedColumn<bool>(
+    'is_placeholder',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_placeholder" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _metadataMeta = const VerificationMeta(
     'metadata',
   );
@@ -7138,6 +7153,7 @@ class $ScreenshotsTableTable extends ScreenshotsTable
     tags,
     hasRedactions,
     isProcessed,
+    isPlaceholder,
     metadata,
   ];
   @override
@@ -7318,6 +7334,15 @@ class $ScreenshotsTableTable extends ScreenshotsTable
         ),
       );
     }
+    if (data.containsKey('is_placeholder')) {
+      context.handle(
+        _isPlaceholderMeta,
+        isPlaceholder.isAcceptableOrUnknown(
+          data['is_placeholder']!,
+          _isPlaceholderMeta,
+        ),
+      );
+    }
     if (data.containsKey('metadata')) {
       context.handle(
         _metadataMeta,
@@ -7413,6 +7438,10 @@ class $ScreenshotsTableTable extends ScreenshotsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_processed'],
       )!,
+      isPlaceholder: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_placeholder'],
+      )!,
       metadata: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}metadata'],
@@ -7447,6 +7476,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
   final String tags;
   final bool hasRedactions;
   final bool isProcessed;
+  final bool isPlaceholder;
   final String metadata;
   const ScreenshotRow({
     required this.id,
@@ -7469,6 +7499,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
     required this.tags,
     required this.hasRedactions,
     required this.isProcessed,
+    required this.isPlaceholder,
     required this.metadata,
   });
   @override
@@ -7500,6 +7531,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
     map['tags'] = Variable<String>(tags);
     map['has_redactions'] = Variable<bool>(hasRedactions);
     map['is_processed'] = Variable<bool>(isProcessed);
+    map['is_placeholder'] = Variable<bool>(isPlaceholder);
     map['metadata'] = Variable<String>(metadata);
     return map;
   }
@@ -7532,6 +7564,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
       tags: Value(tags),
       hasRedactions: Value(hasRedactions),
       isProcessed: Value(isProcessed),
+      isPlaceholder: Value(isPlaceholder),
       metadata: Value(metadata),
     );
   }
@@ -7562,6 +7595,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
       tags: serializer.fromJson<String>(json['tags']),
       hasRedactions: serializer.fromJson<bool>(json['hasRedactions']),
       isProcessed: serializer.fromJson<bool>(json['isProcessed']),
+      isPlaceholder: serializer.fromJson<bool>(json['isPlaceholder']),
       metadata: serializer.fromJson<String>(json['metadata']),
     );
   }
@@ -7589,6 +7623,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
       'tags': serializer.toJson<String>(tags),
       'hasRedactions': serializer.toJson<bool>(hasRedactions),
       'isProcessed': serializer.toJson<bool>(isProcessed),
+      'isPlaceholder': serializer.toJson<bool>(isPlaceholder),
       'metadata': serializer.toJson<String>(metadata),
     };
   }
@@ -7614,6 +7649,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
     String? tags,
     bool? hasRedactions,
     bool? isProcessed,
+    bool? isPlaceholder,
     String? metadata,
   }) => ScreenshotRow(
     id: id ?? this.id,
@@ -7638,6 +7674,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
     tags: tags ?? this.tags,
     hasRedactions: hasRedactions ?? this.hasRedactions,
     isProcessed: isProcessed ?? this.isProcessed,
+    isPlaceholder: isPlaceholder ?? this.isPlaceholder,
     metadata: metadata ?? this.metadata,
   );
   ScreenshotRow copyWithCompanion(ScreenshotsTableCompanion data) {
@@ -7684,6 +7721,9 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
       isProcessed: data.isProcessed.present
           ? data.isProcessed.value
           : this.isProcessed,
+      isPlaceholder: data.isPlaceholder.present
+          ? data.isPlaceholder.value
+          : this.isPlaceholder,
       metadata: data.metadata.present ? data.metadata.value : this.metadata,
     );
   }
@@ -7711,6 +7751,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
           ..write('tags: $tags, ')
           ..write('hasRedactions: $hasRedactions, ')
           ..write('isProcessed: $isProcessed, ')
+          ..write('isPlaceholder: $isPlaceholder, ')
           ..write('metadata: $metadata')
           ..write(')'))
         .toString();
@@ -7738,6 +7779,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
     tags,
     hasRedactions,
     isProcessed,
+    isPlaceholder,
     metadata,
   ]);
   @override
@@ -7764,6 +7806,7 @@ class ScreenshotRow extends DataClass implements Insertable<ScreenshotRow> {
           other.tags == this.tags &&
           other.hasRedactions == this.hasRedactions &&
           other.isProcessed == this.isProcessed &&
+          other.isPlaceholder == this.isPlaceholder &&
           other.metadata == this.metadata);
 }
 
@@ -7788,6 +7831,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
   final Value<String> tags;
   final Value<bool> hasRedactions;
   final Value<bool> isProcessed;
+  final Value<bool> isPlaceholder;
   final Value<String> metadata;
   final Value<int> rowid;
   const ScreenshotsTableCompanion({
@@ -7811,6 +7855,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
     this.tags = const Value.absent(),
     this.hasRedactions = const Value.absent(),
     this.isProcessed = const Value.absent(),
+    this.isPlaceholder = const Value.absent(),
     this.metadata = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -7835,6 +7880,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
     this.tags = const Value.absent(),
     this.hasRedactions = const Value.absent(),
     this.isProcessed = const Value.absent(),
+    this.isPlaceholder = const Value.absent(),
     this.metadata = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -7869,6 +7915,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
     Expression<String>? tags,
     Expression<bool>? hasRedactions,
     Expression<bool>? isProcessed,
+    Expression<bool>? isPlaceholder,
     Expression<String>? metadata,
     Expression<int>? rowid,
   }) {
@@ -7893,6 +7940,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
       if (tags != null) 'tags': tags,
       if (hasRedactions != null) 'has_redactions': hasRedactions,
       if (isProcessed != null) 'is_processed': isProcessed,
+      if (isPlaceholder != null) 'is_placeholder': isPlaceholder,
       if (metadata != null) 'metadata': metadata,
       if (rowid != null) 'rowid': rowid,
     });
@@ -7919,6 +7967,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
     Value<String>? tags,
     Value<bool>? hasRedactions,
     Value<bool>? isProcessed,
+    Value<bool>? isPlaceholder,
     Value<String>? metadata,
     Value<int>? rowid,
   }) {
@@ -7943,6 +7992,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
       tags: tags ?? this.tags,
       hasRedactions: hasRedactions ?? this.hasRedactions,
       isProcessed: isProcessed ?? this.isProcessed,
+      isPlaceholder: isPlaceholder ?? this.isPlaceholder,
       metadata: metadata ?? this.metadata,
       rowid: rowid ?? this.rowid,
     );
@@ -8011,6 +8061,9 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
     if (isProcessed.present) {
       map['is_processed'] = Variable<bool>(isProcessed.value);
     }
+    if (isPlaceholder.present) {
+      map['is_placeholder'] = Variable<bool>(isPlaceholder.value);
+    }
     if (metadata.present) {
       map['metadata'] = Variable<String>(metadata.value);
     }
@@ -8043,6 +8096,7 @@ class ScreenshotsTableCompanion extends UpdateCompanion<ScreenshotRow> {
           ..write('tags: $tags, ')
           ..write('hasRedactions: $hasRedactions, ')
           ..write('isProcessed: $isProcessed, ')
+          ..write('isPlaceholder: $isPlaceholder, ')
           ..write('metadata: $metadata, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -26368,6 +26422,7 @@ typedef $$ScreenshotsTableTableCreateCompanionBuilder =
       Value<String> tags,
       Value<bool> hasRedactions,
       Value<bool> isProcessed,
+      Value<bool> isPlaceholder,
       Value<String> metadata,
       Value<int> rowid,
     });
@@ -26393,6 +26448,7 @@ typedef $$ScreenshotsTableTableUpdateCompanionBuilder =
       Value<String> tags,
       Value<bool> hasRedactions,
       Value<bool> isProcessed,
+      Value<bool> isPlaceholder,
       Value<String> metadata,
       Value<int> rowid,
     });
@@ -26589,6 +26645,11 @@ class $$ScreenshotsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isPlaceholder => $composableBuilder(
+    column: $table.isPlaceholder,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get metadata => $composableBuilder(
     column: $table.metadata,
     builder: (column) => ColumnFilters(column),
@@ -26773,6 +26834,11 @@ class $$ScreenshotsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isPlaceholder => $composableBuilder(
+    column: $table.isPlaceholder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get metadata => $composableBuilder(
     column: $table.metadata,
     builder: (column) => ColumnOrderings(column),
@@ -26887,6 +26953,11 @@ class $$ScreenshotsTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isProcessed => $composableBuilder(
     column: $table.isProcessed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isPlaceholder => $composableBuilder(
+    column: $table.isPlaceholder,
     builder: (column) => column,
   );
 
@@ -27024,6 +27095,7 @@ class $$ScreenshotsTableTableTableManager
                 Value<String> tags = const Value.absent(),
                 Value<bool> hasRedactions = const Value.absent(),
                 Value<bool> isProcessed = const Value.absent(),
+                Value<bool> isPlaceholder = const Value.absent(),
                 Value<String> metadata = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ScreenshotsTableCompanion(
@@ -27047,6 +27119,7 @@ class $$ScreenshotsTableTableTableManager
                 tags: tags,
                 hasRedactions: hasRedactions,
                 isProcessed: isProcessed,
+                isPlaceholder: isPlaceholder,
                 metadata: metadata,
                 rowid: rowid,
               ),
@@ -27072,6 +27145,7 @@ class $$ScreenshotsTableTableTableManager
                 Value<String> tags = const Value.absent(),
                 Value<bool> hasRedactions = const Value.absent(),
                 Value<bool> isProcessed = const Value.absent(),
+                Value<bool> isPlaceholder = const Value.absent(),
                 Value<String> metadata = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ScreenshotsTableCompanion.insert(
@@ -27095,6 +27169,7 @@ class $$ScreenshotsTableTableTableManager
                 tags: tags,
                 hasRedactions: hasRedactions,
                 isProcessed: isProcessed,
+                isPlaceholder: isPlaceholder,
                 metadata: metadata,
                 rowid: rowid,
               ),

@@ -227,6 +227,26 @@ class _ScreenshotEditorScreenState
         canvasState.updateBackgroundImage(newImage);
       }
 
+      // Handle placeholder to actual screenshot conversion
+      final screenshot = await ref.read(screenshotProvider(widget.screenshotId).future);
+      if (screenshot != null && screenshot.isPlaceholder) {
+        // Convert placeholder to actual screenshot
+        final updatedScreenshot = screenshot.copyWith(
+          width: newImage.width,
+          height: newImage.height,
+          isPlaceholder: false,
+          modifiedDate: DateTime.now(),
+          originalPath: '', // Will be set by drag-drop or file picker
+        );
+
+        // Update in database
+        final database = ref.read(databaseProvider);
+        await database.updateScreenshot(updatedScreenshot, widget.projectId);
+
+        // Invalidate provider to refresh
+        ref.invalidate(screenshotProvider(widget.screenshotId));
+      }
+
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

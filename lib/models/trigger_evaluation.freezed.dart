@@ -136,10 +136,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerMatch():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -198,10 +195,7 @@ return $default(_that.id,_that.triggerId,_that.templateId,_that.assetId,_that.ma
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String triggerId,  String templateId,  String assetId,  bool matched,  Map<String, dynamic> extractedValues,  double confidence,  DateTime evaluatedAt,  int priority,  String? error,  Map<String, dynamic> debugInfo)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerMatch():
-return $default(_that.id,_that.triggerId,_that.templateId,_that.assetId,_that.matched,_that.extractedValues,_that.confidence,_that.evaluatedAt,_that.priority,_that.error,_that.debugInfo);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.triggerId,_that.templateId,_that.assetId,_that.matched,_that.extractedValues,_that.confidence,_that.evaluatedAt,_that.priority,_that.error,_that.debugInfo);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -461,10 +455,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _ParameterResolution():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -523,10 +514,7 @@ return $default(_that.name,_that.type,_that.value,_that.source,_that.required,_t
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  ParameterType type,  dynamic value,  ParameterSource source,  bool required,  bool resolved,  String? error,  DateTime resolvedAt,  Map<String, dynamic> metadata)  $default,) {final _that = this;
 switch (_that) {
 case _ParameterResolution():
-return $default(_that.name,_that.type,_that.value,_that.source,_that.required,_that.resolved,_that.error,_that.resolvedAt,_that.metadata);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.name,_that.type,_that.value,_that.source,_that.required,_that.resolved,_that.error,_that.resolvedAt,_that.metadata);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -767,10 +755,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerConditionResult():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -829,10 +814,7 @@ return $default(_that.expression,_that.result,_that.variables,_that.executionTim
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String expression,  bool result,  Map<String, dynamic> variables,  int executionTimeMs,  String? error,  List<String> debugTrace)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerConditionResult():
-return $default(_that.expression,_that.result,_that.variables,_that.executionTimeMs,_that.error,_that.debugTrace);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.expression,_that.result,_that.variables,_that.executionTimeMs,_that.error,_that.debugTrace);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1065,10 +1047,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _TriggerContext():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1127,10 +1106,7 @@ return $default(_that.variables,_that.asset,_that.metadata);case _:
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<String, dynamic> variables,  Map<String, dynamic>? asset,  Map<String, dynamic> metadata)  $default,) {final _that = this;
 switch (_that) {
 case _TriggerContext():
-return $default(_that.variables,_that.asset,_that.metadata);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.variables,_that.asset,_that.metadata);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
