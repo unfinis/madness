@@ -850,10 +850,22 @@ class _ScreenshotEditorScreenState
       final currentVerticalGuides = canvasState?.verticalGuides as List<double>? ?? <double>[];
       final currentHorizontalGuides = canvasState?.horizontalGuides as List<double>? ?? <double>[];
       
-      // Create updated metadata with guides
+      // Create updated metadata with guides and crop bounds
       final updatedMetadata = Map<String, dynamic>.from(screenshot.metadata);
       updatedMetadata['verticalGuides'] = currentVerticalGuides;
       updatedMetadata['horizontalGuides'] = currentHorizontalGuides;
+
+      // Save active crop bounds
+      if (_activeCropBounds != null) {
+        updatedMetadata['activeCrop'] = {
+          'left': _activeCropBounds!.left,
+          'top': _activeCropBounds!.top,
+          'width': _activeCropBounds!.width,
+          'height': _activeCropBounds!.height,
+        };
+      } else {
+        updatedMetadata.remove('activeCrop'); // Remove crop if null
+      }
 
       // Create updated screenshot with current layers and guides
       final updatedScreenshot = screenshot.copyWith(
@@ -1307,7 +1319,7 @@ class _ScreenshotEditorScreenState
                           onCropChanged: _onCropChanged,
                           initialCropBounds: _activeCropBounds,
                           onImageReplaced: _onImageReplaced,
-                          onCropStateChanged: () => setState(() {}),
+                          onCropStateChanged: () => WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {})),
                         ),
                       ),
                     ],
@@ -1418,7 +1430,7 @@ class _ScreenshotEditorScreenState
                 onCropChanged: _onCropChanged,
                 initialCropBounds: _activeCropBounds,
                 onImageReplaced: _onImageReplaced,
-                onCropStateChanged: () => setState(() {}),
+                onCropStateChanged: () => WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {})),
               ),
             ),
           ),

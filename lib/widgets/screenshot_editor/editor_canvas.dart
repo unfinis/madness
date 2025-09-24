@@ -180,6 +180,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     super.initState();
     _loadScreenshotImage();
     _isVerticalGuideMode = widget.isVerticalGuideMode;
+    _loadExistingCropBounds(); // Load initial crop bounds from metadata
   }
 
   @override
@@ -191,11 +192,16 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         _isVerticalGuideMode = widget.isVerticalGuideMode;
       });
     }
+    // Handle crop bounds updates from parent
+    if (oldWidget.initialCropBounds != widget.initialCropBounds) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadExistingCropBounds());
+    }
+
     // Handle crop tool activation/deactivation
     if (widget.selectedTool == EditorTool.crop && oldWidget.selectedTool != EditorTool.crop) {
-      _activateCropMode();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _activateCropMode());
     } else if (widget.selectedTool != EditorTool.crop && oldWidget.selectedTool == EditorTool.crop) {
-      _deactivateCropMode();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _deactivateCropMode());
     }
   }
 
