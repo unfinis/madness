@@ -1361,7 +1361,7 @@ class _ScreenshotEditorScreenState
           width: EditorConstants.sidePanelDefaultWidth,
           minWidth: 200,
           maxWidth: 400,
-          initialMode: PanelDisplayMode.splitView,
+          initialMode: PanelDisplayMode.tabbed,
           keyboardShortcuts: const {
             'toggle_properties': 'F1',
             'toggle_layers': 'F2',

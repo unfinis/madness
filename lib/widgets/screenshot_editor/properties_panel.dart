@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/editor_tool.dart';
+import '../../models/tool_preset.dart';
 
 class PropertiesPanel extends StatelessWidget {
   final EditorTool selectedTool;
@@ -93,24 +94,19 @@ class PropertiesPanel extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             
-            // Style Preset Dropdown
-            _buildStylePresetDropdown(context, theme),
-            const SizedBox(height: 12),
-            
-            // Tool-specific properties
-            ..._buildToolProperties(context, theme),
-            
-            const SizedBox(height: 12),
-            
-            // Severity Presets
-            if (selectedTool.isAnnotationTool) ...[
+            // Tool Presets (only for tools that support them)
+            if (ToolPresetManager.toolSupportsPresets(selectedTool)) ...[
               Text(
-                'Severity Presets',
+                'Presets',
                 style: theme.textTheme.labelMedium,
               ),
               const SizedBox(height: 8),
-              _buildSeverityPresets(context, theme),
+              _buildToolPresets(context, theme),
+              const SizedBox(height: 12),
             ],
+
+            // Tool-specific properties
+            ..._buildToolProperties(context, theme),
           ],
         ),
       ),
@@ -174,24 +170,27 @@ class PropertiesPanel extends StatelessWidget {
 
   List<Widget> _buildToolProperties(BuildContext context, ThemeData theme) {
     switch (selectedTool) {
+      case EditorTool.arrow:
+        return _buildArrowToolProperties(context, theme);
+
       case EditorTool.highlightRect:
         return _buildVectorToolProperties(context, theme);
-      
+
       case EditorTool.text:
         return _buildTextToolProperties(context, theme);
-      
+
       case EditorTool.numberLabel:
         return _buildNumberLabelProperties(context, theme);
-      
+
       case EditorTool.redactBlackout:
         return _buildBlackoutProperties(context, theme);
-      
+
       case EditorTool.redactBlur:
         return _buildBlurProperties(context, theme);
-      
+
       case EditorTool.redactPixelate:
         return _buildPixelateProperties(context, theme);
-      
+
       default:
         return [];
     }
@@ -260,10 +259,10 @@ class PropertiesPanel extends StatelessWidget {
 
   List<Widget> _buildTextToolProperties(BuildContext context, ThemeData theme) {
     final settings = toolConfig.toolSpecificSettings;
-    
+
     return [
       // Text Color
-      _buildColorPicker(
+      _buildEnhancedColorPicker(
         context,
         theme,
         'Text Color',
@@ -354,27 +353,31 @@ class PropertiesPanel extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: TextField(
-              controller: TextEditingController(
-                text: (currentNumberLabelValue ?? settings['number'] ?? 1).toString(),
+            child: Center(
+              child: TextField(
+                controller: TextEditingController(
+                  text: (currentNumberLabelValue ?? settings['number'] ?? 1).toString(),
+                ),
+                textAlign: TextAlign.center,
+                textAlignVertical: TextAlignVertical.center,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                onSubmitted: (value) {
+                  final number = int.tryParse(value) ?? 1;
+                  onNumberLabelValueChanged?.call(number);
+                },
               ),
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(4),
-              ],
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              ),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              onSubmitted: (value) {
-                final number = int.tryParse(value) ?? 1;
-                onNumberLabelValueChanged?.call(number);
-              },
             ),
           ),
         ],
@@ -401,18 +404,18 @@ class PropertiesPanel extends StatelessWidget {
       const SizedBox(height: 12),
       
       // Text Color
-      _buildColorPicker(
+      _buildEnhancedColorPicker(
         context,
         theme,
         'Text Color',
         toolConfig.primaryColor,
         (color) => onConfigChanged(toolConfig.copyWith(primaryColor: color)),
       ),
-      
+
       const SizedBox(height: 8),
-      
+
       // Background Color
-      _buildColorPicker(
+      _buildEnhancedColorPicker(
         context,
         theme,
         'Background',
@@ -464,7 +467,7 @@ class PropertiesPanel extends StatelessWidget {
 
   List<Widget> _buildBlackoutProperties(BuildContext context, ThemeData theme) {
     return [
-      _buildColorPicker(
+      _buildEnhancedColorPicker(
         context,
         theme,
         'Color',
@@ -499,7 +502,7 @@ class PropertiesPanel extends StatelessWidget {
 
   List<Widget> _buildPixelateProperties(BuildContext context, ThemeData theme) {
     final settings = toolConfig.toolSpecificSettings;
-    
+
     return [
       _buildSlider(
         context,
@@ -520,49 +523,141 @@ class PropertiesPanel extends StatelessWidget {
     ];
   }
 
-  Widget _buildSeverityPresets(BuildContext context, ThemeData theme) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildPresetButton(
-            context,
-            theme,
-            'Critical',
-            Colors.red,
-            () => onConfigChanged(ToolConfig.criticalPreset(selectedTool)),
+  List<Widget> _buildArrowToolProperties(BuildContext context, ThemeData theme) {
+    return [
+      // Arrow Color
+      _buildEnhancedColorPicker(
+        context,
+        theme,
+        'Arrow Color',
+        toolConfig.primaryColor,
+        (color) => onConfigChanged(toolConfig.copyWith(primaryColor: color)),
+      ),
+
+      const SizedBox(height: 12),
+
+      // Arrow Width
+      _buildSlider(
+        context,
+        theme,
+        'Arrow Width',
+        toolConfig.strokeWidth,
+        0.5,
+        10.0,
+        (value) => onConfigChanged(toolConfig.copyWith(strokeWidth: value)),
+      ),
+    ];
+  }
+
+  /// Gets the current preset ID based on current tool config
+  String? _getCurrentPresetId(List<ToolPreset> presets) {
+    // Try to find a preset that matches the current config
+    for (final preset in presets) {
+      if (_configsMatch(preset.config, toolConfig)) {
+        return preset.id;
+      }
+    }
+    return null; // No matching preset found
+  }
+
+  /// Checks if two configs are essentially the same for preset matching
+  bool _configsMatch(ToolConfig a, ToolConfig b) {
+    // Compare primary properties
+    if (a.tool != b.tool) return false;
+    if (a.primaryColor != b.primaryColor) return false;
+    if (a.secondaryColor != b.secondaryColor) return false;
+    if ((a.strokeWidth - b.strokeWidth).abs() > 0.1) return false;
+
+    // Compare tool-specific settings for key properties
+    final aSettings = a.toolSpecificSettings;
+    final bSettings = b.toolSpecificSettings;
+
+    // Check fill/stroke settings for vector tools
+    if (aSettings['hasFill'] != bSettings['hasFill']) return false;
+    if (aSettings['hasStroke'] != bSettings['hasStroke']) return false;
+
+    return true;
+  }
+
+  Widget _buildToolPresets(BuildContext context, ThemeData theme) {
+    final presets = ToolPresetManager.getPresetsForTool(selectedTool);
+    final currentPresetId = _getCurrentPresetId(presets);
+
+    if (presets.length <= 4) {
+      // Use button layout for 4 or fewer presets
+      return Row(
+        children: presets.map((preset) {
+          final isLast = preset == presets.last;
+          final isSelected = preset.id == currentPresetId;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: isLast ? 0 : 4),
+              child: _buildPresetButton(
+                context,
+                theme,
+                preset.name,
+                preset.previewColor ?? theme.colorScheme.primary,
+                () => onConfigChanged(preset.config),
+                isSelected: isSelected,
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    } else {
+      // Use dropdown for many presets
+      return _buildPresetDropdown(context, theme, presets, currentPresetId);
+    }
+  }
+
+  Widget _buildPresetDropdown(BuildContext context, ThemeData theme, List<ToolPreset> presets, String? currentPresetId) {
+    if (presets.isEmpty) {
+      return const SizedBox.shrink(); // Return empty widget if no presets
+    }
+
+    return DropdownButtonFormField<String>(
+      initialValue: currentPresetId ?? presets.first.id,
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _buildPresetButton(
-            context,
-            theme,
-            'High',
-            Colors.orange,
-            () => onConfigChanged(ToolConfig.highPreset(selectedTool)),
+        filled: true,
+        fillColor: theme.colorScheme.surface,
+      ),
+      items: presets.map((preset) {
+        return DropdownMenuItem(
+          value: preset.id,
+          child: Row(
+            children: [
+              if (preset.previewColor != null) ...[
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: preset.previewColor,
+                    borderRadius: BorderRadius.circular(2),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(preset.name),
+            ],
           ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _buildPresetButton(
-            context,
-            theme,
-            'Med',
-            Colors.amber,
-            () => onConfigChanged(ToolConfig.mediumPreset(selectedTool)),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _buildPresetButton(
-            context,
-            theme,
-            'Low',
-            Colors.green,
-            () => onConfigChanged(ToolConfig.lowPreset(selectedTool)),
-          ),
-        ),
-      ],
+        );
+      }).toList(),
+      onChanged: (presetId) {
+        if (presetId != null) {
+          final preset = presets.firstWhere((p) => p.id == presetId);
+          onConfigChanged(preset.config);
+        }
+      },
     );
   }
 
@@ -571,22 +666,31 @@ class PropertiesPanel extends StatelessWidget {
     ThemeData theme,
     String label,
     Color color,
-    VoidCallback onPressed,
-  ) {
+    VoidCallback onPressed, {
+    bool isSelected = false,
+  }) {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        backgroundColor: color.withValues(alpha: 0.1),
+        backgroundColor: isSelected
+          ? color.withValues(alpha: 0.2)
+          : color.withValues(alpha: 0.1),
         foregroundColor: color,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: color.withValues(alpha: 0.3)),
+          side: BorderSide(
+            color: isSelected ? color : color.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
         ),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+        ),
       ),
     );
   }
@@ -695,47 +799,6 @@ class PropertiesPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildColorPicker(
-    BuildContext context,
-    ThemeData theme,
-    String label,
-    Color currentColor,
-    ValueChanged<Color> onChanged,
-  ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.labelMedium,
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => _showColorPicker(context, currentColor, onChanged),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: currentColor == Colors.transparent ? Colors.white : currentColor,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
-              ),
-            ),
-            child: currentColor == Colors.transparent
-                ? Icon(
-                    Icons.close,
-                    size: 16,
-                    color: theme.colorScheme.onSurface,
-                  )
-                : null,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSlider(
     BuildContext context,
@@ -831,41 +894,61 @@ class PropertiesPanel extends StatelessWidget {
           title: const Text('Select Color'),
           content: SizedBox(
             width: 250,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: colors.length,
-              itemBuilder: (context, index) {
-                final color = colors[index];
-                final isTransparent = color == Colors.transparent;
-                return GestureDetector(
-                  onTap: () {
-                    onChanged(color);
-                    Navigator.of(context).pop();
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isTransparent ? Colors.white : color,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline,
-                        width: color == currentColor ? 3 : 1,
-                      ),
-                    ),
-                    child: isTransparent 
-                        ? Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          )
-                        : null,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
-                );
-              },
+                  itemCount: colors.length,
+                  itemBuilder: (context, index) {
+                    final color = colors[index];
+                    final isTransparent = color == Colors.transparent;
+                    return GestureDetector(
+                      onTap: () {
+                        onChanged(color);
+                        Navigator.of(context).pop();
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isTransparent ? Colors.white : color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline,
+                            width: color == currentColor ? 3 : 1,
+                          ),
+                        ),
+                        child: isTransparent
+                            ? Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )
+                            : null,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _showAdvancedColorPicker(context, currentColor, onChanged);
+                    },
+                    icon: const Icon(Icons.palette),
+                    label: const Text('More Colors...'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           actions: [
@@ -879,82 +962,388 @@ class PropertiesPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildStylePresetDropdown(BuildContext context, ThemeData theme) {
+  void _showAdvancedColorPicker(
+    BuildContext context,
+    Color currentColor,
+    ValueChanged<Color> onChanged,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return _AdvancedColorPickerDialog(
+          initialColor: currentColor,
+          onColorChanged: onChanged,
+        );
+      },
+    );
+  }
+
+  Widget _buildEnhancedColorPicker(
+    BuildContext context,
+    ThemeData theme,
+    String label,
+    Color currentColor,
+    ValueChanged<Color> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Style Preset',
-          style: theme.textTheme.labelSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 4),
-        DropdownButtonFormField<String>(
-          value: 'default',
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Current color display/picker
+              GestureDetector(
+                onTap: () => _showColorPicker(context, currentColor, onChanged),
+                child: Container(
+                  width: 40,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: currentColor == Colors.transparent ? Colors.white : currentColor,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: theme.colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  child: currentColor == Colors.transparent
+                      ? Icon(
+                          Icons.close,
+                          size: 16,
+                          color: theme.colorScheme.onSurface,
+                        )
+                      : null,
+                ),
               ),
-            ),
-            filled: true,
-            fillColor: theme.colorScheme.surface,
+              const SizedBox(width: 8),
+              // Quick color options
+              ...([
+                Colors.red,
+                Colors.orange,
+                Colors.yellow,
+                Colors.green,
+                Colors.blue,
+                Colors.purple,
+                Colors.black,
+                Colors.white,
+              ].map((color) => Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: GestureDetector(
+                  onTap: () => onChanged(color),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      border: Border.all(
+                        color: currentColor == color ? theme.colorScheme.primary : theme.colorScheme.outline,
+                        width: currentColor == color ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: color == Colors.white ? Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ) : null,
+                  ),
+                ),
+              ))),
+            ],
           ),
-          items: const [
-            DropdownMenuItem(value: 'default', child: Text('Default')),
-            DropdownMenuItem(value: 'highlight-red', child: Text('Highlight - Red')),
-            DropdownMenuItem(value: 'highlight-yellow', child: Text('Highlight - Yellow')),
-            DropdownMenuItem(value: 'professional', child: Text('Professional')),
-            DropdownMenuItem(value: 'minimal', child: Text('Minimal')),
-            DropdownMenuItem(value: 'custom', child: Text('Custom...')),
-          ],
-          onChanged: (value) {
-            if (value != null) {
-              _applyStylePreset(value);
-            }
-          },
         ),
       ],
     );
   }
 
-  void _applyStylePreset(String preset) {
-    ToolConfig newConfig;
-    
-    switch (preset) {
-      case 'highlight-red':
-        newConfig = toolConfig.copyWith(
-          primaryColor: const Color(0xFFDC2626),
-          strokeWidth: selectedTool == EditorTool.text ? 1.0 : 3.0,
-        );
-        break;
-      case 'highlight-yellow':
-        newConfig = toolConfig.copyWith(
-          primaryColor: const Color(0xFFEAB308),
-          strokeWidth: selectedTool == EditorTool.text ? 1.0 : 2.5,
-        );
-        break;
-      case 'professional':
-        newConfig = toolConfig.copyWith(
-          primaryColor: const Color(0xFF1F2937),
-          strokeWidth: selectedTool == EditorTool.text ? 1.0 : 2.0,
-        );
-        break;
-      case 'minimal':
-        newConfig = toolConfig.copyWith(
-          primaryColor: const Color(0xFF6B7280),
-          strokeWidth: selectedTool == EditorTool.text ? 1.0 : 1.5,
-        );
-        break;
-      case 'default':
-      default:
-        newConfig = ToolConfig(tool: selectedTool);
-        break;
+}
+
+class _AdvancedColorPickerDialog extends StatefulWidget {
+  final Color initialColor;
+  final ValueChanged<Color> onColorChanged;
+
+  const _AdvancedColorPickerDialog({
+    required this.initialColor,
+    required this.onColorChanged,
+  });
+
+  @override
+  State<_AdvancedColorPickerDialog> createState() => _AdvancedColorPickerDialogState();
+}
+
+class _AdvancedColorPickerDialogState extends State<_AdvancedColorPickerDialog> {
+  late Color _currentColor;
+  late double _hue;
+  late double _saturation;
+  late double _lightness;
+  late int _red;
+  late int _green;
+  late int _blue;
+  late int _alpha;
+
+  final TextEditingController _hexController = TextEditingController();
+  final TextEditingController _redController = TextEditingController();
+  final TextEditingController _greenController = TextEditingController();
+  final TextEditingController _blueController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _currentColor = widget.initialColor;
+    _updateFromColor(_currentColor);
+  }
+
+  void _updateFromColor(Color color) {
+    _red = (color.r * 255.0).round() & 0xff;
+    _green = (color.g * 255.0).round() & 0xff;
+    _blue = (color.b * 255.0).round() & 0xff;
+    _alpha = (color.a * 255.0).round() & 0xff;
+
+    final hsl = HSLColor.fromColor(color);
+    _hue = hsl.hue;
+    _saturation = hsl.saturation;
+    _lightness = hsl.lightness;
+
+    _hexController.text = '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+    _redController.text = _red.toString();
+    _greenController.text = _green.toString();
+    _blueController.text = _blue.toString();
+  }
+
+  void _updateFromHSL() {
+    final hslColor = HSLColor.fromAHSL(_alpha / 255.0, _hue, _saturation, _lightness);
+    _currentColor = hslColor.toColor();
+    _red = (_currentColor.r * 255.0).round() & 0xff;
+    _green = (_currentColor.g * 255.0).round() & 0xff;
+    _blue = (_currentColor.b * 255.0).round() & 0xff;
+    _hexController.text = '#${_currentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+    _redController.text = _red.toString();
+    _greenController.text = _green.toString();
+    _blueController.text = _blue.toString();
+  }
+
+  void _updateFromRGB() {
+    _currentColor = Color.fromARGB(_alpha, _red, _green, _blue);
+    final hsl = HSLColor.fromColor(_currentColor);
+    _hue = hsl.hue;
+    _saturation = hsl.saturation;
+    _lightness = hsl.lightness;
+    _hexController.text = '#${_currentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+  }
+
+  void _updateFromHex(String hex) {
+    try {
+      if (hex.startsWith('#')) hex = hex.substring(1);
+      if (hex.length == 6) hex = 'FF$hex';
+      final value = int.parse(hex, radix: 16);
+      _currentColor = Color(value);
+      _updateFromColor(_currentColor);
+    } catch (e) {
+      // Invalid hex, ignore
     }
-    
-    onConfigChanged(newConfig);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: const Text('Advanced Color Picker'),
+      content: SizedBox(
+        width: 350,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Color preview
+            Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                color: _currentColor,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.colorScheme.outline),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Hue slider
+            _buildHueSlider(theme),
+            const SizedBox(height: 8),
+
+            // Saturation slider
+            _buildSlider(
+              'Saturation',
+              _saturation,
+              0.0,
+              1.0,
+              (value) => setState(() {
+                _saturation = value;
+                _updateFromHSL();
+              }),
+              theme,
+            ),
+            const SizedBox(height: 8),
+
+            // Lightness slider
+            _buildSlider(
+              'Lightness',
+              _lightness,
+              0.0,
+              1.0,
+              (value) => setState(() {
+                _lightness = value;
+                _updateFromHSL();
+              }),
+              theme,
+            ),
+            const SizedBox(height: 16),
+
+            // RGB inputs
+            Row(
+              children: [
+                Expanded(
+                  child: _buildNumberField('R', _redController, 0, 255, (value) {
+                    _red = value;
+                    _updateFromRGB();
+                  }),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNumberField('G', _greenController, 0, 255, (value) {
+                    _green = value;
+                    _updateFromRGB();
+                  }),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNumberField('B', _blueController, 0, 255, (value) {
+                    _blue = value;
+                    _updateFromRGB();
+                  }),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Hex input
+            TextField(
+              controller: _hexController,
+              decoration: const InputDecoration(
+                labelText: 'Hex',
+                border: OutlineInputBorder(),
+                prefixText: '#',
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _updateFromHex(value);
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            widget.onColorChanged(_currentColor);
+            Navigator.of(context).pop();
+          },
+          child: const Text('Select'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHueSlider(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Hue', style: theme.textTheme.labelMedium),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 20,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+          ),
+          child: Slider(
+            value: _hue,
+            min: 0,
+            max: 360,
+            onChanged: (value) => setState(() {
+              _hue = value;
+              _updateFromHSL();
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlider(
+    String label,
+    double value,
+    double min,
+    double max,
+    ValueChanged<double> onChanged,
+    ThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(label, style: theme.textTheme.labelMedium),
+            const Spacer(),
+            Text('${(value * 100).round()}%', style: theme.textTheme.bodySmall),
+          ],
+        ),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNumberField(
+    String label,
+    TextEditingController controller,
+    int min,
+    int max,
+    ValueChanged<int> onChanged,
+  ) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      ),
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(3),
+      ],
+      onChanged: (value) {
+        final intValue = int.tryParse(value);
+        if (intValue != null && intValue >= min && intValue <= max) {
+          setState(() {
+            onChanged(intValue);
+          });
+        }
+      },
+    );
   }
 }

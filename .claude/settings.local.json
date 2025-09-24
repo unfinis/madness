@@ -299,7 +299,12 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/layers_panel.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/screenshot_properties_dialog.dart lib/screens/screenshot_editor_screen.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/editor_canvas.dart lib/screens/screenshot_editor_screen.dart --fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/editor_canvas.dart lib/screens/screenshot_editor_screen.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/editor_canvas.dart lib/screens/screenshot_editor_screen.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/tool_preset.dart lib/widgets/screenshot_editor/properties_panel.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/tool_preset.dart lib/widgets/screenshot_editor/properties_panel.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/properties_panel.dart lib/screens/screenshot_editor_screen.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/properties_panel.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/tool_preset.dart lib/widgets/screenshot_editor/properties_panel.dart lib/screens/screenshot_editor_screen.dart)"
     ],
     "deny": [],
     "ask": []
