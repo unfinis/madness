@@ -28,6 +28,7 @@ class EditorCanvas extends ConsumerStatefulWidget {
   final Function(Rect?)? onCropChanged; // Callback for crop changes
   final Rect? initialCropBounds; // Initial crop bounds from metadata
   final Function(ui.Image)? onImageReplaced; // Callback for image replacement
+  final VoidCallback? onCropStateChanged; // Callback when crop pending state changes
 
   const EditorCanvas({
     super.key,
@@ -48,6 +49,7 @@ class EditorCanvas extends ConsumerStatefulWidget {
     this.onCropChanged,
     this.initialCropBounds,
     this.onImageReplaced,
+    this.onCropStateChanged,
   });
 
   @override
@@ -202,9 +204,26 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
       _isCropMode = true;
       // Store previous crop bounds for cancellation
       _previousCropBounds = _activeCropBounds;
-      // Load existing crop bounds from screenshot metadata if they exist
-      _loadExistingCropBounds();
+
+      // Always set initial preview crop bounds when crop tool is activated
+      if (_activeCropBounds != null) {
+        // Start with existing crop as preview
+        _previewCropBounds = _activeCropBounds;
+      } else if (_backgroundImage != null) {
+        // Set to full image size as initial crop bounds
+        final imageSize = Size(
+          _backgroundImage!.width.toDouble(),
+          _backgroundImage!.height.toDouble(),
+        );
+        _previewCropBounds = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
+      } else {
+        // Fallback to a default size if no background image
+        _previewCropBounds = const Rect.fromLTWH(50, 50, 200, 150);
+      }
     });
+
+    // Notify parent that crop state has changed
+    widget.onCropStateChanged?.call();
   }
 
   void _deactivateCropMode() {
@@ -412,6 +431,28 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
 
   bool get hasPendingCrop => _previewCropBounds != null;
 
+  void enterCropMode() {
+    // When entering crop mode, store current crop state and show uncropped image
+    setState(() {
+      _previousCropBounds = _activeCropBounds;
+      // Don't clear _activeCropBounds yet - we need it for the initial crop bounds
+      // The key is that when _previewCropBounds is null but we're in crop mode,
+      // we show the uncropped image while still showing the crop bounds as guidelines
+      if (_activeCropBounds != null) {
+        _previewCropBounds = _activeCropBounds;
+      }
+    });
+  }
+
+  void exitCropMode() {
+    // When exiting crop mode without applying, restore previous state
+    setState(() {
+      _previewCropBounds = null;
+      _isCropResizing = false;
+      _cropResizeHandle = null;
+    });
+  }
+
   void _onCropChanged(Rect? cropBounds) {
     // Notify parent component about crop changes
     widget.onCropChanged?.call(cropBounds);
@@ -466,14 +507,21 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleCropDrawingUpdate(Offset canvasPoint) {
+    Offset snappedPoint = canvasPoint;
+
+    // Apply snapping if enabled
+    if (widget.enableSnapping) {
+      snappedPoint = _snapToGuides(canvasPoint);
+    }
+
     if (_isCropResizing && _cropResizeHandle != null && _initialLayerBounds != null) {
-      _handleCropResize(canvasPoint);
+      _handleCropResize(snappedPoint);
     } else if (_isDragging && _initialLayerBounds != null) {
-      _handleCropMove(canvasPoint);
+      _handleCropMove(snappedPoint);
     } else if (_isDrawing && _drawingStart != null) {
-      // Update crop rectangle drawing
+      // Update crop rectangle drawing with snapping
       setState(() {
-        _drawingEnd = canvasPoint;
+        _drawingEnd = snappedPoint;
       });
     }
   }
@@ -487,6 +535,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         setState(() {
           _previewCropBounds = cropRect;
         });
+        widget.onCropStateChanged?.call();
       }
     }
 
@@ -504,7 +553,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   void _handleCropResize(Offset currentPoint) {
-    final delta = currentPoint - _dragStart!;
+    Offset snappedPoint = currentPoint;
+
+    // Apply snapping if enabled
+    if (widget.enableSnapping) {
+      snappedPoint = _snapToGuides(currentPoint);
+    }
+
+    final delta = snappedPoint - _dragStart!;
     Rect newCropRect = _initialLayerBounds!;
 
     switch (_cropResizeHandle) {
@@ -577,17 +633,25 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     // Ensure minimum size and canvas bounds
     final renderBox = context.findRenderObject() as RenderBox?;
     final canvasSize = renderBox?.size ?? Size.zero;
+
+    // Clamp bounds safely
+    final clampedLeft = newCropRect.left.clamp(0.0, math.max(0.0, canvasSize.width - 20).toDouble());
+    final clampedTop = newCropRect.top.clamp(0.0, math.max(0.0, canvasSize.height - 20).toDouble());
+    final clampedRight = newCropRect.right.clamp(20.0, canvasSize.width);
+    final clampedBottom = newCropRect.bottom.clamp(20.0, canvasSize.height);
+
     newCropRect = Rect.fromLTRB(
-      newCropRect.left.clamp(0.0, canvasSize.width - 20),
-      newCropRect.top.clamp(0.0, canvasSize.height - 20),
-      newCropRect.right.clamp(20.0, canvasSize.width),
-      newCropRect.bottom.clamp(20.0, canvasSize.height),
+      clampedLeft,
+      clampedTop,
+      clampedRight,
+      clampedBottom,
     );
 
     if (newCropRect.width > 20 && newCropRect.height > 20) {
       setState(() {
         _previewCropBounds = newCropRect;
       });
+      widget.onCropStateChanged?.call();
     }
   }
 
@@ -598,16 +662,22 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     // Keep crop area within canvas bounds
     final renderBox = context.findRenderObject() as RenderBox?;
     final canvasSize = renderBox?.size ?? Size.zero;
-    final clampedRect = Rect.fromLTRB(
-      newCropRect.left.clamp(0.0, canvasSize.width - newCropRect.width),
-      newCropRect.top.clamp(0.0, canvasSize.height - newCropRect.height),
-      (newCropRect.left + newCropRect.width).clamp(newCropRect.width, canvasSize.width),
-      (newCropRect.top + newCropRect.height).clamp(newCropRect.height, canvasSize.height),
+
+    // Calculate max positions ensuring they're not negative
+    final maxLeft = math.max(0.0, canvasSize.width - newCropRect.width);
+    final maxTop = math.max(0.0, canvasSize.height - newCropRect.height);
+
+    final clampedRect = Rect.fromLTWH(
+      newCropRect.left.clamp(0.0, maxLeft),
+      newCropRect.top.clamp(0.0, maxTop),
+      newCropRect.width,
+      newCropRect.height,
     );
 
     setState(() {
       _previewCropBounds = clampedRect;
     });
+    widget.onCropStateChanged?.call();
   }
 
   EditorLayer? _findLayerAtPoint(Offset point) {
@@ -622,20 +692,60 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
 
   String? _getHandleAtPoint(Offset point, Rect bounds) {
     const handleSize = 16.0; // Increased from 8.0 for easier clicking
-    
+
     // Corner handles
     if ((point - bounds.topLeft).distance < handleSize) return 'tl';
     if ((point - bounds.topRight).distance < handleSize) return 'tr';
     if ((point - bounds.bottomLeft).distance < handleSize) return 'bl';
     if ((point - bounds.bottomRight).distance < handleSize) return 'br';
-    
+
     // Edge handles
     if ((point - Offset(bounds.center.dx, bounds.top)).distance < handleSize) return 't';
     if ((point - Offset(bounds.center.dx, bounds.bottom)).distance < handleSize) return 'b';
     if ((point - Offset(bounds.left, bounds.center.dy)).distance < handleSize) return 'l';
     if ((point - Offset(bounds.right, bounds.center.dy)).distance < handleSize) return 'r';
-    
+
     return null;
+  }
+
+  Offset _snapToGuides(Offset point) {
+    const snapDistance = 10.0;
+    double x = point.dx;
+    double y = point.dy;
+
+    // Snap to vertical guides
+    for (final guide in _verticalGuides) {
+      if ((x - guide).abs() < snapDistance) {
+        x = guide;
+        break;
+      }
+    }
+
+    // Snap to horizontal guides
+    for (final guide in _horizontalGuides) {
+      if ((y - guide).abs() < snapDistance) {
+        y = guide;
+        break;
+      }
+    }
+
+    // Snap to image edges if available
+    if (_backgroundImage != null) {
+      final imageWidth = _backgroundImage!.width.toDouble();
+      final imageHeight = _backgroundImage!.height.toDouble();
+
+      // Snap to edges
+      if (x.abs() < snapDistance) x = 0;
+      if ((x - imageWidth).abs() < snapDistance) x = imageWidth;
+      if (y.abs() < snapDistance) y = 0;
+      if ((y - imageHeight).abs() < snapDistance) y = imageHeight;
+
+      // Snap to center
+      if ((x - imageWidth / 2).abs() < snapDistance) x = imageWidth / 2;
+      if ((y - imageHeight / 2).abs() < snapDistance) y = imageHeight / 2;
+    }
+
+    return Offset(x, y);
   }
 
   String? _getGuideAtPoint(Offset point) {
@@ -1758,14 +1868,28 @@ class CanvasPainter extends CustomPainter {
         (size.height - scaledSize.height) / 2,
       );
 
-      // Always draw normal image without crop
-      final rect = Rect.fromLTWH(offset.dx, offset.dy, scaledSize.width, scaledSize.height);
+        final rect = Rect.fromLTWH(offset.dx, offset.dy, scaledSize.width, scaledSize.height);
       final srcRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
+
+      // Apply crop clipping to background image if there's an active crop (but not in crop editing mode)
+      bool shouldApplyCrop = activeCropBounds != null && cropRect == null;
+
+      if (shouldApplyCrop) {
+        canvas.save();
+        canvas.clipRect(activeCropBounds!);
+      }
+
+      // Draw background image (cropped if active crop exists and not in preview mode)
       canvas.drawImageRect(backgroundImage!, srcRect, rect, Paint());
+
+      if (shouldApplyCrop) {
+        canvas.restore();
+      }
     }
-    
-    // Apply global crop clipping if there's an active crop
-    if (activeCropBounds != null) {
+
+    // Apply global crop clipping for layers if there's an active crop (but not in crop editing mode)
+    bool shouldApplyLayerCrop = activeCropBounds != null && cropRect == null;
+    if (shouldApplyLayerCrop) {
       canvas.save();
       canvas.clipRect(activeCropBounds!);
     }
@@ -1775,8 +1899,8 @@ class CanvasPainter extends CustomPainter {
       _drawLayer(canvas, layer, size);
     }
 
-    // Restore canvas state if we applied global clipping
-    if (activeCropBounds != null) {
+    // Restore canvas state if we applied global clipping for layers
+    if (shouldApplyLayerCrop) {
       canvas.restore();
     }
     
@@ -2067,11 +2191,111 @@ class CanvasPainter extends CustomPainter {
   }
 
   void _drawCropBorder(Canvas canvas, Rect cropBounds, Size size) {
-    final paint = Paint()
+    // Draw translucent overlay for areas to be removed
+    final overlayPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.5)
+      ..style = PaintingStyle.fill;
+
+    // Draw overlay rectangles around the crop area (areas to be removed)
+    // Top area
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, cropBounds.top),
+      overlayPaint,
+    );
+    // Bottom area
+    canvas.drawRect(
+      Rect.fromLTWH(0, cropBounds.bottom, size.width, size.height - cropBounds.bottom),
+      overlayPaint,
+    );
+    // Left area
+    canvas.drawRect(
+      Rect.fromLTWH(0, cropBounds.top, cropBounds.left, cropBounds.height),
+      overlayPaint,
+    );
+    // Right area
+    canvas.drawRect(
+      Rect.fromLTWH(cropBounds.right, cropBounds.top, size.width - cropBounds.right, cropBounds.height),
+      overlayPaint,
+    );
+
+    // Draw crop border with dashed pattern
+    final borderPaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
-    canvas.drawRect(cropBounds, paint);
+
+    // Draw solid border
+    canvas.drawRect(cropBounds, borderPaint);
+
+    // Draw rule of thirds grid lines
+    final gridPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.3)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    // Vertical thirds
+    final thirdWidth = cropBounds.width / 3;
+    canvas.drawLine(
+      Offset(cropBounds.left + thirdWidth, cropBounds.top),
+      Offset(cropBounds.left + thirdWidth, cropBounds.bottom),
+      gridPaint,
+    );
+    canvas.drawLine(
+      Offset(cropBounds.left + thirdWidth * 2, cropBounds.top),
+      Offset(cropBounds.left + thirdWidth * 2, cropBounds.bottom),
+      gridPaint,
+    );
+
+    // Horizontal thirds
+    final thirdHeight = cropBounds.height / 3;
+    canvas.drawLine(
+      Offset(cropBounds.left, cropBounds.top + thirdHeight),
+      Offset(cropBounds.right, cropBounds.top + thirdHeight),
+      gridPaint,
+    );
+    canvas.drawLine(
+      Offset(cropBounds.left, cropBounds.top + thirdHeight * 2),
+      Offset(cropBounds.right, cropBounds.top + thirdHeight * 2),
+      gridPaint,
+    );
+
+    // Draw resize handles
+    _drawCropHandles(canvas, cropBounds);
+  }
+
+  void _drawCropHandles(Canvas canvas, Rect bounds) {
+    final handlePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final handleStrokePaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    const handleSize = 10.0;
+    const handleOffset = handleSize / 2;
+
+    // Helper function to draw a handle
+    void drawHandle(Offset center) {
+      final rect = Rect.fromCenter(
+        center: center,
+        width: handleSize,
+        height: handleSize,
+      );
+      canvas.drawRect(rect, handlePaint);
+      canvas.drawRect(rect, handleStrokePaint);
+    }
+
+    // Corner handles
+    drawHandle(bounds.topLeft);
+    drawHandle(bounds.topRight);
+    drawHandle(bounds.bottomLeft);
+    drawHandle(bounds.bottomRight);
+
+    // Edge handles
+    drawHandle(Offset(bounds.center.dx, bounds.top));
+    drawHandle(Offset(bounds.center.dx, bounds.bottom));
+    drawHandle(Offset(bounds.left, bounds.center.dy));
+    drawHandle(Offset(bounds.right, bounds.center.dy));
   }
 
   void _drawSelectionHandles(Canvas canvas, Rect bounds) {

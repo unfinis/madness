@@ -156,6 +156,19 @@ class _ScreenshotEditorScreenState
   }
 
   void _onToolSelected(EditorTool tool) {
+    // Handle crop tool transitions
+    final canvas = _canvasKey.currentState as dynamic;
+    if (canvas != null) {
+      // If switching away from crop tool, exit crop mode
+      if (_selectedTool == EditorTool.crop && tool != EditorTool.crop) {
+        canvas.exitCropMode();
+      }
+      // If switching to crop tool, enter crop mode
+      else if (_selectedTool != EditorTool.crop && tool == EditorTool.crop) {
+        canvas.enterCropMode();
+      }
+    }
+
     setState(() {
       _selectedTool = tool;
       _toolConfig = _getDefaultToolConfig(tool);
@@ -1018,6 +1031,7 @@ class _ScreenshotEditorScreenState
     final canvas = _canvasKey.currentState as dynamic;
     if (canvas != null && canvas.hasPendingCrop) {
       canvas.applyCrop();
+      canvas.exitCropMode(); // Exit crop mode before switching tool
       // Switch back to select tool after applying crop
       setState(() {
         _selectedTool = EditorTool.select;
@@ -1029,6 +1043,7 @@ class _ScreenshotEditorScreenState
     final canvas = _canvasKey.currentState as dynamic;
     if (canvas != null) {
       canvas.cancelCrop();
+      canvas.exitCropMode(); // Exit crop mode before switching tool
       // Switch back to select tool after canceling crop
       setState(() {
         _selectedTool = EditorTool.select;
@@ -1106,24 +1121,28 @@ class _ScreenshotEditorScreenState
             // Crop controls - shown when crop tool is active
             if (_isCropToolActive) ...[
               const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: _hasPendingCrop ? _applyCrop : null,
-                icon: const Icon(Icons.check, size: 18),
-                label: const Text('Apply'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _hasPendingCrop
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.surfaceContainerHighest,
-                  foregroundColor: _hasPendingCrop
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurfaceVariant,
+              // Apply crop button (tick icon like Photoshop) - always enabled when crop tool is active
+              IconButton(
+                onPressed: _applyCrop,
+                icon: const Icon(Icons.check_circle),
+                iconSize: 32,
+                color: _hasPendingCrop ? Colors.green : Colors.grey,
+                tooltip: 'Apply crop (Enter)',
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(width: 4),
-              OutlinedButton.icon(
+              // Cancel crop button (X icon like Photoshop)
+              IconButton(
                 onPressed: _cancelCrop,
-                icon: const Icon(Icons.close, size: 18),
-                label: const Text('Cancel'),
+                icon: const Icon(Icons.cancel),
+                iconSize: 32,
+                color: Colors.red,
+                tooltip: 'Cancel crop (Esc)',
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.8),
+                ),
               ),
             ],
 
@@ -1288,6 +1307,7 @@ class _ScreenshotEditorScreenState
                           onCropChanged: _onCropChanged,
                           initialCropBounds: _activeCropBounds,
                           onImageReplaced: _onImageReplaced,
+                          onCropStateChanged: () => setState(() {}),
                         ),
                       ),
                     ],
@@ -1398,6 +1418,7 @@ class _ScreenshotEditorScreenState
                 onCropChanged: _onCropChanged,
                 initialCropBounds: _activeCropBounds,
                 onImageReplaced: _onImageReplaced,
+                onCropStateChanged: () => setState(() {}),
               ),
             ),
           ),
