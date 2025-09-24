@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/editor_tool.dart';
 import '../models/editor_layer.dart';
 import '../models/editor_command.dart';
+import '../models/screenshot.dart';
 import '../services/screenshot_export_service.dart';
 import '../services/editor_history_service.dart';
 import '../providers/screenshot_providers.dart';
 import '../providers/database_provider.dart';
 import '../dialogs/export_screenshot_dialog.dart';
+import '../dialogs/screenshot_properties_dialog.dart';
 import '../widgets/screenshot_editor/editor_canvas.dart';
 import '../widgets/screenshot_editor/tool_panel.dart';
 import '../widgets/screenshot_editor/layers_panel.dart';
@@ -246,6 +248,61 @@ class _ScreenshotEditorScreenState
 
     if (result != null) {
       _onImageReplaced(result);
+    }
+  }
+
+  Future<void> _showPropertiesDialog() async {
+    final screenshotAsync = ref.read(screenshotProvider(widget.screenshotId));
+
+    screenshotAsync.when(
+      data: (screenshot) async {
+        if (screenshot != null) {
+          await showDialog(
+            context: context,
+            builder: (context) => ScreenshotPropertiesDialog(
+              screenshot: screenshot,
+              onSave: (updatedScreenshot) {
+                _updateScreenshotProperties(updatedScreenshot);
+              },
+            ),
+          );
+        }
+      },
+      loading: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loading screenshot data...')),
+        );
+      },
+      error: (error, stackTrace) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading screenshot: $error')),
+        );
+      },
+    );
+  }
+
+  void _updateScreenshotProperties(Screenshot updatedScreenshot) {
+    try {
+      // Update the screenshot via provider
+      ref.read(databaseProvider).updateScreenshot(updatedScreenshot, widget.projectId);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Screenshot properties updated: "${updatedScreenshot.name}"'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+
+      // Refresh the screenshot data
+      ref.refresh(screenshotProvider(widget.screenshotId));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating properties: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -1081,6 +1138,15 @@ class _ScreenshotEditorScreenState
               ),
             ),
 
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _showPropertiesDialog,
+              icon: const Icon(Icons.settings, size: 18),
+              label: const Text('Properties'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+              ),
+            ),
             const SizedBox(width: 8),
             FilledButton.icon(
               onPressed: _saveChanges,
