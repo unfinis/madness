@@ -118,6 +118,7 @@ class LayersPanel extends ConsumerWidget {
                 : ReorderableListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     itemCount: layers.length,
+                    buildDefaultDragHandles: false, // Disable automatic drag handles
                     onReorder: onLayerReorder != null
                         ? (oldIndex, newIndex) {
                             if (newIndex > oldIndex) newIndex -= 1;
@@ -384,11 +385,11 @@ class _LayerTileState extends State<_LayerTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return Container(
+
+    final tileContent = Container(
       margin: const EdgeInsets.symmetric(vertical: 1),
       decoration: BoxDecoration(
-        color: widget.isSelected 
+        color: widget.isSelected
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
             : null,
         borderRadius: BorderRadius.circular(6),
@@ -400,18 +401,6 @@ class _LayerTileState extends State<_LayerTile> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           children: [
-            // Drag handle (optional)
-            if (widget.showDragHandle) ...[
-              ReorderableDragStartListener(
-                index: widget.index, // Use the correct index for drag handling
-                child: Icon(
-                  Icons.drag_indicator,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
             
             // Layer type icon
             Container(
@@ -520,6 +509,14 @@ class _LayerTileState extends State<_LayerTile> {
         ),
       ),
     );
+
+    // Wrap with drag listener if drag is enabled
+    return widget.showDragHandle
+        ? ReorderableDragStartListener(
+            index: widget.index,
+            child: tileContent,
+          )
+        : tileContent;
   }
 
   IconData _getLayerIcon() {
