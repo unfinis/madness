@@ -535,7 +535,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
         final numValue = double.tryParse(value);
         if (numValue != null) {
           _updateCondition(groupIndex, condIndex, condition.copyWith(
-            initialValue: TriggerValue.number(numValue),
+            value: TriggerValue.number(numValue),
           ));
         }
       },

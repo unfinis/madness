@@ -138,7 +138,7 @@ class TaskQueueState {
 class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
   final Ref ref;
   final _uuid = const Uuid();
-  final TriggerEvaluator _evaluator = TriggerEvaluator();
+  // TriggerEvaluator only has static methods, no need for instance
   final Map<String, Set<String>> _processedTriggers = {};
 
   TaskQueueNotifier(this.ref) : super(const TaskQueueState()) {
@@ -212,7 +212,7 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
 
     for (final methodology in methodologies) {
       for (final trigger in methodology.triggers) {
-        final matches = _evaluator.findMatchingAssets(trigger, assets);
+        final matches = TriggerEvaluator.findMatchingAssets(trigger, assets);
 
         for (final match in matches) {
           _createOrUpdateTask(methodology, trigger, match);

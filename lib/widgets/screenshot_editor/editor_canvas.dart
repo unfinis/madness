@@ -2669,8 +2669,53 @@ class CanvasPainter extends CustomPainter {
   }
 
   void _drawGuides(Canvas canvas, Size size) {
-    // Guide drawing logic would go here
-    // For now, simple placeholder
+    if (!showGuides || backgroundImage == null) return;
+
+    final guidePaint = Paint()
+      ..color = Colors.blue.withValues(alpha: 0.6)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    // Calculate the same scaling and offset used for the background image
+    final imageSize = Size(backgroundImage!.width.toDouble(), backgroundImage!.height.toDouble());
+    final scaleX = size.width / imageSize.width;
+    final scaleY = size.height / imageSize.height;
+    final scale = math.min(scaleX, scaleY);
+
+    // Center the scaled image
+    final scaledSize = Size(imageSize.width * scale, imageSize.height * scale);
+    final offset = Offset(
+      (size.width - scaledSize.width) / 2,
+      (size.height - scaledSize.height) / 2,
+    );
+
+    // Draw vertical guides - convert from image coordinates to screen coordinates
+    for (final guideX in verticalGuides) {
+      if (guideX >= 0 && guideX <= imageSize.width) {
+        final screenX = offset.dx + (guideX * scale);
+        if (screenX >= 0 && screenX <= size.width) {
+          canvas.drawLine(
+            Offset(screenX, offset.dy),
+            Offset(screenX, offset.dy + scaledSize.height),
+            guidePaint,
+          );
+        }
+      }
+    }
+
+    // Draw horizontal guides - convert from image coordinates to screen coordinates
+    for (final guideY in horizontalGuides) {
+      if (guideY >= 0 && guideY <= imageSize.height) {
+        final screenY = offset.dy + (guideY * scale);
+        if (screenY >= 0 && screenY <= size.height) {
+          canvas.drawLine(
+            Offset(offset.dx, screenY),
+            Offset(offset.dx + scaledSize.width, screenY),
+            guidePaint,
+          );
+        }
+      }
+    }
   }
 
   Color _getPixelBlockColorSync(double imgX, double imgY, double blockSize) {

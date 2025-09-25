@@ -747,7 +747,7 @@ class AssetGraphPainter extends CustomPainter {
         break;
       case RelationshipType.related:
         paint.color = Colors.orange.withValues(alpha: 0.7 * animationValue);
-        paint.pathEffect = null; // Could implement dashed lines here
+        // Could implement dashed lines here using a custom path if needed
         break;
       case RelationshipType.dependency:
         paint.color = Colors.red.withValues(alpha: 0.7 * animationValue);

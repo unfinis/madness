@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/asset.dart';
+import '../models/assets.dart';
 
 class AssetTypeSelectorDialog extends StatefulWidget {
-  final Function(AssetType) onAssetTypeSelected;
+  final void Function(AssetType) onAssetTypeSelected;
 
   const AssetTypeSelectorDialog({
     super.key,
@@ -54,14 +54,14 @@ class _AssetTypeSelectorDialogState extends State<AssetTypeSelectorDialog> {
       examples: ['CVE-2023-1234', 'Weak Password Policy', 'Missing Patch'],
     ),
     AssetTypeInfo(
-      type: AssetType.domain,
-      title: 'Domain',
-      description: 'Active Directory domains and realms',
+      type: AssetType.authenticationSystem,
+      title: 'Domain/Auth System',
+      description: 'Active Directory domains and authentication systems',
       icon: Icons.domain,
-      examples: ['corp.local', 'WORKGROUP', 'Azure AD Tenant'],
+      examples: ['corp.local', 'Azure AD', 'LDAP Server'],
     ),
     AssetTypeInfo(
-      type: AssetType.wireless_network,
+      type: AssetType.wirelessNetwork,
       title: 'Wireless Network',
       description: 'WiFi networks and access points',
       icon: Icons.wifi,

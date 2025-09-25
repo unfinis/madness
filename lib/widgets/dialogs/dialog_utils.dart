@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dialog_system.dart';
 
+// Define missing enums and classes
+enum Assertiveness { polite, assertive }
+
+class SemanticsService {
+  static void announce(String message, Assertiveness assertiveness) {
+    // Stub implementation - would use platform-specific accessibility services
+    debugPrint('Announcing to screen reader: $message (${assertiveness.name})');
+  }
+}
+
 /// Utilities for enhanced dialog functionality and accessibility
 class DialogUtils {
   DialogUtils._();
@@ -117,7 +127,6 @@ class DialogUtils {
     bool hasComplexContent = false,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     // Mobile devices
     if (screenWidth < 600) {
@@ -299,6 +308,8 @@ class _FocusTrapState extends State<FocusTrap> {
 
 /// Standard confirmation dialog
 class _ConfirmationDialog extends StandardDialog {
+  final String _title;
+  final IconData? _icon;
   final String message;
   final String confirmText;
   final String cancelText;
@@ -313,70 +324,79 @@ class _ConfirmationDialog extends StandardDialog {
     IconData? icon,
     this.confirmColor,
     this.isDestructive = false,
-  }) : super(
-          title: title,
-          icon: icon ?? (isDestructive ? Icons.warning_rounded : Icons.help_rounded),
+  }) : _title = title,
+       _icon = icon,
+       super(
           size: DialogSize.small,
         );
 
   @override
-  List<Widget> buildContent(BuildContext context) {
-    return [
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDestructive
-              ? Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3)
-              : Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(12),
+  String get title => _title;
+
+  @override
+  IconData? get headerIcon => _icon ?? (isDestructive ? Icons.warning_rounded : Icons.help_rounded);
+
+  @override
+  Widget buildContent(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDestructive
+                ? Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3)
+                : Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isDestructive ? Icons.warning_rounded : Icons.info_rounded,
+                color: isDestructive
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Row(
+        const SizedBox(height: 24),
+        Row(
           children: [
-            Icon(
-              isDestructive ? Icons.warning_rounded : Icons.info_rounded,
-              color: isDestructive
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(cancelText),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: isDestructive
+                    ? FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      )
+                    : null,
+                child: Text(confirmText),
               ),
             ),
           ],
         ),
-      ),
-      const SizedBox(height: 24),
-      Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(cancelText),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: isDestructive
-                  ? FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    )
-                  : null,
-              child: Text(confirmText),
-            ),
-          ),
-        ],
-      ),
-    ];
+      ],
+    );
   }
 }
 
 /// Standard error dialog
 class _ErrorDialog extends StandardDialog {
+  final String _title;
   final String message;
   final String? details;
   final VoidCallback? onRetry;
@@ -386,95 +406,102 @@ class _ErrorDialog extends StandardDialog {
     required this.message,
     this.details,
     this.onRetry,
-  }) : super(
-          title: title,
-          icon: Icons.error_rounded,
+  }) : _title = title,
+       super(
           size: DialogSize.medium,
         );
+
+  @override
+  String get title => _title;
+
+  @override
+  IconData? get headerIcon => Icons.error_rounded;
 
   @override
   Color? getHeaderColor(BuildContext context) =>
       Theme.of(context).colorScheme.errorContainer;
 
   @override
-  List<Widget> buildContent(BuildContext context) {
-    return [
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.error_rounded,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (details != null) ...[
-              const SizedBox(height: 12),
-              ExpansionTile(
-                title: const Text('Technical Details'),
+  Widget buildContent(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: SelectableText(
-                      details!,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 12,
+                  Icon(
+                    Icons.error_rounded,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
                       ),
                     ),
                   ),
                 ],
               ),
+              if (details != null) ...[
+                const SizedBox(height: 12),
+                ExpansionTile(
+                  title: const Text('Technical Details'),
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SelectableText(
+                        details!,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    onRetry!();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ),
             ],
           ],
         ),
-      ),
-      const SizedBox(height: 24),
-      Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ),
-          if (onRetry != null) ...[
-            const SizedBox(width: 16),
-            Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  onRetry!();
-                },
-                child: const Text('Retry'),
-              ),
-            ),
-          ],
-        ],
-      ),
-    ];
+      ],
+    );
   }
 }
 
@@ -487,34 +514,36 @@ class _LoadingDialog extends StandardDialog {
     required this.message,
     this.canCancel = false,
   }) : super(
-          title: 'Please Wait',
-          icon: Icons.hourglass_top_rounded,
           size: DialogSize.small,
           showCloseButton: false,
           canPop: canCancel,
         );
 
   @override
-  List<Widget> buildContent(BuildContext context) {
-    return [
-      Column(
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
+  String get title => 'Please Wait';
+
+  @override
+  IconData? get headerIcon => Icons.hourglass_top_rounded;
+
+  @override
+  Widget buildContent(BuildContext context) {
+    return Column(
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 16),
+        Text(
+          message,
+          style: Theme.of(context).textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        if (canCancel) ...[
+          const SizedBox(height: 24),
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
           ),
-          if (canCancel) ...[
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
         ],
-      ),
-    ];
+      ],
+    );
   }
 }

@@ -58,6 +58,7 @@ dependencies:
   flutter_quill_extensions: ^11.0.0
   flutter_markdown: ^0.7.4+1
   cupertino_icons: ^1.0.8
+  image: ^4.2.0
 
 
 dev_dependencies:
@@ -92,6 +93,7 @@ flutter:
     - assets/icon/
     - assets/screenshots/
     - assets/questionnaire/
+    - assets/tessdata/
     - assets/methodologies/
     - assets/methodologies/network_segregation/
     - assets/methodologies/discovery/

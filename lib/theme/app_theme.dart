@@ -31,7 +31,6 @@ class AppTheme {
     onBackground: Color(0xFF1A1C1E),
     surface: Color(0xFFFDFCFF),
     onSurface: Color(0xFF1A1C1E),
-    surfaceContainerHighest: Color(0xFFDFE2EB),
     onSurfaceVariant: Color(0xFF43474E),
     inverseSurface: Color(0xFF2F3133),
     onInverseSurface: Color(0xFFF1F0F4),
@@ -66,7 +65,6 @@ class AppTheme {
     onBackground: Color(0xFFE2E2E6),
     surface: Color(0xFF111318),
     onSurface: Color(0xFFE2E2E6),
-    surfaceContainerHighest: Color(0xFF43474E),
     onSurfaceVariant: Color(0xFFC3C7CF),
     inverseSurface: Color(0xFFE2E2E6),
     onInverseSurface: Color(0xFF2F3133),
@@ -103,7 +101,7 @@ class AppTheme {
     ),
 
     // Card Theme
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
@@ -250,7 +248,7 @@ class AppTheme {
     ),
 
     // Dialog Theme
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: _lightColorScheme.surface,
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -340,7 +338,7 @@ class AppTheme {
     ),
 
     // Card Theme
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
@@ -487,7 +485,7 @@ class AppTheme {
     ),
 
     // Dialog Theme
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: _darkColorScheme.surface,
       elevation: 12,
       shape: RoundedRectangleBorder(

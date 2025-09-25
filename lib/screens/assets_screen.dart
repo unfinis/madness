@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/asset.dart';
+import '../models/assets.dart';
 import '../providers/projects_provider.dart';
 import '../providers/asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
