@@ -61,6 +61,7 @@ class AnalyzedTextBlock {
   final bool isConsoleOutput;
   final bool isUIElement;
   final List<Rect> lines;
+  final List<EnhancedLineRect> enhancedLines;
 
   const AnalyzedTextBlock({
     required this.text,
@@ -69,6 +70,7 @@ class AnalyzedTextBlock {
     required this.isConsoleOutput,
     required this.isUIElement,
     required this.lines,
+    required this.enhancedLines,
   });
 }
 
@@ -137,6 +139,7 @@ class AutoGuideGenerator {
         isConsoleOutput: isConsoleOutput,
         isUIElement: isUIElement,
         lines: textBlock.lines,
+        enhancedLines: textBlock.enhancedLines,
       ));
     }
 
@@ -281,6 +284,29 @@ class AutoGuideGenerator {
               confidence: 0.8,
             ));
           }
+
+          // Add console line start/end guides for precise text alignment
+          for (int i = 0; i < textBlock.enhancedLines.length; i++) {
+            final enhancedLine = textBlock.enhancedLines[i];
+
+            guides.add(AutoGuide(
+              id: 'console_${baseId}_line_${i}_start',
+              position: enhancedLine.textStartX,
+              isVertical: true,
+              category: 'Console',
+              description: 'Console line ${i + 1} text start',
+              confidence: 0.9,
+            ));
+
+            guides.add(AutoGuide(
+              id: 'console_${baseId}_line_${i}_end',
+              position: enhancedLine.textEndX,
+              isVertical: true,
+              category: 'Console',
+              description: 'Console line ${i + 1} text end',
+              confidence: 0.9,
+            ));
+          }
         }
       }
     }
@@ -335,6 +361,31 @@ class AutoGuideGenerator {
       confidence: 0.85,
     ));
 
+    // Add UI element text start/end guides for buttons and labels
+    if (textBlock.enhancedLines.isNotEmpty) {
+      for (int i = 0; i < textBlock.enhancedLines.length; i++) {
+        final enhancedLine = textBlock.enhancedLines[i];
+
+        guides.add(AutoGuide(
+          id: 'ui_${baseId}_text_start_$i',
+          position: enhancedLine.textStartX,
+          isVertical: true,
+          category: 'UI Element',
+          description: 'UI text start',
+          confidence: 0.8,
+        ));
+
+        guides.add(AutoGuide(
+          id: 'ui_${baseId}_text_end_$i',
+          position: enhancedLine.textEndX,
+          isVertical: true,
+          category: 'UI Element',
+          description: 'UI text end',
+          confidence: 0.8,
+        ));
+      }
+    }
+
     return guides;
   }
 
@@ -365,10 +416,11 @@ class AutoGuideGenerator {
       confidence: 0.7,
     ));
 
-    // Add line-by-line guides for text blocks too, if we have multiple lines
+    // Add comprehensive line guides including start/end positions
     if (textBlock.lines.length > 1) {
       for (int i = 0; i < textBlock.lines.length; i++) {
         final line = textBlock.lines[i];
+        final enhancedLine = textBlock.enhancedLines[i];
 
         // Add guide at top of each line
         guides.add(AutoGuide(
@@ -388,6 +440,25 @@ class AutoGuideGenerator {
           category: 'Text Block',
           description: 'Line ${i + 1} bottom',
           confidence: 0.6,
+        ));
+
+        // NEW: Add vertical guides at text start and end positions
+        guides.add(AutoGuide(
+          id: 'text_${baseId}_line_${i}_start',
+          position: enhancedLine.textStartX,
+          isVertical: true,
+          category: 'Text Block',
+          description: 'Line ${i + 1} text start',
+          confidence: 0.8,
+        ));
+
+        guides.add(AutoGuide(
+          id: 'text_${baseId}_line_${i}_end',
+          position: enhancedLine.textEndX,
+          isVertical: true,
+          category: 'Text Block',
+          description: 'Line ${i + 1} text end',
+          confidence: 0.8,
         ));
 
         // Add guides between lines

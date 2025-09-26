@@ -295,8 +295,8 @@ class PlatformTextRecognizer {
         final blockBounds = Rect.fromLTRB(minX, minY, maxX, maxY);
         final blockText = blockLines.map((l) => l.text).join(' ');
 
-        // Create line bounds for this block
-        final lineBounds = <Rect>[];
+        // Create enhanced line bounds for this block with start/end positions
+        final lineBounds = <EnhancedLineRect>[];
         final processedLineKeys = <String>{};
 
         for (final lineEntry in lineGroups.entries) {
@@ -306,12 +306,37 @@ class PlatformTextRecognizer {
           final lineWords = lineEntry.value;
           if (lineWords.isEmpty) continue;
 
+          // Calculate overall line bounds
           final lineMinX = lineWords.map((l) => l.left).reduce((a, b) => a < b ? a : b).toDouble();
           final lineMinY = lineWords.map((l) => l.top).reduce((a, b) => a < b ? a : b).toDouble();
           final lineMaxX = lineWords.map((l) => l.left + l.width).reduce((a, b) => a > b ? a : b).toDouble();
           final lineMaxY = lineWords.map((l) => l.top + l.height).reduce((a, b) => a > b ? a : b).toDouble();
 
-          lineBounds.add(Rect.fromLTRB(lineMinX, lineMinY, lineMaxX, lineMaxY));
+          // Find actual text start and end positions (leftmost and rightmost words with text)
+          final wordsWithText = lineWords.where((w) => w.text.trim().isNotEmpty).toList();
+          if (wordsWithText.isNotEmpty) {
+            // Sort words by horizontal position to find actual start/end
+            wordsWithText.sort((a, b) => a.left.compareTo(b.left));
+
+            final textStart = wordsWithText.first.left.toDouble();
+            final textEnd = (wordsWithText.last.left + wordsWithText.last.width).toDouble();
+
+            lineBounds.add(EnhancedLineRect(
+              bounds: Rect.fromLTRB(lineMinX, lineMinY, lineMaxX, lineMaxY),
+              textStartX: textStart,
+              textEndX: textEnd,
+              words: lineWords.length,
+            ));
+          } else {
+            // Fallback for lines without clear text
+            lineBounds.add(EnhancedLineRect(
+              bounds: Rect.fromLTRB(lineMinX, lineMinY, lineMaxX, lineMaxY),
+              textStartX: lineMinX,
+              textEndX: lineMaxX,
+              words: lineWords.length,
+            ));
+          }
+
           processedLineKeys.add(lineEntry.key);
         }
 
@@ -322,7 +347,7 @@ class PlatformTextRecognizer {
           text: blockText,
           bounds: blockBounds,
           confidence: 0.9,
-          lines: lineBounds,
+          enhancedLines: lineBounds,
         ));
       }
 
@@ -362,15 +387,26 @@ class PlatformTextRecognizer {
       imageHeight * 0.9,  // 90% height
     );
 
-    // Create line bounds
-    final lineBounds = <Rect>[];
+    // Create enhanced line bounds with estimated positions
+    final lineBounds = <EnhancedLineRect>[];
     final lineHeight = bounds.height / lines.length.clamp(1, 100);
     for (int i = 0; i < lines.length && i < 100; i++) {
-      lineBounds.add(Rect.fromLTWH(
+      final lineRect = Rect.fromLTWH(
         bounds.left,
         bounds.top + (i * lineHeight),
         bounds.width,
         lineHeight,
+      );
+
+      // For estimated positions, assume text starts after small indent and ends before right margin
+      final estimatedTextStart = bounds.left + (bounds.width * 0.02); // 2% indent
+      final estimatedTextEnd = bounds.right - (bounds.width * 0.02); // 2% right margin
+
+      lineBounds.add(EnhancedLineRect(
+        bounds: lineRect,
+        textStartX: estimatedTextStart,
+        textEndX: estimatedTextEnd,
+        words: 1, // Estimated
       ));
     }
 
@@ -378,7 +414,7 @@ class PlatformTextRecognizer {
       text: fullText,
       bounds: bounds,
       confidence: 0.75, // Lower confidence for estimated positions
-      lines: lineBounds,
+      enhancedLines: lineBounds,
     ));
 
     return textBlocks;
@@ -440,19 +476,61 @@ class TsvLine {
   }
 }
 
+/// Enhanced line rectangle with text start/end positions
+class EnhancedLineRect {
+  final Rect bounds;
+  final double textStartX;
+  final double textEndX;
+  final int words;
+
+  const EnhancedLineRect({
+    required this.bounds,
+    required this.textStartX,
+    required this.textEndX,
+    required this.words,
+  });
+
+  // Convenience getters for compatibility
+  double get left => bounds.left;
+  double get top => bounds.top;
+  double get right => bounds.right;
+  double get bottom => bounds.bottom;
+  double get width => bounds.width;
+  double get height => bounds.height;
+
+  @override
+  String toString() => 'EnhancedLineRect(bounds: $bounds, textStart: $textStartX, textEnd: $textEndX)';
+}
+
 /// Standardized text block representation
 class DetectedTextBlock {
   final String text;
   final Rect bounds;
   final double confidence;
-  final List<Rect> lines;
+  final List<EnhancedLineRect> enhancedLines;
+
+  // Legacy compatibility - convert enhanced lines to simple Rects
+  List<Rect> get lines => enhancedLines.map((line) => line.bounds).toList();
 
   const DetectedTextBlock({
     required this.text,
     required this.bounds,
     required this.confidence,
-    required this.lines,
+    required this.enhancedLines,
   });
+
+  // Legacy constructor for backward compatibility
+  DetectedTextBlock.fromSimpleLines({
+    required this.text,
+    required this.bounds,
+    required this.confidence,
+    required List<Rect> lines,
+  }) : enhancedLines = lines.map((rect) => EnhancedLineRect(
+          bounds: rect,
+          textStartX: rect.left,
+          textEndX: rect.right,
+          words: 1,
+        )).toList();
 
   @override
   String toString() => 'DetectedTextBlock(text: ${text.substring(0, text.length > 20 ? 20 : text.length)}..., bounds: $bounds)';

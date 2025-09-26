@@ -74,6 +74,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   Offset? _drawingStart;
   Offset? _drawingEnd;
   bool _isDrawing = false;
+  Offset? _lastCursorPosition;
   
   // Crop state - non-destructive crop that works on all layers
   Rect? _activeCropBounds; // Current confirmed crop bounds (from metadata)
@@ -1015,58 +1016,111 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     double x = point.dx;
     double y = point.dy;
 
-    // Snap to vertical guides
+    if (_backgroundImage == null) return point;
+
+    // Calculate the same scaling and offset used for the background image
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return point;
+
+    final size = renderBox.size;
+    final imageSize = Size(_backgroundImage!.width.toDouble(), _backgroundImage!.height.toDouble());
+    final scaleX = size.width / imageSize.width;
+    final scaleY = size.height / imageSize.height;
+    final scale = math.min(scaleX, scaleY);
+
+    // Center the scaled image
+    final scaledSize = Size(imageSize.width * scale, imageSize.height * scale);
+    final offset = Offset(
+      (size.width - scaledSize.width) / 2,
+      (size.height - scaledSize.height) / 2,
+    );
+
+    // Snap to vertical guides - convert from image coordinates to canvas coordinates
     for (final guide in _verticalGuides) {
-      if ((x - guide).abs() < snapDistance) {
-        x = guide;
-        break;
+      if (guide >= 0 && guide <= imageSize.width) {
+        final canvasGuideX = offset.dx + (guide * scale);
+        if ((x - canvasGuideX).abs() < snapDistance) {
+          x = canvasGuideX;
+          break;
+        }
       }
     }
 
-    // Snap to horizontal guides
+    // Snap to horizontal guides - convert from image coordinates to canvas coordinates
     for (final guide in _horizontalGuides) {
-      if ((y - guide).abs() < snapDistance) {
-        y = guide;
-        break;
+      if (guide >= 0 && guide <= imageSize.height) {
+        final canvasGuideY = offset.dy + (guide * scale);
+        if ((y - canvasGuideY).abs() < snapDistance) {
+          y = canvasGuideY;
+          break;
+        }
       }
     }
 
-    // Snap to image edges if available
-    if (_backgroundImage != null) {
-      final imageWidth = _backgroundImage!.width.toDouble();
-      final imageHeight = _backgroundImage!.height.toDouble();
+    // Snap to image edges
+    final imageLeft = offset.dx;
+    final imageRight = offset.dx + scaledSize.width;
+    final imageTop = offset.dy;
+    final imageBottom = offset.dy + scaledSize.height;
 
-      // Snap to edges
-      if (x.abs() < snapDistance) x = 0;
-      if ((x - imageWidth).abs() < snapDistance) x = imageWidth;
-      if (y.abs() < snapDistance) y = 0;
-      if ((y - imageHeight).abs() < snapDistance) y = imageHeight;
+    if ((x - imageLeft).abs() < snapDistance) x = imageLeft;
+    if ((x - imageRight).abs() < snapDistance) x = imageRight;
+    if ((y - imageTop).abs() < snapDistance) y = imageTop;
+    if ((y - imageBottom).abs() < snapDistance) y = imageBottom;
 
-      // Snap to center
-      if ((x - imageWidth / 2).abs() < snapDistance) x = imageWidth / 2;
-      if ((y - imageHeight / 2).abs() < snapDistance) y = imageHeight / 2;
-    }
+    // Snap to center
+    final centerX = offset.dx + scaledSize.width / 2;
+    final centerY = offset.dy + scaledSize.height / 2;
+    if ((x - centerX).abs() < snapDistance) x = centerX;
+    if ((y - centerY).abs() < snapDistance) y = centerY;
 
     return Offset(x, y);
   }
 
   String? _getGuideAtPoint(Offset point) {
     const guideSnapDistance = 8.0;
-    
-    // Check vertical guides
+
+    if (_backgroundImage == null) return null;
+
+    // Calculate the same scaling and offset used for the background image
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return null;
+
+    final size = renderBox.size;
+    final imageSize = Size(_backgroundImage!.width.toDouble(), _backgroundImage!.height.toDouble());
+    final scaleX = size.width / imageSize.width;
+    final scaleY = size.height / imageSize.height;
+    final scale = math.min(scaleX, scaleY);
+
+    // Center the scaled image
+    final scaledSize = Size(imageSize.width * scale, imageSize.height * scale);
+    final offset = Offset(
+      (size.width - scaledSize.width) / 2,
+      (size.height - scaledSize.height) / 2,
+    );
+
+    // Check vertical guides - convert from image coordinates to canvas coordinates
     for (int i = 0; i < _verticalGuides.length; i++) {
-      if ((point.dx - _verticalGuides[i]).abs() < guideSnapDistance) {
-        return 'v$i';
+      final guide = _verticalGuides[i];
+      if (guide >= 0 && guide <= imageSize.width) {
+        final canvasGuideX = offset.dx + (guide * scale);
+        if ((point.dx - canvasGuideX).abs() < guideSnapDistance) {
+          return 'v$i';
+        }
       }
     }
-    
-    // Check horizontal guides
+
+    // Check horizontal guides - convert from image coordinates to canvas coordinates
     for (int i = 0; i < _horizontalGuides.length; i++) {
-      if ((point.dy - _horizontalGuides[i]).abs() < guideSnapDistance) {
-        return 'h$i';
+      final guide = _horizontalGuides[i];
+      if (guide >= 0 && guide <= imageSize.height) {
+        final canvasGuideY = offset.dy + (guide * scale);
+        if ((point.dy - canvasGuideY).abs() < guideSnapDistance) {
+          return 'h$i';
+        }
       }
     }
-    
+
     return null;
   }
 
@@ -1282,6 +1336,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   void _handleDrawingStart(Offset point) {
     final canvasPoint = _screenToCanvasCoords(point);
 
+    // Debug: Print coordinate information
+    print('DEBUG - Drawing Start:');
+    print('  Screen point: ${point.dx.toInt()}, ${point.dy.toInt()}');
+    print('  Canvas point: ${canvasPoint.dx.toInt()}, ${canvasPoint.dy.toInt()}');
+
     if (widget.selectedTool == EditorTool.crop) {
       // Crop tool uses special handling
       _handleCropDrawingStart(canvasPoint);
@@ -1289,6 +1348,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     }
 
     final startPoint = _snapPoint(canvasPoint);
+    print('  Snapped point: ${startPoint.dx.toInt()}, ${startPoint.dy.toInt()}');
+
     setState(() {
       _isDrawing = true;
       _drawingStart = startPoint;
@@ -1336,34 +1397,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   }
 
   Offset _screenToCanvasCoords(Offset screenPoint) {
-    // Convert screen coordinates to canvas coordinates
-    // Get the render box to understand the actual widget layout
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return Offset.zero;
-    
-    final canvasSize = renderBox.size;
-    final containerSize = renderBox.size;
-    
-    // Account for the Center widget that centers the canvas within the container
-    // The canvas (800x600) is centered within the container
-    final centerOffset = Offset(
-      (containerSize.width - canvasSize.width * _zoom) / 2,
-      (containerSize.height - canvasSize.height * _zoom) / 2,
-    );
-    
-    // Transform from container coordinates to canvas coordinates
-    // 1. Subtract the center offset and pan offset
-    // 2. Divide by zoom to get canvas coordinates
-    final canvasPoint = Offset(
-      (screenPoint.dx - centerOffset.dx - _pan.dx) / _zoom,
-      (screenPoint.dy - centerOffset.dy - _pan.dy) / _zoom,
-    );
-    
-    // Clamp to canvas bounds
-    return Offset(
-      canvasPoint.dx.clamp(0, canvasSize.width),
-      canvasPoint.dy.clamp(0, canvasSize.height),
-    );
+    // Simply use the screen point directly since the Transform widget handles pan/zoom
+    // and we're working in the same coordinate space as the CustomPaint
+    return screenPoint;
   }
 
   TextLayer? _createNumberLabel(Offset position) {
@@ -1612,6 +1648,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         cursor: _getCursorForTool(widget.selectedTool),
         onHover: (event) {
           final canvasPoint = _screenToCanvasCoords(event.localPosition);
+          setState(() {
+            _lastCursorPosition = event.localPosition;
+          });
 
           // Track handle hover for crop tool
           if (widget.selectedTool == EditorTool.crop) {
@@ -2267,9 +2306,11 @@ class CanvasPainter extends CustomPainter {
         _drawSelectionHandles(canvas, selectedLayer.bounds!);
       }
     }
-    
+
     // Draw guides
     _drawGuides(canvas, size);
+
+    // Debug: Draw coordinate information (removed for now)
   }
 
   void _drawLayer(Canvas canvas, EditorLayer layer, Size canvasSize) {
@@ -2531,9 +2572,139 @@ class CanvasPainter extends CustomPainter {
 
 
   void _drawDrawingPreview(Canvas canvas, Size size) {
-    // Drawing preview logic would go here
-    // For now, simple placeholder
+    if (drawingStart == null || drawingEnd == null) return;
+
+    final paint = Paint()
+      ..isAntiAlias = true
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = toolConfig.strokeWidth
+      ..color = toolConfig.primaryColor.withValues(alpha: 0.7); // Semi-transparent for preview
+
+    switch (selectedTool) {
+      case EditorTool.highlightRect:
+        // Draw rectangle preview with optional fill
+        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
+        final hasFill = toolConfig.toolSpecificSettings['hasFill'] as bool? ?? false;
+        final hasStroke = toolConfig.toolSpecificSettings['hasStroke'] as bool? ?? true;
+
+        // Draw fill if enabled
+        if (hasFill) {
+          final fillPaint = Paint()
+            ..style = PaintingStyle.fill
+            ..color = (toolConfig.secondaryColor.alpha > 0
+                ? toolConfig.secondaryColor
+                : toolConfig.primaryColor.withValues(alpha: 0.3)).withValues(alpha: 0.5); // Semi-transparent for preview
+          canvas.drawRect(rect, fillPaint);
+        }
+
+        // Draw stroke if enabled
+        if (hasStroke) {
+          canvas.drawRect(rect, paint);
+        }
+        break;
+
+      case EditorTool.arrow:
+        // Draw arrow preview matching the existing arrow implementation
+        final arrowHeadSize = toolConfig.toolSpecificSettings['arrowHeadSize'] as double? ?? 15.0;
+        final arrowHeadAngle = toolConfig.toolSpecificSettings['arrowHeadAngle'] as double? ?? 0.5;
+
+        // Draw main arrow line
+        canvas.drawLine(drawingStart!, drawingEnd!, paint);
+
+        // Draw arrowhead using the same logic as _drawVectorElement
+        final direction = (drawingEnd! - drawingStart!).direction;
+        final arrowPoint1 = drawingEnd! + Offset.fromDirection(direction + math.pi - arrowHeadAngle, arrowHeadSize);
+        final arrowPoint2 = drawingEnd! + Offset.fromDirection(direction + math.pi + arrowHeadAngle, arrowHeadSize);
+
+        canvas.drawLine(drawingEnd!, arrowPoint1, paint);
+        canvas.drawLine(drawingEnd!, arrowPoint2, paint);
+        break;
+
+      case EditorTool.redactBlackout:
+      case EditorTool.redactBlur:
+      case EditorTool.redactPixelate:
+        // Draw redaction area preview as filled rectangle
+        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
+        paint.style = PaintingStyle.fill;
+        paint.color = selectedTool == EditorTool.redactBlackout
+            ? Colors.black.withValues(alpha: 0.7)
+            : Colors.grey.withValues(alpha: 0.7);
+        canvas.drawRect(rect, paint);
+
+        // Draw border
+        paint.style = PaintingStyle.stroke;
+        paint.color = paint.color.withValues(alpha: 1.0);
+        canvas.drawRect(rect, paint);
+        break;
+
+      case EditorTool.text:
+        // Draw text area preview as dashed rectangle
+        final rect = Rect.fromPoints(drawingStart!, drawingEnd!);
+        paint.strokeWidth = 1.0;
+        paint.color = toolConfig.primaryColor.withValues(alpha: 0.7);
+        _drawDashedRect(canvas, rect, paint);
+        break;
+
+      case EditorTool.numberLabel:
+        // Draw number label preview as circle
+        final center = (drawingStart! + drawingEnd!) / 2;
+        final radius = toolConfig.toolSpecificSettings['circleRadius'] as double? ?? 12.0;
+
+        // Draw circle background
+        final backgroundPaint = Paint()
+          ..style = PaintingStyle.fill
+          ..color = toolConfig.secondaryColor.withValues(alpha: 0.7);
+        canvas.drawCircle(center, radius, backgroundPaint);
+
+        // Draw circle border
+        paint.style = PaintingStyle.stroke;
+        canvas.drawCircle(center, radius, paint);
+        break;
+
+      default:
+        // For other tools, draw a simple line preview
+        canvas.drawLine(drawingStart!, drawingEnd!, paint);
+        break;
+    }
   }
+
+  void _drawDashedRect(Canvas canvas, Rect rect, Paint paint) {
+    const dashWidth = 5.0;
+    const dashSpace = 3.0;
+
+    // Top edge
+    _drawDashedLine(canvas, rect.topLeft, rect.topRight, paint, dashWidth, dashSpace);
+    // Right edge
+    _drawDashedLine(canvas, rect.topRight, rect.bottomRight, paint, dashWidth, dashSpace);
+    // Bottom edge
+    _drawDashedLine(canvas, rect.bottomRight, rect.bottomLeft, paint, dashWidth, dashSpace);
+    // Left edge
+    _drawDashedLine(canvas, rect.bottomLeft, rect.topLeft, paint, dashWidth, dashSpace);
+  }
+
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint, double dashWidth, double dashSpace) {
+    final direction = end - start;
+    final totalLength = direction.distance;
+    final normalizedDirection = direction / totalLength;
+
+    double currentLength = 0.0;
+    bool drawDash = true;
+
+    while (currentLength < totalLength) {
+      final segmentLength = drawDash ? dashWidth : dashSpace;
+      final segmentEnd = (currentLength + segmentLength).clamp(0.0, totalLength);
+
+      if (drawDash) {
+        final segmentStart = start + normalizedDirection * currentLength;
+        final segmentEndPoint = start + normalizedDirection * segmentEnd;
+        canvas.drawLine(segmentStart, segmentEndPoint, paint);
+      }
+
+      currentLength = segmentEnd;
+      drawDash = !drawDash;
+    }
+  }
+
 
   void _drawCropBorder(Canvas canvas, Rect cropBounds, Size size) {
     // Draw translucent overlay for areas to be removed

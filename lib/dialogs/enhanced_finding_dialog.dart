@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/finding.dart';
 import '../providers/finding_provider.dart';
 import '../constants/app_spacing.dart';
-import '../widgets/quill_rich_editor_widget.dart';
+import '../widgets/super_editor_widget.dart';
 
 class EnhancedFindingDialog extends ConsumerStatefulWidget {
   final Finding? finding;
@@ -368,8 +368,8 @@ Informational (0.0): No direct security impact
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
-            child: QuillRichEditorWidget(
-              initialText: _descriptionMarkdown,
+            child: SuperEditorWidget(
+              initialMarkdown: _descriptionMarkdown,
               hintText: '''Describe the finding in detail...
 
 Example structure:
@@ -378,7 +378,7 @@ Technical Details: Detailed technical explanation
 Impact: Potential impact on the system or business
 Proof of Concept: Steps to reproduce or evidence
 ''',
-              onChanged: (value) {
+              onMarkdownChanged: (value) {
                 _descriptionMarkdown = value;
                 _hasUnsavedChanges = true;
               },
@@ -409,8 +409,8 @@ Proof of Concept: Steps to reproduce or evidence
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
-            child: QuillRichEditorWidget(
-              initialText: _recommendationsMarkdown,
+            child: SuperEditorWidget(
+              initialMarkdown: _recommendationsMarkdown,
               hintText: '''Provide remediation recommendations...
 
 Example structure:
@@ -426,7 +426,7 @@ Additional Considerations:
 - Security best practices
 - Monitoring recommendations
 ''',
-              onChanged: (value) {
+              onMarkdownChanged: (value) {
                 _recommendationsMarkdown = value;
                 _hasUnsavedChanges = true;
               },

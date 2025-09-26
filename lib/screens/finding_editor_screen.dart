@@ -13,6 +13,7 @@ import '../widgets/template_selection_dialog.dart';
 import '../dialogs/add_component_dialog.dart';
 import '../dialogs/add_link_dialog.dart';
 import '../dialogs/screenshot_selection_dialog.dart';
+import '../widgets/super_editor_widget.dart';
 
 class FindingEditorScreen extends ConsumerStatefulWidget {
   final Finding? finding;
@@ -35,13 +36,9 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   
   // Form controllers
   late TextEditingController _titleController;
-  late TextEditingController _descriptionController;
   late TextEditingController _cvssScoreController;
   late TextEditingController _cvssVectorController;
-  late TextEditingController _auditStepsController;
   late TextEditingController _automatedScriptController;
-  late TextEditingController _furtherReadingController;
-  late TextEditingController _verificationController;
   
   // Form state
   FindingSeverity _selectedSeverity = FindingSeverity.medium;
@@ -49,6 +46,12 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   List<FindingComponent> _components = [];
   List<FindingLink> _links = [];
   List<String> _screenshotIds = [];
+
+  // Markdown content for rich text fields
+  String _descriptionMarkdown = '';
+  String _auditStepsMarkdown = '';
+  String _furtherReadingMarkdown = '';
+  String _verificationMarkdown = '';
   
   @override
   void initState() {
@@ -59,14 +62,16 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
     // Initialize controllers with existing data if editing
     final finding = widget.finding;
     _titleController = TextEditingController(text: finding?.title ?? '');
-    _descriptionController = TextEditingController(text: finding?.description ?? '');
     _cvssScoreController = TextEditingController(text: finding?.cvssScore.toString() ?? '');
     _cvssVectorController = TextEditingController(text: finding?.cvssVector ?? '');
-    _auditStepsController = TextEditingController(text: finding?.auditSteps ?? '');
     _automatedScriptController = TextEditingController(text: finding?.automatedScript ?? '');
-    _furtherReadingController = TextEditingController(text: finding?.furtherReading ?? '');
-    _verificationController = TextEditingController(text: finding?.verificationProcedure ?? '');
     
+    // Initialize markdown content
+    _descriptionMarkdown = finding?.description ?? '';
+    _auditStepsMarkdown = finding?.auditSteps ?? '';
+    _furtherReadingMarkdown = finding?.furtherReading ?? '';
+    _verificationMarkdown = finding?.verificationProcedure ?? '';
+
     if (finding != null) {
       _selectedSeverity = finding.severity;
       _selectedStatus = finding.status;
@@ -82,15 +87,11 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   void _setupChangeListeners() {
     final controllers = [
       _titleController,
-      _descriptionController,
       _cvssScoreController,
       _cvssVectorController,
-      _auditStepsController,
       _automatedScriptController,
-      _furtherReadingController,
-      _verificationController,
     ];
-    
+
     for (final controller in controllers) {
       controller.addListener(_markAsChanged);
     }
@@ -108,13 +109,9 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   void dispose() {
     _tabController.dispose();
     _titleController.dispose();
-    _descriptionController.dispose();
     _cvssScoreController.dispose();
     _cvssVectorController.dispose();
-    _auditStepsController.dispose();
     _automatedScriptController.dispose();
-    _furtherReadingController.dispose();
-    _verificationController.dispose();
     super.dispose();
   }
 
@@ -252,20 +249,20 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
           const SizedBox(height: 16),
           
           // Description
-          TextFormField(
-            controller: _descriptionController,
-            decoration: const InputDecoration(
-              labelText: 'Description',
-              hintText: 'Describe the security issue in detail...',
-              border: OutlineInputBorder(),
-              alignLabelWithHint: true,
+          Text(
+            'Description',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            maxLines: 6,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Description is required';
-              }
-              return null;
+          ),
+          const SizedBox(height: 8),
+          SuperEditorWidget(
+            initialMarkdown: _descriptionMarkdown,
+            hintText: 'Describe the security issue in detail...',
+            height: 200,
+            onMarkdownChanged: (value) {
+              _descriptionMarkdown = value;
+              _markAsChanged();
             },
           ),
           const SizedBox(height: 16),
@@ -426,14 +423,14 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 16),
-          TextFormField(
-            controller: _auditStepsController,
-            decoration: const InputDecoration(
-              hintText: 'Enter audit steps...\n\n1. Navigate to...\n2. Check for...\n3. Take screenshot...',
-              border: OutlineInputBorder(),
-              alignLabelWithHint: true,
-            ),
-            maxLines: 8,
+          SuperEditorWidget(
+            initialMarkdown: _auditStepsMarkdown,
+            hintText: 'Enter audit steps...\n\n1. Navigate to...\n2. Check for...\n3. Take screenshot...',
+            height: 250,
+            onMarkdownChanged: (value) {
+              _auditStepsMarkdown = value;
+              _markAsChanged();
+            },
           ),
           const SizedBox(height: 24),
           
@@ -477,14 +474,14 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 16),
-          TextFormField(
-            controller: _furtherReadingController,
-            decoration: const InputDecoration(
-              hintText: 'Enter additional information...',
-              border: OutlineInputBorder(),
-              alignLabelWithHint: true,
-            ),
-            maxLines: 6,
+          SuperEditorWidget(
+            initialMarkdown: _furtherReadingMarkdown,
+            hintText: 'Enter additional information...',
+            height: 200,
+            onMarkdownChanged: (value) {
+              _furtherReadingMarkdown = value;
+              _markAsChanged();
+            },
           ),
         ],
       ),
@@ -702,14 +699,14 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 16),
-          TextFormField(
-            controller: _verificationController,
-            decoration: const InputDecoration(
-              hintText: 'Enter verification steps...\n\n1. Navigate to settings\n2. Verify configuration\n3. Test functionality\n4. Document results',
-              border: OutlineInputBorder(),
-              alignLabelWithHint: true,
-            ),
-            maxLines: 10,
+          SuperEditorWidget(
+            initialMarkdown: _verificationMarkdown,
+            hintText: 'Enter verification steps...\n\n1. Navigate to settings\n2. Verify configuration\n3. Test functionality\n4. Document results',
+            height: 300,
+            onMarkdownChanged: (value) {
+              _verificationMarkdown = value;
+              _markAsChanged();
+            },
           ),
         ],
       ),
@@ -1753,14 +1750,14 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   void _applyTemplateToForm(SubFinding subFinding, FindingTemplate template) {
     setState(() {
       _titleController.text = subFinding.title;
-      _descriptionController.text = subFinding.description;
+      _descriptionMarkdown = subFinding.description;
       _cvssScoreController.text = subFinding.cvssScore.toString();
       _cvssVectorController.text = subFinding.cvssVector;
-      _auditStepsController.text = subFinding.checkSteps;
-      _verificationController.text = subFinding.verificationProcedure ?? '';
-      
+      _auditStepsMarkdown = subFinding.checkSteps;
+      _verificationMarkdown = subFinding.verificationProcedure ?? '';
+
       // Apply recommendation to further reading
-      _furtherReadingController.text = subFinding.recommendation;
+      _furtherReadingMarkdown = subFinding.recommendation;
       
       // Set severity based on the string value
       switch (subFinding.severity.toLowerCase()) {
@@ -1794,6 +1791,14 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
       return;
     }
 
+    // Validate markdown fields
+    if (_descriptionMarkdown.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Description is required')),
+      );
+      return;
+    }
+
     try {
       final currentProject = ref.read(currentProjectProvider);
       if (currentProject == null) {
@@ -1805,25 +1810,25 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
         id: widget.finding?.id ?? '',
         projectId: currentProject.id,
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
+        description: _descriptionMarkdown.trim().isEmpty ? '' : _descriptionMarkdown.trim(),
         cvssScore: score,
-        cvssVector: _cvssVectorController.text.trim().isEmpty 
-            ? null 
+        cvssVector: _cvssVectorController.text.trim().isEmpty
+            ? null
             : _cvssVectorController.text.trim(),
         severity: _selectedSeverity,
         status: _selectedStatus,
-        auditSteps: _auditStepsController.text.trim().isEmpty 
-            ? null 
-            : _auditStepsController.text.trim(),
-        automatedScript: _automatedScriptController.text.trim().isEmpty 
-            ? null 
+        auditSteps: _auditStepsMarkdown.trim().isEmpty
+            ? null
+            : _auditStepsMarkdown.trim(),
+        automatedScript: _automatedScriptController.text.trim().isEmpty
+            ? null
             : _automatedScriptController.text.trim(),
-        furtherReading: _furtherReadingController.text.trim().isEmpty 
-            ? null 
-            : _furtherReadingController.text.trim(),
-        verificationProcedure: _verificationController.text.trim().isEmpty 
-            ? null 
-            : _verificationController.text.trim(),
+        furtherReading: _furtherReadingMarkdown.trim().isEmpty
+            ? null
+            : _furtherReadingMarkdown.trim(),
+        verificationProcedure: _verificationMarkdown.trim().isEmpty
+            ? null
+            : _verificationMarkdown.trim(),
         createdDate: widget.finding?.createdDate ?? DateTime.now(),
         updatedDate: DateTime.now(),
         components: _components,
