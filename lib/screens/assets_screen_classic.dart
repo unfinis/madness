@@ -266,7 +266,7 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<AssetType?>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Type',
                     border: OutlineInputBorder(),
@@ -317,7 +317,7 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<AssetType?>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Type',
                     border: OutlineInputBorder(),
@@ -836,8 +836,8 @@ class _AssetsScreenClassicState extends ConsumerState<AssetsScreenClassic>
                 SnackBar(content: Text('Asset "${asset.name}" deleted')),
               );
             },
-            child: const Text('Delete'),
             style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Delete'),
           ),
         ],
       ),

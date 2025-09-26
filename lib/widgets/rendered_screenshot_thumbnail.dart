@@ -74,14 +74,12 @@ class _RenderedScreenshotThumbnailState extends State<RenderedScreenshotThumbnai
         thumbnail = await ScreenshotThumbnailService.generateThumbnailWithLayers(widget.screenshot);
 
         // Fallback to placeholder if generation failed
-        if (thumbnail == null) {
-          thumbnail = await ScreenshotThumbnailService.generatePlaceholderThumbnail(
+        thumbnail ??= await ScreenshotThumbnailService.generatePlaceholderThumbnail(
             backgroundColor: Colors.grey.shade200,
             iconColor: Colors.grey.shade400,
             icon: Icons.broken_image,
             text: 'Failed to load',
           );
-        }
       } else {
         // No image path - create empty placeholder
         thumbnail = await ScreenshotThumbnailService.generatePlaceholderThumbnail(

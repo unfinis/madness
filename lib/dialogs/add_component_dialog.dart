@@ -49,7 +49,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
     
     return AlertDialog(
       title: Text(isEditing ? 'Edit Component' : 'Add Component'),
-      content: Container(
+      content: SizedBox(
         width: 400,
         child: Form(
           key: _formKey,
@@ -58,7 +58,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
             children: [
               // Component Type
               DropdownButtonFormField<ComponentType>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Type',
                   border: OutlineInputBorder(),

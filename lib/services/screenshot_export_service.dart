@@ -1,9 +1,7 @@
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../models/screenshot.dart';
 import '../models/editor_layer.dart';
@@ -144,16 +142,14 @@ class ScreenshotExportService {
   }
   
   static Future<void> _renderTextLayer(Canvas canvas, TextLayer layer, Paint paint) async {
-    if (layer.bounds == null) return;
-    
     final textPainter = TextPainter(
       text: TextSpan(text: layer.text, style: layer.textStyle),
       textAlign: layer.textAlign,
       textDirection: TextDirection.ltr,
     );
     
-    textPainter.layout(maxWidth: layer.bounds!.width);
-    textPainter.paint(canvas, layer.bounds!.topLeft);
+    textPainter.layout(maxWidth: layer.bounds.width);
+    textPainter.paint(canvas, layer.bounds.topLeft);
   }
   
   // Convert blur radius to sigma for Gaussian blur
@@ -162,14 +158,12 @@ class ScreenshotExportService {
   }
 
   static Future<void> _renderRedactionLayer(Canvas canvas, RedactionLayer layer, Paint paint, ui.Image backgroundImage, ByteData? imagePixelData) async {
-    if (layer.bounds == null) return;
-
     switch (layer.redactionType) {
       case RedactionType.blackout:
         paint
           ..color = Colors.black.withValues(alpha: layer.opacity)
           ..style = PaintingStyle.fill;
-        canvas.drawRect(layer.bounds!, paint);
+        canvas.drawRect(layer.bounds, paint);
         break;
 
       case RedactionType.blur:
@@ -178,13 +172,13 @@ class ScreenshotExportService {
         paint
           ..color = Colors.grey.withValues(alpha: 0.5 * layer.opacity)
           ..style = PaintingStyle.fill;
-        canvas.drawRect(layer.bounds!, paint);
+        canvas.drawRect(layer.bounds, paint);
         break;
 
       case RedactionType.pixelate:
         // Draw pixelated redaction using real image sampling
         final pixelSize = layer.pixelSize.toDouble();
-        final bounds = layer.bounds!;
+        final bounds = layer.bounds;
 
         for (double x = bounds.left; x < bounds.right; x += pixelSize) {
           for (double y = bounds.top; y < bounds.bottom; y += pixelSize) {

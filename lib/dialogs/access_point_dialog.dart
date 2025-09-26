@@ -121,7 +121,7 @@ class _AccessPointDialogState extends ConsumerState<AccessPointDialog> {
 
                 // Access Type
                 DropdownButtonFormField<String>(
-                  value: _selectedAccessType,
+                  initialValue: _selectedAccessType,
                   decoration: const InputDecoration(
                     labelText: 'Access Type',
                     border: OutlineInputBorder(),
@@ -157,7 +157,7 @@ class _AccessPointDialogState extends ConsumerState<AccessPointDialog> {
                       children: [
                         // Source Asset (Host/Device)
                         DropdownButtonFormField<String>(
-                          value: _selectedSourceAssetId,
+                          initialValue: _selectedSourceAssetId,
                           decoration: const InputDecoration(
                             labelText: 'Source Host/Device (Optional)',
                             border: OutlineInputBorder(),
@@ -183,7 +183,7 @@ class _AccessPointDialogState extends ConsumerState<AccessPointDialog> {
 
                         // Source Network
                         DropdownButtonFormField<String>(
-                          value: _selectedSourceNetworkId,
+                          initialValue: _selectedSourceNetworkId,
                           decoration: const InputDecoration(
                             labelText: 'Source Network (Optional)',
                             border: OutlineInputBorder(),
@@ -209,7 +209,7 @@ class _AccessPointDialogState extends ConsumerState<AccessPointDialog> {
 
                         // Credentials
                         DropdownButtonFormField<String>(
-                          value: _selectedCredentialId,
+                          initialValue: _selectedCredentialId,
                           decoration: const InputDecoration(
                             labelText: 'Credentials (Optional)',
                             border: OutlineInputBorder(),

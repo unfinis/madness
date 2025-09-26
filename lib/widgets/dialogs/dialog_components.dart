@@ -130,7 +130,7 @@ class DialogComponents {
             color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           child: DropdownButtonFormField<T>(
-            value: value,
+            initialValue: value,
             decoration: InputDecoration(
               hintText: hintText,
               border: InputBorder.none,
@@ -715,7 +715,7 @@ class DialogComponents {
             Switch(
               value: value,
               onChanged: isEnabled ? onChanged : null,
-              activeColor: Theme.of(context).colorScheme.primary,
+              activeThumbColor: Theme.of(context).colorScheme.primary,
             ),
           ],
         ),

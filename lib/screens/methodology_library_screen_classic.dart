@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/projects_provider.dart';
-import '../providers/storage_provider.dart';
 import '../services/methodology_loader.dart';
 import '../widgets/common_state_widgets.dart';
 import '../widgets/standard_stats_bar.dart';
@@ -240,7 +239,7 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
 
   Widget _buildRiskLevelFilter() {
     return DropdownButtonFormField<String>(
-      value: _selectedRiskLevel,
+      initialValue: _selectedRiskLevel,
       decoration: const InputDecoration(
         labelText: 'Risk Level',
         border: OutlineInputBorder(),
@@ -263,7 +262,7 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
 
   Widget _buildSortByFilter() {
     return DropdownButtonFormField<String>(
-      value: _sortBy,
+      initialValue: _sortBy,
       decoration: const InputDecoration(
         labelText: 'Sort By',
         border: OutlineInputBorder(),
@@ -867,8 +866,8 @@ class _MethodologyLibraryScreenClassicState extends ConsumerState<MethodologyLib
                 SnackBar(content: Text('Methodology "${methodology.name}" deleted')),
               );
             },
-            child: const Text('Delete'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
           ),
         ],
       ),

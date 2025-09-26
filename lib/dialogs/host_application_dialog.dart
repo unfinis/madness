@@ -92,7 +92,7 @@ class _HostApplicationDialogState extends State<HostApplicationDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      child: Container(
+      child: SizedBox(
         width: 700,
         height: 800,
         child: Scaffold(
@@ -169,7 +169,7 @@ class _HostApplicationDialogState extends State<HostApplicationDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedType,
+                    initialValue: _selectedType,
                     decoration: const InputDecoration(
                       labelText: 'Application Type',
                       border: OutlineInputBorder(),
@@ -214,7 +214,7 @@ class _HostApplicationDialogState extends State<HostApplicationDialog> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedArchitecture,
+                    initialValue: _selectedArchitecture,
                     decoration: const InputDecoration(
                       labelText: 'Architecture',
                       border: OutlineInputBorder(),
@@ -315,7 +315,7 @@ class _HostApplicationDialogState extends State<HostApplicationDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedLicenseType,
+                    initialValue: _selectedLicenseType,
                     decoration: const InputDecoration(
                       labelText: 'License Type',
                       border: OutlineInputBorder(),

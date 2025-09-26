@@ -402,7 +402,7 @@ class _MethodologyTemplateEditorDialogState
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _riskLevel,
+                  initialValue: _riskLevel,
                   decoration: const InputDecoration(
                     labelText: 'Risk Level',
                     border: OutlineInputBorder(),
@@ -878,7 +878,7 @@ class _MethodologyTemplateEditorDialogState
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<String>(
-                  value: _riskLevel,
+                  initialValue: _riskLevel,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Select risk level',
@@ -979,7 +979,7 @@ class _MethodologyTemplateEditorDialogState
                     ],
                   ),
                 ),
-                Container(
+                SizedBox(
                   height: 300,
                   child: _currentMethodology.commands.isEmpty
                       ? _buildEmptyCommandsState()

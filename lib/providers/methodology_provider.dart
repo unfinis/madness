@@ -4,7 +4,6 @@ import '../models/methodology_execution.dart';
 import '../services/methodology_engine.dart';
 import '../services/methodology_service.dart';
 import 'projects_provider.dart';
-import 'task_queue_provider.dart';
 
 // Methodology service provider
 final methodologyServiceProvider = Provider<MethodologyService>((ref) {

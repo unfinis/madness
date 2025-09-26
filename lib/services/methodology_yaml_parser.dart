@@ -1,6 +1,5 @@
 import 'package:yaml/yaml.dart';
 import '../models/methodology.dart';
-import '../models/methodology_execution.dart';
 
 class MethodologyYamlParser {
   static Methodology parseYaml(String yamlContent) {

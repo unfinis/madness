@@ -1,4 +1,5 @@
 /// Multiple choice question widget
+library;
 import 'package:flutter/material.dart';
 import 'question_widget_base.dart';
 

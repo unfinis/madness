@@ -129,7 +129,7 @@ class AssetNotifier extends StateNotifier<AsyncValue<List<Asset>>> {
       final newAssets = [...currentAssets, asset];
       print('Updated asset list, now has ${newAssets.length} assets');
       state = AsyncValue.data(newAssets);
-    } catch (error, stackTrace) {
+    } catch (error) {
       print('Error adding asset: $error');
       // Revert optimistic update on error
       await loadAssets();
@@ -148,7 +148,7 @@ class AssetNotifier extends StateNotifier<AsyncValue<List<Asset>>> {
         a.id == asset.id ? asset : a
       ).toList();
       state = AsyncValue.data(updatedAssets);
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Revert optimistic update on error
       await loadAssets();
       rethrow;
@@ -164,7 +164,7 @@ class AssetNotifier extends StateNotifier<AsyncValue<List<Asset>>> {
       final currentAssets = state.value ?? [];
       final filteredAssets = currentAssets.where((a) => a.id != assetId).toList();
       state = AsyncValue.data(filteredAssets);
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Revert optimistic update on error
       await loadAssets();
       rethrow;

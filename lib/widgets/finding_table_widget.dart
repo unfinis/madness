@@ -257,12 +257,12 @@ class _FindingTableWidgetState extends ConsumerState<FindingTableWidget> {
         child: Theme(
           data: Theme.of(context).copyWith(
             dataTableTheme: DataTableThemeData(
-              headingRowColor: MaterialStateProperty.all(const Color(0xFFF8F9FF)),
-              dataRowColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.hovered)) {
+              headingRowColor: WidgetStateProperty.all(const Color(0xFFF8F9FF)),
+              dataRowColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.hovered)) {
                   return const Color(0xFFF0F2FF);
                 }
-                if (states.contains(MaterialState.selected)) {
+                if (states.contains(WidgetState.selected)) {
                   return const Color(0xFFE8EBFF);
                 }
                 return Colors.white;

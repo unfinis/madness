@@ -27,9 +27,7 @@ class ComprehensiveTriggerEvaluator {
       final triggers = template.triggers;
 
       for (final triggerData in triggers) {
-        final trigger = triggerData is loader.MethodologyTrigger
-            ? triggerData
-            : loader.MethodologyTrigger.fromJson(triggerData as Map<String, dynamic>);
+        final trigger = triggerData;
 
         // Check if trigger applies to this asset type
         if (!_isAssetTypeCompatible(trigger, asset)) {

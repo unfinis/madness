@@ -375,7 +375,7 @@ class _AssetRelationshipGraphState extends ConsumerState<AssetRelationshipGraph>
               animationValue: _animation.value,
               theme: Theme.of(context),
             ),
-            child: Container(
+            child: SizedBox(
               width: 800,
               height: 600,
               child: Stack(

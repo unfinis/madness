@@ -46,7 +46,7 @@ class ExpenseTableWidget extends ConsumerWidget {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columnSpacing: 20,
-            headingRowColor: MaterialStateProperty.all(
+            headingRowColor: WidgetStateProperty.all(
               Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             ),
             columns: const [

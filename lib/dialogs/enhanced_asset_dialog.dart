@@ -493,7 +493,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
           const SizedBox(height: 8),
         ],
         DropdownButtonFormField<String>(
-          value: value.isEmpty ? null : value,
+          initialValue: value.isEmpty ? null : value,
           decoration: InputDecoration(
             labelText: subtitle == null ? label : null,
             border: const OutlineInputBorder(),
@@ -659,7 +659,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                 [
                   if (widget.mode == AssetDialogMode.create)
                     DropdownButtonFormField<AssetType>(
-                      value: _selectedAssetType,
+                      initialValue: _selectedAssetType,
                       decoration: const InputDecoration(
                         labelText: 'Asset Type',
                         border: OutlineInputBorder(),
@@ -895,7 +895,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                 if (_nacEnabled == 'enabled') ...[
                   const SizedBox(height: AppSpacing.md),
                   DropdownButtonFormField<String>(
-                    value: _nacType.isEmpty ? null : _nacType,
+                    initialValue: _nacType.isEmpty ? null : _nacType,
                     decoration: const InputDecoration(
                       labelText: 'NAC Type',
                       border: OutlineInputBorder(),
@@ -913,7 +913,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                   ),
                   const SizedBox(height: AppSpacing.md),
                   DropdownButtonFormField<String>(
-                    value: _accessLevel,
+                    initialValue: _accessLevel,
                     decoration: const InputDecoration(
                       labelText: 'Access Level',
                       border: OutlineInputBorder(),
@@ -1091,7 +1091,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _osType.isEmpty ? null : _osType,
+                        initialValue: _osType.isEmpty ? null : _osType,
                         decoration: const InputDecoration(
                           labelText: 'Operating System',
                           border: OutlineInputBorder(),
@@ -1113,7 +1113,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _privilegeLevel,
+                        initialValue: _privilegeLevel,
                         decoration: const InputDecoration(
                           labelText: 'Access Level',
                           border: OutlineInputBorder(),
@@ -1205,7 +1205,7 @@ class _EnhancedAssetDialogState extends ConsumerState<EnhancedAssetDialog>
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _protocol,
+                        initialValue: _protocol,
                         decoration: const InputDecoration(
                           labelText: 'Protocol',
                           border: OutlineInputBorder(),

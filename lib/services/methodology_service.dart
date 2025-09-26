@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:yaml/yaml.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../models/methodology.dart';
@@ -643,7 +642,7 @@ class MethodologyService {
         throw MethodologyServiceException('Unknown methodology source');
     }
 
-    final fileName = '${methodologyId}.yaml';
+    final fileName = '$methodologyId.yaml';
     final sourceFile = File(path.join(sourceDir.path, fileName));
 
     if (!await sourceFile.exists()) {
@@ -674,7 +673,7 @@ class MethodologyService {
     }
 
     Directory targetDir = source == MethodologySource.custom ? _customDirectory : _importedDirectory;
-    final fileName = '${methodologyId}.yaml';
+    final fileName = '$methodologyId.yaml';
     final targetFile = File(path.join(targetDir.path, fileName));
 
     await targetFile.writeAsString(yamlContent);
@@ -694,7 +693,7 @@ class MethodologyService {
     }
 
     Directory sourceDir = source == MethodologySource.custom ? _customDirectory : _importedDirectory;
-    final fileName = '${methodologyId}.yaml';
+    final fileName = '$methodologyId.yaml';
     final sourceFile = File(path.join(sourceDir.path, fileName));
 
     if (await sourceFile.exists()) {
@@ -726,7 +725,7 @@ class MethodologyService {
         break;
     }
 
-    final fileName = '${methodologyId}.yaml';
+    final fileName = '$methodologyId.yaml';
     final sourceFile = File(path.join(sourceDir.path, fileName));
     final disabledFile = File(path.join(_disabledDirectory.path, fileName));
 
@@ -739,7 +738,7 @@ class MethodologyService {
   }
 
   Future<void> enableMethodology(String methodologyId, MethodologySource targetSource) async {
-    final fileName = '${methodologyId}.yaml';
+    final fileName = '$methodologyId.yaml';
     final disabledFile = File(path.join(_disabledDirectory.path, fileName));
 
     if (!await disabledFile.exists()) {
@@ -811,7 +810,7 @@ class MethodologyService {
         break;
     }
 
-    return path.join(sourceDir.path, '${methodologyId}.yaml');
+    return path.join(sourceDir.path, '$methodologyId.yaml');
   }
 }
 

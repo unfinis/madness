@@ -122,21 +122,21 @@ class TriggerEvaluationTestService {
       'assetType': networkSegment.type.name,
       'propertyCount': networkSegment.properties.length,
       'hasNacEnabled': networkSegment.properties.containsKey('nac_enabled'),
-      'passed': networkSegment.properties.length > 0,
+      'passed': networkSegment.properties.isNotEmpty,
     };
 
     tests['hostCreation'] = {
       'assetType': host.type.name,
       'propertyCount': host.properties.length,
       'hasIpAddress': host.properties.containsKey('ip_address'),
-      'passed': host.properties.length > 0,
+      'passed': host.properties.isNotEmpty,
     };
 
     tests['serviceCreation'] = {
       'assetType': service.type.name,
       'propertyCount': service.properties.length,
       'hasPort': service.properties.containsKey('port'),
-      'passed': service.properties.length > 0,
+      'passed': service.properties.isNotEmpty,
     };
 
     return tests;

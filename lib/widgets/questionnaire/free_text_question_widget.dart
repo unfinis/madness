@@ -1,4 +1,5 @@
 /// Free text question widget
+library;
 import 'package:flutter/material.dart';
 import 'question_widget_base.dart';
 

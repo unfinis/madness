@@ -189,7 +189,7 @@ class _AzureAssetDetailDialogState extends ConsumerState<AzureAssetDetailDialog>
             const SizedBox(height: 16),
             if (!_isEditing)
               DropdownButtonFormField<AssetType>(
-                value: _selectedAssetType,
+                initialValue: _selectedAssetType,
                 decoration: const InputDecoration(
                   labelText: 'Asset Type',
                   border: OutlineInputBorder(),
@@ -272,7 +272,7 @@ class _AzureAssetDetailDialogState extends ConsumerState<AzureAssetDetailDialog>
               ),
             ),
             const SizedBox(height: 16),
-            ...properties.entries.map((entry) => _buildPropertyField(entry.key, entry.value)).toList(),
+            ...properties.entries.map((entry) => _buildPropertyField(entry.key, entry.value)),
           ],
         ),
       ),

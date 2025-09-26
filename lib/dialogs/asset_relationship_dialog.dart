@@ -255,7 +255,7 @@ class _AssetRelationshipDialogState extends ConsumerState<AssetRelationshipDialo
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedRelationshipType,
+            initialValue: _selectedRelationshipType,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'Select relationship type',

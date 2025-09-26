@@ -27,7 +27,7 @@
 ///
 /// See README.md for complete documentation and examples.
 
-library dialog_system;
+library;
 
 // Core dialog system
 export 'dialog_system.dart';

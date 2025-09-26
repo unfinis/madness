@@ -5,7 +5,6 @@ import '../models/methodology_execution.dart';
 import '../models/scope.dart';
 import '../models/credential.dart';
 import '../services/trigger_evaluator.dart';
-import '../services/methodology_yaml_parser.dart';
 import 'methodology_provider.dart';
 import 'projects_provider.dart';
 import 'scope_provider.dart';

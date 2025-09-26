@@ -1,4 +1,5 @@
 /// Contact validation widget for team roles and stakeholder management
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/contact.dart';
@@ -220,7 +221,7 @@ class _ContactValidationQuestionWidgetState extends QuestionWidgetBaseState<Cont
           AppSpacing.vGapSM,
           
           DropdownButtonFormField<String?>(
-            value: assignedContactId,
+            initialValue: assignedContactId,
             decoration: InputDecoration(
               labelText: 'Select Contact',
               border: const OutlineInputBorder(),

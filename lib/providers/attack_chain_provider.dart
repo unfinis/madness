@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/attack_chain_service.dart';
-import '../services/methodology_engine.dart';
 import 'methodology_provider.dart';
-import 'projects_provider.dart';
 
 /// Provider for attack chain service
 final attackChainServiceProvider = Provider<AttackChainService>((ref) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/methodology_loader.dart';
 
@@ -36,7 +35,7 @@ class _EnhancedMethodologyDetailDialogState extends ConsumerState<EnhancedMethod
     final methodology = widget.methodology;
 
     return Dialog(
-      child: Container(
+      child: SizedBox(
         width: 900,
         height: 700,
         child: Column(

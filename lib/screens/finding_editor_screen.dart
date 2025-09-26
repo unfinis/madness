@@ -325,7 +325,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             children: [
               Expanded(
                 child: DropdownButtonFormField<FindingSeverity>(
-                  value: _selectedSeverity,
+                  initialValue: _selectedSeverity,
                   decoration: const InputDecoration(
                     labelText: 'Severity',
                     border: OutlineInputBorder(),
@@ -362,7 +362,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<FindingStatus>(
-                  value: _selectedStatus,
+                  initialValue: _selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Status',
                     border: OutlineInputBorder(),

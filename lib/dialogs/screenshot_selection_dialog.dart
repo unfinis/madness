@@ -37,7 +37,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
     final screenshotsAsync = ref.watch(projectScreenshotsProvider(widget.projectId));
 
     return Dialog(
-      child: Container(
+      child: SizedBox(
         width: 800,
         height: 600,
         child: Column(
@@ -109,7 +109,7 @@ class _ScreenshotSelectionDialogState extends ConsumerState<ScreenshotSelectionD
                   SizedBox(
                     width: 150,
                     child: DropdownButtonFormField<String>(
-                      value: _selectedCategory,
+                      initialValue: _selectedCategory,
                       decoration: const InputDecoration(
                         labelText: 'Category',
                         border: OutlineInputBorder(),

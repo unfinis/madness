@@ -171,7 +171,7 @@ class _AdAssetDetailDialogState extends ConsumerState<AdAssetDetailDialog> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<AssetType>(
-          value: _selectedAssetType,
+          initialValue: _selectedAssetType,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Select asset type',
@@ -279,7 +279,7 @@ class _AdAssetDetailDialogState extends ConsumerState<AdAssetDetailDialog> {
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildPropertyField(key, type),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -352,7 +352,7 @@ class _AdAssetDetailDialogState extends ConsumerState<AdAssetDetailDialog> {
                         ),
                       ],
                     );
-                  }).toList(),
+                  }),
                   Row(
                     children: [
                       Expanded(

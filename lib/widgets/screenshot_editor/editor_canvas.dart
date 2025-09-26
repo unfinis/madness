@@ -1,7 +1,6 @@
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -985,7 +984,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   EditorLayer? _findLayerAtPoint(Offset point) {
     // Search layers in reverse order (top to bottom)
     for (final layer in widget.layers.reversed) {
-      if (layer.bounds?.contains(point) == true) {
+      if (layer.bounds.contains(point) == true) {
         return layer;
       }
     }
@@ -1151,8 +1150,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     // Snap to other layer bounds (medium priority)
     if (!snappedToGuide) {
       for (final layer in widget.layers) {
-        if (layer.bounds != null && layer.visible) {
-          final bounds = layer.bounds!;
+        if (layer.visible) {
+          final bounds = layer.bounds;
           
           // Snap to edges
           if ((point.dx - bounds.left).abs() < snapDistance && snappedX == point.dx) {
@@ -1669,15 +1668,13 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
               orElse: () => widget.layers.first,
             );
 
-            if (selectedLayer.bounds != null) {
-              final handle = _getHandleAtPoint(canvasPoint, selectedLayer.bounds!);
-              if (_hoverHandle != handle) {
-                setState(() {
-                  _hoverHandle = handle;
-                });
-              }
+            final handle = _getHandleAtPoint(canvasPoint, selectedLayer.bounds);
+            if (_hoverHandle != handle) {
+              setState(() {
+                _hoverHandle = handle;
+              });
             }
-          } else if (_hoverHandle != null) {
+                    } else if (_hoverHandle != null) {
             setState(() {
               _hoverHandle = null;
             });
@@ -1786,20 +1783,18 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
           // Handle object selection, resizing, and dragging
           if (_selectedLayerId != null) {
             final selectedLayer = widget.layers.firstWhere((l) => l.id == _selectedLayerId);
-            if (selectedLayer.bounds != null) {
-              final handle = _getHandleAtPoint(canvasPoint, selectedLayer.bounds!);
-              if (handle != null) {
-                // Start resizing
-                setState(() {
-                  _resizeHandle = handle;
-                  _isResizing = true;
-                  _dragStart = canvasPoint;
-                  _initialLayerBounds = selectedLayer.bounds;
-                });
-                return;
-              }
+            final handle = _getHandleAtPoint(canvasPoint, selectedLayer.bounds);
+            if (handle != null) {
+              // Start resizing
+              setState(() {
+                _resizeHandle = handle;
+                _isResizing = true;
+                _dragStart = canvasPoint;
+                _initialLayerBounds = selectedLayer.bounds;
+              });
+              return;
             }
-          }
+                    }
           
           final layer = _findLayerAtPoint(canvasPoint);
           if (layer != null) {
@@ -1851,7 +1846,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
             setState(() {
               _selectedLayerId = layer.id;
               _dragStart = canvasPoint;
-              _initialLayerPosition = layer.bounds?.topLeft ?? Offset.zero;
+              _initialLayerPosition = layer.bounds.topLeft ?? Offset.zero;
               _initialLayerBounds = layer.bounds;
               _isDragging = true;
             });
@@ -2296,10 +2291,8 @@ class CanvasPainter extends CustomPainter {
     // Draw selection handles for select and move tools
     if ((selectedTool == EditorTool.select || selectedTool == EditorTool.move) && selectedLayerId != null) {
       final selectedLayer = layers.firstWhere((l) => l.id == selectedLayerId, orElse: () => layers.first);
-      if (selectedLayer.bounds != null) {
-        _drawSelectionHandles(canvas, selectedLayer.bounds!);
-      }
-    }
+      _drawSelectionHandles(canvas, selectedLayer.bounds);
+        }
 
     // Draw guides
     _drawGuides(canvas, size);
@@ -2405,14 +2398,11 @@ class CanvasPainter extends CustomPainter {
   }
 
   void _drawTextLayer(Canvas canvas, TextLayer layer) {
-    if (layer.bounds == null) return;
-    
-    // Check if this is a number label
     final isNumberLabel = layer.metadata['isNumberLabel'] == true;
     
     if (isNumberLabel) {
       // Draw number label with circular background
-      final center = layer.bounds!.center;
+      final center = layer.bounds.center;
       final radius = layer.metadata['circleRadius']?.toDouble() ?? 16.0;
       final backgroundColor = Color(layer.metadata['backgroundColor'] ?? Colors.red.value);
       
@@ -2455,14 +2445,12 @@ class CanvasPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       
-      textPainter.layout(maxWidth: layer.bounds!.width);
-      textPainter.paint(canvas, layer.bounds!.topLeft);
+      textPainter.layout(maxWidth: layer.bounds.width);
+      textPainter.paint(canvas, layer.bounds.topLeft);
     }
   }
 
   void _drawRedactionLayer(Canvas canvas, RedactionLayer layer, Size canvasSize) {
-    if (layer.bounds == null) return;
-    
     final paint = Paint();
     
     switch (layer.redactionType) {
@@ -2470,7 +2458,7 @@ class CanvasPainter extends CustomPainter {
         paint
           ..color = Colors.black.withValues(alpha: layer.opacity)
           ..style = PaintingStyle.fill;
-        canvas.drawRect(layer.bounds!, paint);
+        canvas.drawRect(layer.bounds, paint);
         break;
         
       case RedactionType.blur:
@@ -2493,10 +2481,10 @@ class CanvasPainter extends CustomPainter {
           
           // Convert bounds from canvas coordinates to image coordinates  
           final srcRect = Rect.fromLTWH(
-            (layer.bounds!.left - imageOffset.dx) / scale,
-            (layer.bounds!.top - imageOffset.dy) / scale,
-            layer.bounds!.width / scale,
-            layer.bounds!.height / scale,
+            (layer.bounds.left - imageOffset.dx) / scale,
+            (layer.bounds.top - imageOffset.dy) / scale,
+            layer.bounds.width / scale,
+            layer.bounds.height / scale,
           );
           
           // Draw the background image portion with blur
@@ -2504,7 +2492,7 @@ class CanvasPainter extends CustomPainter {
             ..imageFilter = ui.ImageFilter.blur(sigmaX: layer.blurRadius, sigmaY: layer.blurRadius)
             ..color = Colors.white.withValues(alpha: layer.opacity);
           
-          canvas.drawImageRect(backgroundImage!, srcRect, layer.bounds!, blurPaint);
+          canvas.drawImageRect(backgroundImage!, srcRect, layer.bounds, blurPaint);
         }
         
         canvas.restore();
@@ -2530,7 +2518,7 @@ class CanvasPainter extends CustomPainter {
           
           // Pixelate by drawing small rects with average color from image blocks
           final pixelSize = layer.pixelSize.toDouble();
-          final bounds = layer.bounds!;
+          final bounds = layer.bounds;
 
           for (double x = bounds.left; x < bounds.right; x += pixelSize) {
             for (double y = bounds.top; y < bounds.bottom; y += pixelSize) {

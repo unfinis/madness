@@ -53,8 +53,9 @@ class _CVSSCalculatorDialogState extends State<CVSSCalculatorDialog> {
   void _parseVector(String vector) {
     final parts = vector.split('/');
     for (final part in parts) {
-      if (part.startsWith('AV:')) _attackVector = part.substring(3);
-      else if (part.startsWith('AC:')) _attackComplexity = part.substring(3);
+      if (part.startsWith('AV:')) {
+        _attackVector = part.substring(3);
+      } else if (part.startsWith('AC:')) _attackComplexity = part.substring(3);
       else if (part.startsWith('PR:')) _privilegesRequired = part.substring(3);
       else if (part.startsWith('UI:')) _userInteraction = part.substring(3);
       else if (part.startsWith('S:')) _scope = part.substring(2);

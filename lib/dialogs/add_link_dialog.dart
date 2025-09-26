@@ -40,7 +40,7 @@ class _AddLinkDialogState extends State<AddLinkDialog> {
     
     return AlertDialog(
       title: Text(isEditing ? 'Edit Link' : 'Add Link'),
-      content: Container(
+      content: SizedBox(
         width: 400,
         child: Form(
           key: _formKey,

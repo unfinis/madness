@@ -294,7 +294,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
                 _buildConditionGroup(index, group),
               ],
             );
-          }).toList(),
+          }),
       ],
     );
   }
@@ -355,7 +355,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
                   _buildCondition(groupIndex, condIndex, condition),
                 ],
               );
-            }).toList(),
+            }),
             const SizedBox(height: AppSpacing.md),
             ElevatedButton.icon(
               onPressed: () => _addCondition(groupIndex),
@@ -397,7 +397,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<AssetType>(
-                  value: condition.assetType,
+                  initialValue: condition.assetType,
                   decoration: const InputDecoration(labelText: 'Asset Type'),
                   items: AssetType.values.map((type) => DropdownMenuItem(
                     value: type,
@@ -417,7 +417,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
-                  value: condition.property,
+                  initialValue: condition.property,
                   decoration: const InputDecoration(labelText: 'Property'),
                   items: assetProperties.map((prop) => DropdownMenuItem(
                     value: prop.name,
@@ -434,7 +434,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
               Expanded(
                 flex: 1,
                 child: DropdownButtonFormField<TriggerOperator>(
-                  value: condition.operator,
+                  initialValue: condition.operator,
                   decoration: const InputDecoration(labelText: 'Operator'),
                   items: TriggerOperator.values.map((op) => DropdownMenuItem(
                     value: op,
@@ -491,7 +491,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
 
     if (property.allowedValues?.isNotEmpty == true) {
       return DropdownButtonFormField<String>(
-        value: property.allowedValues!.contains(currentValue) ? currentValue : null,
+        initialValue: property.allowedValues!.contains(currentValue) ? currentValue : null,
         decoration: const InputDecoration(labelText: 'Value'),
         items: [
           const DropdownMenuItem(value: null, child: Text('-- Select Value --')),
@@ -549,7 +549,7 @@ class _TriggerBuilderWidgetState extends ConsumerState<TriggerBuilderWidget> {
     );
 
     return DropdownButtonFormField<bool>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: const InputDecoration(labelText: 'Value'),
       items: const [
         DropdownMenuItem(value: true, child: Text('True')),

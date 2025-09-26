@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/projects_provider.dart';
@@ -246,7 +245,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
 
   Widget _buildRiskLevelFilter() {
     return DropdownButtonFormField<String>(
-      value: _selectedRiskLevel,
+      initialValue: _selectedRiskLevel,
       decoration: const InputDecoration(
         labelText: 'Risk Level',
         border: OutlineInputBorder(),
@@ -269,7 +268,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
 
   Widget _buildSortByFilter() {
     return DropdownButtonFormField<String>(
-      value: _sortBy,
+      initialValue: _sortBy,
       decoration: const InputDecoration(
         labelText: 'Sort By',
         border: OutlineInputBorder(),

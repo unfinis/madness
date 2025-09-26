@@ -209,7 +209,7 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
         ),
         const SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<MethodologyStep>(
-          value: _selectedStep,
+          initialValue: _selectedStep,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Choose a step to execute',

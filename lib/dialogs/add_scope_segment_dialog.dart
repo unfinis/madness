@@ -244,7 +244,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
             color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           child: DropdownButtonFormField<ScopeSegmentType>(
-            value: _selectedType,
+            initialValue: _selectedType,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -293,7 +293,7 @@ class _AddScopeSegmentDialogState extends ConsumerState<AddScopeSegmentDialog> {
             color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
           ),
           child: DropdownButtonFormField<ScopeSegmentStatus>(
-            value: _selectedStatus,
+            initialValue: _selectedStatus,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),

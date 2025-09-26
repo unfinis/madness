@@ -1,4 +1,5 @@
 /// Advanced date-time picker widget for project scheduling and timeline management
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/projects_provider.dart';
@@ -358,7 +359,7 @@ class _ProjectDatesQuestionWidgetState extends QuestionWidgetBaseState<ProjectDa
           
           // Time Window Selection
           DropdownButtonFormField<String>(
-            value: _timeWindow,
+            initialValue: _timeWindow,
             decoration: const InputDecoration(
               labelText: 'Preferred Communication Window',
               border: OutlineInputBorder(),

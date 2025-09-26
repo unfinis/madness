@@ -332,7 +332,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
 
   Widget _buildTypeDropdown() {
     return DropdownButtonFormField<ExpenseType>(
-      value: _selectedType,
+      initialValue: _selectedType,
       decoration: const InputDecoration(
         labelText: 'Type *',
         border: OutlineInputBorder(),
@@ -355,7 +355,7 @@ class _AddExpenseDialogState extends ConsumerState<AddExpenseDialog> {
 
   Widget _buildCategoryDropdown() {
     return DropdownButtonFormField<ExpenseCategory>(
-      value: _selectedCategory,
+      initialValue: _selectedCategory,
       decoration: const InputDecoration(
         labelText: 'Category *',
         border: OutlineInputBorder(),

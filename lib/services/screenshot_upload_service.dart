@@ -210,7 +210,7 @@ class ScreenshotUploadService {
 
       // Generate file name with ID prefix
       final extension = path.extension(fileName);
-      final newFileName = '${screenshotId}_${type}$extension';
+      final newFileName = '${screenshotId}_$type$extension';
       final filePath = path.join(screenshotsDir.path, newFileName);
 
       // Save file

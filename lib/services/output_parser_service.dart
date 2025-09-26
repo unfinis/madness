@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../models/methodology_execution.dart';
 
 /// Service for parsing command outputs and extracting structured data

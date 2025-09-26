@@ -193,7 +193,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
                 SizedBox(
                   width: 100,
                   child: DropdownButtonFormField<int>(
-                    value: _priority,
+                    initialValue: _priority,
                     decoration: const InputDecoration(
                       labelText: 'Priority',
                       border: OutlineInputBorder(),
@@ -431,7 +431,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
 
   Widget _buildExpressionTree(TriggerExpression expression) {
     return DragTarget<Object>(
-      onAccept: (data) {
+      onAcceptWithDetails: (data) {
         setState(() {
           if (data is AssetPropertyDragData) {
             _insertPropertyAt(expression, data);
@@ -543,7 +543,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
             Expanded(
               flex: 2,
               child: DropdownButtonFormField<String>(
-                value: property,
+                initialValue: property,
                 decoration: const InputDecoration(
                   labelText: 'Property',
                   border: OutlineInputBorder(),
@@ -564,7 +564,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: DropdownButtonFormField<TriggerOperator>(
-                value: operator,
+                initialValue: operator,
                 decoration: const InputDecoration(
                   labelText: 'Operator',
                   border: OutlineInputBorder(),
@@ -649,7 +649,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
 
     if (property.allowedValues?.isNotEmpty == true) {
       return DropdownButtonFormField<String>(
-        value: property.allowedValues!.contains(currentValue) ? currentValue : null,
+        initialValue: property.allowedValues!.contains(currentValue) ? currentValue : null,
         decoration: const InputDecoration(
           labelText: 'Value',
           border: OutlineInputBorder(),
@@ -707,7 +707,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
     );
 
     return DropdownButtonFormField<bool>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: const InputDecoration(
         labelText: 'Value',
         border: OutlineInputBorder(),
@@ -808,7 +808,7 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
                     _buildExpressionTree(subExpr),
                   ],
                 );
-              }).toList(),
+              }),
             ],
           ),
         );

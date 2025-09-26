@@ -1,4 +1,5 @@
 /// Base widget for questionnaire questions
+library;
 import 'package:flutter/material.dart';
 import '../../models/questionnaire.dart';
 

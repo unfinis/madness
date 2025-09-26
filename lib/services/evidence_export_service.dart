@@ -52,7 +52,7 @@ class EvidenceExportService {
           final expenseName = _sanitizeFileName(expense.description);
           final dateStr = _formatDateForFileName(expense.date);
           final extension = evidence.fileName.split('.').last;
-          final baseFileName = '${expenseName}_${dateStr}';
+          final baseFileName = '${expenseName}_$dateStr';
           
           // Handle duplicate names with auto-increment
           String finalFileName;

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/task_queue_provider.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/task_queue/task_card_widget.dart';
-import '../widgets/task_queue/task_filters_widget.dart';
 import '../widgets/task_queue/task_stats_widget.dart';
 import '../constants/app_spacing.dart';
 import '../constants/responsive_breakpoints.dart';

@@ -1,4 +1,5 @@
 /// Project scope confirmation widget with interactive elements checklist
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/projects_provider.dart';
@@ -19,7 +20,7 @@ class ProjectScopeQuestionWidget extends QuestionWidgetBase {
 
 class _ProjectScopeQuestionWidgetState extends QuestionWidgetBaseState<ProjectScopeQuestionWidget> {
   Map<String, bool> _scopeElements = {};
-  Map<String, List<String>> _scopeItems = {};
+  final Map<String, List<String>> _scopeItems = {};
   final Map<String, TextEditingController> _itemControllers = {};
 
   // Standard scope elements with icons and descriptions

@@ -121,7 +121,7 @@ class _AttackPlanScreenState extends ConsumerState<AttackPlanScreen>
           // Priority filter
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: _selectedFilter,
+              initialValue: _selectedFilter,
               decoration: InputDecoration(
                 labelText: 'Priority',
                 border: OutlineInputBorder(

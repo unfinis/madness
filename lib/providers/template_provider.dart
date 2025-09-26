@@ -11,7 +11,7 @@ class TemplateProvider extends StateNotifier<AsyncValue<List<TemplateInfo>>> {
   }
 
   static const String _templatesPath = '/home/kali/madness/devhelp/templates';
-  List<FindingTemplate> _loadedTemplates = [];
+  final List<FindingTemplate> _loadedTemplates = [];
 
   /// Load the template index from devhelp/templates/index.json
   Future<void> loadTemplateIndex() async {

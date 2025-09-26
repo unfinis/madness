@@ -88,7 +88,7 @@ class _HostServiceDialogState extends State<HostServiceDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      child: Container(
+      child: SizedBox(
         width: 700,
         height: 800,
         child: Scaffold(
@@ -190,7 +190,7 @@ class _HostServiceDialogState extends State<HostServiceDialog> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedProtocol,
+                    initialValue: _selectedProtocol,
                     decoration: const InputDecoration(
                       labelText: 'Protocol',
                       border: OutlineInputBorder(),
@@ -210,7 +210,7 @@ class _HostServiceDialogState extends State<HostServiceDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedState,
+                    initialValue: _selectedState,
                     decoration: const InputDecoration(
                       labelText: 'State',
                       border: OutlineInputBorder(),
@@ -226,7 +226,7 @@ class _HostServiceDialogState extends State<HostServiceDialog> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedConfidence,
+                    initialValue: _selectedConfidence,
                     decoration: const InputDecoration(
                       labelText: 'Confidence',
                       border: OutlineInputBorder(),

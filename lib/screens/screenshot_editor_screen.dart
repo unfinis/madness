@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +8,6 @@ import '../models/editor_layer.dart';
 import '../models/editor_command.dart';
 import '../models/screenshot.dart';
 import '../services/screenshot_export_service.dart';
-import '../services/editor_history_service.dart';
 import '../providers/screenshot_providers.dart';
 import '../providers/database_provider.dart';
 import '../dialogs/export_screenshot_dialog.dart';
@@ -579,7 +577,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           strokeColor: vectorLayer.strokeColor,
           fillColor: vectorLayer.fillColor,
           strokeWidth: vectorLayer.strokeWidth,
@@ -597,7 +595,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           text: textLayer.text,
           textStyle: textLayer.textStyle,
           textAlign: textLayer.textAlign,
@@ -614,7 +612,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           redactionType: redactionLayer.redactionType,
           redactionColor: redactionLayer.redactionColor,
           blurRadius: redactionLayer.blurRadius,
@@ -636,7 +634,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           createdDate: now,
           modifiedDate: now,
           image: bitmapLayer.image,
@@ -760,7 +758,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           strokeColor: vectorLayer.strokeColor,
           fillColor: vectorLayer.fillColor,
           strokeWidth: vectorLayer.strokeWidth,
@@ -778,7 +776,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           text: textLayer.text,
           textStyle: textLayer.textStyle,
           textAlign: textLayer.textAlign,
@@ -795,7 +793,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           redactionType: redactionLayer.redactionType,
           redactionColor: redactionLayer.redactionColor,
           blurRadius: redactionLayer.blurRadius,
@@ -817,7 +815,7 @@ class _ScreenshotEditorScreenState
           locked: layer.locked,
           opacity: layer.opacity,
           blendModeType: layer.blendModeType,
-          bounds: layer.bounds != null ? layer.bounds.translate(10, 10) : Rect.fromLTWH(10, 10, 100, 100),
+          bounds: layer.bounds.translate(10, 10),
           image: bitmapLayer.image,
           imagePath: bitmapLayer.imagePath,
           createdDate: now,

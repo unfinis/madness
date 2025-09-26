@@ -211,7 +211,7 @@ class _NewProjectDialogState extends ConsumerState<NewProjectDialog> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedProjectType,
+                              initialValue: _selectedProjectType,
                               decoration: InputDecoration(
                                 labelText: 'Project Type *',
                                 border: OutlineInputBorder(

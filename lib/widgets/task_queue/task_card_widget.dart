@@ -202,7 +202,7 @@ class TaskCardWidget extends ConsumerWidget {
               ],
             ),
           );
-        }).toList(),
+        }),
         if (task.triggers.length > 3)
           Text(
             '... and ${task.triggers.length - 3} more',
@@ -325,7 +325,7 @@ class TaskCardWidget extends ConsumerWidget {
                     ],
                   ),
                 ),
-              )).toList(),
+              )),
             ],
           ),
         ),

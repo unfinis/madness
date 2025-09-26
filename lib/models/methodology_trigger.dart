@@ -311,7 +311,7 @@ class DeduplicationKeyGenerator {
 
     // Generate hash for complex properties
     if (key.contains('{hash}')) {
-      final hashData = '${asset.properties}:${variables}';
+      final hashData = '${asset.properties}:$variables';
       final hash = hashData.hashCode.toRadixString(16);
       key = key.replaceAll('{hash}', hash);
     }

@@ -109,7 +109,7 @@ class _NetworkHostDialogState extends ConsumerState<NetworkHostDialog> {
                     return Column(
                       children: [
                         DropdownButtonFormField<String>(
-                          value: _selectedHostAssetId,
+                          initialValue: _selectedHostAssetId,
                           decoration: const InputDecoration(
                             labelText: 'Link to Host Asset (Optional)',
                             border: OutlineInputBorder(),

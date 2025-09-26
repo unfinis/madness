@@ -86,7 +86,7 @@ class _NetworkInterfaceDialogState extends State<NetworkInterfaceDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      child: Container(
+      child: SizedBox(
         width: 600,
         height: 700,
         child: Scaffold(
@@ -162,7 +162,7 @@ class _NetworkInterfaceDialogState extends State<NetworkInterfaceDialog> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedType,
+                    initialValue: _selectedType,
                     decoration: const InputDecoration(
                       labelText: 'Interface Type',
                       border: OutlineInputBorder(),

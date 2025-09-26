@@ -355,7 +355,7 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
             const SizedBox(height: 16),
             if (!isViewMode && widget.mode == AssetDialogMode.create)
               DropdownButtonFormField<AssetType>(
-                value: _selectedAssetType,
+                initialValue: _selectedAssetType,
                 decoration: const InputDecoration(
                   labelText: 'Asset Type',
                   border: OutlineInputBorder(),
@@ -849,7 +849,7 @@ class _AddPropertyDialogState extends State<_AddPropertyDialog> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedType,
+            initialValue: _selectedType,
             decoration: const InputDecoration(
               labelText: 'Type',
               border: OutlineInputBorder(),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'editor_constants.dart';
 
 /// A sophisticated collapsible side panel widget that supports multiple display modes:
 /// 
@@ -446,7 +445,7 @@ class CollapsibleSidePanelState extends State<CollapsibleSidePanel>
   Widget _buildCollapsedIndicator() {
     final theme = Theme.of(context);
     
-    return Container(
+    return SizedBox(
       width: 48,
       child: Column(
         children: [

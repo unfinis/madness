@@ -100,7 +100,7 @@ class _SubFindingTemplateDialogState extends ConsumerState<SubFindingTemplateDia
       final descriptionBuffer = StringBuffer();
       
       // Add base description if available
-      if (template.baseDescription != null && template.baseDescription!.isNotEmpty) {
+      if (template.baseDescription.isNotEmpty) {
         descriptionBuffer.writeln(template.baseDescription);
         descriptionBuffer.writeln();
       }

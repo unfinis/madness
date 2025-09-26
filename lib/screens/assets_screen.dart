@@ -311,7 +311,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<AssetType?>(
-                        value: _selectedType,
+                        initialValue: _selectedType,
                         decoration: const InputDecoration(
                           labelText: 'Type',
                           border: OutlineInputBorder(),
@@ -340,7 +340,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: DropdownButtonFormField<AssetDiscoveryStatus?>(
-                        value: _selectedStatus,
+                        initialValue: _selectedStatus,
                         decoration: const InputDecoration(
                           labelText: 'Status',
                           border: OutlineInputBorder(),
@@ -367,7 +367,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<AccessLevel?>(
-                  value: _selectedAccessLevel,
+                  initialValue: _selectedAccessLevel,
                   decoration: const InputDecoration(
                     labelText: 'Access Level',
                     border: OutlineInputBorder(),
@@ -415,7 +415,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<AssetType?>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Type',
                     border: OutlineInputBorder(),
@@ -445,7 +445,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<AssetDiscoveryStatus?>(
-                  value: _selectedStatus,
+                  initialValue: _selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Status',
                     border: OutlineInputBorder(),
@@ -475,7 +475,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<AccessLevel?>(
-                  value: _selectedAccessLevel,
+                  initialValue: _selectedAccessLevel,
                   decoration: const InputDecoration(
                     labelText: 'Access',
                     border: OutlineInputBorder(),

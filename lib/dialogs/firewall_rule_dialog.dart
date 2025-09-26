@@ -103,7 +103,7 @@ class _FirewallRuleDialogState extends State<FirewallRuleDialog> {
 
                 // Action Dropdown
                 DropdownButtonFormField<String>(
-                  value: _selectedAction,
+                  initialValue: _selectedAction,
                   decoration: const InputDecoration(
                     labelText: 'Action',
                     border: OutlineInputBorder(),
@@ -162,7 +162,7 @@ class _FirewallRuleDialogState extends State<FirewallRuleDialog> {
 
                 // Protocol Dropdown
                 DropdownButtonFormField<String>(
-                  value: _selectedProtocol,
+                  initialValue: _selectedProtocol,
                   decoration: const InputDecoration(
                     labelText: 'Protocol',
                     border: OutlineInputBorder(),

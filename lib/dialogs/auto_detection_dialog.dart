@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import '../services/auto_detection_config.dart';
 import '../services/auto_guide_generator.dart';
 import '../services/auto_redaction_service.dart';
-import '../models/editor_layer.dart';
 
 /// Dialog for configuring and running auto-detection features
 class AutoDetectionDialog extends StatefulWidget {

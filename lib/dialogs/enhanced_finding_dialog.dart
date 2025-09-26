@@ -93,7 +93,9 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
       controller.dispose();
     }
     for (final check in _remediationCheckControllers) {
-      check.values.forEach((controller) => controller.dispose());
+      for (var controller in check.values) {
+        controller.dispose();
+      }
     }
     super.dispose();
   }
@@ -240,7 +242,7 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
 
           // Severity dropdown
           DropdownButtonFormField<FindingSeverity>(
-            value: _selectedSeverity,
+            initialValue: _selectedSeverity,
             decoration: const InputDecoration(
               labelText: 'Severity *',
               border: OutlineInputBorder(),
@@ -540,7 +542,7 @@ Avoid technical jargon and implementation details.''',
                 ],
               ),
             );
-          }).toList(),
+          }),
           const SizedBox(height: AppSpacing.md),
           ElevatedButton.icon(
             onPressed: () {
@@ -608,7 +610,9 @@ Avoid technical jargon and implementation details.''',
                           icon: const Icon(Icons.delete),
                           onPressed: () {
                             setState(() {
-                              controllers.values.forEach((c) => c.dispose());
+                              for (var c in controllers.values) {
+                                c.dispose();
+                              }
                               _remediationCheckControllers.removeAt(index);
                             });
                           },
@@ -650,7 +654,7 @@ Avoid technical jargon and implementation details.''',
                 ),
               ),
             );
-          }).toList(),
+          }),
           ElevatedButton.icon(
             onPressed: () {
               setState(() {

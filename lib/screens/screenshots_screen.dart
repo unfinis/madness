@@ -311,7 +311,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                   AppSpacing.hGapSM,
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
-                                      value: _filterStatus,
+                                      initialValue: _filterStatus,
                                       decoration: const InputDecoration(
                                         isDense: true,
                                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -347,7 +347,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                   AppSpacing.hGapSM,
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
-                                      value: _filterFindings,
+                                      initialValue: _filterFindings,
                                       decoration: const InputDecoration(
                                         isDense: true,
                                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -382,7 +382,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                                   AppSpacing.hGapSM,
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
-                                      value: _sortBy,
+                                      initialValue: _sortBy,
                                       decoration: const InputDecoration(
                                         isDense: true,
                                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),

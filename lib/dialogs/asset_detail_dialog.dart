@@ -45,7 +45,9 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
   @override
   void dispose() {
     _tabController.dispose();
-    _controllers.values.forEach((controller) => controller.dispose());
+    for (var controller in _controllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -100,7 +102,7 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      child: Container(
+      child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
         height: MediaQuery.of(context).size.height * 0.9,
         child: Scaffold(
@@ -841,7 +843,7 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
     String Function(T)? formatValue,
   }) {
     return DropdownButtonFormField<T>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -1750,7 +1752,7 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
     final currentValue = _editedAsset.getProperty<String>('nac_type') ?? 'none';
 
     return DropdownButtonFormField<String>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: const InputDecoration(
         labelText: 'NAC Type',
         border: OutlineInputBorder(),
@@ -1905,7 +1907,7 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
     final currentValue = _editedAsset.getProperty<String>('current_access_level') ?? 'none';
 
     return DropdownButtonFormField<String>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: const InputDecoration(
         labelText: 'Current Access Level',
         border: OutlineInputBorder(),
@@ -2053,7 +2055,7 @@ class _AssetDetailDialogState extends ConsumerState<AssetDetailDialog>
         ),
         title: Text(hostname ?? ipAddress),
         subtitle: Text(
-          '${ipAddress} • '
+          '$ipAddress • '
           '${isGateway ? 'Gateway • ' : ''}'
           '${isCompromised ? 'Compromised' : 'Discovered'}',
         ),

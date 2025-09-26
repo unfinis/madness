@@ -628,7 +628,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   ),
                   AppSpacing.vGapSM,
                   DropdownButtonFormField<DocumentType>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -842,7 +842,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
                 AppSpacing.vGapSM,
                 DropdownButtonFormField<DocumentType>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 
 class TestWidget extends StatefulWidget {
+  const TestWidget({super.key});
+
   @override
   State<TestWidget> createState() => _TestWidgetState();
 }

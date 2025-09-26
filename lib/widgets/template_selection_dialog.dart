@@ -80,7 +80,7 @@ class _TemplateSelectionDialogState extends ConsumerState<TemplateSelectionDialo
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: InputDecoration(
                       labelText: 'Category',
                       border: OutlineInputBorder(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/task.dart';
-import '../providers/task_provider.dart';
 
 class TaskItemWidget extends ConsumerWidget {
   final Task task;

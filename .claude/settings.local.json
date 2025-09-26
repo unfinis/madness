@@ -358,7 +358,8 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/dialogs/enhanced_finding_dialog.dart lib/screens/finding_editor_screen.dart --fatal-warnings)",
       "WebFetch(domain:github.com)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/screenshot_editor/editor_canvas.dart --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/rendered_screenshot_thumbnail.dart lib/screens/screenshots_screen.dart --fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/rendered_screenshot_thumbnail.dart lib/screens/screenshots_screen.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe pub upgrade --major-versions --dry-run)"
     ],
     "deny": [],
     "ask": []

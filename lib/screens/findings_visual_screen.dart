@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/projects_provider.dart';
-import '../providers/comprehensive_asset_provider.dart';
 import '../widgets/common_state_widgets.dart';
 import '../constants/app_spacing.dart';
-import '../models/asset.dart';
 import 'dart:math' as math;
 
 class FindingsVisualScreen extends ConsumerStatefulWidget {
@@ -326,7 +324,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Container(
+            SizedBox(
               height: 200,
               child: Center(
                 child: _buildPieChart(categories),
@@ -375,7 +373,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Container(
+            SizedBox(
               height: 300,
               child: _buildRiskMatrixGrid(findings),
             ),
@@ -490,7 +488,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
         children: [
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: _selectedSeverity,
+              initialValue: _selectedSeverity,
               decoration: const InputDecoration(
                 labelText: 'Severity',
                 border: OutlineInputBorder(),
@@ -514,7 +512,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),
@@ -742,7 +740,7 @@ class _FindingsVisualScreenState extends ConsumerState<FindingsVisualScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Timeline line and dot
-        Container(
+        SizedBox(
           width: 60,
           child: Column(
             children: [

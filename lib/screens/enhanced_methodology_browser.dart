@@ -21,7 +21,7 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
   String? _selectedCategory;
   String? _selectedDifficulty;
   String? _selectedTarget;
-  Set<String> _selectedTags = {};
+  final Set<String> _selectedTags = {};
   MethodologySort _sortBy = MethodologySort.name;
   bool _gridView = true;
 
@@ -227,7 +227,7 @@ class _EnhancedMethodologyBrowserState extends ConsumerState<EnhancedMethodology
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.background,
+                  fillColor: Theme.of(context).colorScheme.surface,
                 ),
                 onChanged: (value) {
                   setState(() {

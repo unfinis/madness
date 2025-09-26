@@ -243,13 +243,13 @@ class _SimpleSuperEditorWidgetState extends State<SimpleSuperEditorWidget> {
             IconButton(
               icon: const Icon(Icons.format_bold, size: 18),
               tooltip: 'Bold',
-              onPressed: () => _insertMarkdown('**text**'),
+              onPressed: _toggleBold,
               visualDensity: VisualDensity.compact,
             ),
             IconButton(
               icon: const Icon(Icons.format_italic, size: 18),
               tooltip: 'Italic',
-              onPressed: () => _insertMarkdown('*text*'),
+              onPressed: _toggleItalic,
               visualDensity: VisualDensity.compact,
             ),
             IconButton(
@@ -373,6 +373,106 @@ class _SimpleSuperEditorWidgetState extends State<SimpleSuperEditorWidget> {
       Future.delayed(const Duration(milliseconds: 100), () {
         _insertMarkdown(markdown);
       });
+    }
+  }
+
+  // Smart text formatting methods that work with selections
+  void _toggleBold() {
+    _toggleFormatting('**', '**', 'Bold text');
+  }
+
+  void _toggleItalic() {
+    _toggleFormatting('*', '*', 'Italic text');
+  }
+
+  void _toggleFormatting(String startMark, String endMark, String placeholder) {
+    if (_showMarkdown) {
+      _toggleMarkdownFormatting(startMark, endMark, placeholder);
+    } else {
+      // Switch to markdown mode and apply formatting there
+      setState(() {
+        _showMarkdown = true;
+        _updateMarkdownController();
+      });
+
+      // Apply formatting after a brief delay
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _toggleMarkdownFormatting(startMark, endMark, placeholder);
+      });
+    }
+  }
+
+  void _toggleMarkdownFormatting(String startMark, String endMark, String placeholder) {
+    final controller = _markdownController;
+    final text = controller.text;
+    final selection = controller.selection;
+
+    if (!selection.isValid) {
+      // No selection, insert template at cursor
+      final insertText = '$startMark$placeholder$endMark';
+      final newText = text.replaceRange(selection.start, selection.end, insertText);
+
+      controller.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection(
+          baseOffset: selection.start + startMark.length,
+          extentOffset: selection.start + startMark.length + placeholder.length,
+        ),
+      );
+      return;
+    }
+
+    final selectedText = text.substring(selection.start, selection.end);
+
+    // Check if text is already formatted
+    if (selectedText.startsWith(startMark) && selectedText.endsWith(endMark)) {
+      // Remove formatting
+      final unformattedText = selectedText.substring(
+        startMark.length,
+        selectedText.length - endMark.length,
+      );
+
+      final newText = text.replaceRange(selection.start, selection.end, unformattedText);
+
+      controller.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection(
+          baseOffset: selection.start,
+          extentOffset: selection.start + unformattedText.length,
+        ),
+      );
+    } else {
+      // Check if formatting surrounds the selection
+      final beforeStart = selection.start >= startMark.length ?
+          text.substring(selection.start - startMark.length, selection.start) : '';
+      final afterEnd = selection.end + endMark.length <= text.length ?
+          text.substring(selection.end, selection.end + endMark.length) : '';
+
+      if (beforeStart == startMark && afterEnd == endMark) {
+        // Remove surrounding formatting
+        final newText = text.replaceRange(selection.end, selection.end + endMark.length, '') // Remove end mark first
+            .replaceRange(selection.start - startMark.length, selection.start, ''); // Then start mark
+
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection(
+            baseOffset: selection.start - startMark.length,
+            extentOffset: selection.end - startMark.length,
+          ),
+        );
+      } else {
+        // Add formatting around selection
+        final formattedText = '$startMark$selectedText$endMark';
+        final newText = text.replaceRange(selection.start, selection.end, formattedText);
+
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection(
+            baseOffset: selection.start + startMark.length,
+            extentOffset: selection.end + startMark.length,
+          ),
+        );
+      }
     }
   }
 }
