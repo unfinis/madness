@@ -25,11 +25,21 @@ class _RenderedScreenshotThumbnailState extends State<RenderedScreenshotThumbnai
   ui.Image? _thumbnailImage;
   bool _isLoading = true;
   bool _hasError = false;
+  bool _hasDependencies = false;
 
   @override
   void initState() {
     super.initState();
-    _generateThumbnail();
+    // Don't call _generateThumbnail() here - wait for didChangeDependencies
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasDependencies) {
+      _hasDependencies = true;
+      _generateThumbnail();
+    }
   }
 
   @override

@@ -966,9 +966,10 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
               flex: 2,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     Text(
                       screenshot.name,
                       style: theme.textTheme.titleSmall?.copyWith(
@@ -1098,6 +1099,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                       ],
                     ),
                   ],
+                ),
                 ),
               ),
             ),

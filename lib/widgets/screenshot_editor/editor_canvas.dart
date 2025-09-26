@@ -74,7 +74,6 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   Offset? _drawingStart;
   Offset? _drawingEnd;
   bool _isDrawing = false;
-  Offset? _lastCursorPosition;
   
   // Crop state - non-destructive crop that works on all layers
   Rect? _activeCropBounds; // Current confirmed crop bounds (from metadata)
@@ -1336,11 +1335,6 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   void _handleDrawingStart(Offset point) {
     final canvasPoint = _screenToCanvasCoords(point);
 
-    // Debug: Print coordinate information
-    print('DEBUG - Drawing Start:');
-    print('  Screen point: ${point.dx.toInt()}, ${point.dy.toInt()}');
-    print('  Canvas point: ${canvasPoint.dx.toInt()}, ${canvasPoint.dy.toInt()}');
-
     if (widget.selectedTool == EditorTool.crop) {
       // Crop tool uses special handling
       _handleCropDrawingStart(canvasPoint);
@@ -1348,7 +1342,6 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
     }
 
     final startPoint = _snapPoint(canvasPoint);
-    print('  Snapped point: ${startPoint.dx.toInt()}, ${startPoint.dy.toInt()}');
 
     setState(() {
       _isDrawing = true;
@@ -1405,7 +1398,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
   TextLayer? _createNumberLabel(Offset position) {
     final numberValue = widget.getNextNumberLabelValue?.call() ?? 1;
     final now = DateTime.now();
-    final layerId = 'number-label-${now.millisecondsSinceEpoch}';
+    // Add random component to ensure uniqueness
+    final randomSuffix = (math.Random().nextDouble() * 10000).toInt();
+    final layerId = 'number-label-${now.millisecondsSinceEpoch}-$randomSuffix';
     final fontSize = widget.toolConfig.toolSpecificSettings['fontSize']?.toDouble() ?? 16.0;
     final circleRadius = widget.toolConfig.toolSpecificSettings['circleRadius']?.toDouble() ?? 16.0;
     
@@ -1445,9 +1440,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
 
   EditorLayer? _createLayerFromGesture() {
     if (_drawingStart == null || _drawingEnd == null) return null;
-    
+
     final now = DateTime.now();
-    final layerId = 'layer-${now.millisecondsSinceEpoch}';
+    // Add random component to ensure uniqueness even with rapid creation
+    final randomSuffix = (math.Random().nextDouble() * 10000).toInt();
+    final layerId = 'layer-${now.millisecondsSinceEpoch}-$randomSuffix';
     
     switch (widget.selectedTool) {
       case EditorTool.highlightRect:
@@ -1648,9 +1645,6 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas> {
         cursor: _getCursorForTool(widget.selectedTool),
         onHover: (event) {
           final canvasPoint = _screenToCanvasCoords(event.localPosition);
-          setState(() {
-            _lastCursorPosition = event.localPosition;
-          });
 
           // Track handle hover for crop tool
           if (widget.selectedTool == EditorTool.crop) {

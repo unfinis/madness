@@ -317,7 +317,6 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
 
   Widget _buildHeaderDropdown(ThemeData theme) {
     return PopupMenuButton<int>(
-      icon: const Icon(Icons.title, size: 18),
       tooltip: 'Headers',
       itemBuilder: (context) => [
         const PopupMenuItem(value: 1, child: Text('# Header 1')),
