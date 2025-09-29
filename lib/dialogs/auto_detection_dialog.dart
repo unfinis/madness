@@ -488,57 +488,71 @@ class _AutoDetectionDialogState extends State<AutoDetectionDialog> {
   }
 
   Future<void> _runAnalysis() async {
-    setState(() {
-      _isAnalyzing = true;
-      _analysisStatus = 'Initializing analysis...';
-      _generatedGuides.clear();
-      _redactionSuggestions.clear();
-    });
+    if (mounted) {
+      setState(() {
+        _isAnalyzing = true;
+        _analysisStatus = 'Initializing analysis...';
+        _generatedGuides.clear();
+        _redactionSuggestions.clear();
+      });
+    }
 
     try {
       // Generate guides if enabled
       if (_config.enableAutoGuides) {
-        setState(() {
-          _analysisStatus = 'Analyzing image for guides...';
-        });
+        if (mounted) {
+          setState(() {
+            _analysisStatus = 'Analyzing image for guides...';
+          });
+        }
 
         final guides = await AutoGuideGenerator.generateGuides(
           widget.image,
           config: _config.getGuideConfigWithPadding(),
         );
 
-        setState(() {
-          _generatedGuides = guides;
-          _analysisStatus = 'Found ${guides.length} potential guides.';
-        });
+        if (mounted) {
+          setState(() {
+            _generatedGuides = guides;
+            _analysisStatus = 'Found ${guides.length} potential guides.';
+          });
+        }
       }
 
       // Detect sensitive data if enabled
       if (_config.enableAutoRedaction) {
-        setState(() {
-          _analysisStatus = 'Scanning for sensitive data...';
-        });
+        if (mounted) {
+          setState(() {
+            _analysisStatus = 'Scanning for sensitive data...';
+          });
+        }
 
         final redactionResult = await AutoRedactionService.analyzeAndSuggestRedactions(
           widget.image,
           config: _config.getRedactionConfigWithPadding(),
         );
 
+        if (mounted) {
+          setState(() {
+            _redactionSuggestions = redactionResult.suggestions;
+            _analysisStatus = 'Analysis complete! Found ${_generatedGuides.length} guides and ${_redactionSuggestions.length} redaction suggestions.';
+          });
+        }
+      }
+
+      if (mounted) {
         setState(() {
-          _redactionSuggestions = redactionResult.suggestions;
-          _analysisStatus = 'Analysis complete! Found ${_generatedGuides.length} guides and ${_redactionSuggestions.length} redaction suggestions.';
+          _isAnalyzing = false;
         });
       }
 
-      setState(() {
-        _isAnalyzing = false;
-      });
-
     } catch (e) {
-      setState(() {
-        _isAnalyzing = false;
-        _analysisStatus = 'Analysis failed: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _analysisStatus = 'Analysis failed: $e';
+        });
+      }
     }
   }
 

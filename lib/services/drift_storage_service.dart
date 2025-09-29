@@ -77,6 +77,19 @@ class DriftStorageService {
     return result != null;
   }
 
+  /// Get count of stored templates
+  Future<int> getTemplateCount() async {
+    final countQuery = _database.selectOnly(_database.methodologyTemplatesTable)
+      ..addColumns([_database.methodologyTemplatesTable.id.count()]);
+    final result = await countQuery.getSingle();
+    return result.read(_database.methodologyTemplatesTable.id.count()) ?? 0;
+  }
+
+  /// Clear all templates from database
+  Future<void> clearAllTemplates() async {
+    await _database.delete(_database.methodologyTemplatesTable).go();
+  }
+
   // ===== RUN INSTANCES =====
 
   /// Store a run instance

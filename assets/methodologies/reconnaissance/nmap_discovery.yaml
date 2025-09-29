@@ -1,0 +1,100 @@
+# Nmap Host Discovery Methodology
+id: nmap_discovery
+version: "1.0.0"
+template_version: "2.0"
+name: "Nmap Host Discovery"
+workstream: "reconnaissance"
+author: "Security Team"
+created: "2024-01-01T00:00:00Z"
+modified: "2024-09-29T00:00:00Z"
+status: "active"
+description: "Comprehensive host discovery using Nmap to identify live hosts on network segments"
+tags: ["network", "discovery", "nmap", "scanning", "reconnaissance"]
+risk_level: "low"
+
+overview:
+  purpose: "Discover live hosts on the network using various Nmap techniques"
+  scope: "Internal network segments with authorized access"
+  prerequisites:
+    - "Network access to target segment"
+    - "Nmap installed (version 7.94+)"
+    - "Proper authorization for network scanning"
+  category: "reconnaissance"
+
+triggers:
+  - name: "Network Segment Added"
+    type: "asset_discovered"
+    conditions:
+      asset_type: "network"
+      properties:
+        has_access: true
+        scan_authorized: true
+
+equipment:
+  - "Nmap 7.94 or newer"
+  - "Network access to target segments"
+  - "Sufficient bandwidth for scanning"
+
+procedures:
+  - id: "proc_ping_scan"
+    name: "ICMP Ping Scan"
+    description: "Basic ping scan to discover responsive hosts"
+    commands:
+      - "nmap -sn {network_range}"
+    placeholders:
+      network_range: "asset.cidr"
+    expected_output:
+      - "Host is up"
+      - "Nmap scan report"
+
+  - id: "proc_tcp_syn_discovery"
+    name: "TCP SYN Discovery"
+    description: "TCP SYN discovery for hosts that don't respond to ping"
+    commands:
+      - "nmap -PS80,443,22,21,25,53 -sn {network_range}"
+    placeholders:
+      network_range: "asset.cidr"
+    expected_output:
+      - "Host is up"
+      - "SYN discovery results"
+
+  - id: "proc_arp_scan"
+    name: "ARP Scan (Local Network)"
+    description: "ARP-based discovery for local network segments"
+    commands:
+      - "nmap -PR -sn {network_range}"
+    placeholders:
+      network_range: "asset.cidr"
+    expected_output:
+      - "Host is up"
+      - "MAC addresses revealed"
+
+findings:
+  - id: "finding_host_discovered"
+    title: "Live Host Discovered"
+    severity: "info"
+    description: "Active host found on network segment"
+    remediation: "Document discovered host and proceed with authorized enumeration"
+
+  - id: "finding_network_topology"
+    title: "Network Topology Mapped"
+    severity: "info"
+    description: "Network topology and host distribution identified"
+    remediation: "Use topology information for further authorized testing"
+
+cleanup:
+  - id: "cleanup_scan_logs"
+    description: "Clean up temporary scan log files"
+    required: false
+    commands:
+      - "rm -f /tmp/nmap_scan_*.log"
+
+troubleshooting:
+  - issue: "No hosts discovered with ping scan"
+    solution: "Try TCP SYN discovery (-PS) or ARP scan (-PR) for local networks"
+
+  - issue: "Scan appears to hang"
+    solution: "Check network connectivity and firewall rules; consider using --host-timeout option"
+
+  - issue: "Permission denied errors"
+    solution: "Ensure proper privileges for raw socket access or use TCP connect scans"

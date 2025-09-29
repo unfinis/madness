@@ -13,7 +13,7 @@ import '../widgets/template_selection_dialog.dart';
 import '../dialogs/add_component_dialog.dart';
 import '../dialogs/add_link_dialog.dart';
 import '../dialogs/screenshot_selection_dialog.dart';
-import '../widgets/super_editor_widget.dart';
+import '../widgets/quill_rich_editor_widget.dart';
 
 class FindingEditorScreen extends ConsumerStatefulWidget {
   final Finding? finding;
@@ -47,11 +47,11 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   List<FindingLink> _links = [];
   List<String> _screenshotIds = [];
 
-  // Markdown content for rich text fields
-  String _descriptionMarkdown = '';
-  String _auditStepsMarkdown = '';
-  String _furtherReadingMarkdown = '';
-  String _verificationMarkdown = '';
+  // Rich text content for rich text fields
+  String _descriptionContent = '';
+  String _auditStepsContent = '';
+  String _furtherReadingContent = '';
+  String _verificationContent = '';
   
   @override
   void initState() {
@@ -66,11 +66,11 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
     _cvssVectorController = TextEditingController(text: finding?.cvssVector ?? '');
     _automatedScriptController = TextEditingController(text: finding?.automatedScript ?? '');
     
-    // Initialize markdown content
-    _descriptionMarkdown = finding?.description ?? '';
-    _auditStepsMarkdown = finding?.auditSteps ?? '';
-    _furtherReadingMarkdown = finding?.furtherReading ?? '';
-    _verificationMarkdown = finding?.verificationProcedure ?? '';
+    // Initialize rich text content
+    _descriptionContent = finding?.description ?? '';
+    _auditStepsContent = finding?.auditSteps ?? '';
+    _furtherReadingContent = finding?.furtherReading ?? '';
+    _verificationContent = finding?.verificationProcedure ?? '';
 
     if (finding != null) {
       _selectedSeverity = finding.severity;
@@ -256,12 +256,13 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 8),
-          SuperEditorWidget(
-            initialMarkdown: _descriptionMarkdown,
-            hintText: 'Describe the security issue in detail...',
-            height: 200,
-            onMarkdownChanged: (value) {
-              _descriptionMarkdown = value;
+          QuillRichEditorWidget(
+            initialContent: _descriptionContent,
+            placeholder: 'Describe the security issue in detail...',
+            minHeight: 200,
+            showToolbar: true,
+            onChanged: (value) {
+              _descriptionContent = value;
               _markAsChanged();
             },
           ),
@@ -423,12 +424,13 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 16),
-          SuperEditorWidget(
-            initialMarkdown: _auditStepsMarkdown,
-            hintText: 'Enter audit steps...\n\n1. Navigate to...\n2. Check for...\n3. Take screenshot...',
-            height: 250,
-            onMarkdownChanged: (value) {
-              _auditStepsMarkdown = value;
+          QuillRichEditorWidget(
+            initialContent: _auditStepsContent,
+            placeholder: 'Enter audit steps...\n\n1. Navigate to...\n2. Check for...\n3. Take screenshot...',
+            minHeight: 250,
+            showToolbar: true,
+            onChanged: (value) {
+              _auditStepsContent = value;
               _markAsChanged();
             },
           ),
@@ -474,12 +476,13 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 16),
-          SuperEditorWidget(
-            initialMarkdown: _furtherReadingMarkdown,
-            hintText: 'Enter additional information...',
-            height: 200,
-            onMarkdownChanged: (value) {
-              _furtherReadingMarkdown = value;
+          QuillRichEditorWidget(
+            initialContent: _furtherReadingContent,
+            placeholder: 'Enter additional information...',
+            minHeight: 200,
+            showToolbar: true,
+            onChanged: (value) {
+              _furtherReadingContent = value;
               _markAsChanged();
             },
           ),
@@ -699,12 +702,13 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
             ),
           ),
           const SizedBox(height: 16),
-          SuperEditorWidget(
-            initialMarkdown: _verificationMarkdown,
-            hintText: 'Enter verification steps...\n\n1. Navigate to settings\n2. Verify configuration\n3. Test functionality\n4. Document results',
-            height: 300,
-            onMarkdownChanged: (value) {
-              _verificationMarkdown = value;
+          QuillRichEditorWidget(
+            initialContent: _verificationContent,
+            placeholder: 'Enter verification steps...\n\n1. Navigate to settings\n2. Verify configuration\n3. Test functionality\n4. Document results',
+            minHeight: 300,
+            showToolbar: true,
+            onChanged: (value) {
+              _verificationContent = value;
               _markAsChanged();
             },
           ),
@@ -1276,9 +1280,7 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
               ),
             )
           else
-            ...finding.subFindings.asMap().entries.map((entry) {
-              final index = entry.key;
-              final subFinding = entry.value;
+            ...finding.subFindings.map((subFinding) {
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
                 child: ExpansionTile(
@@ -1750,14 +1752,14 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
   void _applyTemplateToForm(SubFinding subFinding, FindingTemplate template) {
     setState(() {
       _titleController.text = subFinding.title;
-      _descriptionMarkdown = subFinding.description;
+      _descriptionContent = subFinding.description;
       _cvssScoreController.text = subFinding.cvssScore.toString();
       _cvssVectorController.text = subFinding.cvssVector;
-      _auditStepsMarkdown = subFinding.checkSteps;
-      _verificationMarkdown = subFinding.verificationProcedure ?? '';
+      _auditStepsContent = subFinding.checkSteps;
+      _verificationContent = subFinding.verificationProcedure ?? '';
 
       // Apply recommendation to further reading
-      _furtherReadingMarkdown = subFinding.recommendation;
+      _furtherReadingContent = subFinding.recommendation;
       
       // Set severity based on the string value
       switch (subFinding.severity.toLowerCase()) {
@@ -1791,8 +1793,8 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
       return;
     }
 
-    // Validate markdown fields
-    if (_descriptionMarkdown.trim().isEmpty) {
+    // Validate rich text fields
+    if (_descriptionContent.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Description is required')),
       );
@@ -1810,25 +1812,25 @@ class _FindingEditorScreenState extends ConsumerState<FindingEditorScreen>
         id: widget.finding?.id ?? '',
         projectId: currentProject.id,
         title: _titleController.text.trim(),
-        description: _descriptionMarkdown.trim().isEmpty ? '' : _descriptionMarkdown.trim(),
+        description: _descriptionContent.trim().isEmpty ? '' : _descriptionContent.trim(),
         cvssScore: score,
         cvssVector: _cvssVectorController.text.trim().isEmpty
             ? null
             : _cvssVectorController.text.trim(),
         severity: _selectedSeverity,
         status: _selectedStatus,
-        auditSteps: _auditStepsMarkdown.trim().isEmpty
+        auditSteps: _auditStepsContent.trim().isEmpty
             ? null
-            : _auditStepsMarkdown.trim(),
+            : _auditStepsContent.trim(),
         automatedScript: _automatedScriptController.text.trim().isEmpty
             ? null
             : _automatedScriptController.text.trim(),
-        furtherReading: _furtherReadingMarkdown.trim().isEmpty
+        furtherReading: _furtherReadingContent.trim().isEmpty
             ? null
-            : _furtherReadingMarkdown.trim(),
-        verificationProcedure: _verificationMarkdown.trim().isEmpty
+            : _furtherReadingContent.trim(),
+        verificationProcedure: _verificationContent.trim().isEmpty
             ? null
-            : _verificationMarkdown.trim(),
+            : _verificationContent.trim(),
         createdDate: widget.finding?.createdDate ?? DateTime.now(),
         updatedDate: DateTime.now(),
         components: _components,

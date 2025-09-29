@@ -49,6 +49,16 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
   final List<String> _redoStack = [];
   final int _maxUndoSteps = 50;
 
+  // Auto-save functionality
+  Timer? _autoSaveTimer;
+  bool _hasUnsavedChanges = false;
+  DateTime? _lastSaveTime;
+  String _saveStatus = '';
+
+  // Synchronization optimization
+  Timer? _syncToMarkdownTimer;
+  Timer? _syncFromMarkdownTimer;
+
   @override
   void initState() {
     super.initState();
@@ -65,6 +75,9 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
 
     // Initialize undo stack with initial content
     _saveUndoState();
+
+    // Initialize auto-save
+    _startAutoSave();
   }
 
   void _initializeDocument() {
@@ -94,16 +107,32 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
       document: _document,
       composer: _composer,
     );
+
+    // Ensure the composer has a valid selection to prevent null pointer exceptions
+    if (_composer.selection == null && _document.nodeCount > 0) {
+      final firstNode = _document.getNodeAt(0);
+      if (firstNode != null) {
+        final initialPosition = DocumentPosition(
+          nodeId: firstNode.id,
+          nodePosition: firstNode is TextNode
+            ? const TextNodePosition(offset: 0)
+            : firstNode.beginningPosition,
+        );
+
+        _composer.setSelectionWithReason(
+          DocumentSelection.collapsed(position: initialPosition),
+          SelectionReason.userInteraction,
+        );
+      }
+    }
   }
 
 
   void _onMarkdownChanged() {
     if (_isUpdating || !_showMarkdown) return;
 
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _syncFromMarkdown();
-    });
+    // Use the optimized synchronization method with proper batching
+    _scheduleSyncFromMarkdown();
   }
 
   void _updateMarkdownController() {
@@ -111,10 +140,18 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
 
     _isUpdating = true;
     try {
+      // Add null safety check for document
+      if (_document.nodeCount == 0) {
+        _markdownController.text = '';
+        return;
+      }
+
       final markdown = serializeDocumentToMarkdown(_document);
       _markdownController.text = markdown;
     } catch (e) {
       debugPrint('Serialization error: $e');
+      // Fallback to empty content on error
+      _markdownController.text = '';
     } finally {
       _isUpdating = false;
     }
@@ -126,13 +163,27 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
     _isUpdating = true;
     try {
       final newDocument = deserializeMarkdownToDocument(_markdownController.text);
+
       setState(() {
+        // Replace the entire document with the new parsed document
         _document = newDocument;
+        // Recreate the editor with the new document
         _createEditor();
       });
+
       _notifyChanges();
     } catch (e) {
       debugPrint('Markdown sync error: $e');
+      // If parsing fails, create a minimal document with the raw text
+      setState(() {
+        _document = MutableDocument(nodes: [
+          ParagraphNode(
+            id: Editor.createNodeId(),
+            text: AttributedText(_markdownController.text),
+          ),
+        ]);
+        _createEditor();
+      });
     } finally {
       _isUpdating = false;
     }
@@ -171,6 +222,9 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _autoSaveTimer?.cancel();
+    _syncToMarkdownTimer?.cancel();
+    _syncFromMarkdownTimer?.cancel();
     _focusNode.dispose();
     _markdownController.dispose();
     super.dispose();
@@ -239,6 +293,43 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
                   visualDensity: VisualDensity.compact,
                 ),
               ),
+
+              // Auto-save status indicator
+              if (_saveStatus.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _hasUnsavedChanges
+                        ? theme.colorScheme.error.withValues(alpha: 0.2)
+                        : theme.colorScheme.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _hasUnsavedChanges ? Icons.edit : Icons.check,
+                        size: 12,
+                        color: _hasUnsavedChanges
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _saveStatus,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: _hasUnsavedChanges
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+
               const Spacer(),
               if (_showMarkdown) ...[
                 IconButton(
@@ -253,6 +344,24 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
                   onPressed: _showDocumentOutline,
                   visualDensity: VisualDensity.compact,
                 ),
+                IconButton(
+                  icon: const Icon(Icons.search, size: 18),
+                  tooltip: 'Find & Replace (Ctrl+F)',
+                  onPressed: _showFindReplaceDialog,
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.analytics, size: 18),
+                  tooltip: 'Document Statistics',
+                  onPressed: _showDocumentStatistics,
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.save, size: 18),
+                  tooltip: 'Save (Ctrl+S)',
+                  onPressed: _forceSave,
+                  visualDensity: VisualDensity.compact,
+                ),
               ],
             ],
           ),
@@ -265,78 +374,125 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Text formatting
-                  _buildToolbarButton(
-                    icon: Icons.format_bold,
-                    tooltip: 'Bold (Ctrl+B)',
-                    onPressed: _toggleBold,
-                  ),
-                  _buildToolbarButton(
-                    icon: Icons.format_italic,
-                    tooltip: 'Italic (Ctrl+I)',
-                    onPressed: _toggleItalic,
-                  ),
-                  _buildToolbarButton(
-                    icon: Icons.strikethrough_s,
-                    tooltip: 'Strikethrough',
-                    onPressed: _toggleStrikethrough,
-                  ),
-                  _buildToolbarButton(
-                    icon: Icons.code,
-                    tooltip: 'Inline Code',
-                    onPressed: () => _toggleInlineCode(),
-                  ),
-                  _buildToolbarButton(
-                    icon: Icons.link,
-                    tooltip: 'Insert Link (Ctrl+K)',
-                    onPressed: _showLinkDialog,
-                  ),
+                  // Text Style Group
+                  _buildToolbarGroup('Text Style', [
+                    _buildToolbarButton(
+                      icon: Icons.format_bold,
+                      tooltip: 'Bold (Ctrl+B)',
+                      onPressed: _toggleBold,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.format_italic,
+                      tooltip: 'Italic (Ctrl+I)',
+                      onPressed: _toggleItalic,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.format_underlined,
+                      tooltip: 'Underline (Ctrl+U)',
+                      onPressed: _toggleUnderline,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.strikethrough_s,
+                      tooltip: 'Strikethrough',
+                      onPressed: _toggleStrikethrough,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.superscript,
+                      tooltip: 'Superscript',
+                      onPressed: _toggleSuperscript,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.subscript,
+                      tooltip: 'Subscript',
+                      onPressed: _toggleSubscript,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.highlight,
+                      tooltip: 'Highlight',
+                      onPressed: _toggleHighlight,
+                    ),
+                  ]),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
 
-                  // Headers dropdown
-                  _buildHeaderDropdown(theme),
+                  // Code & Links Group
+                  _buildToolbarGroup('Code & Links', [
+                    _buildToolbarButton(
+                      icon: Icons.code,
+                      tooltip: 'Inline Code (Ctrl+`)',
+                      onPressed: () => _toggleInlineCode(),
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.link,
+                      tooltip: 'Insert Link (Ctrl+K)',
+                      onPressed: _showLinkDialog,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.image,
+                      tooltip: 'Insert Image (Ctrl+Shift+I)',
+                      onPressed: _showImageDialog,
+                    ),
+                  ]),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
 
-                  // Lists
-                  _buildListDropdown(theme),
+                  // Structure Group
+                  _buildToolbarGroup('Structure', [
+                    _buildHeaderDropdown(theme),
+                    _buildListDropdown(theme),
+                    _buildAlignmentDropdown(theme),
+                  ]),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
 
-                  // Block elements
-                  _buildToolbarButton(
-                    icon: Icons.format_quote,
-                    tooltip: 'Quote',
-                    onPressed: () => _insertMarkdown('\n> '),
-                  ),
-                  _buildToolbarButton(
-                    icon: Icons.horizontal_rule,
-                    tooltip: 'Horizontal Rule',
-                    onPressed: () => _insertMarkdown('\n---\n'),
-                  ),
-                  _buildCodeDropdown(theme),
-                  // Table tools dropdown
-                  _buildTableDropdown(theme),
-                  _buildToolbarButton(
-                    icon: Icons.image,
-                    tooltip: 'Insert Image',
-                    onPressed: () => _insertMarkdown('![Alt text](image-url)'),
-                  ),
+                  // Block Elements Group
+                  _buildToolbarGroup('Blocks', [
+                    _buildToolbarButton(
+                      icon: Icons.format_quote,
+                      tooltip: 'Quote Block (Ctrl+Shift+Q)',
+                      onPressed: () => _insertQuoteBlock(),
+                    ),
+                    _buildCodeDropdown(theme),
+                    _buildTableDropdown(theme),
+                    _buildToolbarButton(
+                      icon: Icons.horizontal_rule,
+                      tooltip: 'Horizontal Rule',
+                      onPressed: () => _insertHorizontalRule(),
+                    ),
+                  ]),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
 
-                  // Undo/Redo
-                  _buildToolbarButton(
-                    icon: Icons.undo,
-                    tooltip: 'Undo (Ctrl+Z)',
-                    onPressed: _canUndo() ? _undo : null,
-                  ),
-                  _buildToolbarButton(
-                    icon: Icons.redo,
-                    tooltip: 'Redo (Ctrl+Y)',
-                    onPressed: _canRedo() ? _redo : null,
-                  ),
+                  // Advanced Tools Group
+                  _buildToolbarGroup('Tools', [
+                    _buildToolbarButton(
+                      icon: Icons.format_clear,
+                      tooltip: 'Clear Formatting (Ctrl+\\)',
+                      onPressed: _clearFormatting,
+                    ),
+                    _buildFindReplaceButton(theme),
+                    _buildToolbarButton(
+                      icon: Icons.analytics,
+                      tooltip: 'Document Statistics',
+                      onPressed: _showDocumentStats,
+                    ),
+                  ]),
+
+                  const SizedBox(width: 12),
+
+                  // History Group
+                  _buildToolbarGroup('History', [
+                    _buildToolbarButton(
+                      icon: Icons.undo,
+                      tooltip: 'Undo (Ctrl+Z)',
+                      onPressed: _canUndo() ? _undo : null,
+                    ),
+                    _buildToolbarButton(
+                      icon: Icons.redo,
+                      tooltip: 'Redo (Ctrl+Y)',
+                      onPressed: _canRedo() ? _redo : null,
+                    ),
+                  ]),
                 ],
               ),
             ),
@@ -358,8 +514,7 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
         const PopupMenuItem(value: 6, child: Text('###### Header 6')),
       ],
       onSelected: (level) {
-        final prefix = '#' * level;
-        _insertMarkdown('\n$prefix ');
+        _insertRichTextHeader(level);
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -660,32 +815,159 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
     );
   }
 
-  Widget _buildRichEditor(ThemeData theme) {
-    return Padding(
-      padding: widget.padding ?? const EdgeInsets.all(AppSpacing.md),
-      child: SuperEditor(
-        editor: _editor,
-        focusNode: _focusNode,
-        stylesheet: defaultStylesheet.copyWith(
-          addRulesAfter: [
-            // Fix text indentation issues
-            StyleRule(
-              BlockSelector.all,
-              (doc, docNode) => {
-                Styles.textStyle: theme.textTheme.bodyMedium!,
-                Styles.padding: const CascadingPadding.all(0), // Remove default padding
-              },
+  Widget _buildToolbarGroup(String label, List<Widget> children) {
+    return IntrinsicWidth(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(7),
+                  topRight: Radius.circular(7),
+                ),
+              ),
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            // Specific styling for paragraphs
-            StyleRule(
-              const BlockSelector("paragraph"),
-              (doc, docNode) => {
-                Styles.textStyle: theme.textTheme.bodyMedium!,
-                Styles.padding: const CascadingPadding.symmetric(vertical: 4), // Minimal vertical padding
-              },
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Wrap(
+                children: children,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAlignmentDropdown(ThemeData theme) {
+    return PopupMenuButton<String>(
+      tooltip: 'Text Alignment',
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'left',
+          child: ListTile(
+            leading: Icon(Icons.format_align_left),
+            title: Text('Left Align'),
+            dense: true,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'center',
+          child: ListTile(
+            leading: Icon(Icons.format_align_center),
+            title: Text('Center Align'),
+            dense: true,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'right',
+          child: ListTile(
+            leading: Icon(Icons.format_align_right),
+            title: Text('Right Align'),
+            dense: true,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'justify',
+          child: ListTile(
+            leading: Icon(Icons.format_align_justify),
+            title: Text('Justify'),
+            dense: true,
+          ),
+        ),
+      ],
+      onSelected: (value) => _handleAlignmentAction(value),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Icon(Icons.format_align_left, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildFindReplaceButton(ThemeData theme) {
+    return _buildToolbarButton(
+      icon: Icons.search,
+      tooltip: 'Find & Replace (Ctrl+F)',
+      onPressed: () => _showFindReplaceDialog(),
+    );
+  }
+
+  Widget _buildRichEditor(ThemeData theme) {
+    return Padding(
+      padding: widget.padding ?? const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Info panel for rich text view
+          if (_hasTablesInContent()) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Tables display as markdown text in rich text mode. Switch to "Markdown" view to see formatted tables.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.visibility, size: 16, color: theme.colorScheme.primary),
+                    tooltip: 'Switch to Markdown view',
+                    onPressed: () {
+                      setState(() {
+                        _showMarkdown = true;
+                        _updateMarkdownController();
+                      });
+                    },
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          Expanded(
+            child: SuperEditor(
+              editor: _editor,
+              focusNode: _focusNode,
+              stylesheet: _buildCustomStylesheet(theme),
+              componentBuilders: [
+                ...defaultComponentBuilders,
+              ],
+              gestureMode: DocumentGestureMode.mouse,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -708,7 +990,7 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Edit markdown directly. Changes sync to rich text automatically.',
+                    'Edit markdown directly. Tables & code blocks display properly here. Changes sync to rich text automatically.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
@@ -738,6 +1020,16 @@ class _SuperEditorWidgetState extends State<SuperEditorWidget> {
         ],
       ),
     );
+  }
+
+  bool _hasTablesInContent() {
+    try {
+      final markdown = serializeDocumentToMarkdown(_document);
+      // Check for markdown table pattern
+      return RegExp(r'\|.*\|.*\n\|[-:]*\|').hasMatch(markdown);
+    } catch (e) {
+      return false;
+    }
   }
 
   String _getMarkdownHintText() {
@@ -773,11 +1065,10 @@ Code block
 
   // Simplified toolbar actions - insert markdown directly
   void _insertMarkdown(String markdown) {
-    if (_showMarkdown) {
-      // Save state for undo
-      _saveUndoState();
+    _saveUndoState();
 
-      // Insert into markdown text field
+    if (_showMarkdown) {
+      // Insert directly into markdown text field
       final controller = _markdownController;
       final currentText = controller.text;
       final selection = controller.selection;
@@ -794,17 +1085,30 @@ Code block
           offset: selection.start + markdown.length,
         ),
       );
-    } else {
-      // Switch to markdown mode and insert there
-      setState(() {
-        _showMarkdown = true;
-        _updateMarkdownController();
-      });
 
-      // Insert after a brief delay to ensure the markdown view is rendered
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _insertMarkdown(markdown);
-      });
+      // Sync the changes to rich text
+      _syncFromMarkdown();
+    } else {
+      // Update markdown representation first, then add the new content
+      _updateMarkdownController();
+      final currentMarkdown = _markdownController.text;
+
+      // Add the markdown at the end or at cursor position if we can determine it
+      final newMarkdown = currentMarkdown.isEmpty
+          ? markdown.trim()
+          : '$currentMarkdown\n${markdown.trim()}';
+
+      _markdownController.text = newMarkdown;
+
+      // Sync back to rich text
+      _syncFromMarkdown();
+
+      // Optionally switch to markdown mode to show the insertion
+      if (markdown.contains('\n') || markdown.length > 50) {
+        setState(() {
+          _showMarkdown = true;
+        });
+      }
     }
   }
 
@@ -913,6 +1217,407 @@ Code block
     );
   }
 
+  // Find and Replace functionality
+  void _showFindReplaceDialog({bool showReplace = false}) async {
+    // Switch to markdown mode for find/replace operations
+    if (!_showMarkdown) {
+      _updateMarkdownController();
+      setState(() {
+        _showMarkdown = true;
+      });
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) => _FindReplaceDialog(
+        controller: _markdownController,
+        showReplace: showReplace,
+        onReplace: (findText, replaceText, replaceAll) {
+          _performReplace(findText, replaceText, replaceAll);
+        },
+      ),
+    );
+  }
+
+  void _performReplace(String findText, String replaceText, bool replaceAll) {
+    if (findText.isEmpty) return;
+
+    _saveUndoState();
+
+    final controller = _markdownController;
+    final text = controller.text;
+
+    if (replaceAll) {
+      // Replace all occurrences
+      final newText = text.replaceAll(findText, replaceText);
+      if (newText != text) {
+        controller.text = newText;
+        _syncFromMarkdown();
+
+        final count = text.split(findText).length - 1;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Replaced $count occurrences')),
+        );
+      }
+    } else {
+      // Replace current selection or first occurrence
+      final selection = controller.selection;
+      final selectedText = selection.isValid
+          ? text.substring(selection.start, selection.end)
+          : '';
+
+      if (selectedText == findText) {
+        // Replace selected text
+        final newText = text.replaceRange(selection.start, selection.end, replaceText);
+        controller.text = newText;
+        controller.selection = TextSelection.collapsed(
+          offset: selection.start + replaceText.length,
+        );
+        _syncFromMarkdown();
+      } else {
+        // Find and replace first occurrence
+        final index = text.indexOf(findText);
+        if (index != -1) {
+          final newText = text.replaceFirst(findText, replaceText);
+          controller.text = newText;
+          controller.selection = TextSelection(
+            baseOffset: index,
+            extentOffset: index + replaceText.length,
+          );
+          _syncFromMarkdown();
+        }
+      }
+    }
+  }
+
+  // Document Statistics
+  void _showDocumentStatistics() {
+    _updateMarkdownController();
+    final stats = _calculateDocumentStats(_markdownController.text);
+
+    showDialog(
+      context: context,
+      builder: (context) => _DocumentStatisticsDialog(stats: stats),
+    );
+  }
+
+  DocumentStats _calculateDocumentStats(String text) {
+    // Basic text statistics
+    final trimmedText = text.trim();
+    final characters = text.length;
+    final charactersNoSpaces = text.replaceAll(RegExp(r'\s'), '').length;
+
+    // Word count (split by whitespace, filter empty)
+    final words = trimmedText.isEmpty
+        ? <String>[]
+        : trimmedText.split(RegExp(r'\s+'))
+            .where((word) => word.isNotEmpty)
+            .toList();
+    final wordCount = words.length;
+
+    // Paragraph count (split by double newlines)
+    final paragraphs = trimmedText.isEmpty
+        ? 0
+        : trimmedText.split(RegExp(r'\n\s*\n')).length;
+
+    // Line count
+    final lines = text.isEmpty ? 0 : text.split('\n').length;
+
+    // Sentence count (approximate - split by sentence ending punctuation)
+    final sentences = trimmedText.isEmpty
+        ? 0
+        : trimmedText.split(RegExp(r'[.!?]+\s+')).length;
+
+    // Reading time estimate (200 words per minute average)
+    final readingMinutes = (wordCount / 200).ceil();
+
+    // Markdown specific stats
+    final headers = _extractHeaders(text);
+    final headerCount = headers.length;
+
+    // Code blocks
+    final codeBlockMatches = RegExp(r'```[\s\S]*?```').allMatches(text);
+    final codeBlockCount = codeBlockMatches.length;
+
+    // Inline code
+    final inlineCodeMatches = RegExp(r'`[^`]+`').allMatches(text);
+    final inlineCodeCount = inlineCodeMatches.length;
+
+    // Links
+    final linkMatches = RegExp(r'\[([^\]]+)\]\(([^)]+)\)').allMatches(text);
+    final linkCount = linkMatches.length;
+
+    // Images
+    final imageMatches = RegExp(r'!\[([^\]]*)\]\(([^)]+)\)').allMatches(text);
+    final imageCount = imageMatches.length;
+
+    // Lists (bullet and numbered)
+    final bulletPoints = text.split('\n')
+        .where((line) => line.trim().startsWith('- ') || line.trim().startsWith('* '))
+        .length;
+    final numberedPoints = text.split('\n')
+        .where((line) => RegExp(r'^\s*\d+\.\s').hasMatch(line))
+        .length;
+    final totalListItems = bulletPoints + numberedPoints;
+
+    // Tables
+    final tableRows = text.split('\n')
+        .where((line) => line.trim().startsWith('|') && line.trim().endsWith('|'))
+        .length;
+
+    // Approximate table count (header + separator + data rows)
+    final tableCount = tableRows > 0 ? (tableRows / 3).ceil() : 0;
+
+    return DocumentStats(
+      characters: characters,
+      charactersNoSpaces: charactersNoSpaces,
+      words: wordCount,
+      sentences: sentences,
+      paragraphs: paragraphs,
+      lines: lines,
+      readingMinutes: readingMinutes,
+      headers: headerCount,
+      codeBlocks: codeBlockCount,
+      inlineCode: inlineCodeCount,
+      links: linkCount,
+      images: imageCount,
+      listItems: totalListItems,
+      tables: tableCount,
+    );
+  }
+
+  // Auto-save functionality
+  void _startAutoSave() {
+    _autoSaveTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_hasUnsavedChanges) {
+        _performAutoSave();
+      }
+    });
+
+    // Set initial status
+    setState(() {
+      _saveStatus = 'Auto-save enabled';
+      _hasUnsavedChanges = false;
+    });
+
+    // Clear status after a few seconds
+    Timer(const Duration(seconds: 3), () {
+      if (mounted && !_hasUnsavedChanges) {
+        setState(() {
+          _saveStatus = '';
+        });
+      }
+    });
+  }
+
+  void _markAsChanged() {
+    if (!_hasUnsavedChanges) {
+      setState(() {
+        _hasUnsavedChanges = true;
+        _saveStatus = 'Unsaved changes';
+      });
+    }
+  }
+
+  void _performAutoSave() async {
+    if (!_hasUnsavedChanges) return;
+
+    setState(() {
+      _saveStatus = 'Saving...';
+    });
+
+    // Simulate save operation (replace with actual save logic)
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // In a real app, you would save to file system, cloud, etc.
+    final markdown = _markdownController.text;
+    if (widget.onMarkdownChanged != null) {
+      widget.onMarkdownChanged!(markdown);
+    }
+
+    final now = DateTime.now();
+    setState(() {
+      _hasUnsavedChanges = false;
+      _lastSaveTime = now;
+      _saveStatus = 'Saved ${_formatSaveTime(now)}';
+    });
+
+    // Clear save status after a few seconds
+    Timer(const Duration(seconds: 3), () {
+      if (mounted && !_hasUnsavedChanges) {
+        setState(() {
+          _saveStatus = '';
+        });
+      }
+    });
+  }
+
+  void _forceSave() {
+    _hasUnsavedChanges = true; // Force save even if no changes detected
+    _performAutoSave();
+  }
+
+  String _formatSaveTime(DateTime time) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+
+    if (diff.inSeconds < 60) {
+      return 'just now';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours}h ago';
+    } else {
+      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    }
+  }
+
+  // Advanced Super Editor Features
+  Stylesheet _buildCustomStylesheet(ThemeData theme) {
+    return defaultStylesheet.copyWith(
+      addRulesAfter: [
+        // Enhanced paragraph styling
+        StyleRule(
+          const BlockSelector("paragraph"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.bodyMedium!.copyWith(
+              height: 1.6, // Better line spacing for reading
+            ),
+            Styles.padding: const CascadingPadding.symmetric(vertical: 4),
+          },
+        ),
+
+        // Custom header styling with better hierarchy
+        StyleRule(
+          const BlockSelector("header1"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.headlineLarge!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+            Styles.padding: const CascadingPadding.only(top: 24, bottom: 12),
+          },
+        ),
+
+        StyleRule(
+          const BlockSelector("header2"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.headlineMedium!.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
+            ),
+            Styles.padding: const CascadingPadding.only(top: 20, bottom: 10),
+          },
+        ),
+
+        StyleRule(
+          const BlockSelector("header3"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.headlineSmall!.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+            Styles.padding: const CascadingPadding.only(top: 16, bottom: 8),
+          },
+        ),
+
+        // Enhanced blockquote styling
+        StyleRule(
+          const BlockSelector("blockquote"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.bodyMedium!.copyWith(
+              fontStyle: FontStyle.italic,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            Styles.padding: const CascadingPadding.only(left: 16, top: 8, bottom: 8),
+            // Border would be added via custom component if available
+          },
+        ),
+
+        // Code block styling
+        StyleRule(
+          const BlockSelector("code"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.bodyMedium!.copyWith(
+              fontFamily: 'monospace',
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+            Styles.padding: const CascadingPadding.all(12),
+          },
+        ),
+
+        // List item styling
+        StyleRule(
+          const BlockSelector("listItem"),
+          (doc, docNode) => {
+            Styles.textStyle: theme.textTheme.bodyMedium!,
+            Styles.padding: const CascadingPadding.only(left: 24, bottom: 4),
+          },
+        ),
+      ],
+    );
+  }
+
+
+  // Enhanced keyboard shortcut system
+  Map<LogicalKeySet, VoidCallback> _buildKeyboardShortcuts() {
+    return {
+      // Text formatting shortcuts
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyB): _toggleBold,
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyI): _toggleItalic,
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.keyS): _toggleStrikethrough,
+
+      // Document shortcuts
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): _forceSave,
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): () => _showFindReplaceDialog(),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyH): () => _showFindReplaceDialog(showReplace: true),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyK): _showLinkDialog,
+
+      // Header shortcuts
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit1): () => _insertRichTextHeader(1),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit2): () => _insertRichTextHeader(2),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit3): () => _insertRichTextHeader(3),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit4): () => _insertRichTextHeader(4),
+
+      // List shortcuts
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.digit8): () => _insertRichTextList('unordered'),
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.digit7): () => _insertRichTextList('ordered'),
+
+      // Undo/Redo
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyZ): _undo,
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyY): _redo,
+      LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.keyZ): _redo,
+    };
+  }
+
+  // Optimized synchronization methods
+  void _scheduleSyncToMarkdown() {
+    // Cancel any pending sync to avoid redundant updates
+    _syncToMarkdownTimer?.cancel();
+
+    // Schedule sync with a slight delay to batch rapid changes
+    _syncToMarkdownTimer = Timer(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        _updateMarkdownController();
+      }
+    });
+  }
+
+  void _scheduleSyncFromMarkdown() {
+    // Cancel any pending sync to avoid redundant updates
+    _syncFromMarkdownTimer?.cancel();
+
+    // Schedule sync with a slight delay to batch rapid changes
+    _syncFromMarkdownTimer = Timer(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        _syncFromMarkdown();
+      }
+    });
+  }
+
+
   // Smart text formatting methods that work with selections
   void _toggleBold() {
     _toggleFormatting('**', '**', 'Bold text');
@@ -926,20 +1631,115 @@ Code block
     _toggleFormatting('~~', '~~', 'Strikethrough text');
   }
 
+  void _toggleUnderline() {
+    _toggleFormatting('<u>', '</u>', 'Underlined text');
+  }
+
+  void _toggleSuperscript() {
+    _toggleFormatting('<sup>', '</sup>', 'Superscript');
+  }
+
+  void _toggleSubscript() {
+    _toggleFormatting('<sub>', '</sub>', 'Subscript');
+  }
+
+  void _toggleHighlight() {
+    _toggleFormatting('==', '==', 'Highlighted text');
+  }
+
+  void _toggleInlineCode() {
+    _toggleFormatting('`', '`', 'code');
+  }
+
   void _toggleFormatting(String startMark, String endMark, String placeholder) {
     if (_showMarkdown) {
       _toggleMarkdownFormatting(startMark, endMark, placeholder);
     } else {
-      // Switch to markdown mode and apply formatting there
-      setState(() {
-        _showMarkdown = true;
-        _updateMarkdownController();
-      });
+      _toggleRichTextFormatting(startMark, endMark);
+    }
+  }
 
-      // Apply formatting after a brief delay
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _toggleMarkdownFormatting(startMark, endMark, placeholder);
-      });
+  void _toggleRichTextFormatting(String startMark, String endMark) {
+    // Enhanced null safety checks
+    if (_document.nodeCount == 0) {
+      debugPrint('Document is empty, cannot apply formatting');
+      return;
+    }
+
+    final selection = _composer.selection;
+    if (selection == null) {
+      // Create a default selection at the beginning of the document
+      final firstNode = _document.getNodeAt(0);
+      if (firstNode == null) return;
+
+      try {
+        final initialPosition = DocumentPosition(
+          nodeId: firstNode.id,
+          nodePosition: firstNode is TextNode
+            ? const TextNodePosition(offset: 0)
+            : firstNode.beginningPosition,
+        );
+
+        _composer.setSelectionWithReason(
+          DocumentSelection.collapsed(position: initialPosition),
+          SelectionReason.userInteraction,
+        );
+      } catch (e) {
+        debugPrint('Failed to create selection: $e');
+      }
+      return; // Let the user click to create a selection first
+    }
+
+    // Validate selection positions exist in document
+    try {
+      final baseNode = _document.getNodeById(selection.base.nodeId);
+      final extentNode = _document.getNodeById(selection.extent.nodeId);
+      if (baseNode == null || extentNode == null) {
+        debugPrint('Selection references non-existent nodes');
+        return;
+      }
+    } catch (e) {
+      debugPrint('Invalid selection: $e');
+      return;
+    }
+
+    _saveUndoState();
+
+    // Map markdown syntax to Super Editor attributions
+    Attribution? attribution;
+    if (startMark == '**') {
+      attribution = boldAttribution;
+    } else if (startMark == '*') {
+      attribution = italicsAttribution;
+    } else if (startMark == '~~') {
+      attribution = strikethroughAttribution;
+    } else if (startMark == '`') {
+      attribution = codeAttribution;
+    }
+
+    if (attribution != null) {
+      try {
+        // Use the correct Super Editor command with proper request format
+        _editor.execute([
+          ToggleTextAttributionsRequest(
+            documentRange: selection,
+            attributions: {attribution},
+          ),
+        ]);
+
+        // Update markdown representation after the rich text change (optimized timing)
+        _scheduleSyncToMarkdown();
+      } catch (e) {
+        debugPrint('Rich text formatting error: $e');
+        // Fallback to markdown mode if the command fails
+        _updateMarkdownController();
+        setState(() {
+          _showMarkdown = true;
+        });
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _toggleMarkdownFormatting(startMark, endMark, 'text');
+        });
+      }
     }
   }
 
@@ -1018,11 +1818,17 @@ Code block
         );
       }
     }
+
+    // Always sync changes back to rich text
+    _syncFromMarkdown();
   }
 
   // Undo/Redo functionality
   void _saveUndoState() {
     final currentText = _markdownController.text;
+
+    // Mark as changed when saving undo state
+    _markAsChanged();
 
     // Don't save if text hasn't changed
     if (_undoStack.isNotEmpty && _undoStack.last == currentText) {
@@ -1099,6 +1905,15 @@ Code block
         } else if (event.logicalKey == LogicalKeyboardKey.keyK) {
           _showLinkDialog();
           return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.keyF) {
+          _showFindReplaceDialog();
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.keyH) {
+          _showFindReplaceDialog(showReplace: true);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.keyS) {
+          _forceSave();
+          return KeyEventResult.handled;
         }
       }
     }
@@ -1164,9 +1979,87 @@ Code block
     }
   }
 
-  // Inline code toggle
-  void _toggleInlineCode() {
-    _toggleFormatting('`', '`', 'code');
+
+  // Enhanced block formatting methods
+  void _insertQuoteBlock() {
+    // For now, use markdown insertion which syncs properly
+    // Super Editor's blockquote API needs more investigation
+    _insertMarkdown('\n> ');
+  }
+
+  void _insertHorizontalRule() {
+    // Use markdown insertion for now
+    _insertMarkdown('\n---\n');
+  }
+
+  void _clearFormatting() {
+    // Clear all formatting from selected text
+    final selection = _composer.selection;
+    if (selection == null) return;
+
+    _saveUndoState();
+
+    try {
+      // Clear all text attributions from selection
+      _editor.execute([
+        RemoveTextAttributionsRequest(
+          documentRange: selection,
+          attributions: {
+            boldAttribution,
+            italicsAttribution,
+            strikethroughAttribution,
+            underlineAttribution,
+            codeAttribution,
+          },
+        ),
+      ]);
+      _scheduleSyncToMarkdown();
+    } catch (e) {
+      debugPrint('Failed to clear formatting: $e');
+      // Fallback to markdown mode
+      _updateMarkdownController();
+      setState(() {
+        _showMarkdown = true;
+      });
+    }
+  }
+
+  void _showImageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _ImageInsertDialog(
+        onInsert: (url, altText) {
+          _insertMarkdown('![$altText]($url)');
+        },
+      ),
+    );
+  }
+
+  void _showDocumentStats() {
+    final markdown = serializeDocumentToMarkdown(_document);
+    final stats = _calculateDocumentStats(markdown);
+
+    showDialog(
+      context: context,
+      builder: (context) => _DocumentStatisticsDialog(
+        stats: stats,
+      ),
+    );
+  }
+
+  // Rich text header insertion
+  void _insertRichTextHeader(int level) {
+    // Use markdown insertion which will sync to rich text
+    final headerMarkdown = '\n${'#' * level} ';
+    _insertMarkdown(headerMarkdown);
+  }
+
+  // Rich text list insertion (with fallback to markdown)
+  void _insertRichTextList(String listType) {
+    // For now, use markdown approach since the advanced commands need more research
+    // This still provides rich text synchronization through our existing system
+    final listMarkdown = listType == 'unordered' ? '- ' : '1. ';
+    _insertMarkdown('\n$listMarkdown');
   }
 
   // Code action handler
@@ -1251,10 +2144,10 @@ Code block
   void _handleListAction(String action) {
     switch (action) {
       case 'bullet_list':
-        _insertMarkdown('\n- ');
+        _insertRichTextList('unordered');
         break;
       case 'numbered_list':
-        _insertMarkdown('\n1. ');
+        _insertRichTextList('ordered');
         break;
       case 'indent_list':
         _indentCurrentLine();
@@ -1272,6 +2165,29 @@ Code block
         _convertListType('numbered');
         break;
     }
+  }
+
+  void _handleAlignmentAction(String alignment) {
+    // For now, implement basic HTML-style alignment in markdown
+    // This could be enhanced with custom CSS or Super Editor styling
+    String alignmentTag;
+    switch (alignment) {
+      case 'left':
+        alignmentTag = '<div align="left">\n\n</div>';
+        break;
+      case 'center':
+        alignmentTag = '<div align="center">\n\n</div>';
+        break;
+      case 'right':
+        alignmentTag = '<div align="right">\n\n</div>';
+        break;
+      case 'justify':
+        alignmentTag = '<div align="justify">\n\n</div>';
+        break;
+      default:
+        return;
+    }
+    _insertMarkdown(alignmentTag);
   }
 
   void _indentCurrentLine() {
@@ -2078,6 +2994,405 @@ class _DocumentOutlineDialog extends StatelessWidget {
   }
 }
 
+// Document Statistics class
+class DocumentStats {
+  final int characters;
+  final int charactersNoSpaces;
+  final int words;
+  final int sentences;
+  final int paragraphs;
+  final int lines;
+  final int readingMinutes;
+  final int headers;
+  final int codeBlocks;
+  final int inlineCode;
+  final int links;
+  final int images;
+  final int listItems;
+  final int tables;
+
+  const DocumentStats({
+    required this.characters,
+    required this.charactersNoSpaces,
+    required this.words,
+    required this.sentences,
+    required this.paragraphs,
+    required this.lines,
+    required this.readingMinutes,
+    required this.headers,
+    required this.codeBlocks,
+    required this.inlineCode,
+    required this.links,
+    required this.images,
+    required this.listItems,
+    required this.tables,
+  });
+}
+
+// Document Statistics Dialog
+class _DocumentStatisticsDialog extends StatelessWidget {
+  final DocumentStats stats;
+
+  const _DocumentStatisticsDialog({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    Widget buildStatItem(String label, String value, {IconData? icon}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+            ],
+            Expanded(child: Text(label)),
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AlertDialog(
+      title: const Text('Document Statistics'),
+      content: SizedBox(
+        width: 350,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Text Statistics',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const Divider(),
+            buildStatItem('Words', '${stats.words}', icon: Icons.text_fields),
+            buildStatItem('Characters', '${stats.characters}', icon: Icons.abc),
+            buildStatItem('Characters (no spaces)', '${stats.charactersNoSpaces}'),
+            buildStatItem('Sentences', '${stats.sentences}', icon: Icons.circle),
+            buildStatItem('Paragraphs', '${stats.paragraphs}', icon: Icons.view_agenda),
+            buildStatItem('Lines', '${stats.lines}', icon: Icons.format_align_left),
+            buildStatItem(
+              'Reading time',
+              '${stats.readingMinutes} min${stats.readingMinutes == 1 ? '' : 's'}',
+              icon: Icons.schedule,
+            ),
+
+            const SizedBox(height: 16),
+
+            Text(
+              'Markdown Elements',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const Divider(),
+            buildStatItem('Headers', '${stats.headers}', icon: Icons.title),
+            buildStatItem('Code blocks', '${stats.codeBlocks}', icon: Icons.code),
+            buildStatItem('Inline code', '${stats.inlineCode}', icon: Icons.code),
+            buildStatItem('Links', '${stats.links}', icon: Icons.link),
+            buildStatItem('Images', '${stats.images}', icon: Icons.image),
+            buildStatItem('List items', '${stats.listItems}', icon: Icons.list),
+            buildStatItem('Tables', '${stats.tables}', icon: Icons.table_chart),
+
+            if (stats.words > 0) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Reading time based on 200 words/minute average',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+}
+
+// Find Replace Dialog
+class _FindReplaceDialog extends StatefulWidget {
+  final TextEditingController controller;
+  final bool showReplace;
+  final Function(String findText, String replaceText, bool replaceAll) onReplace;
+
+  const _FindReplaceDialog({
+    required this.controller,
+    required this.showReplace,
+    required this.onReplace,
+  });
+
+  @override
+  State<_FindReplaceDialog> createState() => _FindReplaceDialogState();
+}
+
+class _FindReplaceDialogState extends State<_FindReplaceDialog> {
+  late TextEditingController _findController;
+  late TextEditingController _replaceController;
+  bool _caseSensitive = false;
+  bool _wholeWord = false;
+  int _currentMatchIndex = -1;
+  int _totalMatches = 0;
+  List<int> _matchPositions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _findController = TextEditingController();
+    _replaceController = TextEditingController();
+    _findController.addListener(_updateMatches);
+  }
+
+  @override
+  void dispose() {
+    _findController.dispose();
+    _replaceController.dispose();
+    super.dispose();
+  }
+
+  void _updateMatches() {
+    final findText = _findController.text;
+    final docText = widget.controller.text;
+
+    if (findText.isEmpty) {
+      setState(() {
+        _matchPositions.clear();
+        _totalMatches = 0;
+        _currentMatchIndex = -1;
+      });
+      return;
+    }
+
+    final searchText = _caseSensitive ? docText : docText.toLowerCase();
+    final searchPattern = _caseSensitive ? findText : findText.toLowerCase();
+
+    _matchPositions.clear();
+    int startIndex = 0;
+
+    while (true) {
+      int index = searchText.indexOf(searchPattern, startIndex);
+      if (index == -1) break;
+
+      if (_wholeWord) {
+        // Check if it's a whole word
+        bool isWholeWord = true;
+        if (index > 0 && RegExp(r'\w').hasMatch(docText[index - 1])) {
+          isWholeWord = false;
+        }
+        if (index + searchPattern.length < docText.length &&
+            RegExp(r'\w').hasMatch(docText[index + searchPattern.length])) {
+          isWholeWord = false;
+        }
+        if (isWholeWord) {
+          _matchPositions.add(index);
+        }
+      } else {
+        _matchPositions.add(index);
+      }
+
+      startIndex = index + 1;
+    }
+
+    setState(() {
+      _totalMatches = _matchPositions.length;
+      _currentMatchIndex = _totalMatches > 0 ? 0 : -1;
+    });
+
+    if (_totalMatches > 0) {
+      _highlightMatch(0);
+    }
+  }
+
+  void _highlightMatch(int matchIndex) {
+    if (matchIndex < 0 || matchIndex >= _matchPositions.length) return;
+
+    final position = _matchPositions[matchIndex];
+    final findText = _findController.text;
+
+    widget.controller.selection = TextSelection(
+      baseOffset: position,
+      extentOffset: position + findText.length,
+    );
+
+    setState(() {
+      _currentMatchIndex = matchIndex;
+    });
+  }
+
+  void _findNext() {
+    if (_totalMatches == 0) return;
+    final nextIndex = (_currentMatchIndex + 1) % _totalMatches;
+    _highlightMatch(nextIndex);
+  }
+
+  void _findPrevious() {
+    if (_totalMatches == 0) return;
+    final prevIndex = (_currentMatchIndex - 1 + _totalMatches) % _totalMatches;
+    _highlightMatch(prevIndex);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.showReplace ? 'Find & Replace' : 'Find'),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Find field
+            TextField(
+              controller: _findController,
+              decoration: InputDecoration(
+                labelText: 'Find',
+                hintText: 'Enter text to find...',
+                suffixText: _totalMatches > 0 ? '${_currentMatchIndex + 1}/$_totalMatches' : '',
+              ),
+              autofocus: true,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Replace field (if shown)
+            if (widget.showReplace) ...[
+              TextField(
+                controller: _replaceController,
+                decoration: const InputDecoration(
+                  labelText: 'Replace with',
+                  hintText: 'Enter replacement text...',
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // Options
+            Row(
+              children: [
+                Expanded(
+                  child: CheckboxListTile(
+                    title: const Text('Case sensitive', style: TextStyle(fontSize: 12)),
+                    value: _caseSensitive,
+                    onChanged: (value) {
+                      setState(() {
+                        _caseSensitive = value ?? false;
+                      });
+                      _updateMatches();
+                    },
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                Expanded(
+                  child: CheckboxListTile(
+                    title: const Text('Whole word', style: TextStyle(fontSize: 12)),
+                    value: _wholeWord,
+                    onChanged: (value) {
+                      setState(() {
+                        _wholeWord = value ?? false;
+                      });
+                      _updateMatches();
+                    },
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // Navigation buttons
+            Row(
+              children: [
+                IconButton(
+                  onPressed: _totalMatches > 0 ? _findPrevious : null,
+                  icon: const Icon(Icons.keyboard_arrow_up),
+                  tooltip: 'Previous',
+                ),
+                IconButton(
+                  onPressed: _totalMatches > 0 ? _findNext : null,
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                  tooltip: 'Next',
+                ),
+                const Spacer(),
+                Text(
+                  _totalMatches == 0
+                      ? (_findController.text.isEmpty ? '' : 'No matches')
+                      : '$_totalMatches matches found',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+        if (widget.showReplace) ...[
+          TextButton(
+            onPressed: _totalMatches > 0
+                ? () {
+                    widget.onReplace(_findController.text, _replaceController.text, false);
+                    _updateMatches();
+                  }
+                : null,
+            child: const Text('Replace'),
+          ),
+          TextButton(
+            onPressed: _totalMatches > 0
+                ? () {
+                    widget.onReplace(_findController.text, _replaceController.text, true);
+                    Navigator.of(context).pop();
+                  }
+                : null,
+            child: const Text('Replace All'),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 // Link Dialog Widget
 class _LinkDialog extends StatefulWidget {
   final String initialText;
@@ -2181,6 +3496,185 @@ class _LinkDialogState extends State<_LinkDialog> {
             });
           },
           child: const Text('Insert'),
+        ),
+      ],
+    );
+  }
+}
+
+// Enhanced Image Insert Dialog
+class _ImageInsertDialog extends StatefulWidget {
+  final Function(String url, String altText) onInsert;
+
+  const _ImageInsertDialog({
+    required this.onInsert,
+  });
+
+  @override
+  State<_ImageInsertDialog> createState() => _ImageInsertDialogState();
+}
+
+class _ImageInsertDialogState extends State<_ImageInsertDialog> {
+  final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _altController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _widthController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+
+  String _imageSource = 'url'; // 'url', 'file'
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _altController.dispose();
+    _titleController.dispose();
+    _widthController.dispose();
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Insert Image'),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Image source selection
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'url',
+                  label: Text('URL'),
+                  icon: Icon(Icons.link),
+                ),
+                ButtonSegment(
+                  value: 'file',
+                  label: Text('File'),
+                  icon: Icon(Icons.file_upload),
+                ),
+              ],
+              selected: {_imageSource},
+              onSelectionChanged: (Set<String> selection) {
+                setState(() {
+                  _imageSource = selection.first;
+                });
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            if (_imageSource == 'url') ...[
+              TextField(
+                controller: _urlController,
+                decoration: const InputDecoration(
+                  labelText: 'Image URL *',
+                  hintText: 'https://example.com/image.jpg',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ] else ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.cloud_upload, size: 48),
+                    const SizedBox(height: 8),
+                    const Text('File upload not implemented'),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Please use URL option for now',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: _altController,
+              decoration: const InputDecoration(
+                labelText: 'Alt Text *',
+                hintText: 'Descriptive text for accessibility',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title (Optional)',
+                hintText: 'Tooltip text on hover',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _widthController,
+                    decoration: const InputDecoration(
+                      labelText: 'Width (Optional)',
+                      hintText: '300px or 50%',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _heightController,
+                    decoration: const InputDecoration(
+                      labelText: 'Height (Optional)',
+                      hintText: '200px or auto',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            if (_imageSource == 'url' && _urlController.text.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please enter an image URL')),
+              );
+              return;
+            }
+
+            if (_altController.text.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please enter alt text for accessibility')),
+              );
+              return;
+            }
+
+            widget.onInsert(_urlController.text, _altController.text);
+            Navigator.of(context).pop();
+          },
+          child: const Text('Insert Image'),
         ),
       ],
     );

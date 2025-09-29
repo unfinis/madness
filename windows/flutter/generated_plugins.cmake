@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   file_selector_windows
+  flutter_inappwebview_windows
   irondash_engine_context
   permission_handler_windows
   sqlite3_flutter_libs

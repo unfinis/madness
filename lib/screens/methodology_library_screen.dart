@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/projects_provider.dart';
-import '../providers/storage_provider.dart';
+import '../providers/unified_methodology_provider.dart';
 import '../widgets/common_state_widgets.dart';
 import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/methodology_template_editor_dialog.dart';
-import '../services/methodology_loader.dart';
+import '../services/methodology_loader.dart' as loader;
 
 class MethodologyLibraryScreen extends ConsumerStatefulWidget {
   const MethodologyLibraryScreen({super.key});
@@ -21,41 +21,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   String _selectedRiskLevel = 'all';
   String _sortBy = 'name'; // name, created, updated, risk
 
-  bool _hasLoadedFromJson = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMethodologiesFromJsonIfNeeded();
-  }
-
-  /// Load methodologies from JSON assets if storage is empty
-  Future<void> _loadMethodologiesFromJsonIfNeeded() async {
-    if (_hasLoadedFromJson) return;
-
-    try {
-      final storage = ref.read(storageServiceProvider);
-      final existingTemplates = await storage.getAllTemplates();
-
-      // If storage is empty, load from JSON and migrate
-      if (existingTemplates.isEmpty) {
-        debugPrint('Storage empty, loading from JSON assets...');
-        await MethodologyLoader.loadAllMethodologies();
-        final jsonMethodologies = MethodologyLoader.getAllMethodologies();
-        debugPrint('Loaded ${jsonMethodologies.length} methodologies from JSON');
-
-        // Store in Drift database
-        for (final methodology in jsonMethodologies) {
-          await storage.storeTemplate(methodology);
-        }
-        debugPrint('Migrated ${jsonMethodologies.length} methodologies to Drift database');
-      }
-
-      _hasLoadedFromJson = true;
-    } catch (e) {
-      debugPrint('Error in _loadMethodologiesFromJsonIfNeeded: $e');
-    }
-  }
+  // No longer need manual loading - the unified provider handles this automatically
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +33,21 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       );
     }
 
-    // Watch templates from storage
-    final templatesAsync = ref.watch(templateNotifierProvider);
+    // Update search filters based on local state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(methodologySearchFiltersProvider.notifier).update((state) => {
+        'query': _searchQuery,
+        'tags': _selectedTag != null ? [_selectedTag!] : <String>[],
+        'riskLevel': _selectedRiskLevel == 'all' ? null : _selectedRiskLevel,
+        'workstream': null,
+      });
+    });
 
-    return templatesAsync.when(
+    // Watch all templates and filtered templates
+    final allTemplatesAsync = ref.watch(allMethodologyTemplatesProvider);
+    final filteredTemplatesAsync = ref.watch(filteredMethodologiesProvider);
+
+    return allTemplatesAsync.when(
       loading: () => const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -94,26 +71,23 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.refresh(templateNotifierProvider),
+                onPressed: () => ref.refresh(allMethodologyTemplatesProvider),
                 child: const Text('Retry'),
               ),
             ],
           ),
         ),
       ),
-      data: (methodologies) {
-        final filteredMethodologies = _applyFilters(methodologies);
-        final allTags = _getAllTags(methodologies);
+      data: (allMethodologies) {
+        final filteredMethodologies = filteredTemplatesAsync.asData?.value ?? [];
+        final allTags = _getAllTags(allMethodologies);
 
-        return _buildLibraryContent(filteredMethodologies, allTags);
+        return _buildLibraryContent(filteredMethodologies, allTags, allMethodologies);
       },
     );
   }
 
-  Widget _buildLibraryContent(List<MethodologyTemplate> filteredMethodologies, List<String> allTags) {
-    // Get original methodologies list for stats
-    final templatesAsync = ref.read(templateNotifierProvider);
-    final allMethodologies = templatesAsync.asData?.value ?? [];
+  Widget _buildLibraryContent(List<loader.MethodologyTemplate> filteredMethodologies, List<String> allTags, List<loader.MethodologyTemplate> allMethodologies) {
 
     return Scaffold(
       body: Column(
@@ -136,7 +110,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  Widget _buildStatsBar(List<MethodologyTemplate> filtered, List<MethodologyTemplate> total) {
+  Widget _buildStatsBar(List<loader.MethodologyTemplate> filtered, List<loader.MethodologyTemplate> total) {
     final stats = _calculateStats(total);
 
     final statsData = [
@@ -288,7 +262,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  Widget _buildTagCloud(List<String> allTags, List<MethodologyTemplate> methodologies) {
+  Widget _buildTagCloud(List<String> allTags, List<loader.MethodologyTemplate> methodologies) {
     final tagFrequency = <String, int>{};
     for (final methodology in methodologies) {
       for (final tag in methodology.tags) {
@@ -381,7 +355,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     return (frequency / maxFrequency).clamp(0.0, 1.0) * 3.0;
   }
 
-  Widget _buildMethodologyGrid(List<MethodologyTemplate> methodologies) {
+  Widget _buildMethodologyGrid(List<loader.MethodologyTemplate> methodologies) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 1200 ? 3 : constraints.maxWidth > 800 ? 2 : 1;
@@ -403,7 +377,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  Widget _buildMethodologyCard(MethodologyTemplate methodology) {
+  Widget _buildMethodologyCard(loader.MethodologyTemplate methodology) {
     final riskColor = _getRiskLevelColor(methodology.riskLevel);
 
     return Card(
@@ -647,55 +621,9 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  List<MethodologyTemplate> _applyFilters(List<MethodologyTemplate> methodologies) {
-    var filtered = methodologies.where((methodology) {
-      // Search filter
-      if (_searchQuery.isNotEmpty) {
-        final searchableText = [
-          methodology.name,
-          methodology.id,
-          methodology.description,
-          ...methodology.tags,
-        ].join(' ').toLowerCase();
+  // Filtering is now handled by the unified provider
 
-        if (!searchableText.contains(_searchQuery)) {
-          return false;
-        }
-      }
-
-      // Risk level filter
-      if (_selectedRiskLevel != 'all' && methodology.riskLevel != _selectedRiskLevel) {
-        return false;
-      }
-
-      // Tag filter
-      if (_selectedTag != null && !methodology.tags.contains(_selectedTag)) {
-        return false;
-      }
-
-      return true;
-    }).toList();
-
-    // Sort
-    switch (_sortBy) {
-      case 'name':
-        filtered.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'created':
-        filtered.sort((a, b) => b.created.compareTo(a.created));
-        break;
-      case 'updated':
-        filtered.sort((a, b) => b.modified.compareTo(a.modified));
-        break;
-      case 'risk':
-        filtered.sort((a, b) => _getRiskLevelPriority(b.riskLevel).compareTo(_getRiskLevelPriority(a.riskLevel)));
-        break;
-    }
-
-    return filtered;
-  }
-
-  List<String> _getAllTags(List<MethodologyTemplate> methodologies) {
+  List<String> _getAllTags(List<loader.MethodologyTemplate> methodologies) {
     final allTags = <String>{};
     for (final methodology in methodologies) {
       allTags.addAll(methodology.tags);
@@ -703,7 +631,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     return allTags.toList()..sort();
   }
 
-  _MethodologyStats _calculateStats(List<MethodologyTemplate> methodologies) {
+  _MethodologyStats _calculateStats(List<loader.MethodologyTemplate> methodologies) {
     return _MethodologyStats(
       lowRisk: methodologies.where((m) => m.riskLevel == 'low').length,
       mediumRisk: methodologies.where((m) => m.riskLevel == 'medium').length,
@@ -727,20 +655,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     }
   }
 
-  int _getRiskLevelPriority(String riskLevel) {
-    switch (riskLevel) {
-      case 'critical':
-        return 4;
-      case 'high':
-        return 3;
-      case 'medium':
-        return 2;
-      case 'low':
-        return 1;
-      default:
-        return 0;
-    }
-  }
+  // Risk level priority logic moved to provider
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -790,7 +705,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  void _openMethodology(MethodologyTemplate template) {
+  void _openMethodology(loader.MethodologyTemplate template) {
     showDialog(
       context: context,
       builder: (context) => MethodologyTemplateEditorDialog(
@@ -800,7 +715,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  void _handleMethodologyAction(String action, MethodologyTemplate methodology) {
+  void _handleMethodologyAction(String action, loader.MethodologyTemplate methodology) {
     switch (action) {
       case 'view':
         _openMethodology(methodology);
@@ -820,7 +735,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     }
   }
 
-  void _editMethodology(MethodologyTemplate template) {
+  void _editMethodology(loader.MethodologyTemplate template) {
     showDialog(
       context: context,
       builder: (context) => MethodologyTemplateEditorDialog(
@@ -836,19 +751,19 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  void _duplicateMethodology(MethodologyTemplate methodology) {
+  void _duplicateMethodology(loader.MethodologyTemplate methodology) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Duplicate methodology coming soon')),
     );
   }
 
-  void _exportMethodology(MethodologyTemplate methodology) {
+  void _exportMethodology(loader.MethodologyTemplate methodology) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Export methodology coming soon')),
     );
   }
 
-  void _deleteMethodology(MethodologyTemplate methodology) {
+  void _deleteMethodology(loader.MethodologyTemplate methodology) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

@@ -1,0 +1,23 @@
+# Methodology Index
+# This file lists all available methodologies for the unified loader
+
+version: "1.0"
+last_updated: "2024-09-29T00:00:00Z"
+
+methodologies:
+  reconnaissance:
+    - id: "nmap_discovery"
+      file: "reconnaissance/nmap_discovery.yaml"
+      name: "Nmap Host Discovery"
+      tags: ["network", "discovery", "nmap"]
+
+  exploitation:
+    - id: "smb_relay_attack"
+      file: "exploitation/smb_relay.yaml"
+      name: "SMB Relay Attack"
+      tags: ["smb", "relay", "ntlm"]
+
+# Future methodologies will be added here
+# persistence:
+# lateral_movement:
+# privilege_escalation:

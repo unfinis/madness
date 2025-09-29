@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/finding.dart';
 import '../providers/finding_provider.dart';
 import '../constants/app_spacing.dart';
-import '../widgets/super_editor_widget.dart';
+import '../widgets/quill_rich_editor_widget.dart';
 
 class EnhancedFindingDialog extends ConsumerStatefulWidget {
   final Finding? finding;
@@ -32,9 +32,9 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
   late TextEditingController _cvssVectorController;
   late TextEditingController _executiveNoteController;
 
-  // Markdown content controllers
-  late String _descriptionMarkdown;
-  late String _recommendationsMarkdown;
+  // Rich text content controllers
+  late String _descriptionContent;
+  late String _recommendationsContent;
 
   // Lists for dynamic fields
   final List<TextEditingController> _furtherReadingControllers = [];
@@ -59,9 +59,9 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
     );
     _executiveNoteController = TextEditingController();
 
-    // Initialize markdown content
-    _descriptionMarkdown = widget.finding?.description ?? '';
-    _recommendationsMarkdown = '';
+    // Initialize rich text content
+    _descriptionContent = widget.finding?.description ?? '';
+    _recommendationsContent = '';
 
     // Initialize severity
     _selectedSeverity = widget.finding?.severity ?? FindingSeverity.medium;
@@ -172,7 +172,7 @@ class _EnhancedFindingDialogState extends ConsumerState<EnhancedFindingDialog>
           IconButton(
             icon: const Icon(Icons.upload),
             onPressed: _importFromMarkdown,
-            tooltip: 'Import from Markdown',
+            tooltip: 'Import from HTML/Markdown',
           ),
           IconButton(
             icon: const Icon(Icons.close),
@@ -365,26 +365,27 @@ Informational (0.0): No direct security impact
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Provide a detailed description of the vulnerability or finding. Use markdown for formatting.',
+            'Provide a detailed description of the vulnerability or finding. Use the rich text editor to format your content.',
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
-            child: SuperEditorWidget(
-              initialMarkdown: _descriptionMarkdown,
-              hintText: '''Describe the finding in detail...
+            child: QuillRichEditorWidget(
+              initialContent: _descriptionContent,
+              placeholder: '''Describe the finding in detail...
 
 Example structure:
-Overview: Brief summary of the finding
-Technical Details: Detailed technical explanation
-Impact: Potential impact on the system or business
-Proof of Concept: Steps to reproduce or evidence
+• Overview: Brief summary of the finding
+• Technical Details: Detailed technical explanation
+• Impact: Potential impact on the system or business
+• Proof of Concept: Steps to reproduce or evidence
 ''',
-              onMarkdownChanged: (value) {
-                _descriptionMarkdown = value;
+              onChanged: (value) {
+                _descriptionContent = value;
                 _hasUnsavedChanges = true;
               },
-              height: 400,
+              minHeight: 400,
+              showToolbar: true,
             ),
           ),
         ],
@@ -406,33 +407,34 @@ Proof of Concept: Steps to reproduce or evidence
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Provide detailed remediation steps and recommendations. Use markdown for formatting.',
+            'Provide detailed remediation steps and recommendations. Use the rich text editor to format your content.',
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
-            child: SuperEditorWidget(
-              initialMarkdown: _recommendationsMarkdown,
-              hintText: '''Provide remediation recommendations...
+            child: QuillRichEditorWidget(
+              initialContent: _recommendationsContent,
+              placeholder: '''Provide remediation recommendations...
 
 Example structure:
-Short-term Remediation:
-1. Immediate actions to mitigate risk
-2. Quick fixes or workarounds
+• Short-term Remediation:
+  1. Immediate actions to mitigate risk
+  2. Quick fixes or workarounds
 
-Long-term Remediation:
-- Permanent solution implementation
-- Architecture changes if needed
+• Long-term Remediation:
+  - Permanent solution implementation
+  - Architecture changes if needed
 
-Additional Considerations:
-- Security best practices
-- Monitoring recommendations
+• Additional Considerations:
+  - Security best practices
+  - Monitoring recommendations
 ''',
-              onMarkdownChanged: (value) {
-                _recommendationsMarkdown = value;
+              onChanged: (value) {
+                _recommendationsContent = value;
                 _hasUnsavedChanges = true;
               },
-              height: 400,
+              minHeight: 400,
+              showToolbar: true,
             ),
           ),
         ],
@@ -912,7 +914,7 @@ Avoid technical jargon and implementation details.''',
       id: widget.finding?.id ?? const Uuid().v4(),
       projectId: widget.projectId,
       title: _titleController.text,
-      description: _descriptionMarkdown,
+      description: _descriptionContent,
       cvssScore: double.tryParse(_cvssScoreController.text) ?? 0.0,
       cvssVector: _cvssVectorController.text.isEmpty ? null : _cvssVectorController.text,
       severity: _selectedSeverity,
@@ -951,16 +953,16 @@ Avoid technical jargon and implementation details.''',
     buffer.writeln();
 
     // Description
-    if (_descriptionMarkdown.isNotEmpty) {
+    if (_descriptionContent.isNotEmpty) {
       buffer.writeln('## Description');
-      buffer.writeln(_descriptionMarkdown);
+      buffer.writeln(_descriptionContent);
       buffer.writeln();
     }
 
     // Recommendations
-    if (_recommendationsMarkdown.isNotEmpty) {
+    if (_recommendationsContent.isNotEmpty) {
       buffer.writeln('## Recommendations');
-      buffer.writeln(_recommendationsMarkdown);
+      buffer.writeln(_recommendationsContent);
       buffer.writeln();
     }
 
@@ -1004,11 +1006,11 @@ Avoid technical jargon and implementation details.''',
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Import from Markdown',
+                'Import from HTML/Markdown',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 16),
-              const Text('Paste your markdown content below:'),
+              const Text('Paste your HTML or markdown content below:'),
               const SizedBox(height: 8),
               Expanded(
                 child: TextField(
@@ -1019,9 +1021,9 @@ Avoid technical jargon and implementation details.''',
                     hintText: 'Paste markdown content here...',
                   ),
                   onChanged: (value) {
-                    // Store the markdown content for parsing
+                    // Store the rich text content for parsing
                     setState(() {
-                      _descriptionMarkdown = value;
+                      _descriptionContent = value;
                     });
                   },
                 ),

@@ -968,6 +968,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                 padding: const EdgeInsets.all(12),
                 child: SingleChildScrollView(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                     Text(
@@ -999,7 +1000,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                             color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
+                          Flexible(
                             child: Text(
                               screenshot.caption,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -1023,7 +1024,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                             color: theme.colorScheme.secondary,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
+                          Flexible(
                             child: Text(
                               screenshot.instructions,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -1066,7 +1067,7 @@ class _ScreenshotsScreenState extends ConsumerState<ScreenshotsScreen> {
                         }).toList(),
                       ),
                     ],
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(
