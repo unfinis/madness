@@ -425,6 +425,115 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
     state = state.copyWith(tasks: updatedTasks);
   }
 
+  /// Execute a complete task - runs the methodology
+  Future<void> executeTask(String taskId) async {
+    final taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = state.tasks[taskIndex];
+    final projectId = ref.read(currentProjectProvider)?.id;
+    if (projectId == null) return;
+
+    try {
+      // Update task status to running
+      _updateTaskStatus(taskId, TaskStatus.inProgress);
+
+      // Get the methodology
+      final methodology = _getMethodologyById(task.methodologyId, projectId);
+      if (methodology == null) {
+        throw Exception('Methodology not found: ${task.methodologyId}');
+      }
+
+      // Execute via methodology engine
+      final methodologyNotifier = ref.read(methodologyProvider(projectId).notifier);
+
+      // Start methodology execution with trigger context
+      final triggerContext = task.triggers.isNotEmpty
+          ? task.triggers.first.context
+          : <String, dynamic>{};
+
+      await methodologyNotifier.startMethodologyExecution(
+        methodology.id,
+        additionalContext: triggerContext,
+      );
+
+      // Mark task as completed
+      _updateTaskStatus(taskId, TaskStatus.completed);
+
+    } catch (e) {
+      print('Error executing task $taskId: $e');
+      _updateTaskStatus(taskId, TaskStatus.failed);
+      rethrow;
+    }
+  }
+
+  /// Update task status
+  void _updateTaskStatus(String taskId, TaskStatus newStatus) {
+    final taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = state.tasks[taskIndex];
+    final updatedTask = task.copyWith(
+      status: newStatus,
+      completedDate: newStatus == TaskStatus.completed ? DateTime.now() : null,
+    );
+
+    final updatedTasks = [...state.tasks];
+    updatedTasks[taskIndex] = updatedTask;
+
+    state = state.copyWith(tasks: updatedTasks);
+  }
+
+  /// Complete a specific trigger with output
+  void completeTriggerWithOutput(String taskId, String triggerId, String output) {
+    final taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = state.tasks[taskIndex];
+    final triggerIndex = task.triggers.indexWhere((t) => t.id == triggerId);
+    if (triggerIndex == -1) return;
+
+    // Parse output for useful information
+    final parsedResults = _parseOutput(output);
+
+    // Update trigger with output and results
+    final updatedTrigger = task.triggers[triggerIndex].copyWith(
+      status: TriggerStatus.completed,
+      output: output,
+      parsedResults: parsedResults,
+      executedDate: DateTime.now(),
+    );
+
+    // Update triggers list
+    final updatedTriggers = [...task.triggers];
+    updatedTriggers[triggerIndex] = updatedTrigger;
+
+    // Check if all triggers are completed
+    final allCompleted = updatedTriggers.every((t) =>
+        t.status == TriggerStatus.completed ||
+        t.status == TriggerStatus.skipped ||
+        t.status == TriggerStatus.failed
+    );
+
+    // Update task
+    final updatedTask = task.copyWith(
+      triggers: updatedTriggers,
+      status: allCompleted ? TaskStatus.completed : task.status,
+      completedDate: allCompleted ? DateTime.now() : null,
+      completedCount: updatedTriggers.where((t) => t.status == TriggerStatus.completed).length,
+    );
+
+    final updatedTasks = [...state.tasks];
+    updatedTasks[taskIndex] = updatedTask;
+
+    state = state.copyWith(tasks: updatedTasks);
+
+    // Update assets with parsed results
+    if (parsedResults.isNotEmpty) {
+      _updateAssetsWithResults(parsedResults);
+    }
+  }
+
   Map<String, dynamic> _parseOutput(String output) {
     final results = <String, dynamic>{};
 

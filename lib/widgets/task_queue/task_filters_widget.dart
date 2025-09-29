@@ -12,7 +12,6 @@ class TaskFiltersWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final taskQueueState = ref.watch(taskQueueProvider);
 
     return Card(
       child: Padding(

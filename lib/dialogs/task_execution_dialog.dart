@@ -391,25 +391,44 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
     }
   }
 
-  void _executeTrigger() {
+  void _executeTrigger() async {
     if (_selectedTrigger == null) return;
 
     setState(() {
       _isExecuting = true;
     });
 
-    ref.read(taskQueueProvider.notifier).executeTrigger(
-      widget.task.id,
-      _selectedTrigger!.id,
-    );
+    try {
+      // Execute the entire task via the task queue provider
+      await ref.read(taskQueueProvider.notifier).executeTask(widget.task.id);
 
-    Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         setState(() {
           _isExecuting = false;
         });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Task executed successfully')),
+        );
+
+        // Update the trigger status to completed
+        _selectedTrigger = _selectedTrigger!.copyWith(status: TriggerStatus.completed);
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isExecuting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Execution failed: $e')),
+        );
+
+        // Update the trigger status to failed
+        _selectedTrigger = _selectedTrigger!.copyWith(status: TriggerStatus.failed);
+      }
+    }
   }
 
   void _skipTrigger() {
@@ -426,11 +445,23 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
   void _completeWithOutput() {
     if (_selectedTrigger == null || _outputController.text.isEmpty) return;
 
-    ref.read(taskQueueProvider.notifier).completeWithOutput(
-      widget.task.id,
-      _selectedTrigger!.id,
-      _outputController.text,
-    );
+    try {
+      // Update the trigger with output and mark as completed
+      ref.read(taskQueueProvider.notifier).completeTriggerWithOutput(
+        widget.task.id,
+        _selectedTrigger!.id,
+        _outputController.text,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task completed with output')),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error completing task: $e')),
+      );
+    }
 
     Navigator.of(context).pop();
   }
