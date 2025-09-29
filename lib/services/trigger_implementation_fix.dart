@@ -6,6 +6,7 @@ import '../models/methodology_trigger.dart' as mt;
 import '../models/methodology.dart' hide MethodologyTrigger;
 import '../models/asset.dart';
 import '../providers/task_queue_provider.dart';
+import 'yaml_trigger_loader.dart';
 
 /// Fixed implementation of trigger evaluator
 class TriggerEvaluatorFixed {
@@ -306,11 +307,26 @@ class TriggerLoaderService {
   final List<mt.MethodologyTrigger> _loadedTriggers = [];
   final Map<String, Methodology> _methodologies = {};
 
-  /// Initialize with test data
+  /// Initialize with YAML data and fallback to test data
   Future<void> initialize() async {
-    // Load test triggers
     _loadedTriggers.clear();
-    _loadedTriggers.addAll(SampleTriggers.getTestTriggers());
+
+    try {
+      // Try to load triggers from YAML files first
+      final yamlLoader = YamlTriggerLoader();
+      final yamlTriggers = await yamlLoader.loadTriggersFromYaml();
+
+      if (yamlTriggers.isNotEmpty) {
+        _loadedTriggers.addAll(yamlTriggers);
+        print('Loaded ${yamlTriggers.length} triggers from YAML files');
+      } else {
+        print('No YAML triggers found, falling back to test data');
+        _loadedTriggers.addAll(SampleTriggers.getTestTriggers());
+      }
+    } catch (e) {
+      print('Error loading YAML triggers, using test data: $e');
+      _loadedTriggers.addAll(SampleTriggers.getTestTriggers());
+    }
 
     // Create corresponding methodologies
     _createTestMethodologies();

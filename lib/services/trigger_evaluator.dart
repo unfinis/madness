@@ -1,4 +1,4 @@
-import '../models/assets.dart';
+import '../models/asset.dart';
 import '../models/methodology_trigger_builder.dart';
 import '../models/methodology_execution.dart' hide AssetType;
 import 'trigger_implementation_fix.dart';
@@ -60,9 +60,72 @@ class TriggerEvaluator {
     MethodologyTriggerDefinition trigger,
     List<Asset> allAssets,
   ) {
-    // For now, return false to fix compilation
-    // TODO: Implement proper evaluation logic based on trigger.conditionGroups and trigger.groupLogicalOperator
-    return false;
+    try {
+      // Convert asset to compatible format for the existing TriggerEvaluatorFixed
+      final assetMap = _convertAssetToMap(asset);
+      final assetList = [assetMap];
+
+      // Use the existing working evaluation logic from TriggerEvaluatorFixed
+      final matches = TriggerEvaluatorFixed.findMatchingAssets(trigger, assetList);
+      return matches.isNotEmpty;
+
+    } catch (e) {
+      print('Error evaluating asset against trigger: $e');
+      return false;
+    }
+  }
+
+  /// Convert Asset to Map format compatible with TriggerEvaluatorFixed
+  static Map<String, dynamic> _convertAssetToMap(Asset asset) {
+    final Map<String, dynamic> assetMap = {
+      'id': asset.id,
+      'type': asset.type.name,
+      'name': asset.name,
+      'identifier': asset.name,
+      'description': asset.description,
+      'confidence': asset.confidence,
+    };
+
+    // Convert all properties from PropertyValue to basic types
+    asset.properties.forEach((key, propertyValue) {
+      assetMap[key] = _convertPropertyValue(propertyValue);
+    });
+
+    // Add type-specific convenience fields for common trigger patterns
+    switch (asset.type) {
+      case AssetType.host:
+        assetMap['host'] = asset.name;
+        break;
+      case AssetType.service:
+        // Properties should contain service-specific data like port, protocol, etc.
+        break;
+      case AssetType.credential:
+        // Properties should contain username, domain, type, etc.
+        break;
+      case AssetType.networkSegment:
+        assetMap['subnet'] = asset.name;
+        break;
+      case AssetType.activeDirectoryDomain:
+        assetMap['domain'] = asset.name;
+        break;
+      default:
+        // Other types use basic properties
+        break;
+    }
+
+    return assetMap;
+  }
+
+  /// Convert PropertyValue to simple dynamic value
+  static dynamic _convertPropertyValue(PropertyValue value) {
+    return value.when(
+      string: (str) => str,
+      integer: (intValue) => intValue,
+      boolean: (boolValue) => boolValue,
+      stringList: (list) => list,
+      map: (map) => map,
+      objectList: (objects) => objects,
+    );
   }
 
   /// Calculate confidence score for a trigger match
@@ -75,16 +138,19 @@ class TriggerEvaluator {
 
     // Increase confidence for high-value assets
     for (final asset in matchingAssets) {
-      if (asset.type == AssetType.authenticationSystem ||
-          asset.type == AssetType.cloudTenant) {
+      if (asset.type == AssetType.activeDirectoryDomain ||
+          asset.type == AssetType.domainController ||
+          asset.type == AssetType.azureTenant) {
         confidence += 0.1;
       }
     }
 
     // Increase confidence based on asset confidence scores
-    final avgAssetConfidence = matchingAssets.fold<double>(
-      0.0, (sum, asset) => sum + asset.confidence) / matchingAssets.length;
-    confidence *= avgAssetConfidence;
+    if (matchingAssets.isNotEmpty) {
+      final avgAssetConfidence = matchingAssets.fold<double>(
+        0.0, (sum, asset) => sum + (asset.confidence ?? 0.5)) / matchingAssets.length;
+      confidence *= avgAssetConfidence;
+    }
 
     // Cap confidence at 1.0
     return confidence.clamp(0.0, 1.0);
@@ -97,10 +163,11 @@ class TriggerEvaluator {
   ) {
     int priority = 50; // Base priority
 
-    // Increase priority for compromised assets
-    final compromisedCount = matchingAssets.where(
-      (asset) => asset.discoveryStatus == AssetDiscoveryStatus.compromised
-    ).length;
+    // Check for compromised status in asset properties
+    final compromisedCount = matchingAssets.where((asset) {
+      final statusProp = asset.properties['status'] ?? asset.properties['compromised'];
+      return statusProp != null && _convertPropertyValue(statusProp) == true;
+    }).length;
     priority += compromisedCount * 20;
 
     // Increase priority for high-value assets (based on type)
@@ -109,10 +176,13 @@ class TriggerEvaluator {
         case AssetType.host:
           priority += 10;
           break;
-        case AssetType.authenticationSystem:
+        case AssetType.activeDirectoryDomain:
           priority += 15;
           break;
-        case AssetType.cloudTenant:
+        case AssetType.domainController:
+          priority += 15;
+          break;
+        case AssetType.azureTenant:
           priority += 12;
           break;
         case AssetType.credential:
@@ -124,27 +194,28 @@ class TriggerEvaluator {
       }
     }
 
-    // Increase priority based on access level
+    // Check for access level in asset properties
     for (final asset in matchingAssets) {
-      switch (asset.accessLevel) {
-        case AccessLevel.system:
-          priority += 20;
-          break;
-        case AccessLevel.admin:
-          priority += 15;
-          break;
-        case AccessLevel.user:
-          priority += 10;
-          break;
-        case AccessLevel.guest:
-          priority += 5;
-          break;
-        case AccessLevel.none:
-          priority += 1;
-          break;
-        case null:
-          priority += 1;
-          break;
+      final accessLevelProp = asset.properties['access_level'] ?? asset.properties['accessLevel'];
+      if (accessLevelProp != null) {
+        final accessLevel = _convertPropertyValue(accessLevelProp)?.toString().toLowerCase();
+        switch (accessLevel) {
+          case 'full':
+            priority += 20;
+            break;
+          case 'partial':
+            priority += 15;
+            break;
+          case 'limited':
+            priority += 10;
+            break;
+          case 'blocked':
+            priority += 5;
+            break;
+          default:
+            priority += 1;
+            break;
+        }
       }
     }
 

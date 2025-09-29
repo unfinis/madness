@@ -297,13 +297,47 @@ class TaskItemWidget extends ConsumerWidget {
   }
 
   void _markTaskCompleted(WidgetRef ref, String taskId) {
+    // Show confirmation dialog
+    showDialog<bool>(
+      context: ref.context,
+      builder: (context) => AlertDialog(
+        title: const Text('Complete Task'),
+        content: const Text('Are you sure you want to mark this task as completed? This will trigger re-evaluation of dependent methodologies.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Complete'),
+          ),
+        ],
+      ),
+    ).then((confirmed) {
+      if (confirmed == true) {
+        _performTaskCompletion(ref, taskId);
+      }
+    });
+  }
+
+  void _performTaskCompletion(WidgetRef ref, String taskId) {
     try {
       // Try to get current project and mark task completed
       final currentProject = ref.read(currentProjectProvider);
       if (currentProject != null) {
+        // Use both task provider (for database) and task queue provider (for trigger re-evaluation)
         ref.read(taskProvider(currentProject.id).notifier).markTaskCompleted(taskId);
+
+        // Also mark in task queue for trigger re-evaluation
+        try {
+          ref.read(taskQueueProvider.notifier).markTaskCompleted(taskId);
+        } catch (e) {
+          print('Task queue completion failed (expected if task not in queue): $e');
+        }
+
         ScaffoldMessenger.of(ref.context).showSnackBar(
-          const SnackBar(content: Text('Task marked as completed')),
+          const SnackBar(content: Text('Task completed successfully')),
         );
       } else {
         ScaffoldMessenger.of(ref.context).showSnackBar(

@@ -1,0 +1,212 @@
+# Web Application Discovery Methodology
+id: web_discovery
+version: "1.0.0"
+name: "Web Application Discovery and Enumeration"
+workstream: "web_applications"
+author: "Security Team"
+created: "2024-09-29T00:00:00Z"
+status: "active"
+description: "Comprehensive web application discovery and initial enumeration"
+tags: ["web", "http", "https", "discovery", "enumeration", "reconnaissance"]
+risk_level: "low"
+
+overview:
+  purpose: "Discover and enumerate web applications and services"
+  scope: "HTTP/HTTPS services on discovered hosts"
+  prerequisites:
+    - "Network access to target hosts"
+    - "Web enumeration tools installed"
+    - "Authorization for web application testing"
+  category: "web_applications"
+
+triggers:
+  - name: "HTTP Service Discovered"
+    conditions:
+      asset_type: "service"
+      properties:
+        service_name: "http"
+        enumerated: false
+    priority: 6
+    enabled: true
+    cooldown_period: "2h"
+    batch_capable: true
+    batch_criteria: "same_host"
+    batch_command: "batch_web_enum.sh {service_list}"
+    max_batch_size: 10
+    individual_command: "enum_web_service.sh {host} {port}"
+    expected_property_updates:
+      - "enumerated"
+      - "server_software"
+      - "technologies_detected"
+      - "directories_found"
+    expected_asset_discovery:
+      - "vulnerability"
+      - "credential"
+
+  - name: "HTTPS Service Discovered"
+    conditions:
+      asset_type: "service"
+      properties:
+        service_name: "https"
+        ssl_enumerated: false
+    priority: 6
+    enabled: true
+    batch_capable: true
+    batch_criteria: "ssl_certificate_check"
+    individual_command: "enum_ssl_service.sh {host} {port}"
+    expected_property_updates:
+      - "ssl_enumerated"
+      - "ssl_certificate_info"
+      - "ssl_vulnerabilities"
+    expected_asset_discovery:
+      - "vulnerability"
+
+  - name: "Web Service with Authentication"
+    conditions:
+      asset_type: "service"
+      properties:
+        service_name: "http"
+        authentication_detected: true
+        credentials_tested: false
+    priority: 5
+    enabled: true
+    batch_capable: false
+    individual_command: "test_web_auth.sh {host} {port}"
+    expected_property_updates:
+      - "credentials_tested"
+      - "default_credentials_found"
+
+equipment:
+  - "Web browser with security extensions"
+  - "Burp Suite or OWASP ZAP"
+  - "Dirb, Gobuster, or similar directory enumeration tools"
+  - "Nikto web vulnerability scanner"
+  - "Whatweb or similar technology detection tools"
+
+procedures:
+  - id: "proc_http_fingerprinting"
+    name: "HTTP Service Fingerprinting"
+    description: "Identify web server software and technologies"
+    commands:
+      - "whatweb {target_url}"
+      - "nmap -sC -sV -p {port} {host}"
+    placeholders:
+      target_url: "http://{host}:{port}"
+      host: "asset.host"
+      port: "asset.port"
+    expected_output:
+      - "Web server software version"
+      - "Technologies and frameworks identified"
+      - "HTTP headers analysis"
+
+  - id: "proc_directory_enumeration"
+    name: "Directory and File Enumeration"
+    description: "Discover hidden directories and files"
+    commands:
+      - "gobuster dir -u {target_url} -w /usr/share/wordlists/dirb/common.txt"
+      - "dirb {target_url} -o {output_file}"
+    placeholders:
+      target_url: "http://{host}:{port}"
+      host: "asset.host"
+      port: "asset.port"
+      output_file: "/tmp/dirb_{host}_{port}.txt"
+    expected_output:
+      - "Discovered directories and files"
+      - "Response codes and sizes"
+
+  - id: "proc_ssl_enumeration"
+    name: "SSL/TLS Configuration Analysis"
+    description: "Analyze SSL/TLS configuration and certificates"
+    commands:
+      - "sslscan {host}:{port}"
+      - "testssl.sh {host}:{port}"
+    placeholders:
+      host: "asset.host"
+      port: "asset.port"
+    expected_output:
+      - "SSL/TLS cipher suites"
+      - "Certificate information"
+      - "SSL vulnerabilities"
+
+  - id: "proc_web_vulnerability_scan"
+    name: "Basic Web Vulnerability Scanning"
+    description: "Perform initial vulnerability scanning"
+    commands:
+      - "nikto -h {target_url} -o {output_file}"
+    placeholders:
+      target_url: "http://{host}:{port}"
+      host: "asset.host"
+      port: "asset.port"
+      output_file: "/tmp/nikto_{host}_{port}.txt"
+    expected_output:
+      - "Potential vulnerabilities"
+      - "Misconfigurations"
+      - "Information disclosure issues"
+
+  - id: "proc_default_credentials"
+    name: "Default Credential Testing"
+    description: "Test for common default credentials"
+    commands:
+      - "test_default_creds.sh {target_url}"
+      - "hydra -C /usr/share/wordlists/default-creds.txt {host} http-get /{path}"
+    placeholders:
+      target_url: "http://{host}:{port}"
+      host: "asset.host"
+      port: "asset.port"
+      path: "admin"
+    expected_output:
+      - "Successful authentication attempts"
+      - "Account lockout behavior"
+
+findings:
+  - id: "finding_web_app_discovered"
+    title: "Web Application Discovered"
+    severity: "info"
+    description: "Web application identified and enumerated"
+    remediation: "Document web application for further security testing"
+
+  - id: "finding_directory_listing"
+    title: "Directory Listing Enabled"
+    severity: "low"
+    description: "Web server has directory listing enabled"
+    remediation: "Disable directory listing in web server configuration"
+
+  - id: "finding_default_credentials"
+    title: "Default Credentials Found"
+    severity: "high"
+    description: "Default or weak credentials discovered on web application"
+    remediation: "Change default credentials immediately and implement strong password policy"
+
+  - id: "finding_ssl_vulnerabilities"
+    title: "SSL/TLS Vulnerabilities"
+    severity: "medium"
+    description: "SSL/TLS configuration vulnerabilities identified"
+    remediation: "Update SSL/TLS configuration to use secure ciphers and protocols"
+
+  - id: "finding_information_disclosure"
+    title: "Information Disclosure"
+    severity: "low"
+    description: "Web application discloses sensitive information"
+    remediation: "Configure web server to minimize information disclosure"
+
+cleanup:
+  - id: "cleanup_scan_outputs"
+    description: "Clean up temporary scan output files"
+    required: false
+    commands:
+      - "rm -f /tmp/nikto_*.txt"
+      - "rm -f /tmp/dirb_*.txt"
+      - "rm -f /tmp/ssl_scan_*.txt"
+
+troubleshooting:
+  - issue: "Web service not responding"
+    solution: "Check network connectivity and verify service is actually HTTP/HTTPS"
+
+  - issue: "Directory enumeration taking too long"
+    solution: "Use smaller wordlists or increase timeout values"
+
+  - issue: "SSL scanning tools failing"
+    solution: "Verify target supports SSL/TLS and check for certificate validation issues"
+
+  - issue: "Too many false positives in vulnerability scan"
+    solution: "Manually verify findings and tune scanner configuration"

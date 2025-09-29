@@ -1,0 +1,164 @@
+# Network Access Control Assessment Methodology
+id: nac_assessment
+version: "1.0.0"
+name: "Network Access Control Assessment"
+workstream: "network_testing"
+author: "Security Team"
+created: "2024-09-29T00:00:00Z"
+status: "active"
+description: "Assessment of network access controls and segmentation effectiveness"
+tags: ["nac", "network", "segmentation", "access-control", "testing"]
+risk_level: "medium"
+
+overview:
+  purpose: "Test network access controls and segmentation boundaries"
+  scope: "Network segments with NAC implementations"
+  prerequisites:
+    - "Network access to test segments"
+    - "Various network testing tools"
+    - "Authorization for network testing"
+  category: "network_testing"
+
+triggers:
+  - name: "NAC-Enabled Network Segment"
+    conditions:
+      asset_type: "networkSegment"
+      properties:
+        nac_enabled: true
+        access_level: "blocked"
+        credentials_available: true
+    priority: 8
+    enabled: true
+    cooldown_period: "4h"
+    batch_capable: true
+    batch_criteria: "same_nac_type"
+    batch_command: "batch_nac_test.sh {network_list}"
+    max_batch_size: 5
+    individual_command: "test_nac.sh {network_cidr}"
+    expected_property_updates:
+      - "access_level"
+      - "nac_bypass_attempted"
+      - "bypass_successful"
+    expected_asset_discovery:
+      - "vulnerability"
+      - "service"
+
+  - name: "Credential-Based NAC Bypass"
+    conditions:
+      asset_type: "networkSegment"
+      properties:
+        nac_type: "802.1x"
+        credentials_available: true
+        bypass_attempted: false
+    priority: 7
+    enabled: true
+    batch_capable: false
+    individual_command: "test_8021x_bypass.sh {network_cidr} {credentials}"
+    expected_property_updates:
+      - "bypass_attempted"
+      - "access_level"
+
+equipment:
+  - "Network testing laptop"
+  - "USB-to-Ethernet adapters"
+  - "Network cables and taps"
+  - "Wireless adapters (for 802.1x testing)"
+  - "Network scanning tools (nmap, masscan)"
+
+procedures:
+  - id: "proc_nac_identification"
+    name: "NAC System Identification"
+    description: "Identify the type and configuration of NAC system"
+    commands:
+      - "nmap -sC -sV {gateway_ip}"
+      - "identify_nac_type.sh {network_range}"
+    placeholders:
+      gateway_ip: "asset.gateway"
+      network_range: "asset.cidr"
+    expected_output:
+      - "NAC system type identified"
+      - "Authentication methods discovered"
+
+  - id: "proc_mac_address_bypass"
+    name: "MAC Address Bypass Testing"
+    description: "Test for MAC address-based bypass vulnerabilities"
+    commands:
+      - "macchanger -r eth0"
+      - "test_mac_bypass.sh {authorized_mac}"
+    placeholders:
+      authorized_mac: "asset.authorized_macs[0]"
+    expected_output:
+      - "MAC spoofing results"
+      - "Network access status"
+
+  - id: "proc_credential_testing"
+    name: "Credential-Based Access Testing"
+    description: "Test network access using discovered credentials"
+    commands:
+      - "wpa_supplicant -c {config_file} -i {interface}"
+      - "test_network_access.sh {target_network}"
+    placeholders:
+      config_file: "/tmp/wpa_config.conf"
+      interface: "wlan0"
+      target_network: "asset.cidr"
+    expected_output:
+      - "Authentication success/failure"
+      - "Network connectivity status"
+
+  - id: "proc_network_mapping"
+    name: "Post-Access Network Mapping"
+    description: "Map network topology after gaining access"
+    commands:
+      - "nmap -sn {network_range}"
+      - "traceroute {gateway_ip}"
+    placeholders:
+      network_range: "asset.cidr"
+      gateway_ip: "asset.gateway"
+    expected_output:
+      - "Live host inventory"
+      - "Network topology map"
+
+findings:
+  - id: "finding_nac_bypass"
+    title: "Network Access Control Bypass"
+    severity: "high"
+    description: "NAC system can be bypassed using identified techniques"
+    remediation: "Strengthen NAC implementation and close identified bypass methods"
+
+  - id: "finding_weak_authentication"
+    title: "Weak NAC Authentication"
+    severity: "medium"
+    description: "NAC system uses weak or default authentication methods"
+    remediation: "Implement strong authentication mechanisms and credential policies"
+
+  - id: "finding_network_segmentation"
+    title: "Inadequate Network Segmentation"
+    severity: "medium"
+    description: "Network segmentation is insufficient after NAC bypass"
+    remediation: "Implement additional network segmentation controls"
+
+cleanup:
+  - id: "cleanup_network_config"
+    description: "Reset network interface configurations"
+    required: true
+    commands:
+      - "dhclient -r eth0"
+      - "ifconfig eth0 down"
+      - "macchanger -p eth0"
+
+  - id: "cleanup_temp_configs"
+    description: "Remove temporary configuration files"
+    required: false
+    commands:
+      - "rm -f /tmp/wpa_config.conf"
+      - "rm -f /tmp/nac_test_*.log"
+
+troubleshooting:
+  - issue: "Cannot connect to network after credential testing"
+    solution: "Reset network interface and clear cached credentials"
+
+  - issue: "MAC address spoofing not working"
+    solution: "Check interface supports MAC changing and use appropriate tools"
+
+  - issue: "802.1x authentication failing"
+    solution: "Verify credential format and certificate requirements"

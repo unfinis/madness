@@ -5,19 +5,10 @@ version: "1.0"
 last_updated: "2024-09-29T00:00:00Z"
 
 methodologies:
-  reconnaissance:
-    - id: "nmap_discovery"
-      file: "reconnaissance/nmap_discovery.yaml"
-      name: "Nmap Host Discovery"
-      tags: ["network", "discovery", "nmap"]
+  - "reconnaissance/nmap_discovery.yaml"
+  - "exploitation/smb_relay.yaml"
+  - "active_directory/ad_enumeration.yaml"
+  - "network_segregation/nac_assessment.yaml"
+  - "web_applications/web_discovery.yaml"
 
-  exploitation:
-    - id: "smb_relay_attack"
-      file: "exploitation/smb_relay.yaml"
-      name: "SMB Relay Attack"
-      tags: ["smb", "relay", "ntlm"]
-
-# Future methodologies will be added here
-# persistence:
-# lateral_movement:
-# privilege_escalation:
+# Future methodologies will be added here as they are created

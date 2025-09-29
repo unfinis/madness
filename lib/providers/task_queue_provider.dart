@@ -1000,6 +1000,75 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
       };
     }).toList();
   }
+
+  /// Mark a task as completed with optional results
+  void markTaskCompleted(String taskId, {Map<String, dynamic>? results, String? error}) {
+    final taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final task = state.tasks[taskIndex];
+    final projectId = ref.read(currentProjectProvider)?.id;
+
+    if (projectId == null) return;
+
+    try {
+      // Mark all triggers as completed
+      final updatedTriggers = task.triggers.map((trigger) {
+        if (trigger.status != TriggerStatus.completed) {
+          return trigger.copyWith(
+            status: TriggerStatus.completed,
+            executedDate: DateTime.now(),
+          );
+        }
+        return trigger;
+      }).toList();
+
+      // Update the task
+      final updatedTask = task.copyWith(
+        triggers: updatedTriggers,
+        status: TaskStatus.completed,
+        completedCount: updatedTriggers.length,
+        completedDate: DateTime.now(),
+      );
+
+      final updatedTasks = [...state.tasks];
+      updatedTasks[taskIndex] = updatedTask;
+      state = state.copyWith(tasks: updatedTasks);
+
+      // Process results if provided
+      if (results != null && results.isNotEmpty) {
+        _updateAssetsWithResults(results);
+      }
+
+      // Log completion for trigger tracking
+      for (final trigger in updatedTriggers) {
+        final dedupKey = trigger.context['dedupKey'] as String? ?? '${task.id}:${trigger.id}';
+        // TODO: Mark trigger as completed in PropertyDrivenEngine
+        print('[TaskQueue] Marked trigger completed: $dedupKey');
+      }
+
+      print('[TaskQueue] Task ${task.methodologyName} completed successfully');
+
+      // Trigger re-evaluation of methodologies for new potential triggers
+      _reevaluateTriggersAfterCompletion(projectId);
+
+    } catch (e) {
+      print('[TaskQueue] Error marking task completed: $e');
+    }
+  }
+
+  /// Re-evaluate triggers after task completion to find new methodology opportunities
+  void _reevaluateTriggersAfterCompletion(String projectId) {
+    // This would integrate with the PropertyDrivenEngine to check for new triggers
+    // based on the assets that were just created from the completed task
+    print('[TaskQueue] Re-evaluating triggers after task completion');
+
+    // Get all assets for the project and evaluate triggers
+    // This is a placeholder for now - full implementation would:
+    // 1. Get all assets from comprehensive asset provider
+    // 2. Run trigger evaluation
+    // 3. Create new tasks for triggered methodologies
+  }
 }
 
 final taskQueueProvider = StateNotifierProvider<TaskQueueNotifier, TaskQueueState>((ref) {

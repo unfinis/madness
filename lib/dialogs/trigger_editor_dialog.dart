@@ -431,12 +431,12 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
 
   Widget _buildExpressionTree(TriggerExpression expression) {
     return DragTarget<Object>(
-      onAcceptWithDetails: (data) {
+      onAcceptWithDetails: (details) {
         setState(() {
-          if (data is AssetPropertyDragData) {
-            _insertPropertyAt(expression, data);
-          } else if (data is LogicalOperator) {
-            _insertOperatorAt(expression, data);
+          if (details.data is AssetPropertyDragData) {
+            _insertPropertyAt(expression, details.data as AssetPropertyDragData);
+          } else if (details.data is LogicalOperator) {
+            _insertOperatorAt(expression, details.data as LogicalOperator);
           }
         });
       },
@@ -1024,11 +1024,55 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
   }
 
   void _insertPropertyAt(TriggerExpression target, AssetPropertyDragData data) {
-    // Implementation for inserting property at specific location
+    final condition = TriggerExpression.condition(
+      assetType: data.assetType,
+      property: data.property.name,
+      operator: _getDefaultOperator(data.property.type),
+      value: _getDefaultValue(data.property.type),
+    );
+
+    setState(() {
+      if (rootExpression.maybeWhen(empty: () => true, orElse: () => false)) {
+        rootExpression = condition;
+      } else {
+        // Add as new AND condition with existing expression
+        rootExpression = TriggerExpression.logical(
+          operator: 'AND',
+          expressions: [rootExpression, condition],
+        );
+      }
+    });
   }
 
   void _insertOperatorAt(TriggerExpression target, LogicalOperator operator) {
-    // Implementation for inserting operator at specific location
+    setState(() {
+      if (rootExpression.maybeWhen(empty: () => true, orElse: () => false)) {
+        // Can't add operator to empty expression
+        return;
+      }
+
+      switch (operator) {
+        case LogicalOperator.and:
+        case LogicalOperator.or:
+          rootExpression = TriggerExpression.logical(
+            operator: operator.name.toUpperCase(),
+            expressions: [rootExpression, TriggerExpression.empty()],
+          );
+          break;
+        case LogicalOperator.not:
+          rootExpression = TriggerExpression.logical(
+            operator: 'NOT',
+            expressions: [rootExpression],
+          );
+          break;
+        case LogicalOperator.group:
+          rootExpression = TriggerExpression.logical(
+            operator: 'AND',
+            expressions: [rootExpression],
+          );
+          break;
+      }
+    });
   }
 
   void _removeExpression(TriggerExpression expression) {
@@ -1038,7 +1082,42 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
   }
 
   void _addExpressionToGroup(TriggerExpression groupExpression) {
-    // Implementation for adding expression to logical group
+    setState(() {
+      rootExpression = _addExpressionToGroupTree(rootExpression, groupExpression);
+    });
+  }
+
+  TriggerExpression _addExpressionToGroupTree(
+    TriggerExpression current,
+    TriggerExpression targetGroup,
+  ) {
+    if (current == targetGroup) {
+      return current.maybeWhen(
+        logical: (operator, expressions) {
+          // Add an empty expression to this group
+          return TriggerExpression.logical(
+            operator: operator,
+            expressions: [...expressions, TriggerExpression.empty()],
+          );
+        },
+        orElse: () => current,
+      );
+    }
+
+    // Recursively search in logical expressions
+    return current.maybeWhen(
+      logical: (op, expressions) {
+        final updatedExpressions = expressions.map((expr) =>
+          _addExpressionToGroupTree(expr, targetGroup)
+        ).toList();
+
+        return TriggerExpression.logical(
+          operator: op,
+          expressions: updatedExpressions,
+        );
+      },
+      orElse: () => current,
+    );
   }
 
   void _updateCondition(
@@ -1047,7 +1126,50 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
     TriggerOperator? operator,
     TriggerValue? value,
   }) {
-    // Implementation for updating condition values
+    // Find and update the specific condition expression
+    setState(() {
+      rootExpression = _updateExpressionTree(rootExpression, expression,
+        property: property, operator: operator, value: value);
+    });
+  }
+
+  TriggerExpression _updateExpressionTree(
+    TriggerExpression current,
+    TriggerExpression target, {
+    String? property,
+    TriggerOperator? operator,
+    TriggerValue? value,
+  }) {
+    // If this is the target expression, update it
+    if (current == target) {
+      return current.maybeWhen(
+        condition: (assetType, prop, op, val) {
+          return TriggerExpression.condition(
+            assetType: assetType,
+            property: property ?? prop,
+            operator: operator ?? op,
+            value: value ?? val,
+          );
+        },
+        orElse: () => current,
+      );
+    }
+
+    // If this is a logical expression, recursively update its children
+    return current.maybeWhen(
+      logical: (op, expressions) {
+        final updatedExpressions = expressions.map((expr) =>
+          _updateExpressionTree(expr, target,
+            property: property, operator: operator, value: value)
+        ).toList();
+
+        return TriggerExpression.logical(
+          operator: op,
+          expressions: updatedExpressions,
+        );
+      },
+      orElse: () => current,
+    );
   }
 
   void _saveTrigger() {
@@ -1072,8 +1194,74 @@ class _TriggerEditorDialogState extends ConsumerState<TriggerEditorDialog> {
   }
 
   List<TriggerGroup> _convertExpressionToGroups(TriggerExpression expression) {
-    // Implementation for converting expression tree back to condition groups
-    return [];
+    return expression.when(
+      empty: () => [],
+      condition: (assetType, property, operator, value) => [
+        TriggerGroup(
+          id: 'group_${DateTime.now().millisecondsSinceEpoch}',
+          logicalOperator: 'AND',
+          conditions: [
+            TriggerCondition(
+              id: 'condition_${DateTime.now().millisecondsSinceEpoch}',
+              assetType: assetType,
+              property: property,
+              operator: operator,
+              value: value,
+            ),
+          ],
+        ),
+      ],
+      logical: (operator, expressions) {
+        // Convert logical expressions to condition groups
+        final groups = <TriggerGroup>[];
+
+        // Determine logical operator string
+        String logicalOp;
+        switch (operator.toUpperCase()) {
+          case 'OR':
+            logicalOp = 'OR';
+            break;
+          case 'NOT':
+            logicalOp = 'NOT';
+            break;
+          default:
+            logicalOp = 'AND';
+            break;
+        }
+
+        // Convert each sub-expression
+        for (final subExpr in expressions) {
+          final subGroups = _convertExpressionToGroups(subExpr);
+
+          if (subGroups.isNotEmpty) {
+            // If we have multiple sub-expressions, combine them appropriately
+            if (subGroups.length == 1) {
+              // Single group - update its logical operator
+              final group = subGroups.first;
+              groups.add(TriggerGroup(
+                id: group.id,
+                logicalOperator: logicalOp,
+                conditions: group.conditions,
+              ));
+            } else {
+              // Multiple groups - add them all
+              groups.addAll(subGroups);
+            }
+          }
+        }
+
+        // If no groups were created from sub-expressions, create an empty group
+        if (groups.isEmpty && expressions.isNotEmpty) {
+          groups.add(TriggerGroup(
+            id: 'group_${DateTime.now().millisecondsSinceEpoch}',
+            logicalOperator: logicalOp,
+            conditions: [],
+          ));
+        }
+
+        return groups;
+      },
+    );
   }
 }
 

@@ -23,12 +23,27 @@ overview:
 
 triggers:
   - name: "Network Segment Added"
-    type: "asset_discovered"
     conditions:
-      asset_type: "network"
+      asset_type: "networkSegment"
       properties:
         has_access: true
         scan_authorized: true
+        scanned: false
+    priority: 10
+    enabled: true
+    cooldown_period: "12h"
+    batch_capable: true
+    batch_criteria: "same_access_level"
+    batch_command: "batch_nmap_scan.sh {network_list}"
+    max_batch_size: 3
+    individual_command: "nmap_full_scan.sh {network_cidr}"
+    expected_property_updates:
+      - "scanned"
+      - "hosts_discovered"
+      - "services_found"
+    expected_asset_discovery:
+      - "host"
+      - "service"
 
 equipment:
   - "Nmap 7.94 or newer"

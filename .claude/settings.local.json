@@ -413,7 +413,14 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/comprehensive_asset_provider.dart lib/services/asset_trigger_integration_service.dart --fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart lib/services/command_generator.dart lib/providers/comprehensive_asset_provider.dart lib/services/asset_trigger_integration_service.dart --fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart lib/services/command_generator.dart lib/providers/comprehensive_asset_provider.dart lib/services/asset_trigger_integration_service.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/yaml_trigger_loader.dart lib/services/trigger_implementation_fix.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/yaml_trigger_loader.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart lib/widgets/task_item_widget.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_evaluator.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_evaluator.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/trigger_editor_dialog.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/yaml_trigger_loader.dart --no-fatal-warnings)"
     ],
     "deny": [],
     "ask": []

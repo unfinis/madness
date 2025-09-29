@@ -1,0 +1,143 @@
+# Active Directory Enumeration Methodology
+id: ad_enumeration
+version: "1.0.0"
+name: "Active Directory Enumeration"
+workstream: "reconnaissance"
+author: "Security Team"
+created: "2024-09-29T00:00:00Z"
+status: "active"
+description: "Comprehensive Active Directory domain enumeration using various tools and techniques"
+tags: ["active-directory", "enumeration", "domain", "ldap", "reconnaissance"]
+risk_level: "low"
+
+overview:
+  purpose: "Enumerate Active Directory domain structure, users, groups, and computers"
+  scope: "Active Directory domains with authenticated access"
+  prerequisites:
+    - "Domain credentials or network access"
+    - "PowerShell or Linux with AD tools"
+    - "Proper authorization for AD enumeration"
+  category: "reconnaissance"
+
+triggers:
+  - name: "Active Directory Domain Discovered"
+    conditions:
+      asset_type: "activeDirectoryDomain"
+      properties:
+        enumerated: false
+    priority: 9
+    enabled: true
+    cooldown_period: "24h"
+    batch_capable: false
+    individual_command: "enum_ad_domain.sh {domain_name}"
+    expected_property_updates:
+      - "enumerated"
+      - "users_count"
+      - "computers_count"
+      - "groups_count"
+    expected_asset_discovery:
+      - "adUser"
+      - "adComputer"
+      - "domainController"
+
+  - name: "Domain Controller Access"
+    conditions:
+      asset_type: "domainController"
+      properties:
+        accessible: true
+        enumerated: false
+    priority: 10
+    enabled: true
+    batch_capable: false
+    individual_command: "enum_dc.sh {dc_hostname}"
+    expected_property_updates:
+      - "enumerated"
+      - "services_identified"
+    expected_asset_discovery:
+      - "service"
+      - "vulnerability"
+
+equipment:
+  - "BloodHound/SharpHound"
+  - "PowerView/PowerSploit"
+  - "ldapsearch (Linux)"
+  - "Domain credentials or network access"
+
+procedures:
+  - id: "proc_domain_info"
+    name: "Basic Domain Information"
+    description: "Gather basic domain information and structure"
+    commands:
+      - "nltest /domain_trusts"
+      - "Get-ADDomain -Identity {domain_name}"
+    placeholders:
+      domain_name: "asset.name"
+    expected_output:
+      - "Domain SID"
+      - "Domain functional level"
+      - "Domain controllers list"
+
+  - id: "proc_user_enumeration"
+    name: "User Account Enumeration"
+    description: "Enumerate domain user accounts and properties"
+    commands:
+      - "Get-ADUser -Filter * -Properties *"
+      - "ldapsearch -x -h {dc_host} -b 'DC=domain,DC=local' '(objectclass=user)'"
+    placeholders:
+      dc_host: "asset.domain_controllers[0]"
+    expected_output:
+      - "User account list"
+      - "User properties and attributes"
+
+  - id: "proc_group_enumeration"
+    name: "Group Enumeration"
+    description: "Enumerate domain groups and memberships"
+    commands:
+      - "Get-ADGroup -Filter * -Properties *"
+      - "Get-ADGroupMember -Identity 'Domain Admins'"
+    expected_output:
+      - "Domain groups list"
+      - "Group memberships"
+      - "Privileged group members"
+
+  - id: "proc_computer_enumeration"
+    name: "Computer Account Enumeration"
+    description: "Enumerate domain computer accounts"
+    commands:
+      - "Get-ADComputer -Filter * -Properties *"
+      - "ldapsearch -x -h {dc_host} -b 'DC=domain,DC=local' '(objectclass=computer)'"
+    placeholders:
+      dc_host: "asset.domain_controllers[0]"
+    expected_output:
+      - "Computer account list"
+      - "Operating system information"
+
+findings:
+  - id: "finding_privileged_users"
+    title: "Privileged Users Identified"
+    severity: "info"
+    description: "Domain administrators and other privileged users discovered"
+    remediation: "Review privileged user accounts for security best practices"
+
+  - id: "finding_service_accounts"
+    title: "Service Accounts Discovered"
+    severity: "low"
+    description: "Service accounts with potential SPNs identified"
+    remediation: "Ensure service accounts follow security best practices"
+
+cleanup:
+  - id: "cleanup_temp_files"
+    description: "Clean up temporary enumeration files"
+    required: false
+    commands:
+      - "rm -f /tmp/ad_enum_*.txt"
+
+troubleshooting:
+  - issue: "Access denied during enumeration"
+    solution: "Verify domain credentials and ensure proper permissions for AD queries"
+
+  - issue: "LDAP queries failing"
+    solution: "Check network connectivity to domain controller and LDAP port (389/636)"
+
+  - issue: "PowerShell module not available"
+    solution: "Install Active Directory PowerShell module or use alternative tools like ldapsearch"
