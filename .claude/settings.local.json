@@ -409,7 +409,11 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/task_queue_screen.dart lib/widgets/trigger_test_widget.dart lib/services/trigger_implementation_fix.dart lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart lib/services/property_driven_engine.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/task_queue_screen.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/dialogs/task_execution_dialog.dart lib/providers/task_queue_provider.dart lib/services/command_generator.dart --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/task_queue_screen.dart lib/dialogs/task_execution_dialog.dart lib/providers/task_queue_provider.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/task_queue_screen.dart lib/dialogs/task_execution_dialog.dart lib/providers/task_queue_provider.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/comprehensive_asset_provider.dart lib/services/asset_trigger_integration_service.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart lib/services/command_generator.dart lib/providers/comprehensive_asset_provider.dart lib/services/asset_trigger_integration_service.dart --fatal-warnings)"
     ],
     "deny": [],
     "ask": []

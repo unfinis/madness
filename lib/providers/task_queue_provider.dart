@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/methodology.dart';
-import '../models/methodology_execution.dart';
+// Removed unused import
 import '../models/scope.dart';
 import '../models/credential.dart';
 import '../services/trigger_evaluator.dart';
@@ -9,6 +9,8 @@ import 'methodology_provider.dart';
 import 'projects_provider.dart';
 import 'scope_provider.dart';
 import 'credential_provider.dart';
+import 'comprehensive_asset_provider.dart';
+import '../models/asset.dart';
 
 class TaskInstance {
   final String id;
@@ -156,8 +158,19 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
       _evaluateTriggersFromCredentialChanges(previous, next, projectId);
     });
 
-    ref.listen(methodologyProvider(projectId), (previous, next) {
-      _evaluateTriggersFromAssetChanges(previous?.discoveredAssets, next.discoveredAssets, projectId);
+    // Listen to asset changes from the comprehensive asset provider instead of methodology provider
+    ref.listen(assetNotifierProvider(projectId), (previous, next) {
+      final previousAssets = previous?.when(
+        data: (assets) => assets,
+        loading: () => <Asset>[],
+        error: (_, __) => <Asset>[],
+      ) ?? [];
+      final currentAssets = next.when(
+        data: (assets) => assets,
+        loading: () => <Asset>[],
+        error: (_, __) => <Asset>[],
+      );
+      _evaluateTriggersFromAssetChanges(previousAssets, currentAssets, projectId);
     });
   }
 
@@ -194,15 +207,15 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
   }
 
   void _evaluateTriggersFromAssetChanges(
-    List<DiscoveredAsset>? previous,
-    List<DiscoveredAsset> current,
+    List<Asset>? previous,
+    List<Asset> current,
     String projectId,
   ) {
     if ((previous?.length ?? 0) == current.length) {
       return;
     }
 
-    final assets = _convertDiscoveredAssetsToMaps(current);
+    final assets = _convertAssetsToMaps(current);
     _evaluateAllTriggers(assets, projectId);
   }
 
@@ -695,167 +708,230 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
     return results;
   }
 
-  void _updateAssetsWithResults(Map<String, dynamic> results) {
+  void _updateAssetsWithResults(Map<String, dynamic> results) async {
     final projectId = ref.read(currentProjectProvider)?.id;
     if (projectId == null) return;
 
-    final methodologyNotifier = ref.read(methodologyProvider(projectId).notifier);
+    final assetNotifier = ref.read(assetNotifierProvider(projectId).notifier);
+
+    print('[TaskQueue] Processing parsed output with ${results.keys.length} result types');
 
     // Create assets from discovered hosts
     if (results.containsKey('discovered_hosts')) {
       for (final host in results['discovered_hosts'] as List) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.host,
-          name: 'Host $host',
-          value: host,
+          name: 'Host: $host',
           properties: {
-            'source': 'nmap_scan',
-            'host': host,
-            'ip_address': host,
+            'source': PropertyValue.string('nmap_scan'),
+            'ip_address': PropertyValue.string(host),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 0.95,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'host', 'nmap'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created host asset: $host');
       }
     }
 
     // Create assets from generic discovered IPs (fallback)
     if (results.containsKey('discovered_ips')) {
       for (final ip in results['discovered_ips']) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.host,
-          name: 'Discovered Host',
-          value: ip,
+          name: 'Discovered Host: $ip',
           properties: {
-            'source': 'generic_parsing',
-            'host': ip,
-            'ip_address': ip,
+            'source': PropertyValue.string('generic_parsing'),
+            'ip_address': PropertyValue.string(ip),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 0.8,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'host', 'generic'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created generic host asset: $ip');
       }
     }
 
     // Create assets from discovered services
     if (results.containsKey('discovered_services')) {
       for (final service in results['discovered_services']) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.service,
-          name: service['service'] ?? 'Unknown Service',
-          value: '${service['port']}/${service['service']}',
+          name: 'Service: ${service['service']}',
           properties: {
-            'source': 'port_scan',
-            'port': service['port'],
-            'protocol': service['protocol'] ?? 'tcp',
-            'service_name': service['service'],
-            'version': service['version'] ?? '',
-            ...service,
+            'source': PropertyValue.string('port_scan'),
+            'port': PropertyValue.integer(service['port'] ?? 0),
+            'protocol': PropertyValue.string(service['protocol'] ?? 'tcp'),
+            'service_name': PropertyValue.string(service['service'] ?? ''),
+            'version': PropertyValue.string(service['version'] ?? ''),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 0.9,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'service', 'port-scan'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created service asset: ${service['service']} on port ${service['port']}');
       }
     }
 
     // Create assets from captured credentials
     if (results.containsKey('captured_credentials')) {
       for (final cred in results['captured_credentials'] as List) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.credential,
           name: 'Captured: ${cred['username']}',
-          value: cred['username'],
           properties: {
-            'source': 'responder',
-            'type': cred['type'],
-            'username': cred['username'],
-            'hash': cred['hash'],
-            'domain': cred['domain'],
-            'verified': false,
-            ...cred,
+            'source': PropertyValue.string('responder'),
+            'credential_type': PropertyValue.string(cred['type'] ?? 'ntlmv2'),
+            'username': PropertyValue.string(cred['username'] ?? ''),
+            'hash': PropertyValue.string(cred['hash'] ?? ''),
+            'domain': PropertyValue.string(cred['domain'] ?? ''),
+            'verified': PropertyValue.boolean(false),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 0.95,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'credential', 'responder'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created credential asset: ${cred['username']}');
       }
     }
 
     // Create assets from verified credentials
     if (results.containsKey('verified_credentials')) {
       for (final cred in results['verified_credentials'] as List) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.credential,
           name: 'Verified Access: ${cred['host']}',
-          value: '${cred['host']}:${cred['port']}',
           properties: {
-            'source': 'crackmapexec',
-            'host': cred['host'],
-            'port': cred['port'],
-            'protocol': cred['protocol'],
-            'status': cred['status'],
-            'details': cred['details'],
-            'verified': true,
-            ...cred,
+            'source': PropertyValue.string('crackmapexec'),
+            'host': PropertyValue.string(cred['host'] ?? ''),
+            'port': PropertyValue.integer(cred['port'] ?? 445),
+            'protocol': PropertyValue.string(cred['protocol'] ?? 'smb'),
+            'status': PropertyValue.string(cred['status'] ?? 'success'),
+            'details': PropertyValue.string(cred['details'] ?? ''),
+            'verified': PropertyValue.boolean(true),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 1.0,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'credential', 'crackmapexec'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created verified credential asset: ${cred['host']}');
       }
     }
 
     // Create assets from SMB shares
     if (results.containsKey('discovered_shares')) {
       for (final share in results['discovered_shares'] as List) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.service,
           name: 'SMB Share: ${share['name']}',
-          value: share['name'],
           properties: {
-            'source': 'smb_enumeration',
-            'share_name': share['name'],
-            'share_type': share['type'],
-            'description': share['description'],
-            'protocol': 'smb',
-            ...share,
+            'source': PropertyValue.string('smb_enumeration'),
+            'share_name': PropertyValue.string(share['name'] ?? ''),
+            'share_type': PropertyValue.string(share['type'] ?? 'Disk'),
+            'description': PropertyValue.string(share['description'] ?? ''),
+            'protocol': PropertyValue.string('smb'),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 0.9,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'service', 'smb'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created SMB share asset: ${share['name']}');
       }
     }
 
     // Create assets from discovered hashes
     if (results.containsKey('discovered_hashes')) {
       for (final hash in results['discovered_hashes']) {
-        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+        final asset = Asset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.credential,
           name: 'Hash Found',
-          value: hash,
           properties: {
-            'source': 'hash_extraction',
-            'hash_value': hash,
-            'hash_length': hash.length,
-            'verified': false,
+            'source': PropertyValue.string('hash_extraction'),
+            'hash_value': PropertyValue.string(hash),
+            'hash_length': PropertyValue.integer(hash.length),
+            'credential_type': PropertyValue.string('hash'),
+            'verified': PropertyValue.boolean(false),
+            'discovered_by': PropertyValue.string('manual_execution'),
+            'discovered_at': PropertyValue.string(DateTime.now().toIso8601String()),
           },
-          discoveredDate: DateTime.now(),
-          confidence: 0.7,
-        ));
+          completedTriggers: [],
+          triggerResults: {},
+          parentAssetIds: [],
+          childAssetIds: [],
+          discoveredAt: DateTime.now(),
+          tags: ['discovered', 'credential', 'hash'],
+        );
+
+        await assetNotifier.addAsset(asset);
+        print('[TaskQueue] Created hash asset: ${hash.substring(0, 8)}...');
       }
     }
+
+    final totalAssets = (results['discovered_hosts']?.length ?? 0) +
+        (results['discovered_ips']?.length ?? 0) +
+        (results['discovered_services']?.length ?? 0) +
+        (results['captured_credentials']?.length ?? 0) +
+        (results['verified_credentials']?.length ?? 0) +
+        (results['discovered_shares']?.length ?? 0) +
+        (results['discovered_hashes']?.length ?? 0);
+
+    print('[TaskQueue] Created $totalAssets new assets from command output');
   }
 
   List<Methodology> _getAvailableMethodologies(String projectId) {
@@ -909,14 +985,18 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
     }).toList();
   }
 
-  List<Map<String, dynamic>> _convertDiscoveredAssetsToMaps(List<DiscoveredAsset> assets) {
+  List<Map<String, dynamic>> _convertAssetsToMaps(List<Asset> assets) {
     return assets.map((asset) {
       return {
         'id': asset.id,
         'type': asset.type.name,
-        'identifier': asset.value,
-        'metadata': asset.properties,
-        'confidence': asset.confidence,
+        'identifier': asset.name,
+        'name': asset.name,
+        'properties': asset.properties,
+        'confidence': asset.confidence ?? 1.0,
+        'project_id': asset.projectId,
+        'discovered_at': asset.discoveredAt.toIso8601String(),
+        'tags': asset.tags,
       };
     }).toList();
   }
