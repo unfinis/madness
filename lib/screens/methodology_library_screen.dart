@@ -6,6 +6,8 @@ import '../widgets/common_state_widgets.dart';
 import '../widgets/standard_stats_bar.dart';
 import '../constants/app_spacing.dart';
 import '../dialogs/methodology_template_editor_dialog.dart';
+import '../dialogs/methodology_details_dialog.dart';
+import '../widgets/methodology_template_card.dart';
 import '../services/methodology_loader.dart' as loader;
 
 class MethodologyLibraryScreen extends ConsumerStatefulWidget {
@@ -378,208 +380,13 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   }
 
   Widget _buildMethodologyCard(loader.MethodologyTemplate methodology) {
-    final riskColor = _getRiskLevelColor(methodology.riskLevel);
-
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: () => _openMethodology(methodology),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: riskColor.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: riskColor.withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        methodology.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: riskColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        methodology.id,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Objective
-                      Text(
-                        methodology.description,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-
-                      // Tags
-                      if (methodology.tags.isNotEmpty) ...[
-                        Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: methodology.tags.take(3).map((tag) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                tag,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Theme.of(context).primaryColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        if (methodology.tags.length > 3)
-                          Text(
-                            '+${methodology.tags.length - 3} more',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        const SizedBox(height: AppSpacing.sm),
-                      ],
-
-                      // Stats row
-                      Row(
-                        children: [
-                          _buildMethodologyBadge('Triggers: ${methodology.triggers.length}', Icons.flash_on, Colors.orange),
-                          const SizedBox(width: 4),
-                          _buildMethodologyBadge('Commands: ${methodology.procedures.expand((p) => p.commands).length}', Icons.terminal, Colors.blue),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Footer
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, size: 12, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDate(methodology.modified),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'v${methodology.version}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    PopupMenuButton<String>(
-                      onSelected: (action) => _handleMethodologyAction(action, methodology),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(value: 'view', child: Text('View Details')),
-                        const PopupMenuItem(value: 'edit', child: Text('Edit Template')),
-                        const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
-                        const PopupMenuItem(value: 'export', child: Text('Export')),
-                        const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
-                      child: Icon(Icons.more_vert, size: 16, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return MethodologyTemplateCard(
+      template: methodology,
+      onTap: () => _openMethodology(methodology),
+      onExecute: null, // Enable when ready for execution
     );
   }
 
-  Widget _buildMethodologyBadge(String text, IconData icon, Color color) {
-    return Flexible(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 10, color: color),
-            const SizedBox(width: 2),
-            Flexible(
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 9,
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildEmptyState() {
     return Center(
@@ -640,37 +447,6 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  Color _getRiskLevelColor(String riskLevel) {
-    switch (riskLevel) {
-      case 'low':
-        return Colors.green;
-      case 'medium':
-        return Colors.orange;
-      case 'high':
-        return Colors.red;
-      case 'critical':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // Risk level priority logic moved to provider
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
-  }
 
 
   void _handleMenuAction(String action) {
@@ -708,87 +484,15 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   void _openMethodology(loader.MethodologyTemplate template) {
     showDialog(
       context: context,
-      builder: (context) => MethodologyTemplateEditorDialog(
-        jsonMethodology: template,
-        isEditMode: false,
+      barrierDismissible: false,
+      builder: (context) => MethodologyDetailsDialog(
+        template: template,
+        canExecute: false, // Set to true when execution is enabled
       ),
     );
   }
 
-  void _handleMethodologyAction(String action, loader.MethodologyTemplate methodology) {
-    switch (action) {
-      case 'view':
-        _openMethodology(methodology);
-        break;
-      case 'edit':
-        _editMethodology(methodology);
-        break;
-      case 'duplicate':
-        _duplicateMethodology(methodology);
-        break;
-      case 'export':
-        _exportMethodology(methodology);
-        break;
-      case 'delete':
-        _deleteMethodology(methodology);
-        break;
-    }
-  }
 
-  void _editMethodology(loader.MethodologyTemplate template) {
-    showDialog(
-      context: context,
-      builder: (context) => MethodologyTemplateEditorDialog(
-        jsonMethodology: template,
-        isEditMode: true,
-        onSave: (updatedMethodology) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Template "${updatedMethodology.title}" updated successfully!')),
-          );
-          // TODO: Update in methodology service
-        },
-      ),
-    );
-  }
-
-  void _duplicateMethodology(loader.MethodologyTemplate methodology) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Duplicate methodology coming soon')),
-    );
-  }
-
-  void _exportMethodology(loader.MethodologyTemplate methodology) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Export methodology coming soon')),
-    );
-  }
-
-  void _deleteMethodology(loader.MethodologyTemplate methodology) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Methodology'),
-        content: Text('Are you sure you want to delete "${methodology.name}"? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Methodology "${methodology.name}" deleted')),
-              );
-              // TODO: Delete from methodology service
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _importTemplates() {
     ScaffoldMessenger.of(context).showSnackBar(

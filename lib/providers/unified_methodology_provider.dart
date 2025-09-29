@@ -116,3 +116,21 @@ final filteredMethodologiesProvider = FutureProvider<List<loader.MethodologyTemp
   final filters = ref.watch(methodologySearchFiltersProvider);
   return ref.read(methodologySearchProvider(filters).future);
 });
+
+/// Provider for methodology categories/workstreams
+final methodologyWorkstreamsProvider = FutureProvider<List<String>>((ref) async {
+  final methodologies = await ref.watch(allMethodologyTemplatesProvider.future);
+  final workstreams = methodologies.map((m) => m.workstream).toSet().toList();
+  workstreams.sort();
+  return workstreams;
+});
+
+/// Provider for all unique tags
+final allMethodologyTagsProvider = FutureProvider<List<String>>((ref) async {
+  final methodologies = await ref.watch(allMethodologyTemplatesProvider.future);
+  final allTags = <String>{};
+  for (final m in methodologies) {
+    allTags.addAll(m.tags);
+  }
+  return allTags.toList()..sort();
+});
