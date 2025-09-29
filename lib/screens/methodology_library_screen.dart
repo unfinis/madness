@@ -23,7 +23,23 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
   String _selectedRiskLevel = 'all';
   String _sortBy = 'name'; // name, created, updated, risk
 
-  // No longer need manual loading - the unified provider handles this automatically
+  @override
+  void initState() {
+    super.initState();
+    // Initialize filters once in initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateFilters();
+    });
+  }
+
+  void _updateFilters() {
+    ref.read(methodologySearchFiltersProvider.notifier).update((state) => {
+      'query': _searchQuery,
+      'tags': _selectedTag != null ? [_selectedTag!] : <String>[],
+      'riskLevel': _selectedRiskLevel == 'all' ? null : _selectedRiskLevel,
+      'workstream': null,
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +51,10 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       );
     }
 
-    // Update search filters based on local state
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(methodologySearchFiltersProvider.notifier).update((state) => {
-        'query': _searchQuery,
-        'tags': _selectedTag != null ? [_selectedTag!] : <String>[],
-        'riskLevel': _selectedRiskLevel == 'all' ? null : _selectedRiskLevel,
-        'workstream': null,
-      });
-    });
+    // Remove the problematic WidgetsBinding.instance.addPostFrameCallback from here!
 
-    // Watch all templates and filtered templates
+    // Watch all templates
     final allTemplatesAsync = ref.watch(allMethodologyTemplatesProvider);
-    final filteredTemplatesAsync = ref.watch(filteredMethodologiesProvider);
 
     return allTemplatesAsync.when(
       loading: () => const Scaffold(
@@ -81,20 +88,21 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
         ),
       ),
       data: (allMethodologies) {
-        final filteredMethodologies = filteredTemplatesAsync.asData?.value ?? [];
+        // Use local filtering instead of async provider to avoid rebuild cycles
+        final filteredMethodologies = _applyLocalFilters(allMethodologies);
         final allTags = _getAllTags(allMethodologies);
+        final stats = _calculateStats(allMethodologies);
 
-        return _buildLibraryContent(filteredMethodologies, allTags, allMethodologies);
+        return _buildLibraryContent(filteredMethodologies, allTags, allMethodologies, stats);
       },
     );
   }
 
-  Widget _buildLibraryContent(List<loader.MethodologyTemplate> filteredMethodologies, List<String> allTags, List<loader.MethodologyTemplate> allMethodologies) {
-
+  Widget _buildLibraryContent(List<loader.MethodologyTemplate> filteredMethodologies, List<String> allTags, List<loader.MethodologyTemplate> allMethodologies, _MethodologyStats stats) {
     return Scaffold(
       body: Column(
         children: [
-          _buildStatsBar(filteredMethodologies, allMethodologies),
+          _buildStatsBar(filteredMethodologies, allMethodologies, stats),
           const Divider(height: 1),
           _buildSearchAndFilters(),
           const Divider(height: 1),
@@ -112,8 +120,65 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
     );
   }
 
-  Widget _buildStatsBar(List<loader.MethodologyTemplate> filtered, List<loader.MethodologyTemplate> total) {
-    final stats = _calculateStats(total);
+  // Add local filtering method that doesn't depend on async provider
+  List<loader.MethodologyTemplate> _applyLocalFilters(List<loader.MethodologyTemplate> methodologies) {
+    var filtered = methodologies;
+
+    // Apply search query
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filtered = filtered.where((m) =>
+        m.name.toLowerCase().contains(query) ||
+        m.description.toLowerCase().contains(query) ||
+        m.tags.any((t) => t.toLowerCase().contains(query))
+      ).toList();
+    }
+
+    // Apply tag filter
+    if (_selectedTag != null) {
+      filtered = filtered.where((m) => m.tags.contains(_selectedTag)).toList();
+    }
+
+    // Apply risk level filter
+    if (_selectedRiskLevel != 'all') {
+      filtered = filtered.where((m) => m.riskLevel == _selectedRiskLevel).toList();
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) {
+      switch (_sortBy) {
+        case 'name':
+          return a.name.compareTo(b.name);
+        case 'risk':
+          return _getRiskPriority(a.riskLevel).compareTo(_getRiskPriority(b.riskLevel));
+        case 'created':
+          return b.created.compareTo(a.created);
+        case 'updated':
+          return b.modified.compareTo(a.modified);
+        default:
+          return a.name.compareTo(b.name);
+      }
+    });
+
+    return filtered;
+  }
+
+  int _getRiskPriority(String riskLevel) {
+    switch (riskLevel) {
+      case 'critical':
+        return 4;
+      case 'high':
+        return 3;
+      case 'medium':
+        return 2;
+      case 'low':
+        return 1;
+      default:
+        return 0;
+    }
+  }
+
+  Widget _buildStatsBar(List<loader.MethodologyTemplate> filtered, List<loader.MethodologyTemplate> total, _MethodologyStats stats) {
 
     final statsData = [
       StatData(
@@ -167,15 +232,33 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
             return Column(
               children: [
                 TextField(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Search methodologies...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                _searchQuery = '';
+                                _updateFilters();
+                              });
+                            },
+                          )
+                        : null,
                   ),
                   onChanged: (value) {
                     setState(() {
-                      _searchQuery = value.toLowerCase();
+                      _searchQuery = value;
+                    });
+                    // Debounce the filter update
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (_searchQuery == value) {
+                        _updateFilters();
+                      }
                     });
                   },
                 ),
@@ -195,15 +278,33 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
               Expanded(
                 flex: 3,
                 child: TextField(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Search methodologies by title, ID, or tags...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                _searchQuery = '';
+                                _updateFilters();
+                              });
+                            },
+                          )
+                        : null,
                   ),
                   onChanged: (value) {
                     setState(() {
-                      _searchQuery = value.toLowerCase();
+                      _searchQuery = value;
+                    });
+                    // Debounce the filter update
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (_searchQuery == value) {
+                        _updateFilters();
+                      }
                     });
                   },
                 ),
@@ -237,6 +338,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
       onChanged: (value) {
         setState(() {
           _selectedRiskLevel = value ?? 'all';
+          _updateFilters(); // Update filters when risk level changes
         });
       },
     );
@@ -298,6 +400,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
                   onPressed: () {
                     setState(() {
                       _selectedTag = null;
+                      _updateFilters(); // Update filters when clearing tag filter
                     });
                   },
                   icon: const Icon(Icons.clear),
@@ -319,6 +422,7 @@ class _MethodologyLibraryScreenState extends ConsumerState<MethodologyLibraryScr
                 onTap: () {
                   setState(() {
                     _selectedTag = isSelected ? null : entry.key;
+                    _updateFilters(); // Update filters when tag selection changes
                   });
                 },
                 child: Container(

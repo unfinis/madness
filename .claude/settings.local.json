@@ -424,7 +424,8 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/yaml_trigger_loader.dart lib/services/trigger_implementation_fix.dart lib/services/trigger_evaluator.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/widgets/task_item_widget.dart lib/providers/task_queue_provider.dart lib/services/yaml_trigger_loader.dart lib/services/trigger_evaluator.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/unified_methodology_provider.dart lib/widgets/methodology_template_card.dart lib/dialogs/methodology_details_dialog.dart lib/screens/methodology_library_screen.dart --fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/unified_methodology_provider.dart lib/widgets/methodology_template_card.dart lib/dialogs/methodology_details_dialog.dart lib/screens/methodology_library_screen.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/unified_methodology_provider.dart lib/widgets/methodology_template_card.dart lib/dialogs/methodology_details_dialog.dart lib/screens/methodology_library_screen.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/unified_methodology_provider.dart lib/screens/methodology_library_screen.dart lib/widgets/methodology_template_card.dart lib/dialogs/methodology_details_dialog.dart)"
     ],
     "deny": [],
     "ask": []

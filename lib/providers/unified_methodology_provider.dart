@@ -111,10 +111,42 @@ final methodologySearchFiltersProvider = StateProvider<Map<String, dynamic>>((re
   };
 });
 
-/// Computed provider that automatically searches based on current filters
-final filteredMethodologiesProvider = FutureProvider<List<loader.MethodologyTemplate>>((ref) async {
+/// Simplified filtered provider that doesn't cause rebuilds
+final filteredMethodologiesProvider = Provider<List<loader.MethodologyTemplate>>((ref) {
+  final allMethodologiesAsync = ref.watch(allMethodologyTemplatesProvider);
   final filters = ref.watch(methodologySearchFiltersProvider);
-  return ref.read(methodologySearchProvider(filters).future);
+
+  // Return empty list while loading
+  if (!allMethodologiesAsync.hasValue) {
+    return [];
+  }
+
+  final allMethodologies = allMethodologiesAsync.value!;
+  var filtered = allMethodologies;
+
+  // Apply filters synchronously
+  final query = (filters['query'] as String? ?? '').toLowerCase();
+  if (query.isNotEmpty) {
+    filtered = filtered.where((m) =>
+      m.name.toLowerCase().contains(query) ||
+      m.description.toLowerCase().contains(query) ||
+      m.tags.any((t) => t.toLowerCase().contains(query))
+    ).toList();
+  }
+
+  final tags = filters['tags'] as List<String>? ?? [];
+  if (tags.isNotEmpty) {
+    filtered = filtered.where((m) =>
+      tags.any((tag) => m.tags.contains(tag))
+    ).toList();
+  }
+
+  final riskLevel = filters['riskLevel'] as String?;
+  if (riskLevel != null && riskLevel != 'all') {
+    filtered = filtered.where((m) => m.riskLevel == riskLevel).toList();
+  }
+
+  return filtered;
 });
 
 /// Provider for methodology categories/workstreams
