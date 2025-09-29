@@ -452,7 +452,7 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
           ? task.triggers.first.context
           : <String, dynamic>{};
 
-      await methodologyNotifier.startMethodologyExecution(
+      await methodologyNotifier.startMethodology(
         methodology.id,
         additionalContext: triggerContext,
       );

@@ -190,7 +190,7 @@ class PropertyDrivenEngine {
 
   /// Generate deduplication key for trigger-asset combination
   String _generateDeduplicationKey(trigger_models.MethodologyTrigger trigger, Map<String, dynamic> asset) {
-    final template = trigger.deduplicationKeyTemplate ?? '{trigger.id}:{asset.id}';
+    final template = trigger.deduplicationKeyTemplate;
 
     return template
         .replaceAll('{trigger.id}', trigger.id)

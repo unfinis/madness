@@ -4,6 +4,7 @@ import '../providers/task_queue_provider.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/task_queue/task_card_widget.dart';
 import '../widgets/task_queue/task_stats_widget.dart';
+import '../widgets/trigger_test_widget.dart';
 import '../constants/app_spacing.dart';
 import '../constants/responsive_breakpoints.dart';
 
@@ -33,7 +34,6 @@ class _TaskQueueScreenState extends ConsumerState<TaskQueueScreen>
   @override
   Widget build(BuildContext context) {
     final currentProject = ref.watch(currentProjectProvider);
-    final taskQueueState = ref.watch(taskQueueProvider);
     final pendingTasks = ref.watch(pendingTasksProvider);
     final activeTasks = ref.watch(activeTasksProvider);
     final completedTasks = ref.watch(completedTasksProvider);
@@ -106,6 +106,12 @@ class _TaskQueueScreenState extends ConsumerState<TaskQueueScreen>
       body: Column(
         children: [
           const TaskStatsWidget(),
+          const Divider(),
+          // Temporary trigger test widget for testing
+          const Padding(
+            padding: EdgeInsets.all(AppSpacing.sm),
+            child: TriggerTestWidget(),
+          ),
           const Divider(),
           Expanded(
             child: TabBarView(

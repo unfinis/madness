@@ -401,7 +401,13 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_implementation_fix.dart lib/providers/task_queue_provider.dart lib/widgets/trigger_test_widget.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/task_item_widget.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/task_queue/ lib/widgets/common/task_widgets.dart lib/widgets/common/trigger_widgets.dart --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/task_queue/task_filters_widget.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/task_queue/task_filters_widget.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_implementation_fix.dart lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/property_driven_engine.dart lib/services/trigger_evaluator.dart lib/widgets/trigger_test_widget.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/property_driven_engine.dart lib/services/trigger_evaluator.dart lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart lib/widgets/trigger_test_widget.dart lib/widgets/task_queue/task_card_widget.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/task_queue_screen.dart lib/widgets/trigger_test_widget.dart lib/services/trigger_implementation_fix.dart lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/screens/task_queue_screen.dart lib/widgets/trigger_test_widget.dart lib/services/trigger_implementation_fix.dart lib/providers/task_queue_provider.dart lib/dialogs/task_execution_dialog.dart lib/services/property_driven_engine.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/main.dart lib/app_shell.dart lib/screens/task_queue_screen.dart --no-fatal-warnings)"
     ],
     "deny": [],
     "ask": []

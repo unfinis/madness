@@ -9,7 +9,6 @@ import '../providers/task_queue_provider.dart';
 
 /// Fixed implementation of trigger evaluator
 class TriggerEvaluatorFixed {
-  static const _uuid = Uuid();
 
   /// Find matching assets for a trigger - WORKING IMPLEMENTATION
   static List<Map<String, dynamic>> findMatchingAssets(
