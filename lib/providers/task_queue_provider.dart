@@ -537,12 +537,142 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
   Map<String, dynamic> _parseOutput(String output) {
     final results = <String, dynamic>{};
 
+    // Parse different tool outputs
+    if (output.contains('Nmap scan report')) {
+      results.addAll(_parseNmapOutput(output));
+    } else if (output.contains('[*] Responder')) {
+      results.addAll(_parseResponderOutput(output));
+    } else if (output.contains('SMB')) {
+      results.addAll(_parseSmbOutput(output));
+    } else if (output.contains('crackmapexec') || output.contains('CME')) {
+      results.addAll(_parseCrackmapexecOutput(output));
+    } else {
+      // Fallback to generic parsing
+      results.addAll(_parseGenericOutput(output));
+    }
+
+    return results;
+  }
+
+  Map<String, dynamic> _parseNmapOutput(String output) {
+    final results = <String, dynamic>{};
+    final List<String> discoveredHosts = [];
+    final List<Map<String, dynamic>> services = [];
+
+    // Parse: "Nmap scan report for 192.168.1.100"
+    final hostRegex = RegExp(r'Nmap scan report for ([\d\.]+)');
+    for (final match in hostRegex.allMatches(output)) {
+      discoveredHosts.add(match.group(1)!);
+    }
+
+    // Parse open ports: "445/tcp open microsoft-ds"
+    final portRegex = RegExp(r'(\d+)/(tcp|udp)\s+open\s+(\S+)(?:\s+(.+))?');
+    for (final match in portRegex.allMatches(output)) {
+      services.add({
+        'port': int.parse(match.group(1)!),
+        'protocol': match.group(2),
+        'service': match.group(3),
+        'version': match.group(4) ?? '',
+      });
+    }
+
+    if (discoveredHosts.isNotEmpty) {
+      results['discovered_hosts'] = discoveredHosts;
+    }
+    if (services.isNotEmpty) {
+      results['discovered_services'] = services;
+    }
+
+    return results;
+  }
+
+  Map<String, dynamic> _parseResponderOutput(String output) {
+    final results = <String, dynamic>{};
+    final List<Map<String, dynamic>> capturedCreds = [];
+
+    // Parse captured hashes - look for NTLM responses
+    final ntlmRegex = RegExp(r'\[SMB\] NTLMv2-SSP Username : (.+)');
+    final hashRegex = RegExp(r'\[SMB\] NTLMv2-SSP Hash\s+: (.+)');
+
+    final usernames = ntlmRegex.allMatches(output).map((m) => m.group(1)?.trim()).toList();
+    final hashes = hashRegex.allMatches(output).map((m) => m.group(1)?.trim()).toList();
+
+    for (int i = 0; i < usernames.length && i < hashes.length; i++) {
+      if (usernames[i] != null && hashes[i] != null) {
+        capturedCreds.add({
+          'type': 'ntlmv2',
+          'username': usernames[i],
+          'hash': hashes[i],
+          'domain': usernames[i]!.contains('\\') ? usernames[i]!.split('\\')[0] : '',
+        });
+      }
+    }
+
+    if (capturedCreds.isNotEmpty) {
+      results['captured_credentials'] = capturedCreds;
+    }
+
+    return results;
+  }
+
+  Map<String, dynamic> _parseSmbOutput(String output) {
+    final results = <String, dynamic>{};
+    final List<Map<String, dynamic>> smbShares = [];
+
+    // Parse SMB shares
+    final shareRegex = RegExp(r'(\S+)\s+(Disk|IPC|Printer)\s+(.*)');
+    for (final match in shareRegex.allMatches(output)) {
+      smbShares.add({
+        'name': match.group(1),
+        'type': match.group(2),
+        'description': match.group(3)?.trim() ?? '',
+      });
+    }
+
+    if (smbShares.isNotEmpty) {
+      results['discovered_shares'] = smbShares;
+    }
+
+    return results;
+  }
+
+  Map<String, dynamic> _parseCrackmapexecOutput(String output) {
+    final results = <String, dynamic>{};
+    final List<Map<String, dynamic>> credentials = [];
+
+    // Parse successful authentications
+    final authRegex = RegExp(r'(\d+\.\d+\.\d+\.\d+):(\d+)\s+(\S+)\s+\[(\+|\-)\]\s+(.+)');
+    for (final match in authRegex.allMatches(output)) {
+      final status = match.group(4) == '+' ? 'success' : 'failed';
+      if (status == 'success') {
+        credentials.add({
+          'host': match.group(1),
+          'port': int.tryParse(match.group(2) ?? '') ?? 445,
+          'protocol': match.group(3),
+          'status': status,
+          'details': match.group(5),
+        });
+      }
+    }
+
+    if (credentials.isNotEmpty) {
+      results['verified_credentials'] = credentials;
+    }
+
+    return results;
+  }
+
+  Map<String, dynamic> _parseGenericOutput(String output) {
+    final results = <String, dynamic>{};
+
+    // Generic IP address extraction
     final ipPattern = RegExp(r'\b(?:\d{1,3}\.){3}\d{1,3}\b');
     final ips = ipPattern.allMatches(output).map((m) => m.group(0)).toList();
     if (ips.isNotEmpty) {
-      results['discovered_ips'] = ips;
+      results['discovered_ips'] = ips.toSet().toList(); // Remove duplicates
     }
 
+    // Generic port pattern
     final portPattern = RegExp(r'(\d+)/(?:tcp|udp)\s+open\s+(\S+)');
     final ports = <Map<String, dynamic>>[];
     for (final match in portPattern.allMatches(output)) {
@@ -555,10 +685,11 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
       results['discovered_services'] = ports;
     }
 
+    // Generic hash extraction
     final hashPattern = RegExp(r'\b[a-fA-F0-9]{32}\b|\b[a-fA-F0-9]{40}\b|\b[a-fA-F0-9]{64}\b');
     final hashes = hashPattern.allMatches(output).map((m) => m.group(0)).toList();
     if (hashes.isNotEmpty) {
-      results['discovered_hashes'] = hashes;
+      results['discovered_hashes'] = hashes.toSet().toList();
     }
 
     return results;
@@ -570,6 +701,27 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
 
     final methodologyNotifier = ref.read(methodologyProvider(projectId).notifier);
 
+    // Create assets from discovered hosts
+    if (results.containsKey('discovered_hosts')) {
+      for (final host in results['discovered_hosts'] as List) {
+        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+          id: _uuid.v4(),
+          projectId: projectId,
+          type: AssetType.host,
+          name: 'Host $host',
+          value: host,
+          properties: {
+            'source': 'nmap_scan',
+            'host': host,
+            'ip_address': host,
+          },
+          discoveredDate: DateTime.now(),
+          confidence: 0.95,
+        ));
+      }
+    }
+
+    // Create assets from generic discovered IPs (fallback)
     if (results.containsKey('discovered_ips')) {
       for (final ip in results['discovered_ips']) {
         methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
@@ -578,24 +730,129 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
           type: AssetType.host,
           name: 'Discovered Host',
           value: ip,
-          properties: {'source': 'task_execution'},
+          properties: {
+            'source': 'generic_parsing',
+            'host': ip,
+            'ip_address': ip,
+          },
           discoveredDate: DateTime.now(),
-          confidence: 0.9,
+          confidence: 0.8,
         ));
       }
     }
 
+    // Create assets from discovered services
     if (results.containsKey('discovered_services')) {
       for (final service in results['discovered_services']) {
         methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
           id: _uuid.v4(),
           projectId: projectId,
           type: AssetType.service,
-          name: service['service'] ?? 'Service',
+          name: service['service'] ?? 'Unknown Service',
           value: '${service['port']}/${service['service']}',
-          properties: service,
+          properties: {
+            'source': 'port_scan',
+            'port': service['port'],
+            'protocol': service['protocol'] ?? 'tcp',
+            'service_name': service['service'],
+            'version': service['version'] ?? '',
+            ...service,
+          },
           discoveredDate: DateTime.now(),
-          confidence: 0.85,
+          confidence: 0.9,
+        ));
+      }
+    }
+
+    // Create assets from captured credentials
+    if (results.containsKey('captured_credentials')) {
+      for (final cred in results['captured_credentials'] as List) {
+        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+          id: _uuid.v4(),
+          projectId: projectId,
+          type: AssetType.credential,
+          name: 'Captured: ${cred['username']}',
+          value: cred['username'],
+          properties: {
+            'source': 'responder',
+            'type': cred['type'],
+            'username': cred['username'],
+            'hash': cred['hash'],
+            'domain': cred['domain'],
+            'verified': false,
+            ...cred,
+          },
+          discoveredDate: DateTime.now(),
+          confidence: 0.95,
+        ));
+      }
+    }
+
+    // Create assets from verified credentials
+    if (results.containsKey('verified_credentials')) {
+      for (final cred in results['verified_credentials'] as List) {
+        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+          id: _uuid.v4(),
+          projectId: projectId,
+          type: AssetType.credential,
+          name: 'Verified Access: ${cred['host']}',
+          value: '${cred['host']}:${cred['port']}',
+          properties: {
+            'source': 'crackmapexec',
+            'host': cred['host'],
+            'port': cred['port'],
+            'protocol': cred['protocol'],
+            'status': cred['status'],
+            'details': cred['details'],
+            'verified': true,
+            ...cred,
+          },
+          discoveredDate: DateTime.now(),
+          confidence: 1.0,
+        ));
+      }
+    }
+
+    // Create assets from SMB shares
+    if (results.containsKey('discovered_shares')) {
+      for (final share in results['discovered_shares'] as List) {
+        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+          id: _uuid.v4(),
+          projectId: projectId,
+          type: AssetType.service,
+          name: 'SMB Share: ${share['name']}',
+          value: share['name'],
+          properties: {
+            'source': 'smb_enumeration',
+            'share_name': share['name'],
+            'share_type': share['type'],
+            'description': share['description'],
+            'protocol': 'smb',
+            ...share,
+          },
+          discoveredDate: DateTime.now(),
+          confidence: 0.9,
+        ));
+      }
+    }
+
+    // Create assets from discovered hashes
+    if (results.containsKey('discovered_hashes')) {
+      for (final hash in results['discovered_hashes']) {
+        methodologyNotifier.addDiscoveredAsset(DiscoveredAsset(
+          id: _uuid.v4(),
+          projectId: projectId,
+          type: AssetType.credential,
+          name: 'Hash Found',
+          value: hash,
+          properties: {
+            'source': 'hash_extraction',
+            'hash_value': hash,
+            'hash_length': hash.length,
+            'verified': false,
+          },
+          discoveredDate: DateTime.now(),
+          confidence: 0.7,
         ));
       }
     }

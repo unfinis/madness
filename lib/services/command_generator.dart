@@ -159,35 +159,68 @@ class CommandGenerator {
       context.addAll(additionalParams);
     }
 
+    // Extract asset information and create common placeholders
     if (context['asset'] is Map) {
       final asset = context['asset'] as Map;
 
-      if (asset['host'] != null) {
-        context['HOST'] = asset['host'];
-        context['TARGET'] = asset['host'];
+      // Host/IP placeholders
+      if (asset['host'] != null || asset['identifier'] != null || asset['name'] != null) {
+        final hostValue = asset['host'] ?? asset['identifier'] ?? asset['name'];
+        context['HOST'] = hostValue;
+        context['TARGET'] = hostValue;
+        context['target'] = hostValue; // lowercase variant
+        context['host'] = hostValue; // lowercase variant
       }
 
+      // Port placeholders
       if (asset['port'] != null) {
         context['PORT'] = asset['port'];
+        context['port'] = asset['port'];
       }
 
-      if (asset['service'] != null) {
-        context['SERVICE'] = asset['service'];
+      // Service placeholders
+      if (asset['service'] != null || asset['service_name'] != null) {
+        final serviceValue = asset['service'] ?? asset['service_name'];
+        context['SERVICE'] = serviceValue;
+        context['service'] = serviceValue;
       }
 
+      // Protocol placeholder
+      if (asset['protocol'] != null) {
+        context['PROTOCOL'] = asset['protocol'];
+        context['protocol'] = asset['protocol'];
+      }
+
+      // Network segment placeholders
+      if (asset['subnet'] != null) {
+        context['SUBNET'] = asset['subnet'];
+        context['subnet'] = asset['subnet'];
+      }
+
+      // Credential placeholders
       if (asset['username'] != null) {
         context['USERNAME'] = asset['username'];
+        context['username'] = asset['username'];
       }
 
       if (asset['password'] != null) {
         context['PASSWORD'] = asset['password'];
+        context['password'] = asset['password'];
       }
 
       if (asset['domain'] != null) {
         context['DOMAIN'] = asset['domain'];
+        context['domain'] = asset['domain'];
+      }
+
+      // Share-specific placeholders
+      if (asset['share_name'] != null) {
+        context['SHARE'] = asset['share_name'];
+        context['share'] = asset['share_name'];
       }
     }
 
+    // Handle credentials list
     if (context['credentials'] is List) {
       final creds = context['credentials'] as List;
       if (creds.isNotEmpty) {
@@ -195,11 +228,23 @@ class CommandGenerator {
         context['CREDENTIAL_USER'] = firstCred['username'] ?? '';
         context['CREDENTIAL_PASS'] = firstCred['password'] ?? '';
         context['CREDENTIAL_DOMAIN'] = firstCred['domain'] ?? '';
+        context['credential_user'] = firstCred['username'] ?? '';
+        context['credential_pass'] = firstCred['password'] ?? '';
+        context['credential_domain'] = firstCred['domain'] ?? '';
       }
     }
 
+    // Add common environment variables
     context['TIMESTAMP'] = DateTime.now().toIso8601String();
     context['DATE'] = DateTime.now().toIso8601String().split('T')[0];
+    context['INTERFACE'] = 'eth0'; // Default interface
+    context['interface'] = 'eth0';
+
+    // Add wordlists and common paths (can be configured per environment)
+    context['WORDLIST_COMMON'] = '/usr/share/wordlists/common.txt';
+    context['WORDLIST_USERS'] = '/usr/share/wordlists/users.txt';
+    context['wordlist_common'] = '/usr/share/wordlists/common.txt';
+    context['wordlist_users'] = '/usr/share/wordlists/users.txt';
 
     return context;
   }
