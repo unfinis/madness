@@ -1,6 +1,7 @@
 import '../models/assets.dart';
 import '../models/methodology_trigger_builder.dart';
 import '../models/methodology_execution.dart' hide AssetType;
+import 'trigger_implementation_fix.dart';
 
 /// Enhanced trigger evaluator that works with the comprehensive asset model
 class TriggerEvaluator {
@@ -189,11 +190,10 @@ class TriggerEvaluator {
   /// Legacy compatibility method for finding matching assets
   static List<Map<String, dynamic>> findMatchingAssets(
     dynamic trigger,
-    List<Map<String, dynamic>> assets
+    List<Map<String, dynamic>> assets,
   ) {
-    // For now, return empty list to avoid build errors
-    // This method needs proper implementation based on the trigger and asset structure
-    return [];
+    // Use the fixed implementation from trigger_implementation_fix.dart
+    return TriggerEvaluatorFixed.findMatchingAssets(trigger, assets);
   }
 }
 

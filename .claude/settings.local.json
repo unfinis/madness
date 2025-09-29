@@ -396,7 +396,9 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/drift_storage_service.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/common/ lib/theme/app_decorations.dart lib/utils/asset_converters.dart lib/widgets/task_queue/task_card_widget.dart lib/dialogs/task_execution_dialog.dart lib/widgets/task_item_widget.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/common/ lib/theme/app_decorations.dart lib/utils/asset_converters.dart lib/widgets/task_queue/task_card_widget.dart lib/dialogs/task_execution_dialog.dart lib/widgets/task_item_widget.dart --no-fatal-infos)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/common/ lib/theme/app_decorations.dart lib/utils/asset_converters.dart lib/widgets/task_queue/task_card_widget.dart lib/dialogs/task_execution_dialog.dart lib/widgets/task_item_widget.dart)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/common/ lib/theme/app_decorations.dart lib/utils/asset_converters.dart lib/widgets/task_queue/task_card_widget.dart lib/dialogs/task_execution_dialog.dart lib/widgets/task_item_widget.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_implementation_fix.dart lib/services/property_driven_engine.dart lib/services/trigger_evaluator.dart lib/widgets/task_item_widget.dart lib/widgets/trigger_test_widget.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_implementation_fix.dart lib/providers/task_queue_provider.dart lib/widgets/trigger_test_widget.dart --no-fatal-warnings)"
     ],
     "deny": [],
     "ask": []

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/task.dart';
 import '../theme/app_decorations.dart';
+import '../providers/task_provider.dart';
+import '../providers/projects_provider.dart';
 import 'common/task_widgets.dart';
 
 class TaskItemWidget extends ConsumerWidget {
@@ -295,10 +297,25 @@ class TaskItemWidget extends ConsumerWidget {
   }
 
   void _markTaskCompleted(WidgetRef ref, String taskId) {
-    // TODO: Fix provider family access
-    // ref.read(taskProvider(projectId).notifier).markTaskCompleted(taskId);
-    ScaffoldMessenger.of(ref.context).showSnackBar(
-      const SnackBar(content: Text('Task completion functionality is temporarily disabled')),
-    );
+    try {
+      // Try to get current project and mark task completed
+      final currentProject = ref.read(currentProjectProvider);
+      if (currentProject != null) {
+        ref.read(taskProvider(currentProject.id).notifier).markTaskCompleted(taskId);
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          const SnackBar(content: Text('Task marked as completed')),
+        );
+      } else {
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          const SnackBar(content: Text('No active project found')),
+        );
+      }
+    } catch (e) {
+      // Fallback if provider is not available
+      print('Error marking task completed: $e');
+      ScaffoldMessenger.of(ref.context).showSnackBar(
+        SnackBar(content: Text('Error completing task: $e')),
+      );
+    }
   }
 }

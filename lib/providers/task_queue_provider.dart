@@ -410,6 +410,11 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
     state = state.copyWith(tasks: updatedTasks);
   }
 
+  void addTask(TaskInstance task) {
+    final updatedTasks = [...state.tasks, task];
+    state = state.copyWith(tasks: updatedTasks);
+  }
+
   void removeTask(String taskId) {
     final updatedTasks = state.tasks.where((t) => t.id != taskId).toList();
     state = state.copyWith(tasks: updatedTasks);
