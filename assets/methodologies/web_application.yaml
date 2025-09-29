@@ -1,0 +1,86 @@
+id: "web_application"
+version: "1.0.0"
+template_version: "1.0"
+name: "Web Application Assessment"
+workstream: "Application Security"
+author: "Security Team"
+created: "2024-01-01"
+modified: "2024-01-01"
+status: "active"
+description: "Web application penetration testing methodology"
+tags: ["web", "application", "http", "https"]
+risk_level: "high"
+
+overview:
+  purpose: "Identify vulnerabilities in web applications"
+  scope: "All web services and applications"
+  prerequisites:
+    - "Application URLs"
+    - "Testing authorization"
+  category: "Application"
+
+triggers:
+  - name: "HTTP Service Discovered"
+    description: "Port 80/443 is open - enumerate web application"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "80"
+    priority: 95
+    batch_capable: false
+    individual_command: "nikto -h http://<target_ip>"
+    command_variants:
+      quick: "whatweb http://<target_ip>"
+      thorough: "nikto -h http://<target_ip> -Tuning x"
+    expected_property_updates: ["web_server", "web_technologies", "web_headers"]
+    expected_asset_discovery: ["vulnerability", "service"]
+    tags: ["web", "http", "discovery"]
+    enabled: true
+
+  - name: "HTTPS Service Discovered"
+    description: "Port 443 is open - check SSL/TLS configuration"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "443"
+    priority: 95
+    batch_capable: false
+    individual_command: "testssl.sh <target_ip>"
+    expected_property_updates: ["ssl_version", "ssl_ciphers", "certificate_info"]
+    tags: ["web", "https", "ssl", "tls"]
+    enabled: true
+
+  - name: "WordPress Detected"
+    description: "WordPress CMS detected - run WP specific scans"
+    conditions:
+      asset_type: "service"
+      properties:
+        "web_technologies": "*wordpress*"
+    priority: 85
+    individual_command: "wpscan --url http://<target_ip> --enumerate ap,at,u"
+    expected_property_updates: ["wordpress_version", "wordpress_plugins", "wordpress_users"]
+    expected_asset_discovery: ["vulnerability", "credential"]
+    tags: ["wordpress", "cms", "web"]
+    enabled: true
+
+procedures:
+  - id: "web_enum"
+    name: "Web Application Enumeration"
+    description: "Initial web application reconnaissance"
+    commands:
+      - "whatweb http://<target_ip>"
+      - "nikto -h http://<target_ip>"
+      - "gobuster dir -u http://<target_ip> -w /usr/share/wordlists/dirb/common.txt"
+
+findings:
+  - id: "WEB-001"
+    title: "Weak SSL/TLS Configuration"
+    severity: "high"
+    description: "Server supports outdated SSL/TLS protocols"
+    remediation: "Disable TLS 1.0/1.1 and enable only TLS 1.2+"
+
+cleanup:
+  - id: "cleanup_web"
+    description: "Remove any test data created during web testing"
+    commands:
+      - "curl -X DELETE http://<target_ip>/test-upload.txt"

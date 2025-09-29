@@ -1,115 +1,72 @@
-# Nmap Host Discovery Methodology
-id: nmap_discovery
+id: "nmap_discovery"
 version: "1.0.0"
-template_version: "2.0"
-name: "Nmap Host Discovery"
-workstream: "reconnaissance"
+template_version: "1.0"
+name: "Network Discovery and Scanning"
+workstream: "Reconnaissance"
 author: "Security Team"
-created: "2024-01-01T00:00:00Z"
-modified: "2024-09-29T00:00:00Z"
+created: "2024-01-01"
+modified: "2024-01-01"
 status: "active"
-description: "Comprehensive host discovery using Nmap to identify live hosts on network segments"
-tags: ["network", "discovery", "nmap", "scanning", "reconnaissance"]
+description: "Initial network discovery and port scanning"
+tags: ["nmap", "discovery", "reconnaissance"]
 risk_level: "low"
 
 overview:
-  purpose: "Discover live hosts on the network using various Nmap techniques"
-  scope: "Internal network segments with authorized access"
+  purpose: "Discover live hosts and open services"
+  scope: "All authorized network ranges"
   prerequisites:
-    - "Network access to target segment"
-    - "Nmap installed (version 7.94+)"
-    - "Proper authorization for network scanning"
-  category: "reconnaissance"
+    - "Network access"
+    - "Authorized IP ranges"
+  category: "Discovery"
 
 triggers:
-  - name: "Network Segment Added"
+  - name: "New Network Segment"
+    description: "New network segment discovered - perform discovery scan"
     conditions:
       asset_type: "networkSegment"
       properties:
-        has_access: true
-        scan_authorized: true
-        scanned: false
-    priority: 10
+        "scanned": "false"
+    priority: 100
+    batch_capable: false
+    individual_command: "nmap -sn <subnet>"
+    command_variants:
+      quick: "nmap -sn -T4 <subnet>"
+      thorough: "nmap -sn -PS21,22,25,80,443,3389,8080 -PA80,443 -PU53,161 <subnet>"
+    expected_property_updates: ["live_hosts", "scanned"]
+    expected_asset_discovery: ["host"]
+    tags: ["discovery", "ping_sweep"]
     enabled: true
-    cooldown_period: "12h"
-    batch_capable: true
-    batch_criteria: "same_access_level"
-    batch_command: "batch_nmap_scan.sh {network_list}"
-    max_batch_size: 3
-    individual_command: "nmap_full_scan.sh {network_cidr}"
-    expected_property_updates:
-      - "scanned"
-      - "hosts_discovered"
-      - "services_found"
-    expected_asset_discovery:
-      - "host"
-      - "service"
 
-equipment:
-  - "Nmap 7.94 or newer"
-  - "Network access to target segments"
-  - "Sufficient bandwidth for scanning"
+  - name: "Live Host Discovered"
+    description: "Host is alive - perform port scan"
+    conditions:
+      asset_type: "host"
+      properties:
+        "alive": "true"
+        "ports_scanned": "false"
+    priority: 90
+    batch_capable: true
+    batch_criteria: "subnet"
+    max_batch_size: 20
+    batch_command: "nmap -sS -sV -p- <subnet>"
+    individual_command: "nmap -sS -sV -p- <target_ip>"
+    expected_property_updates: ["open_ports", "services", "os_detection"]
+    expected_asset_discovery: ["service"]
+    tags: ["port_scan", "service_detection"]
+    enabled: true
 
 procedures:
-  - id: "proc_ping_scan"
-    name: "ICMP Ping Scan"
-    description: "Basic ping scan to discover responsive hosts"
+  - id: "initial_discovery"
+    name: "Initial Network Discovery"
+    description: "Discover live hosts in network"
     commands:
-      - "nmap -sn {network_range}"
-    placeholders:
-      network_range: "asset.cidr"
-    expected_output:
-      - "Host is up"
-      - "Nmap scan report"
-
-  - id: "proc_tcp_syn_discovery"
-    name: "TCP SYN Discovery"
-    description: "TCP SYN discovery for hosts that don't respond to ping"
-    commands:
-      - "nmap -PS80,443,22,21,25,53 -sn {network_range}"
-    placeholders:
-      network_range: "asset.cidr"
-    expected_output:
-      - "Host is up"
-      - "SYN discovery results"
-
-  - id: "proc_arp_scan"
-    name: "ARP Scan (Local Network)"
-    description: "ARP-based discovery for local network segments"
-    commands:
-      - "nmap -PR -sn {network_range}"
-    placeholders:
-      network_range: "asset.cidr"
-    expected_output:
-      - "Host is up"
-      - "MAC addresses revealed"
+      - "nmap -sn <subnet>"
+      - "arp-scan -l"
+      - "netdiscover -r <subnet>"
 
 findings:
-  - id: "finding_host_discovered"
-    title: "Live Host Discovered"
-    severity: "info"
-    description: "Active host found on network segment"
-    remediation: "Document discovered host and proceed with authorized enumeration"
-
-  - id: "finding_network_topology"
-    title: "Network Topology Mapped"
-    severity: "info"
-    description: "Network topology and host distribution identified"
-    remediation: "Use topology information for further authorized testing"
-
-cleanup:
-  - id: "cleanup_scan_logs"
-    description: "Clean up temporary scan log files"
-    required: false
-    commands:
-      - "rm -f /tmp/nmap_scan_*.log"
-
-troubleshooting:
-  - issue: "No hosts discovered with ping scan"
-    solution: "Try TCP SYN discovery (-PS) or ARP scan (-PR) for local networks"
-
-  - issue: "Scan appears to hang"
-    solution: "Check network connectivity and firewall rules; consider using --host-timeout option"
-
-  - issue: "Permission denied errors"
-    solution: "Ensure proper privileges for raw socket access or use TCP connect scans"
+  - id: "DISC-001"
+    title: "Unnecessary Services Exposed"
+    severity: "low"
+    description: "Non-essential services are accessible"
+    remediation: "Disable or filter unnecessary services"

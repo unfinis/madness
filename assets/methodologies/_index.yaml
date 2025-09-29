@@ -1,14 +1,6 @@
-# Methodology Index
-# This file lists all available methodologies for the unified loader
-
-version: "1.0"
-last_updated: "2024-09-29T00:00:00Z"
-
+# Methodology index file
 methodologies:
+  - "internal_network.yaml"
+  - "web_application.yaml"
+  - "active_directory.yaml"
   - "reconnaissance/nmap_discovery.yaml"
-  - "exploitation/smb_relay.yaml"
-  - "active_directory/ad_enumeration.yaml"
-  - "network_segregation/nac_assessment.yaml"
-  - "web_applications/web_discovery.yaml"
-
-# Future methodologies will be added here as they are created

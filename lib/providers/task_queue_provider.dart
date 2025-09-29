@@ -1,15 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/methodology.dart';
-// Removed unused import
+import '../models/methodology_trigger_builder.dart';
 import '../models/scope.dart';
 import '../models/credential.dart';
 import '../services/trigger_evaluator.dart';
+import '../services/trigger_implementation_fix.dart';
 import 'methodology_provider.dart';
 import 'projects_provider.dart';
 import 'scope_provider.dart';
-import 'credential_provider.dart';
 import 'comprehensive_asset_provider.dart';
+import 'credential_provider.dart';
 import '../models/asset.dart';
 
 class TaskInstance {
@@ -1059,15 +1060,98 @@ class TaskQueueNotifier extends StateNotifier<TaskQueueState> {
 
   /// Re-evaluate triggers after task completion to find new methodology opportunities
   void _reevaluateTriggersAfterCompletion(String projectId) {
-    // This would integrate with the PropertyDrivenEngine to check for new triggers
+    // This integrates with the trigger system to check for new triggers
     // based on the assets that were just created from the completed task
     print('[TaskQueue] Re-evaluating triggers after task completion');
 
-    // Get all assets for the project and evaluate triggers
-    // This is a placeholder for now - full implementation would:
-    // 1. Get all assets from comprehensive asset provider
-    // 2. Run trigger evaluation
-    // 3. Create new tasks for triggered methodologies
+    try {
+      // Get all assets for the project and evaluate triggers
+      final assetsAsync = ref.read(assetsProvider(projectId));
+      final assets = assetsAsync.value ?? [];
+
+      if (assets.isEmpty) {
+        print('[TaskQueue] No assets found for re-evaluation');
+        return;
+      }
+
+      // Initialize trigger loader and get triggers
+      final triggerLoader = TriggerLoaderService();
+      Future.microtask(() async {
+        try {
+          await triggerLoader.initialize();
+          final triggers = triggerLoader.getTriggers();
+
+          if (triggers.isEmpty) {
+            print('[TaskQueue] No triggers loaded for re-evaluation');
+            return;
+          }
+
+          // Use trigger evaluator to find matches
+          final triggerDefinitions = triggers.map((trigger) =>
+            MethodologyTriggerDefinition(
+              id: trigger.id,
+              name: trigger.name,
+              description: trigger.description ?? '',
+              conditionGroups: [], // Would need to convert trigger conditions
+            )
+          ).toList();
+
+          final matches = TriggerEvaluator.evaluateAssets(
+            assets: assets,
+            triggers: triggerDefinitions,
+            projectId: projectId,
+          );
+
+          // Create new tasks for high-priority matches
+          for (final match in matches.take(5)) { // Limit to top 5 matches
+            if (match.priority > 70) { // Only high-priority triggers
+              _createTaskFromTriggerMatch(match, projectId);
+            }
+          }
+
+          if (matches.isNotEmpty) {
+            print('[TaskQueue] Re-evaluation found ${matches.length} new trigger matches');
+          }
+
+        } catch (e) {
+          print('[TaskQueue] Error during trigger re-evaluation: $e');
+        }
+      });
+
+    } catch (e) {
+      print('[TaskQueue] Error accessing assets for re-evaluation: $e');
+    }
+  }
+
+  /// Create a task from a trigger match
+  void _createTaskFromTriggerMatch(MethodologyTriggerMatch match, String projectId) {
+    try {
+      final taskId = const Uuid().v4();
+      final triggerInstance = TriggerInstance(
+        id: const Uuid().v4(),
+        triggerId: match.trigger.id,
+        context: match.context,
+        status: TriggerStatus.pending,
+      );
+
+      final newTask = TaskInstance(
+        id: taskId,
+        methodologyId: match.trigger.id,
+        methodologyName: match.trigger.name,
+        triggers: [triggerInstance],
+        status: TaskStatus.pending,
+        completedCount: 0,
+        createdDate: DateTime.now(),
+      );
+
+      // Add to task queue
+      final updatedTasks = [...state.tasks, newTask];
+      state = state.copyWith(tasks: updatedTasks);
+
+      print('[TaskQueue] Created new task from re-evaluation: ${match.trigger.name}');
+    } catch (e) {
+      print('[TaskQueue] Error creating task from trigger match: $e');
+    }
   }
 }
 

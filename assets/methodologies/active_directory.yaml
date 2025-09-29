@@ -1,0 +1,87 @@
+id: "active_directory"
+version: "1.0.0"
+template_version: "1.0"
+name: "Active Directory Assessment"
+workstream: "Infrastructure"
+author: "Security Team"
+created: "2024-01-01"
+modified: "2024-01-01"
+status: "active"
+description: "Active Directory penetration testing methodology"
+tags: ["active_directory", "windows", "domain"]
+risk_level: "critical"
+
+overview:
+  purpose: "Identify vulnerabilities in Active Directory environment"
+  scope: "Domain controllers and domain-joined systems"
+  prerequisites:
+    - "Domain access"
+    - "Network connectivity to DC"
+  category: "Active Directory"
+
+triggers:
+  - name: "Domain Controller Identified"
+    description: "Port 389/636 LDAP is open - enumerate domain"
+    conditions:
+      asset_type: "domainController"
+      properties:
+        "ports.389": "open"
+    priority: 100
+    batch_capable: false
+    individual_command: "ldapsearch -x -h <target_ip> -s base namingContexts"
+    command_variants:
+      authenticated: "ldapsearch -x -h <target_ip> -D '<username>' -w '<password>' -b 'DC=domain,DC=com'"
+      anonymous: "ldapsearch -x -h <target_ip> -s base -b ''"
+    expected_property_updates: ["domain_name", "naming_contexts", "ldap_signing"]
+    expected_asset_discovery: ["activeDirectoryDomain", "credential"]
+    tags: ["ldap", "domain", "enumeration"]
+    enabled: true
+
+  - name: "Kerberos Service Found"
+    description: "Port 88 is open - test Kerberos authentication"
+    conditions:
+      asset_type: "domainController"
+      properties:
+        "ports.88": "open"
+    priority: 95
+    individual_command: "kerbrute userenum --dc <target_ip> --domain <domain> users.txt"
+    expected_property_updates: ["kerberos_encryption", "domain_users"]
+    expected_asset_discovery: ["credential"]
+    tags: ["kerberos", "authentication", "domain"]
+    enabled: true
+
+  - name: "Domain Credentials Obtained"
+    description: "Valid domain credentials - enumerate AD"
+    conditions:
+      asset_type: "credential"
+      properties:
+        "credential_type": "domain"
+        "valid": "true"
+    priority: 100
+    individual_command: "bloodhound-python -d <domain> -u <username> -p <password> -ns <dc_ip>"
+    expected_property_updates: ["ad_users", "ad_groups", "ad_computers", "ad_trusts"]
+    expected_asset_discovery: ["vulnerability", "credential"]
+    tags: ["bloodhound", "enumeration", "post-auth"]
+    enabled: true
+
+procedures:
+  - id: "ad_enum"
+    name: "AD Enumeration"
+    description: "Enumerate Active Directory structure"
+    commands:
+      - "enum4linux-ng -A -R <dc_ip>"
+      - "rpcclient -U '' -N <dc_ip>"
+      - "GetADUsers.py -all <domain>/<username>:<password> -dc-ip <dc_ip>"
+
+findings:
+  - id: "AD-001"
+    title: "Kerberoasting Attack Vector"
+    severity: "high"
+    description: "Service accounts with SPNs are kerberoastable"
+    remediation: "Use strong passwords for service accounts and consider gMSA"
+
+cleanup:
+  - id: "cleanup_ad"
+    description: "Remove any test accounts or modifications"
+    commands:
+      - "net user testuser /delete /domain"

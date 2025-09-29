@@ -1,0 +1,98 @@
+id: "internal_network"
+version: "1.0.0"
+template_version: "1.0"
+name: "Internal Network Assessment"
+workstream: "Infrastructure"
+author: "Security Team"
+created: "2024-01-01"
+modified: "2024-01-01"
+status: "active"
+description: "Methodology for internal network penetration testing"
+tags: ["network", "internal", "infrastructure"]
+risk_level: "medium"
+
+overview:
+  purpose: "Identify vulnerabilities in internal network services"
+  scope: "All internal network segments"
+  prerequisites:
+    - "Network access"
+    - "Scanning authorization"
+  category: "Network"
+
+triggers:
+  - name: "SMB Service Discovered"
+    description: "Port 445 is open - enumerate SMB"
+    conditions:
+      asset_type: "host"
+      properties:
+        "ports.445": "open"
+    priority: 90
+    batch_capable: true
+    batch_criteria: "subnet"
+    max_batch_size: 50
+    batch_command: "crackmapexec smb <subnet> --shares"
+    individual_command: "enum4linux -a <target_ip>"
+    cooldown_period: "30m"
+    command_variants:
+      aggressive: "enum4linux -a -M -G -P <target_ip>"
+      stealth: "smbclient -L //<target_ip> -N"
+    expected_property_updates: ["smb_shares", "smb_signing", "smb_version"]
+    expected_asset_discovery: ["credential", "vulnerability"]
+    tags: ["smb", "enumeration", "discovery"]
+    enabled: true
+
+  - name: "RDP Service Discovered"
+    description: "Port 3389 is open - check RDP configuration"
+    conditions:
+      asset_type: "host"
+      properties:
+        "ports.3389": "open"
+    priority: 85
+    batch_capable: false
+    individual_command: "rdp-sec-check.pl <target_ip>"
+    cooldown_period: "1h"
+    expected_property_updates: ["rdp_nla", "rdp_encryption"]
+    tags: ["rdp", "windows", "remote"]
+    enabled: true
+
+  - name: "SSH Service Discovered"
+    description: "Port 22 is open - enumerate SSH"
+    conditions:
+      asset_type: "host"
+      properties:
+        "ports.22": "open"
+    priority: 80
+    batch_capable: true
+    batch_criteria: "subnet"
+    max_batch_size: 100
+    batch_command: "nmap -p22 --script ssh-auth-methods,ssh-hostkey <subnet>"
+    individual_command: "ssh-audit <target_ip>"
+    expected_property_updates: ["ssh_version", "ssh_algorithms", "ssh_auth_methods"]
+    tags: ["ssh", "linux", "authentication"]
+    enabled: true
+
+procedures:
+  - id: "smb_enum"
+    name: "SMB Enumeration"
+    description: "Enumerate SMB shares and users"
+    commands:
+      - "enum4linux -a <target_ip>"
+      - "smbclient -L //<target_ip> -N"
+      - "crackmapexec smb <target_ip> --shares"
+
+findings:
+  - id: "SMB-001"
+    title: "SMB Signing Not Required"
+    severity: "medium"
+    description: "SMB signing is not enforced"
+    remediation: "Enable SMB signing via Group Policy"
+
+cleanup:
+  - id: "cleanup_smb"
+    description: "Remove any test files created during SMB testing"
+    commands:
+      - "smbclient //<target_ip>/share -c 'rm testfile.txt'"
+
+troubleshooting:
+  - issue: "SMB connection refused"
+    solution: "Check if SMB is filtered by firewall or if service is running"

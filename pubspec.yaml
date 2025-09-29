@@ -98,6 +98,10 @@ flutter:
     - assets/methodologies/network_segregation/
     - assets/methodologies/discovery/
     - assets/methodologies/breakout/
+    - assets/methodologies/reconnaissance/
+    - assets/methodologies/active_directory/
+    - assets/methodologies/exploitation/
+    - assets/methodologies/web_applications/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

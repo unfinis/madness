@@ -5,6 +5,7 @@ import '../models/task.dart';
 import '../theme/app_decorations.dart';
 import '../providers/task_provider.dart';
 import '../providers/projects_provider.dart';
+import '../providers/task_queue_provider.dart' hide TaskStatus;
 import 'common/task_widgets.dart';
 
 class TaskItemWidget extends ConsumerWidget {
