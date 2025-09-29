@@ -7,6 +7,8 @@ import '../providers/projects_provider.dart';
 import '../services/command_generator.dart';
 import '../models/methodology.dart';
 import '../constants/app_spacing.dart';
+import '../widgets/common/trigger_widgets.dart';
+import '../theme/app_decorations.dart';
 
 class TaskExecutionDialog extends ConsumerStatefulWidget {
   final TaskInstance task;
@@ -80,8 +82,7 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+      decoration: AppDecorations.info().copyWith(
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
@@ -151,7 +152,7 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                        ? AppDecorations.selected(primaryColor: Theme.of(context).primaryColor).color
                         : null,
                     border: Border(
                       bottom: BorderSide(color: Colors.grey.shade200),
@@ -164,21 +165,19 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
                         color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      _buildTriggerStatusIcon(trigger.status),
+                      TriggerStatusIcon(status: trigger.status),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _getTriggerDisplayText(trigger),
+                              TriggerDisplayUtils.getText(trigger),
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
-                              'Status: ${trigger.status.name}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                              'Status: ${TriggerDisplayUtils.getStatusText(trigger.status)}',
+                              style: AppTextStyles.muted(),
                             ),
                           ],
                         ),
@@ -262,18 +261,11 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: AppDecorations.neutral(),
           child: _generatedCommand.isNotEmpty
               ? SelectableText(
                   _generatedCommand,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 14,
-                  ),
+                  style: AppTextStyles.code(fontSize: 14),
                 )
               : const Text(
                   'Select a trigger and step to generate command',
@@ -309,10 +301,7 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
                 hintText: 'Paste the command output here...',
                 alignLabelWithHint: true,
               ),
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 12,
-              ),
+              style: AppTextStyles.code(fontSize: 12),
             ),
           ),
         ],
@@ -359,45 +348,6 @@ class _TaskExecutionDialogState extends ConsumerState<TaskExecutionDialog> {
     );
   }
 
-  Widget _buildTriggerStatusIcon(TriggerStatus status) {
-    IconData icon;
-    Color color;
-
-    switch (status) {
-      case TriggerStatus.pending:
-        icon = Icons.radio_button_unchecked;
-        color = Colors.grey;
-        break;
-      case TriggerStatus.running:
-        icon = Icons.play_circle_outline;
-        color = Colors.blue;
-        break;
-      case TriggerStatus.completed:
-        icon = Icons.check_circle_outline;
-        color = Colors.green;
-        break;
-      case TriggerStatus.failed:
-        icon = Icons.error_outline;
-        color = Colors.red;
-        break;
-      case TriggerStatus.skipped:
-        icon = Icons.skip_next;
-        color = Colors.orange;
-        break;
-    }
-
-    return Icon(icon, size: 16, color: color);
-  }
-
-  String _getTriggerDisplayText(TriggerInstance trigger) {
-    final asset = trigger.context['asset'] as Map?;
-    if (asset != null) {
-      final host = asset['host'] ?? asset['identifier'] ?? '';
-      final type = asset['type'] ?? '';
-      return '$type: $host';
-    }
-    return 'Trigger ${trigger.triggerId}';
-  }
 
   Methodology? _getMethodology() {
     final projectId = ref.read(currentProjectProvider)?.id;

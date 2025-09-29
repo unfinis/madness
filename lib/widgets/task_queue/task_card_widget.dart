@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/task_queue_provider.dart';
 import '../../dialogs/task_execution_dialog.dart';
 import '../../constants/app_spacing.dart';
+import '../common/trigger_widgets.dart';
+import '../common/task_widgets.dart';
+import '../../theme/app_decorations.dart';
 
 class TaskCardWidget extends ConsumerWidget {
   final TaskInstance task;
@@ -53,14 +56,12 @@ class TaskCardWidget extends ConsumerWidget {
               ),
               Text(
                 'Created ${_formatDate(task.createdDate)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: AppTextStyles.muted(),
               ),
             ],
           ),
         ),
-        _buildStatusChip(),
+        TaskQueueStatusChip(status: task.status),
       ],
     );
   }
@@ -95,44 +96,6 @@ class TaskCardWidget extends ConsumerWidget {
     return Icon(icon, color: color);
   }
 
-  Widget _buildStatusChip() {
-    Color color;
-    String label;
-
-    switch (task.status) {
-      case TaskStatus.pending:
-        color = Colors.orange;
-        label = 'Pending';
-        break;
-      case TaskStatus.inProgress:
-        color = Colors.blue;
-        label = 'Active';
-        break;
-      case TaskStatus.completed:
-        color = Colors.green;
-        label = 'Completed';
-        break;
-      case TaskStatus.failed:
-        color = Colors.red;
-        label = 'Failed';
-        break;
-      case TaskStatus.cancelled:
-        color = Colors.grey;
-        label = 'Cancelled';
-        break;
-    }
-
-    return Chip(
-      label: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-      backgroundColor: color,
-      padding: EdgeInsets.zero,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-  }
-
   Widget _buildProgress(BuildContext context) {
     final total = task.triggers.length;
     final completed = task.completedCount;
@@ -145,9 +108,7 @@ class TaskCardWidget extends ConsumerWidget {
           children: [
             Text(
               'Progress',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTextStyles.emphasized(),
             ),
             Text(
               '$completed / $total',
@@ -156,14 +117,9 @@ class TaskCardWidget extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.xs),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: Colors.grey[300],
-          valueColor: AlwaysStoppedAnimation<Color>(
-            task.status == TaskStatus.completed
-                ? Colors.green
-                : Colors.blue,
-          ),
+        TaskLinearProgress(
+          progress: progress,
+          showPercentage: false,
         ),
       ],
     );
@@ -179,9 +135,7 @@ class TaskCardWidget extends ConsumerWidget {
       children: [
         Text(
           'Triggers (${task.triggers.length})',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: AppTextStyles.emphasized(),
         ),
         const SizedBox(height: AppSpacing.xs),
         ...task.triggers.take(3).map((trigger) {
@@ -189,11 +143,11 @@ class TaskCardWidget extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.xs),
             child: Row(
               children: [
-                _buildTriggerStatusIcon(trigger.status),
+                TriggerStatusIcon(status: trigger.status),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
-                    _getTriggerDisplayText(trigger),
+                    TriggerDisplayUtils.getText(trigger),
                     style: Theme.of(context).textTheme.bodySmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -206,53 +160,10 @@ class TaskCardWidget extends ConsumerWidget {
         if (task.triggers.length > 3)
           Text(
             '... and ${task.triggers.length - 3} more',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-              fontStyle: FontStyle.italic,
-            ),
+            style: AppTextStyles.muted(fontSize: 12),
           ),
       ],
     );
-  }
-
-  Widget _buildTriggerStatusIcon(TriggerStatus status) {
-    IconData icon;
-    Color color;
-
-    switch (status) {
-      case TriggerStatus.pending:
-        icon = Icons.radio_button_unchecked;
-        color = Colors.grey;
-        break;
-      case TriggerStatus.running:
-        icon = Icons.play_circle_outline;
-        color = Colors.blue;
-        break;
-      case TriggerStatus.completed:
-        icon = Icons.check_circle_outline;
-        color = Colors.green;
-        break;
-      case TriggerStatus.failed:
-        icon = Icons.error_outline;
-        color = Colors.red;
-        break;
-      case TriggerStatus.skipped:
-        icon = Icons.skip_next;
-        color = Colors.orange;
-        break;
-    }
-
-    return Icon(icon, size: 16, color: color);
-  }
-
-  String _getTriggerDisplayText(TriggerInstance trigger) {
-    final asset = trigger.context['asset'] as Map?;
-    if (asset != null) {
-      final host = asset['host'] ?? asset['identifier'] ?? '';
-      final type = asset['type'] ?? '';
-      return '$type: $host';
-    }
-    return 'Trigger ${trigger.triggerId}';
   }
 
   Widget _buildActions(BuildContext context, WidgetRef ref) {
@@ -260,10 +171,12 @@ class TaskCardWidget extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         if (task.status == TaskStatus.completed && task.completedDate != null)
-          Text(
-            'Completed ${_formatDate(task.completedDate!)}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: AppDecorations.success(),
+            child: Text(
+              'Completed ${_formatDate(task.completedDate!)}',
+              style: AppTextStyles.success,
             ),
           )
         else
@@ -307,7 +220,7 @@ class TaskCardWidget extends ConsumerWidget {
               if (task.completedDate != null)
                 Text('Completed: ${_formatDateTime(task.completedDate!)}'),
               const SizedBox(height: AppSpacing.md),
-              const Text('Triggers:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Triggers:', style: AppTextStyles.emphasized()),
               const SizedBox(height: AppSpacing.sm),
               ...task.triggers.map((trigger) => Card(
                 child: Padding(
@@ -315,12 +228,18 @@ class TaskCardWidget extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Trigger: ${trigger.triggerId}'),
-                      Text('Status: ${trigger.status.name}'),
+                      Row(
+                        children: [
+                          TriggerStatusIcon(status: trigger.status),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(TriggerDisplayUtils.getText(trigger)),
+                        ],
+                      ),
+                      Text('Status: ${TriggerDisplayUtils.getStatusText(trigger.status)}'),
                       if (trigger.output != null) ...[
                         const SizedBox(height: AppSpacing.xs),
-                        const Text('Output:', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(trigger.output!, style: const TextStyle(fontFamily: 'monospace')),
+                        Text('Output:', style: AppTextStyles.emphasized()),
+                        Text(trigger.output!, style: AppTextStyles.code()),
                       ],
                     ],
                   ),

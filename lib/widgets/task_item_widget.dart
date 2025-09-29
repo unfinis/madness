@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/task.dart';
+import '../theme/app_decorations.dart';
+import 'common/task_widgets.dart';
 
 class TaskItemWidget extends ConsumerWidget {
   final Task task;
@@ -190,18 +192,10 @@ class TaskItemWidget extends ConsumerWidget {
   Widget _buildChip(BuildContext context, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
+      decoration: AppDecorations.subtleCard(color, radius: 12),
       child: Text(
         label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+        style: AppTextStyles.badge(color),
       ),
     );
   }
@@ -225,11 +219,7 @@ class TaskItemWidget extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
+      decoration: AppDecorations.subtleCard(color, radius: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -237,11 +227,7 @@ class TaskItemWidget extends ConsumerWidget {
           const SizedBox(width: 4),
           Text(
             status.displayName,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.badge(color),
           ),
         ],
       ),
@@ -249,26 +235,11 @@ class TaskItemWidget extends ConsumerWidget {
   }
 
   Widget _buildPriorityChip(BuildContext context, TaskPriority priority) {
-    Color color;
-    switch (priority) {
-      case TaskPriority.high:
-        color = Colors.red;
-        break;
-      case TaskPriority.medium:
-        color = Colors.orange;
-        break;
-      case TaskPriority.low:
-        color = Colors.blue;
-        break;
-    }
+    final color = TaskPriorityUtils.getColor(priority);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
+      decoration: AppDecorations.subtleCard(color, radius: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -276,11 +247,7 @@ class TaskItemWidget extends ConsumerWidget {
           const SizedBox(width: 4),
           Text(
             priority.displayName,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.badge(color),
           ),
         ],
       ),
@@ -310,16 +277,10 @@ class TaskItemWidget extends ConsumerWidget {
       children: [
         SizedBox(
           width: 80,
-          child: LinearProgressIndicator(
-            value: task.progress / 100,
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              task.progress > 80
-                  ? Colors.green
-                  : task.progress > 50
-                      ? Colors.orange
-                      : Theme.of(context).colorScheme.primary,
-            ),
+          child: TaskLinearProgress(
+            progress: task.progress / 100,
+            showPercentage: false,
+            height: 4,
           ),
         ),
         const SizedBox(height: 4),
