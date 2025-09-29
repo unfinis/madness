@@ -3390,7 +3390,14 @@ mixin _$Asset {
 // Methodology integration
  List<String> get completedTriggers; Map<String, TriggerExecutionResult> get triggerResults;// Organization and filtering
  List<String> get tags; Map<String, String>? get metadata;// Security context
- AccessLevel? get accessLevel; List<String>? get securityControls;
+ AccessLevel? get accessLevel; List<String>? get securityControls;// NEW RELATIONSHIP SYSTEM FIELDS:
+ Map<String, List<String>> get relationships;// Relationship type -> List of asset IDs
+ Map<String, dynamic> get inheritedProperties;// Properties inherited from parent
+ String get lifecycleState;// Current state in lifecycle
+ Map<String, DateTime> get stateTransitions;// History of state changes
+ Map<String, String> get dependencyMap;// Service/asset dependencies
+ List<String> get discoveryPath;// How this asset was discovered
+ Map<String, dynamic> get relationshipMetadata;
 /// Create a copy of Asset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3403,16 +3410,16 @@ $AssetCopyWith<Asset> get copyWith => _$AssetCopyWithImpl<Asset>(this as Asset, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Asset&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.properties, properties)&&(identical(other.discoveryStatus, discoveryStatus) || other.discoveryStatus == discoveryStatus)&&(identical(other.discoveredAt, discoveredAt) || other.discoveredAt == discoveredAt)&&(identical(other.lastUpdated, lastUpdated) || other.lastUpdated == lastUpdated)&&(identical(other.discoveryMethod, discoveryMethod) || other.discoveryMethod == discoveryMethod)&&(identical(other.confidence, confidence) || other.confidence == confidence)&&const DeepCollectionEquality().equals(other.parentAssetIds, parentAssetIds)&&const DeepCollectionEquality().equals(other.childAssetIds, childAssetIds)&&const DeepCollectionEquality().equals(other.relatedAssetIds, relatedAssetIds)&&const DeepCollectionEquality().equals(other.completedTriggers, completedTriggers)&&const DeepCollectionEquality().equals(other.triggerResults, triggerResults)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.metadata, metadata)&&(identical(other.accessLevel, accessLevel) || other.accessLevel == accessLevel)&&const DeepCollectionEquality().equals(other.securityControls, securityControls));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Asset&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.properties, properties)&&(identical(other.discoveryStatus, discoveryStatus) || other.discoveryStatus == discoveryStatus)&&(identical(other.discoveredAt, discoveredAt) || other.discoveredAt == discoveredAt)&&(identical(other.lastUpdated, lastUpdated) || other.lastUpdated == lastUpdated)&&(identical(other.discoveryMethod, discoveryMethod) || other.discoveryMethod == discoveryMethod)&&(identical(other.confidence, confidence) || other.confidence == confidence)&&const DeepCollectionEquality().equals(other.parentAssetIds, parentAssetIds)&&const DeepCollectionEquality().equals(other.childAssetIds, childAssetIds)&&const DeepCollectionEquality().equals(other.relatedAssetIds, relatedAssetIds)&&const DeepCollectionEquality().equals(other.completedTriggers, completedTriggers)&&const DeepCollectionEquality().equals(other.triggerResults, triggerResults)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.metadata, metadata)&&(identical(other.accessLevel, accessLevel) || other.accessLevel == accessLevel)&&const DeepCollectionEquality().equals(other.securityControls, securityControls)&&const DeepCollectionEquality().equals(other.relationships, relationships)&&const DeepCollectionEquality().equals(other.inheritedProperties, inheritedProperties)&&(identical(other.lifecycleState, lifecycleState) || other.lifecycleState == lifecycleState)&&const DeepCollectionEquality().equals(other.stateTransitions, stateTransitions)&&const DeepCollectionEquality().equals(other.dependencyMap, dependencyMap)&&const DeepCollectionEquality().equals(other.discoveryPath, discoveryPath)&&const DeepCollectionEquality().equals(other.relationshipMetadata, relationshipMetadata));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,type,projectId,name,description,const DeepCollectionEquality().hash(properties),discoveryStatus,discoveredAt,lastUpdated,discoveryMethod,confidence,const DeepCollectionEquality().hash(parentAssetIds),const DeepCollectionEquality().hash(childAssetIds),const DeepCollectionEquality().hash(relatedAssetIds),const DeepCollectionEquality().hash(completedTriggers),const DeepCollectionEquality().hash(triggerResults),const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(metadata),accessLevel,const DeepCollectionEquality().hash(securityControls)]);
+int get hashCode => Object.hashAll([runtimeType,id,type,projectId,name,description,const DeepCollectionEquality().hash(properties),discoveryStatus,discoveredAt,lastUpdated,discoveryMethod,confidence,const DeepCollectionEquality().hash(parentAssetIds),const DeepCollectionEquality().hash(childAssetIds),const DeepCollectionEquality().hash(relatedAssetIds),const DeepCollectionEquality().hash(completedTriggers),const DeepCollectionEquality().hash(triggerResults),const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(metadata),accessLevel,const DeepCollectionEquality().hash(securityControls),const DeepCollectionEquality().hash(relationships),const DeepCollectionEquality().hash(inheritedProperties),lifecycleState,const DeepCollectionEquality().hash(stateTransitions),const DeepCollectionEquality().hash(dependencyMap),const DeepCollectionEquality().hash(discoveryPath),const DeepCollectionEquality().hash(relationshipMetadata)]);
 
 @override
 String toString() {
-  return 'Asset(id: $id, type: $type, projectId: $projectId, name: $name, description: $description, properties: $properties, discoveryStatus: $discoveryStatus, discoveredAt: $discoveredAt, lastUpdated: $lastUpdated, discoveryMethod: $discoveryMethod, confidence: $confidence, parentAssetIds: $parentAssetIds, childAssetIds: $childAssetIds, relatedAssetIds: $relatedAssetIds, completedTriggers: $completedTriggers, triggerResults: $triggerResults, tags: $tags, metadata: $metadata, accessLevel: $accessLevel, securityControls: $securityControls)';
+  return 'Asset(id: $id, type: $type, projectId: $projectId, name: $name, description: $description, properties: $properties, discoveryStatus: $discoveryStatus, discoveredAt: $discoveredAt, lastUpdated: $lastUpdated, discoveryMethod: $discoveryMethod, confidence: $confidence, parentAssetIds: $parentAssetIds, childAssetIds: $childAssetIds, relatedAssetIds: $relatedAssetIds, completedTriggers: $completedTriggers, triggerResults: $triggerResults, tags: $tags, metadata: $metadata, accessLevel: $accessLevel, securityControls: $securityControls, relationships: $relationships, inheritedProperties: $inheritedProperties, lifecycleState: $lifecycleState, stateTransitions: $stateTransitions, dependencyMap: $dependencyMap, discoveryPath: $discoveryPath, relationshipMetadata: $relationshipMetadata)';
 }
 
 
@@ -3423,7 +3430,7 @@ abstract mixin class $AssetCopyWith<$Res>  {
   factory $AssetCopyWith(Asset value, $Res Function(Asset) _then) = _$AssetCopyWithImpl;
 @useResult
 $Res call({
- String id, AssetType type, String projectId, String name, String? description, Map<String, AssetPropertyValue> properties, AssetDiscoveryStatus discoveryStatus, DateTime discoveredAt, DateTime? lastUpdated, String? discoveryMethod, double confidence, List<String> parentAssetIds, List<String> childAssetIds, List<String> relatedAssetIds, List<String> completedTriggers, Map<String, TriggerExecutionResult> triggerResults, List<String> tags, Map<String, String>? metadata, AccessLevel? accessLevel, List<String>? securityControls
+ String id, AssetType type, String projectId, String name, String? description, Map<String, AssetPropertyValue> properties, AssetDiscoveryStatus discoveryStatus, DateTime discoveredAt, DateTime? lastUpdated, String? discoveryMethod, double confidence, List<String> parentAssetIds, List<String> childAssetIds, List<String> relatedAssetIds, List<String> completedTriggers, Map<String, TriggerExecutionResult> triggerResults, List<String> tags, Map<String, String>? metadata, AccessLevel? accessLevel, List<String>? securityControls, Map<String, List<String>> relationships, Map<String, dynamic> inheritedProperties, String lifecycleState, Map<String, DateTime> stateTransitions, Map<String, String> dependencyMap, List<String> discoveryPath, Map<String, dynamic> relationshipMetadata
 });
 
 
@@ -3440,7 +3447,7 @@ class _$AssetCopyWithImpl<$Res>
 
 /// Create a copy of Asset
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? projectId = null,Object? name = null,Object? description = freezed,Object? properties = null,Object? discoveryStatus = null,Object? discoveredAt = null,Object? lastUpdated = freezed,Object? discoveryMethod = freezed,Object? confidence = null,Object? parentAssetIds = null,Object? childAssetIds = null,Object? relatedAssetIds = null,Object? completedTriggers = null,Object? triggerResults = null,Object? tags = null,Object? metadata = freezed,Object? accessLevel = freezed,Object? securityControls = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? projectId = null,Object? name = null,Object? description = freezed,Object? properties = null,Object? discoveryStatus = null,Object? discoveredAt = null,Object? lastUpdated = freezed,Object? discoveryMethod = freezed,Object? confidence = null,Object? parentAssetIds = null,Object? childAssetIds = null,Object? relatedAssetIds = null,Object? completedTriggers = null,Object? triggerResults = null,Object? tags = null,Object? metadata = freezed,Object? accessLevel = freezed,Object? securityControls = freezed,Object? relationships = null,Object? inheritedProperties = null,Object? lifecycleState = null,Object? stateTransitions = null,Object? dependencyMap = null,Object? discoveryPath = null,Object? relationshipMetadata = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -3462,7 +3469,14 @@ as Map<String, TriggerExecutionResult>,tags: null == tags ? _self.tags : tags //
 as List<String>,metadata: freezed == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
 as Map<String, String>?,accessLevel: freezed == accessLevel ? _self.accessLevel : accessLevel // ignore: cast_nullable_to_non_nullable
 as AccessLevel?,securityControls: freezed == securityControls ? _self.securityControls : securityControls // ignore: cast_nullable_to_non_nullable
-as List<String>?,
+as List<String>?,relationships: null == relationships ? _self.relationships : relationships // ignore: cast_nullable_to_non_nullable
+as Map<String, List<String>>,inheritedProperties: null == inheritedProperties ? _self.inheritedProperties : inheritedProperties // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,lifecycleState: null == lifecycleState ? _self.lifecycleState : lifecycleState // ignore: cast_nullable_to_non_nullable
+as String,stateTransitions: null == stateTransitions ? _self.stateTransitions : stateTransitions // ignore: cast_nullable_to_non_nullable
+as Map<String, DateTime>,dependencyMap: null == dependencyMap ? _self.dependencyMap : dependencyMap // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,discoveryPath: null == discoveryPath ? _self.discoveryPath : discoveryPath // ignore: cast_nullable_to_non_nullable
+as List<String>,relationshipMetadata: null == relationshipMetadata ? _self.relationshipMetadata : relationshipMetadata // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,
   ));
 }
 
@@ -3544,10 +3558,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls,  Map<String, List<String>> relationships,  Map<String, dynamic> inheritedProperties,  String lifecycleState,  Map<String, DateTime> stateTransitions,  Map<String, String> dependencyMap,  List<String> discoveryPath,  Map<String, dynamic> relationshipMetadata)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Asset() when $default != null:
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls);case _:
+return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls,_that.relationships,_that.inheritedProperties,_that.lifecycleState,_that.stateTransitions,_that.dependencyMap,_that.discoveryPath,_that.relationshipMetadata);case _:
   return orElse();
 
 }
@@ -3565,10 +3579,10 @@ return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls,  Map<String, List<String>> relationships,  Map<String, dynamic> inheritedProperties,  String lifecycleState,  Map<String, DateTime> stateTransitions,  Map<String, String> dependencyMap,  List<String> discoveryPath,  Map<String, dynamic> relationshipMetadata)  $default,) {final _that = this;
 switch (_that) {
 case _Asset():
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls);}
+return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls,_that.relationships,_that.inheritedProperties,_that.lifecycleState,_that.stateTransitions,_that.dependencyMap,_that.discoveryPath,_that.relationshipMetadata);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -3582,10 +3596,10 @@ return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls,  Map<String, List<String>> relationships,  Map<String, dynamic> inheritedProperties,  String lifecycleState,  Map<String, DateTime> stateTransitions,  Map<String, String> dependencyMap,  List<String> discoveryPath,  Map<String, dynamic> relationshipMetadata)?  $default,) {final _that = this;
 switch (_that) {
 case _Asset() when $default != null:
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls);case _:
+return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls,_that.relationships,_that.inheritedProperties,_that.lifecycleState,_that.stateTransitions,_that.dependencyMap,_that.discoveryPath,_that.relationshipMetadata);case _:
   return null;
 
 }
@@ -3597,7 +3611,7 @@ return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description
 @JsonSerializable()
 
 class _Asset implements Asset {
-  const _Asset({required this.id, required this.type, required this.projectId, required this.name, this.description, required final  Map<String, AssetPropertyValue> properties, required this.discoveryStatus, required this.discoveredAt, this.lastUpdated, this.discoveryMethod, this.confidence = 1.0, required final  List<String> parentAssetIds, required final  List<String> childAssetIds, required final  List<String> relatedAssetIds, required final  List<String> completedTriggers, required final  Map<String, TriggerExecutionResult> triggerResults, required final  List<String> tags, final  Map<String, String>? metadata, this.accessLevel, final  List<String>? securityControls}): _properties = properties,_parentAssetIds = parentAssetIds,_childAssetIds = childAssetIds,_relatedAssetIds = relatedAssetIds,_completedTriggers = completedTriggers,_triggerResults = triggerResults,_tags = tags,_metadata = metadata,_securityControls = securityControls;
+  const _Asset({required this.id, required this.type, required this.projectId, required this.name, this.description, required final  Map<String, AssetPropertyValue> properties, required this.discoveryStatus, required this.discoveredAt, this.lastUpdated, this.discoveryMethod, this.confidence = 1.0, required final  List<String> parentAssetIds, required final  List<String> childAssetIds, required final  List<String> relatedAssetIds, required final  List<String> completedTriggers, required final  Map<String, TriggerExecutionResult> triggerResults, required final  List<String> tags, final  Map<String, String>? metadata, this.accessLevel, final  List<String>? securityControls, final  Map<String, List<String>> relationships = const {}, final  Map<String, dynamic> inheritedProperties = const {}, this.lifecycleState = 'unknown', final  Map<String, DateTime> stateTransitions = const {}, final  Map<String, String> dependencyMap = const {}, final  List<String> discoveryPath = const [], final  Map<String, dynamic> relationshipMetadata = const {}}): _properties = properties,_parentAssetIds = parentAssetIds,_childAssetIds = childAssetIds,_relatedAssetIds = relatedAssetIds,_completedTriggers = completedTriggers,_triggerResults = triggerResults,_tags = tags,_metadata = metadata,_securityControls = securityControls,_relationships = relationships,_inheritedProperties = inheritedProperties,_stateTransitions = stateTransitions,_dependencyMap = dependencyMap,_discoveryPath = discoveryPath,_relationshipMetadata = relationshipMetadata;
   factory _Asset.fromJson(Map<String, dynamic> json) => _$AssetFromJson(json);
 
 @override final  String id;
@@ -3690,6 +3704,62 @@ class _Asset implements Asset {
   return EqualUnmodifiableListView(value);
 }
 
+// NEW RELATIONSHIP SYSTEM FIELDS:
+ final  Map<String, List<String>> _relationships;
+// NEW RELATIONSHIP SYSTEM FIELDS:
+@override@JsonKey() Map<String, List<String>> get relationships {
+  if (_relationships is EqualUnmodifiableMapView) return _relationships;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_relationships);
+}
+
+// Relationship type -> List of asset IDs
+ final  Map<String, dynamic> _inheritedProperties;
+// Relationship type -> List of asset IDs
+@override@JsonKey() Map<String, dynamic> get inheritedProperties {
+  if (_inheritedProperties is EqualUnmodifiableMapView) return _inheritedProperties;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_inheritedProperties);
+}
+
+// Properties inherited from parent
+@override@JsonKey() final  String lifecycleState;
+// Current state in lifecycle
+ final  Map<String, DateTime> _stateTransitions;
+// Current state in lifecycle
+@override@JsonKey() Map<String, DateTime> get stateTransitions {
+  if (_stateTransitions is EqualUnmodifiableMapView) return _stateTransitions;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_stateTransitions);
+}
+
+// History of state changes
+ final  Map<String, String> _dependencyMap;
+// History of state changes
+@override@JsonKey() Map<String, String> get dependencyMap {
+  if (_dependencyMap is EqualUnmodifiableMapView) return _dependencyMap;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_dependencyMap);
+}
+
+// Service/asset dependencies
+ final  List<String> _discoveryPath;
+// Service/asset dependencies
+@override@JsonKey() List<String> get discoveryPath {
+  if (_discoveryPath is EqualUnmodifiableListView) return _discoveryPath;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_discoveryPath);
+}
+
+// How this asset was discovered
+ final  Map<String, dynamic> _relationshipMetadata;
+// How this asset was discovered
+@override@JsonKey() Map<String, dynamic> get relationshipMetadata {
+  if (_relationshipMetadata is EqualUnmodifiableMapView) return _relationshipMetadata;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_relationshipMetadata);
+}
+
 
 /// Create a copy of Asset
 /// with the given fields replaced by the non-null parameter values.
@@ -3704,16 +3774,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Asset&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._properties, _properties)&&(identical(other.discoveryStatus, discoveryStatus) || other.discoveryStatus == discoveryStatus)&&(identical(other.discoveredAt, discoveredAt) || other.discoveredAt == discoveredAt)&&(identical(other.lastUpdated, lastUpdated) || other.lastUpdated == lastUpdated)&&(identical(other.discoveryMethod, discoveryMethod) || other.discoveryMethod == discoveryMethod)&&(identical(other.confidence, confidence) || other.confidence == confidence)&&const DeepCollectionEquality().equals(other._parentAssetIds, _parentAssetIds)&&const DeepCollectionEquality().equals(other._childAssetIds, _childAssetIds)&&const DeepCollectionEquality().equals(other._relatedAssetIds, _relatedAssetIds)&&const DeepCollectionEquality().equals(other._completedTriggers, _completedTriggers)&&const DeepCollectionEquality().equals(other._triggerResults, _triggerResults)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._metadata, _metadata)&&(identical(other.accessLevel, accessLevel) || other.accessLevel == accessLevel)&&const DeepCollectionEquality().equals(other._securityControls, _securityControls));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Asset&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._properties, _properties)&&(identical(other.discoveryStatus, discoveryStatus) || other.discoveryStatus == discoveryStatus)&&(identical(other.discoveredAt, discoveredAt) || other.discoveredAt == discoveredAt)&&(identical(other.lastUpdated, lastUpdated) || other.lastUpdated == lastUpdated)&&(identical(other.discoveryMethod, discoveryMethod) || other.discoveryMethod == discoveryMethod)&&(identical(other.confidence, confidence) || other.confidence == confidence)&&const DeepCollectionEquality().equals(other._parentAssetIds, _parentAssetIds)&&const DeepCollectionEquality().equals(other._childAssetIds, _childAssetIds)&&const DeepCollectionEquality().equals(other._relatedAssetIds, _relatedAssetIds)&&const DeepCollectionEquality().equals(other._completedTriggers, _completedTriggers)&&const DeepCollectionEquality().equals(other._triggerResults, _triggerResults)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._metadata, _metadata)&&(identical(other.accessLevel, accessLevel) || other.accessLevel == accessLevel)&&const DeepCollectionEquality().equals(other._securityControls, _securityControls)&&const DeepCollectionEquality().equals(other._relationships, _relationships)&&const DeepCollectionEquality().equals(other._inheritedProperties, _inheritedProperties)&&(identical(other.lifecycleState, lifecycleState) || other.lifecycleState == lifecycleState)&&const DeepCollectionEquality().equals(other._stateTransitions, _stateTransitions)&&const DeepCollectionEquality().equals(other._dependencyMap, _dependencyMap)&&const DeepCollectionEquality().equals(other._discoveryPath, _discoveryPath)&&const DeepCollectionEquality().equals(other._relationshipMetadata, _relationshipMetadata));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,type,projectId,name,description,const DeepCollectionEquality().hash(_properties),discoveryStatus,discoveredAt,lastUpdated,discoveryMethod,confidence,const DeepCollectionEquality().hash(_parentAssetIds),const DeepCollectionEquality().hash(_childAssetIds),const DeepCollectionEquality().hash(_relatedAssetIds),const DeepCollectionEquality().hash(_completedTriggers),const DeepCollectionEquality().hash(_triggerResults),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_metadata),accessLevel,const DeepCollectionEquality().hash(_securityControls)]);
+int get hashCode => Object.hashAll([runtimeType,id,type,projectId,name,description,const DeepCollectionEquality().hash(_properties),discoveryStatus,discoveredAt,lastUpdated,discoveryMethod,confidence,const DeepCollectionEquality().hash(_parentAssetIds),const DeepCollectionEquality().hash(_childAssetIds),const DeepCollectionEquality().hash(_relatedAssetIds),const DeepCollectionEquality().hash(_completedTriggers),const DeepCollectionEquality().hash(_triggerResults),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_metadata),accessLevel,const DeepCollectionEquality().hash(_securityControls),const DeepCollectionEquality().hash(_relationships),const DeepCollectionEquality().hash(_inheritedProperties),lifecycleState,const DeepCollectionEquality().hash(_stateTransitions),const DeepCollectionEquality().hash(_dependencyMap),const DeepCollectionEquality().hash(_discoveryPath),const DeepCollectionEquality().hash(_relationshipMetadata)]);
 
 @override
 String toString() {
-  return 'Asset(id: $id, type: $type, projectId: $projectId, name: $name, description: $description, properties: $properties, discoveryStatus: $discoveryStatus, discoveredAt: $discoveredAt, lastUpdated: $lastUpdated, discoveryMethod: $discoveryMethod, confidence: $confidence, parentAssetIds: $parentAssetIds, childAssetIds: $childAssetIds, relatedAssetIds: $relatedAssetIds, completedTriggers: $completedTriggers, triggerResults: $triggerResults, tags: $tags, metadata: $metadata, accessLevel: $accessLevel, securityControls: $securityControls)';
+  return 'Asset(id: $id, type: $type, projectId: $projectId, name: $name, description: $description, properties: $properties, discoveryStatus: $discoveryStatus, discoveredAt: $discoveredAt, lastUpdated: $lastUpdated, discoveryMethod: $discoveryMethod, confidence: $confidence, parentAssetIds: $parentAssetIds, childAssetIds: $childAssetIds, relatedAssetIds: $relatedAssetIds, completedTriggers: $completedTriggers, triggerResults: $triggerResults, tags: $tags, metadata: $metadata, accessLevel: $accessLevel, securityControls: $securityControls, relationships: $relationships, inheritedProperties: $inheritedProperties, lifecycleState: $lifecycleState, stateTransitions: $stateTransitions, dependencyMap: $dependencyMap, discoveryPath: $discoveryPath, relationshipMetadata: $relationshipMetadata)';
 }
 
 
@@ -3724,7 +3794,7 @@ abstract mixin class _$AssetCopyWith<$Res> implements $AssetCopyWith<$Res> {
   factory _$AssetCopyWith(_Asset value, $Res Function(_Asset) _then) = __$AssetCopyWithImpl;
 @override @useResult
 $Res call({
- String id, AssetType type, String projectId, String name, String? description, Map<String, AssetPropertyValue> properties, AssetDiscoveryStatus discoveryStatus, DateTime discoveredAt, DateTime? lastUpdated, String? discoveryMethod, double confidence, List<String> parentAssetIds, List<String> childAssetIds, List<String> relatedAssetIds, List<String> completedTriggers, Map<String, TriggerExecutionResult> triggerResults, List<String> tags, Map<String, String>? metadata, AccessLevel? accessLevel, List<String>? securityControls
+ String id, AssetType type, String projectId, String name, String? description, Map<String, AssetPropertyValue> properties, AssetDiscoveryStatus discoveryStatus, DateTime discoveredAt, DateTime? lastUpdated, String? discoveryMethod, double confidence, List<String> parentAssetIds, List<String> childAssetIds, List<String> relatedAssetIds, List<String> completedTriggers, Map<String, TriggerExecutionResult> triggerResults, List<String> tags, Map<String, String>? metadata, AccessLevel? accessLevel, List<String>? securityControls, Map<String, List<String>> relationships, Map<String, dynamic> inheritedProperties, String lifecycleState, Map<String, DateTime> stateTransitions, Map<String, String> dependencyMap, List<String> discoveryPath, Map<String, dynamic> relationshipMetadata
 });
 
 
@@ -3741,7 +3811,7 @@ class __$AssetCopyWithImpl<$Res>
 
 /// Create a copy of Asset
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? projectId = null,Object? name = null,Object? description = freezed,Object? properties = null,Object? discoveryStatus = null,Object? discoveredAt = null,Object? lastUpdated = freezed,Object? discoveryMethod = freezed,Object? confidence = null,Object? parentAssetIds = null,Object? childAssetIds = null,Object? relatedAssetIds = null,Object? completedTriggers = null,Object? triggerResults = null,Object? tags = null,Object? metadata = freezed,Object? accessLevel = freezed,Object? securityControls = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? projectId = null,Object? name = null,Object? description = freezed,Object? properties = null,Object? discoveryStatus = null,Object? discoveredAt = null,Object? lastUpdated = freezed,Object? discoveryMethod = freezed,Object? confidence = null,Object? parentAssetIds = null,Object? childAssetIds = null,Object? relatedAssetIds = null,Object? completedTriggers = null,Object? triggerResults = null,Object? tags = null,Object? metadata = freezed,Object? accessLevel = freezed,Object? securityControls = freezed,Object? relationships = null,Object? inheritedProperties = null,Object? lifecycleState = null,Object? stateTransitions = null,Object? dependencyMap = null,Object? discoveryPath = null,Object? relationshipMetadata = null,}) {
   return _then(_Asset(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -3763,7 +3833,14 @@ as Map<String, TriggerExecutionResult>,tags: null == tags ? _self._tags : tags /
 as List<String>,metadata: freezed == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
 as Map<String, String>?,accessLevel: freezed == accessLevel ? _self.accessLevel : accessLevel // ignore: cast_nullable_to_non_nullable
 as AccessLevel?,securityControls: freezed == securityControls ? _self._securityControls : securityControls // ignore: cast_nullable_to_non_nullable
-as List<String>?,
+as List<String>?,relationships: null == relationships ? _self._relationships : relationships // ignore: cast_nullable_to_non_nullable
+as Map<String, List<String>>,inheritedProperties: null == inheritedProperties ? _self._inheritedProperties : inheritedProperties // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,lifecycleState: null == lifecycleState ? _self.lifecycleState : lifecycleState // ignore: cast_nullable_to_non_nullable
+as String,stateTransitions: null == stateTransitions ? _self._stateTransitions : stateTransitions // ignore: cast_nullable_to_non_nullable
+as Map<String, DateTime>,dependencyMap: null == dependencyMap ? _self._dependencyMap : dependencyMap // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,discoveryPath: null == discoveryPath ? _self._discoveryPath : discoveryPath // ignore: cast_nullable_to_non_nullable
+as List<String>,relationshipMetadata: null == relationshipMetadata ? _self._relationshipMetadata : relationshipMetadata // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,
   ));
 }
 

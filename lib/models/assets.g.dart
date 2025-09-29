@@ -556,6 +556,32 @@ _Asset _$AssetFromJson(Map<String, dynamic> json) => _Asset(
   securityControls: (json['securityControls'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
+  relationships:
+      (json['relationships'] as Map<String, dynamic>?)?.map(
+        (k, e) =>
+            MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
+      ) ??
+      const {},
+  inheritedProperties:
+      json['inheritedProperties'] as Map<String, dynamic>? ?? const {},
+  lifecycleState: json['lifecycleState'] as String? ?? 'unknown',
+  stateTransitions:
+      (json['stateTransitions'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, DateTime.parse(e as String)),
+      ) ??
+      const {},
+  dependencyMap:
+      (json['dependencyMap'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      const {},
+  discoveryPath:
+      (json['discoveryPath'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  relationshipMetadata:
+      json['relationshipMetadata'] as Map<String, dynamic>? ?? const {},
 );
 
 Map<String, dynamic> _$AssetToJson(_Asset instance) => <String, dynamic>{
@@ -579,6 +605,15 @@ Map<String, dynamic> _$AssetToJson(_Asset instance) => <String, dynamic>{
   'metadata': instance.metadata,
   'accessLevel': _$AccessLevelEnumMap[instance.accessLevel],
   'securityControls': instance.securityControls,
+  'relationships': instance.relationships,
+  'inheritedProperties': instance.inheritedProperties,
+  'lifecycleState': instance.lifecycleState,
+  'stateTransitions': instance.stateTransitions.map(
+    (k, e) => MapEntry(k, e.toIso8601String()),
+  ),
+  'dependencyMap': instance.dependencyMap,
+  'discoveryPath': instance.discoveryPath,
+  'relationshipMetadata': instance.relationshipMetadata,
 };
 
 const _$AssetTypeEnumMap = {

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:uuid/uuid.dart';
+import 'asset_relationships.dart';
 
 part 'assets.freezed.dart';
 part 'assets.g.dart';
@@ -398,9 +399,32 @@ sealed class Asset with _$Asset {
     // Security context
     AccessLevel? accessLevel,
     List<String>? securityControls,
+
+    // NEW RELATIONSHIP SYSTEM FIELDS:
+    @Default({}) Map<String, List<String>> relationships, // Relationship type -> List of asset IDs
+    @Default({}) Map<String, dynamic> inheritedProperties, // Properties inherited from parent
+    @Default('unknown') String lifecycleState, // Current state in lifecycle
+    @Default({}) Map<String, DateTime> stateTransitions, // History of state changes
+    @Default({}) Map<String, String> dependencyMap, // Service/asset dependencies
+    @Default([]) List<String> discoveryPath, // How this asset was discovered
+    @Default({}) Map<String, dynamic> relationshipMetadata, // Extra data about relationships
   }) = _Asset;
 
   factory Asset.fromJson(Map<String, dynamic> json) => _$AssetFromJson(json);
+
+  // Add helper method for default states
+  static String _getDefaultState(AssetType type) {
+    switch (type) {
+      case AssetType.networkSegment:
+        return 'identified';
+      case AssetType.host:
+        return 'discovered';
+      case AssetType.service:
+        return 'identified';
+      default:
+        return 'unknown';
+    }
+  }
 }
 
 @freezed
@@ -1224,6 +1248,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['environment', environmentType],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.environment),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.environment): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
     );
   }
 
@@ -1301,6 +1333,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['network', 'segment'],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: environmentId != null ? {'childOf': [environmentId]} : {},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.networkSegment),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.networkSegment): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: environmentId != null ? [environmentId] : [],
+      relationshipMetadata: {},
     );
   }
 
@@ -1339,6 +1379,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['host'],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: networkSegmentId != null ? {'childOf': [networkSegmentId]} : {},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.host),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.host): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: networkSegmentId != null ? [networkSegmentId] : [],
+      relationshipMetadata: {},
     );
   }
 
@@ -1376,6 +1424,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['cloud', tenantType],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: environmentId != null ? {'childOf': [environmentId]} : {},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.cloudTenant),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.cloudTenant): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: environmentId != null ? [environmentId] : [],
+      relationshipMetadata: {},
     );
   }
 
@@ -1413,6 +1469,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['wireless', 'network'],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: physicalSiteId != null ? {'childOf': [physicalSiteId]} : {},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.wirelessNetwork),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.wirelessNetwork): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: physicalSiteId != null ? [physicalSiteId] : [],
+      relationshipMetadata: {},
     );
   }
 
@@ -1456,6 +1520,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['breakout', 'restriction', environmentType.name],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: {'childOf': [hostAssetId]},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.restrictedEnvironment),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.restrictedEnvironment): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [hostAssetId],
+      relationshipMetadata: {},
     );
   }
 
@@ -1494,6 +1566,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['breakout', 'attempt'],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: {'childOf': [restrictedEnvironmentId], 'relatedTo': [techniqueId]},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.breakoutAttempt),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.breakoutAttempt): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [restrictedEnvironmentId],
+      relationshipMetadata: {},
     );
   }
 
@@ -1536,6 +1616,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['breakout', 'technique', category.name],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.breakoutTechnique),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.breakoutTechnique): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
     );
   }
 
@@ -1577,6 +1665,14 @@ class AssetFactory {
       completedTriggers: [],
       triggerResults: {},
       tags: ['security', 'control', controlType],
+      // NEW RELATIONSHIP SYSTEM FIELDS:
+      relationships: {'childOf': [hostAssetId]},
+      inheritedProperties: {},
+      lifecycleState: AssetLifecycleStates.getDefaultState(AssetType.securityControl),
+      stateTransitions: {AssetLifecycleStates.getDefaultState(AssetType.securityControl): DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [hostAssetId],
+      relationshipMetadata: {},
     );
   }
 }
