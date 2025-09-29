@@ -3,4 +3,6 @@ methodologies:
   - "internal_network.yaml"
   - "web_application.yaml"
   - "active_directory.yaml"
+  - "database.yaml"
+  - "wireless.yaml"
   - "reconnaissance/nmap_discovery.yaml"

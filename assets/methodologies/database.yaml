@@ -1,0 +1,204 @@
+id: "database_assessment"
+version: "1.0.0"
+template_version: "1.0"
+name: "Database Security Assessment"
+workstream: "Database Testing"
+author: "Security Team"
+created: "2024-01-01"
+modified: "2024-01-01"
+status: "active"
+description: "Comprehensive database security assessment methodology"
+tags: ["database", "sql", "mysql", "postgresql", "mssql", "oracle"]
+risk_level: "high"
+
+overview:
+  purpose: "Assess database security configurations and identify vulnerabilities"
+  scope: "All identified database services"
+  prerequisites:
+    - "Network access to database ports"
+    - "Database service identification"
+  category: "Database Assessment"
+
+triggers:
+  - name: "MySQL Service Discovered"
+    description: "Port 3306 is open - assess MySQL database"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "3306"
+        "service": "mysql"
+    priority: 95
+    batch_capable: true
+    batch_criteria: "service_type"
+    max_batch_size: 10
+    batch_command: "nmap -sV -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 <target_list>"
+    individual_command: "nmap -sV -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122 <target_ip>"
+    command_variants:
+      quick: "nmap -sV -p 3306 --script mysql-info,mysql-enum <target_ip>"
+      thorough: "nmap -sV -p 3306 --script mysql-* <target_ip>"
+    expected_property_updates: ["mysql_version", "mysql_databases", "mysql_users", "mysql_config"]
+    expected_asset_discovery: ["database"]
+    tags: ["mysql", "database_enum"]
+    cooldown_period: "15m"
+    enabled: true
+
+  - name: "PostgreSQL Service Discovered"
+    description: "Port 5432 is open - assess PostgreSQL database"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "5432"
+        "service": "postgresql"
+    priority: 95
+    batch_capable: true
+    batch_criteria: "service_type"
+    max_batch_size: 10
+    batch_command: "nmap -sV -p 5432 --script pgsql-brute <target_list>"
+    individual_command: "nmap -sV -p 5432 --script pgsql-brute <target_ip>"
+    expected_property_updates: ["postgres_version", "postgres_databases", "postgres_users"]
+    expected_asset_discovery: ["database"]
+    tags: ["postgresql", "database_enum"]
+    cooldown_period: "15m"
+    enabled: true
+
+  - name: "MSSQL Service Discovered"
+    description: "Port 1433 is open - assess Microsoft SQL Server"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "1433"
+        "service": "mssql"
+    priority: 95
+    batch_capable: true
+    batch_criteria: "service_type"
+    max_batch_size: 8
+    batch_command: "nmap -sV -p 1433 --script ms-sql-brute,ms-sql-config,ms-sql-dac,ms-sql-dump-hashes,ms-sql-empty-password,ms-sql-hasdbaccess,ms-sql-info,ms-sql-ntlm-info,ms-sql-query,ms-sql-tables,ms-sql-xp-cmdshell <target_list>"
+    individual_command: "nmap -sV -p 1433 --script ms-sql-brute,ms-sql-config,ms-sql-dac,ms-sql-dump-hashes,ms-sql-empty-password,ms-sql-hasdbaccess,ms-sql-info,ms-sql-ntlm-info,ms-sql-query,ms-sql-tables,ms-sql-xp-cmdshell <target_ip>"
+    command_variants:
+      quick: "nmap -sV -p 1433 --script ms-sql-info,ms-sql-ntlm-info <target_ip>"
+      thorough: "nmap -sV -p 1433 --script ms-sql-* <target_ip>"
+    expected_property_updates: ["mssql_version", "mssql_databases", "mssql_users", "mssql_config"]
+    expected_asset_discovery: ["database"]
+    tags: ["mssql", "database_enum", "windows"]
+    cooldown_period: "20m"
+    enabled: true
+
+  - name: "Oracle Service Discovered"
+    description: "Port 1521 is open - assess Oracle database"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "1521"
+        "service": "oracle"
+    priority: 95
+    batch_capable: false
+    individual_command: "nmap -sV -p 1521 --script oracle-brute,oracle-enum-users,oracle-sid-brute <target_ip>"
+    expected_property_updates: ["oracle_version", "oracle_sids", "oracle_users"]
+    expected_asset_discovery: ["database"]
+    tags: ["oracle", "database_enum"]
+    cooldown_period: "25m"
+    enabled: true
+
+  - name: "MongoDB Service Discovered"
+    description: "Port 27017 is open - assess MongoDB database"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "27017"
+        "service": "mongodb"
+    priority: 90
+    batch_capable: true
+    batch_criteria: "service_type"
+    max_batch_size: 15
+    batch_command: "nmap -sV -p 27017 --script mongodb-brute,mongodb-databases,mongodb-info <target_list>"
+    individual_command: "nmap -sV -p 27017 --script mongodb-brute,mongodb-databases,mongodb-info <target_ip>"
+    expected_property_updates: ["mongodb_version", "mongodb_databases", "mongodb_collections"]
+    expected_asset_discovery: ["database"]
+    tags: ["mongodb", "nosql", "database_enum"]
+    cooldown_period: "10m"
+    enabled: true
+
+  - name: "Redis Service Discovered"
+    description: "Port 6379 is open - assess Redis database"
+    conditions:
+      asset_type: "service"
+      properties:
+        "port": "6379"
+        "service": "redis"
+    priority: 85
+    batch_capable: true
+    batch_criteria: "service_type"
+    max_batch_size: 20
+    batch_command: "nmap -sV -p 6379 --script redis-brute,redis-info <target_list>"
+    individual_command: "nmap -sV -p 6379 --script redis-brute,redis-info <target_ip>"
+    expected_property_updates: ["redis_version", "redis_config", "redis_keys"]
+    expected_asset_discovery: ["database"]
+    tags: ["redis", "nosql", "cache"]
+    cooldown_period: "5m"
+    enabled: true
+
+  - name: "Database Credentials Available"
+    description: "Database credentials found - test access and enumerate"
+    conditions:
+      asset_type: "database"
+      properties:
+        "credentials_available": "true"
+        "access_tested": "false"
+    priority: 100
+    batch_capable: false
+    individual_command: "sqlmap -u \"<connection_string>\" --batch --crawl=1 --level=1 --risk=1"
+    command_variants:
+      enum_only: "sqlmap -u \"<connection_string>\" --batch --dbs --tables --columns"
+      full_dump: "sqlmap -u \"<connection_string>\" --batch --dump-all --exclude-sysdbs"
+    expected_property_updates: ["database_schema", "sensitive_data", "access_level"]
+    tags: ["credential_testing", "database_access"]
+    cooldown_period: "30m"
+    enabled: true
+
+procedures:
+  - id: "database_discovery"
+    name: "Database Service Discovery"
+    description: "Identify and enumerate database services"
+    commands:
+      - "nmap -sV -p 1433,3306,5432,1521,27017,6379 <target_range>"
+      - "masscan -p1433,3306,5432,1521,27017,6379 <target_range> --rate=1000"
+
+  - id: "database_enumeration"
+    name: "Database Enumeration"
+    description: "Enumerate database configurations and users"
+    commands:
+      - "enum4linux -a <target_ip>"
+      - "nbtscan <target_ip>"
+      - "onesixtyone -c community.txt <target_ip>"
+
+  - id: "database_exploitation"
+    name: "Database Exploitation"
+    description: "Attempt to exploit identified database vulnerabilities"
+    commands:
+      - "sqlmap -u <target_url> --batch --level=3 --risk=2"
+      - "hydra -L users.txt -P passwords.txt <service>://<target_ip>"
+
+findings:
+  - id: "DB-001"
+    title: "Default Database Credentials"
+    severity: "high"
+    description: "Database using default or weak credentials"
+    remediation: "Change default credentials and implement strong password policy"
+
+  - id: "DB-002"
+    title: "Unnecessary Database Privileges"
+    severity: "medium"
+    description: "Database users have excessive privileges"
+    remediation: "Implement principle of least privilege for database access"
+
+  - id: "DB-003"
+    title: "Unencrypted Database Traffic"
+    severity: "medium"
+    description: "Database communications are not encrypted"
+    remediation: "Enable SSL/TLS encryption for database connections"
+
+  - id: "DB-004"
+    title: "Database Information Disclosure"
+    severity: "low"
+    description: "Database version and configuration details exposed"
+    remediation: "Configure database to minimize information disclosure"
