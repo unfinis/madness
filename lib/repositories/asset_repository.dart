@@ -10,8 +10,8 @@ class AssetRepository {
   AssetRepository(this._db);
 
   /// Convert Asset model to database row
-  AssetRowsCompanion _assetToCompanion(Asset asset) {
-    return AssetRowsCompanion(
+  AssetsTableCompanion _assetToCompanion(Asset asset) {
+    return AssetsTableCompanion(
       id: Value(asset.id),
       type: Value(asset.type.toString()),
       projectId: Value(asset.projectId),
@@ -202,7 +202,7 @@ class AssetRepository {
     {Map<String, dynamic>? metadata}
   ) async {
     await _db.into(_db.assetRelationshipsTable).insert(
-      AssetRelationshipRowsCompanion(
+      AssetRelationshipsTableCompanion(
         parentAssetId: Value(parentId),
         childAssetId: Value(childId),
         relationshipType: Value(relationshipType),
@@ -241,14 +241,14 @@ class AssetRepository {
       .go();
 
     // Create new index entries for searchable properties
-    final indexEntries = <AssetPropertyIndexRowsCompanion>[];
+    final indexEntries = <AssetPropertyIndexTableCompanion>[];
 
     for (final entry in asset.properties.entries) {
       final key = entry.key;
       final value = entry.value;
 
-      String stringValue;
-      String propertyType;
+      late String stringValue;
+      late String propertyType;
 
       value.when(
         string: (v) {
@@ -285,7 +285,7 @@ class AssetRepository {
         },
       );
 
-      indexEntries.add(AssetPropertyIndexRowsCompanion(
+      indexEntries.add(AssetPropertyIndexTableCompanion(
         assetId: Value(asset.id),
         propertyKey: Value(key),
         propertyValue: Value(stringValue),
