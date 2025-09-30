@@ -108,183 +108,37 @@ enum FirewallAction {
 }
 
 /// Firewall rule for network segments
-class NetworkFirewallRule {
-  final String id;
-  final String name;
-  final FirewallAction action;
-  final String sourceNetwork;      // CIDR or "any"
-  final String destinationNetwork; // CIDR or "any"
-  final String protocol;           // tcp/udp/icmp/any
-  final String ports;              // "80", "80-443", "any"
-  final String? description;
-  final bool enabled;
-  final DateTime? lastModified;
-
-  const NetworkFirewallRule({
-    required this.id,
-    required this.name,
-    required this.action,
-    required this.sourceNetwork,
-    required this.destinationNetwork,
-    required this.protocol,
-    required this.ports,
-    this.description,
-    this.enabled = true,
-    this.lastModified,
-  });
-
-  factory NetworkFirewallRule.fromJson(Map<String, dynamic> json) {
-    return NetworkFirewallRule(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      action: FirewallAction.values.firstWhere(
-        (e) => e.toString().split('.').last == json['action'],
-        orElse: () => FirewallAction.deny,
-      ),
-      sourceNetwork: json['sourceNetwork'] as String,
-      destinationNetwork: json['destinationNetwork'] as String,
-      protocol: json['protocol'] as String,
-      ports: json['ports'] as String,
-      description: json['description'] as String?,
-      enabled: json['enabled'] as bool? ?? true,
-      lastModified: json['lastModified'] != null
-        ? DateTime.parse(json['lastModified'] as String)
-        : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'action': action.toString().split('.').last,
-      'sourceNetwork': sourceNetwork,
-      'destinationNetwork': destinationNetwork,
-      'protocol': protocol,
-      'ports': ports,
-      'description': description,
-      'enabled': enabled,
-      'lastModified': lastModified?.toIso8601String(),
-    };
-  }
-
-  NetworkFirewallRule copyWith({
-    String? id,
-    String? name,
-    FirewallAction? action,
-    String? sourceNetwork,
-    String? destinationNetwork,
-    String? protocol,
-    String? ports,
+@freezed
+sealed class NetworkFirewallRule with _$NetworkFirewallRule {
+  const factory NetworkFirewallRule({
+    required String id,
+    required String name,
+    required FirewallAction action,
+    required String sourceNetwork,      // CIDR or "any"
+    required String destinationNetwork, // CIDR or "any"
+    required String protocol,           // tcp/udp/icmp/any
+    required String ports,              // "80", "80-443", "any"
     String? description,
-    bool? enabled,
+    @Default(true) bool enabled,
     DateTime? lastModified,
-  }) {
-    return NetworkFirewallRule(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      action: action ?? this.action,
-      sourceNetwork: sourceNetwork ?? this.sourceNetwork,
-      destinationNetwork: destinationNetwork ?? this.destinationNetwork,
-      protocol: protocol ?? this.protocol,
-      ports: ports ?? this.ports,
-      description: description ?? this.description,
-      enabled: enabled ?? this.enabled,
-      lastModified: lastModified ?? this.lastModified,
-    );
-  }
+  }) = _NetworkFirewallRule;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is NetworkFirewallRule &&
-            id == other.id &&
-            name == other.name &&
-            action == other.action &&
-            sourceNetwork == other.sourceNetwork &&
-            destinationNetwork == other.destinationNetwork &&
-            protocol == other.protocol &&
-            ports == other.ports &&
-            enabled == other.enabled);
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id, name, action, sourceNetwork, destinationNetwork, protocol, ports, enabled
-  );
+  factory NetworkFirewallRule.fromJson(Map<String, dynamic> json) => _$NetworkFirewallRuleFromJson(json);
 }
 
 /// Network route information
-class NetworkRoute {
-  final String id;
-  final String destinationNetwork;  // Target network CIDR
-  final String nextHop;            // Gateway IP
-  final int metric;
-  final bool active;
-  final String? description;
-
-  const NetworkRoute({
-    required this.id,
-    required this.destinationNetwork,
-    required this.nextHop,
-    required this.metric,
-    this.active = true,
-    this.description,
-  });
-
-  factory NetworkRoute.fromJson(Map<String, dynamic> json) {
-    return NetworkRoute(
-      id: json['id'] as String,
-      destinationNetwork: json['destinationNetwork'] as String,
-      nextHop: json['nextHop'] as String,
-      metric: json['metric'] as int,
-      active: json['active'] as bool? ?? true,
-      description: json['description'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'destinationNetwork': destinationNetwork,
-      'nextHop': nextHop,
-      'metric': metric,
-      'active': active,
-      'description': description,
-    };
-  }
-
-  NetworkRoute copyWith({
-    String? id,
-    String? destinationNetwork,
-    String? nextHop,
-    int? metric,
-    bool? active,
+@freezed
+sealed class NetworkRoute with _$NetworkRoute {
+  const factory NetworkRoute({
+    required String id,
+    required String destinationNetwork,  // Target network CIDR
+    required String nextHop,            // Gateway IP
+    required int metric,
+    @Default(true) bool active,
     String? description,
-  }) {
-    return NetworkRoute(
-      id: id ?? this.id,
-      destinationNetwork: destinationNetwork ?? this.destinationNetwork,
-      nextHop: nextHop ?? this.nextHop,
-      metric: metric ?? this.metric,
-      active: active ?? this.active,
-      description: description ?? this.description,
-    );
-  }
+  }) = _NetworkRoute;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is NetworkRoute &&
-            id == other.id &&
-            destinationNetwork == other.destinationNetwork &&
-            nextHop == other.nextHop &&
-            metric == other.metric &&
-            active == other.active);
-  }
-
-  @override
-  int get hashCode => Object.hash(id, destinationNetwork, nextHop, metric, active);
+  factory NetworkRoute.fromJson(Map<String, dynamic> json) => _$NetworkRouteFromJson(json);
 }
 
 /// Network access point - tracks how we can access this network
@@ -492,9 +346,8 @@ sealed class SecurityControl with _$SecurityControl {
 // Core Property Value System
 // =============================================================================
 
-sealed class AssetPropertyValue {
-  const AssetPropertyValue();
-
+@freezed
+sealed class AssetPropertyValue with _$AssetPropertyValue {
   const factory AssetPropertyValue.string(String value) = StringAssetProperty;
   const factory AssetPropertyValue.integer(int value) = IntegerAssetProperty;
   const factory AssetPropertyValue.double(double value) = DoubleAssetProperty;
@@ -504,513 +357,60 @@ sealed class AssetPropertyValue {
   const factory AssetPropertyValue.map(Map<String, dynamic> value) = MapAssetProperty;
   const factory AssetPropertyValue.objectList(List<Map<String, dynamic>> objects) = ObjectListAssetProperty;
 
-  factory AssetPropertyValue.fromJson(Map<String, dynamic> json) {
-    final type = json['type'] as String;
-    switch (type) {
-      case 'string':
-        return AssetPropertyValue.string(json['value'] as String);
-      case 'integer':
-        return AssetPropertyValue.integer(json['value'] as int);
-      case 'double':
-        return AssetPropertyValue.double((json['value'] as num).toDouble());
-      case 'boolean':
-        return AssetPropertyValue.boolean(json['value'] as bool);
-      case 'stringList':
-        return AssetPropertyValue.stringList(List<String>.from(json['value']));
-      case 'dateTime':
-        return AssetPropertyValue.dateTime(DateTime.parse(json['value'] as String));
-      case 'map':
-        return AssetPropertyValue.map(Map<String, dynamic>.from(json['value']));
-      case 'objectList':
-        return AssetPropertyValue.objectList(
-          List<Map<String, dynamic>>.from(json['value'])
-        );
-      default:
-        throw ArgumentError('Unknown AssetPropertyValue type: $type');
-    }
-  }
-
-  Map<String, dynamic> toJson();
-
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  });
-}
-
-class StringAssetProperty extends AssetPropertyValue {
-  final String value;
-
-  const StringAssetProperty(this.value);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'string', 'value': value};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => string(value);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is StringAssetProperty && value == other.value);
-
-  @override
-  int get hashCode => value.hashCode;
-}
-
-class IntegerAssetProperty extends AssetPropertyValue {
-  final int value;
-
-  const IntegerAssetProperty(this.value);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'integer', 'value': value};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => integer(value);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is IntegerAssetProperty && value == other.value);
-
-  @override
-  int get hashCode => value.hashCode;
-}
-
-class DoubleAssetProperty extends AssetPropertyValue {
-  final double value;
-
-  const DoubleAssetProperty(this.value);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'double', 'value': value};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => double(value);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is DoubleAssetProperty && value == other.value);
-
-  @override
-  int get hashCode => value.hashCode;
-}
-
-class BooleanAssetProperty extends AssetPropertyValue {
-  final bool value;
-
-  const BooleanAssetProperty(this.value);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'boolean', 'value': value};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => boolean(value);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is BooleanAssetProperty && value == other.value);
-
-  @override
-  int get hashCode => value.hashCode;
-}
-
-class StringListAssetProperty extends AssetPropertyValue {
-  final List<String> values;
-
-  const StringListAssetProperty(this.values);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'stringList', 'value': values};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => stringList(values);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is StringListAssetProperty && values == other.values);
-
-  @override
-  int get hashCode => values.hashCode;
-}
-
-class DateTimeAssetProperty extends AssetPropertyValue {
-  final DateTime value;
-
-  const DateTimeAssetProperty(this.value);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'dateTime', 'value': value.toIso8601String()};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => dateTime(value);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is DateTimeAssetProperty && value == other.value);
-
-  @override
-  int get hashCode => value.hashCode;
-}
-
-class MapAssetProperty extends AssetPropertyValue {
-  final Map<String, dynamic> value;
-
-  const MapAssetProperty(this.value);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'map', 'value': value};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => map(value);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is MapAssetProperty && value == other.value);
-
-  @override
-  int get hashCode => value.hashCode;
-}
-
-class ObjectListAssetProperty extends AssetPropertyValue {
-  final List<Map<String, dynamic>> objects;
-
-  const ObjectListAssetProperty(this.objects);
-
-  @override
-  Map<String, dynamic> toJson() => {'type': 'objectList', 'value': objects};
-
-  @override
-  T when<T>({
-    required T Function(String value) string,
-    required T Function(int value) integer,
-    required T Function(double value) double,
-    required T Function(bool value) boolean,
-    required T Function(List<String> values) stringList,
-    required T Function(DateTime value) dateTime,
-    required T Function(Map<String, dynamic> value) map,
-    required T Function(List<Map<String, dynamic>> objects) objectList,
-  }) => objectList(objects);
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || (other is ObjectListAssetProperty && objects == other.objects);
-
-  @override
-  int get hashCode => objects.hashCode;
+  factory AssetPropertyValue.fromJson(Map<String, dynamic> json) => _$AssetPropertyValueFromJson(json);
 }
 
 // =============================================================================
 // Core Asset Model
 // =============================================================================
 
-class Asset {
-  final String id;
-  final AssetType type;
-  final String projectId;
-  final String name;
-  final String? description;
-
-  // Rich property system - contains all asset-specific data
-  final Map<String, AssetPropertyValue> properties;
-
-  // Discovery and status
-  final AssetDiscoveryStatus discoveryStatus;
-  final DateTime discoveredAt;
-  final DateTime? lastUpdated;
-  final String? discoveryMethod;
-  final double confidence;
-
-  // Hierarchical relationships
-  final List<String> parentAssetIds;
-  final List<String> childAssetIds;
-  final List<String> relatedAssetIds; // Cross-references
-
-  // Methodology integration
-  final List<String> completedTriggers;
-  final Map<String, TriggerExecutionResult> triggerResults;
-
-  // Organization and filtering
-  final List<String> tags;
-  final Map<String, String>? metadata;
-
-  // Security context
-  final AccessLevel? accessLevel;
-  final List<String>? securityControls;
-
-  // NEW RELATIONSHIP SYSTEM FIELDS:
-  final Map<String, List<String>> relationships; // Relationship type -> List of asset IDs
-  final Map<String, dynamic> inheritedProperties; // Properties inherited from parent
-  final String lifecycleState; // Current state in lifecycle
-  final Map<String, DateTime> stateTransitions; // History of state changes
-  final Map<String, String> dependencyMap; // Service/asset dependencies
-  final List<String> discoveryPath; // How this asset was discovered
-  final Map<String, dynamic> relationshipMetadata; // Extra data about relationships
-
-  const Asset({
-    required this.id,
-    required this.type,
-    required this.projectId,
-    required this.name,
-    this.description,
-    required this.properties,
-    required this.discoveryStatus,
-    required this.discoveredAt,
-    this.lastUpdated,
-    this.discoveryMethod,
-    this.confidence = 1.0,
-    required this.parentAssetIds,
-    required this.childAssetIds,
-    required this.relatedAssetIds,
-    required this.completedTriggers,
-    required this.triggerResults,
-    required this.tags,
-    this.metadata,
-    this.accessLevel,
-    this.securityControls,
-    this.relationships = const {},
-    this.inheritedProperties = const {},
-    this.lifecycleState = 'unknown',
-    this.stateTransitions = const {},
-    this.dependencyMap = const {},
-    this.discoveryPath = const [],
-    this.relationshipMetadata = const {},
-  });
-
-  factory Asset.fromJson(Map<String, dynamic> json) {
-    final propertiesJson = json['properties'] as Map<String, dynamic>? ?? {};
-    final properties = propertiesJson.map(
-      (k, v) => MapEntry(k, AssetPropertyValue.fromJson(v as Map<String, dynamic>))
-    );
-
-    final triggerResultsJson = json['triggerResults'] as Map<String, dynamic>? ?? {};
-    final triggerResults = triggerResultsJson.map(
-      (k, v) => MapEntry(k, TriggerExecutionResult.fromJson(v as Map<String, dynamic>))
-    );
-
-    final stateTransitionsJson = json['stateTransitions'] as Map<String, dynamic>? ?? {};
-    final stateTransitions = stateTransitionsJson.map(
-      (k, v) => MapEntry(k, DateTime.parse(v as String))
-    );
-
-    final relationshipsJson = json['relationships'] as Map<String, dynamic>? ?? {};
-    final relationships = relationshipsJson.map(
-      (k, v) => MapEntry(k, List<String>.from(v))
-    );
-
-    return Asset(
-      id: json['id'] as String,
-      type: AssetType.values.firstWhere(
-        (e) => e.toString().split('.').last == json['type'],
-        orElse: () => AssetType.unknown,
-      ),
-      projectId: json['projectId'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      properties: properties,
-      discoveryStatus: AssetDiscoveryStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['discoveryStatus'],
-        orElse: () => AssetDiscoveryStatus.unknown,
-      ),
-      discoveredAt: DateTime.parse(json['discoveredAt'] as String),
-      lastUpdated: json['lastUpdated'] != null
-        ? DateTime.parse(json['lastUpdated'] as String)
-        : null,
-      discoveryMethod: json['discoveryMethod'] as String?,
-      confidence: (json['confidence'] as num?)?.toDouble() ?? 1.0,
-      parentAssetIds: List<String>.from(json['parentAssetIds'] ?? []),
-      childAssetIds: List<String>.from(json['childAssetIds'] ?? []),
-      relatedAssetIds: List<String>.from(json['relatedAssetIds'] ?? []),
-      completedTriggers: List<String>.from(json['completedTriggers'] ?? []),
-      triggerResults: triggerResults,
-      tags: List<String>.from(json['tags'] ?? []),
-      metadata: json['metadata'] != null
-        ? Map<String, String>.from(json['metadata'])
-        : null,
-      accessLevel: json['accessLevel'] != null
-        ? AccessLevel.values.firstWhere(
-            (e) => e.toString().split('.').last == json['accessLevel'],
-            orElse: () => AccessLevel.none,
-          )
-        : null,
-      securityControls: json['securityControls'] != null
-        ? List<String>.from(json['securityControls'])
-        : null,
-      relationships: relationships,
-      inheritedProperties: Map<String, dynamic>.from(json['inheritedProperties'] ?? {}),
-      lifecycleState: json['lifecycleState'] as String? ?? 'unknown',
-      stateTransitions: stateTransitions,
-      dependencyMap: Map<String, String>.from(json['dependencyMap'] ?? {}),
-      discoveryPath: List<String>.from(json['discoveryPath'] ?? []),
-      relationshipMetadata: Map<String, dynamic>.from(json['relationshipMetadata'] ?? {}),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'type': type.toString().split('.').last,
-      'projectId': projectId,
-      'name': name,
-      'description': description,
-      'properties': properties.map((k, v) => MapEntry(k, v.toJson())),
-      'discoveryStatus': discoveryStatus.toString().split('.').last,
-      'discoveredAt': discoveredAt.toIso8601String(),
-      'lastUpdated': lastUpdated?.toIso8601String(),
-      'discoveryMethod': discoveryMethod,
-      'confidence': confidence,
-      'parentAssetIds': parentAssetIds,
-      'childAssetIds': childAssetIds,
-      'relatedAssetIds': relatedAssetIds,
-      'completedTriggers': completedTriggers,
-      'triggerResults': triggerResults.map((k, v) => MapEntry(k, v.toJson())),
-      'tags': tags,
-      'metadata': metadata,
-      'accessLevel': accessLevel?.toString().split('.').last,
-      'securityControls': securityControls,
-      'relationships': relationships,
-      'inheritedProperties': inheritedProperties,
-      'lifecycleState': lifecycleState,
-      'stateTransitions': stateTransitions.map((k, v) => MapEntry(k, v.toIso8601String())),
-      'dependencyMap': dependencyMap,
-      'discoveryPath': discoveryPath,
-      'relationshipMetadata': relationshipMetadata,
-    };
-  }
-
-  Asset copyWith({
-    String? id,
-    AssetType? type,
-    String? projectId,
-    String? name,
+@freezed
+sealed class Asset with _$Asset {
+  const factory Asset({
+    required String id,
+    required AssetType type,
+    required String projectId,
+    required String name,
     String? description,
-    Map<String, AssetPropertyValue>? properties,
-    AssetDiscoveryStatus? discoveryStatus,
-    DateTime? discoveredAt,
+
+    // Rich property system - contains all asset-specific data
+    required Map<String, AssetPropertyValue> properties,
+
+    // Discovery and status
+    required AssetDiscoveryStatus discoveryStatus,
+    required DateTime discoveredAt,
     DateTime? lastUpdated,
     String? discoveryMethod,
-    double? confidence,
-    List<String>? parentAssetIds,
-    List<String>? childAssetIds,
-    List<String>? relatedAssetIds,
-    List<String>? completedTriggers,
-    Map<String, TriggerExecutionResult>? triggerResults,
-    List<String>? tags,
+    @Default(1.0) double confidence,
+
+    // Hierarchical relationships
+    required List<String> parentAssetIds,
+    required List<String> childAssetIds,
+    required List<String> relatedAssetIds, // Cross-references
+
+    // Methodology integration
+    required List<String> completedTriggers,
+    required Map<String, TriggerExecutionResult> triggerResults,
+
+    // Organization and filtering
+    required List<String> tags,
     Map<String, String>? metadata,
+
+    // Security context
     AccessLevel? accessLevel,
     List<String>? securityControls,
-    Map<String, List<String>>? relationships,
-    Map<String, dynamic>? inheritedProperties,
-    String? lifecycleState,
-    Map<String, DateTime>? stateTransitions,
-    Map<String, String>? dependencyMap,
-    List<String>? discoveryPath,
-    Map<String, dynamic>? relationshipMetadata,
-  }) {
-    return Asset(
-      id: id ?? this.id,
-      type: type ?? this.type,
-      projectId: projectId ?? this.projectId,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      properties: properties ?? this.properties,
-      discoveryStatus: discoveryStatus ?? this.discoveryStatus,
-      discoveredAt: discoveredAt ?? this.discoveredAt,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
-      discoveryMethod: discoveryMethod ?? this.discoveryMethod,
-      confidence: confidence ?? this.confidence,
-      parentAssetIds: parentAssetIds ?? this.parentAssetIds,
-      childAssetIds: childAssetIds ?? this.childAssetIds,
-      relatedAssetIds: relatedAssetIds ?? this.relatedAssetIds,
-      completedTriggers: completedTriggers ?? this.completedTriggers,
-      triggerResults: triggerResults ?? this.triggerResults,
-      tags: tags ?? this.tags,
-      metadata: metadata ?? this.metadata,
-      accessLevel: accessLevel ?? this.accessLevel,
-      securityControls: securityControls ?? this.securityControls,
-      relationships: relationships ?? this.relationships,
-      inheritedProperties: inheritedProperties ?? this.inheritedProperties,
-      lifecycleState: lifecycleState ?? this.lifecycleState,
-      stateTransitions: stateTransitions ?? this.stateTransitions,
-      dependencyMap: dependencyMap ?? this.dependencyMap,
-      discoveryPath: discoveryPath ?? this.discoveryPath,
-      relationshipMetadata: relationshipMetadata ?? this.relationshipMetadata,
-    );
-  }
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is Asset &&
-            id == other.id &&
-            type == other.type &&
-            projectId == other.projectId &&
-            name == other.name &&
-            lifecycleState == other.lifecycleState);
-  }
+    // NEW RELATIONSHIP SYSTEM FIELDS:
+    @Default({}) Map<String, List<String>> relationships, // Relationship type -> List of asset IDs
+    @Default({}) Map<String, dynamic> inheritedProperties, // Properties inherited from parent
+    @Default('unknown') String lifecycleState, // Current state in lifecycle
+    @Default({}) Map<String, DateTime> stateTransitions, // History of state changes
+    @Default({}) Map<String, String> dependencyMap, // Service/asset dependencies
+    @Default([]) List<String> discoveryPath, // How this asset was discovered
+    @Default({}) Map<String, dynamic> relationshipMetadata, // Extra data about relationships
+  }) = _Asset;
 
-  @override
-  int get hashCode => Object.hash(id, type, projectId, name, lifecycleState);
+  factory Asset.fromJson(Map<String, dynamic> json) => _$AssetFromJson(json);
 
   // Add helper method for default states
   static String _getDefaultState(AssetType type) {
@@ -1027,105 +427,21 @@ class Asset {
   }
 }
 
-class TriggerExecutionResult {
-  final String triggerId;
-  final String methodologyId;
-  final DateTime executedAt;
-  final bool success;
-  final String? output;
-  final String? error;
-  final Map<String, AssetPropertyValue>? discoveredProperties;
-  final List<Asset>? discoveredAssets;
-  final List<String>? triggeredMethodologies;
-
-  const TriggerExecutionResult({
-    required this.triggerId,
-    required this.methodologyId,
-    required this.executedAt,
-    required this.success,
-    this.output,
-    this.error,
-    this.discoveredProperties,
-    this.discoveredAssets,
-    this.triggeredMethodologies,
-  });
-
-  factory TriggerExecutionResult.fromJson(Map<String, dynamic> json) {
-    final discoveredPropertiesJson = json['discoveredProperties'] as Map<String, dynamic>?;
-    final discoveredProperties = discoveredPropertiesJson?.map(
-      (k, v) => MapEntry(k, AssetPropertyValue.fromJson(v as Map<String, dynamic>))
-    );
-
-    final discoveredAssetsJson = json['discoveredAssets'] as List<dynamic>?;
-    final discoveredAssets = discoveredAssetsJson?.map(
-      (item) => Asset.fromJson(item as Map<String, dynamic>)
-    ).toList();
-
-    return TriggerExecutionResult(
-      triggerId: json['triggerId'] as String,
-      methodologyId: json['methodologyId'] as String,
-      executedAt: DateTime.parse(json['executedAt'] as String),
-      success: json['success'] as bool,
-      output: json['output'] as String?,
-      error: json['error'] as String?,
-      discoveredProperties: discoveredProperties,
-      discoveredAssets: discoveredAssets,
-      triggeredMethodologies: json['triggeredMethodologies'] != null
-        ? List<String>.from(json['triggeredMethodologies'])
-        : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'triggerId': triggerId,
-      'methodologyId': methodologyId,
-      'executedAt': executedAt.toIso8601String(),
-      'success': success,
-      'output': output,
-      'error': error,
-      'discoveredProperties': discoveredProperties?.map((k, v) => MapEntry(k, v.toJson())),
-      'discoveredAssets': discoveredAssets?.map((asset) => asset.toJson()).toList(),
-      'triggeredMethodologies': triggeredMethodologies,
-    };
-  }
-
-  TriggerExecutionResult copyWith({
-    String? triggerId,
-    String? methodologyId,
-    DateTime? executedAt,
-    bool? success,
+@freezed
+sealed class TriggerExecutionResult with _$TriggerExecutionResult {
+  const factory TriggerExecutionResult({
+    required String triggerId,
+    required String methodologyId,
+    required DateTime executedAt,
+    required bool success,
     String? output,
     String? error,
     Map<String, AssetPropertyValue>? discoveredProperties,
     List<Asset>? discoveredAssets,
     List<String>? triggeredMethodologies,
-  }) {
-    return TriggerExecutionResult(
-      triggerId: triggerId ?? this.triggerId,
-      methodologyId: methodologyId ?? this.methodologyId,
-      executedAt: executedAt ?? this.executedAt,
-      success: success ?? this.success,
-      output: output ?? this.output,
-      error: error ?? this.error,
-      discoveredProperties: discoveredProperties ?? this.discoveredProperties,
-      discoveredAssets: discoveredAssets ?? this.discoveredAssets,
-      triggeredMethodologies: triggeredMethodologies ?? this.triggeredMethodologies,
-    );
-  }
+  }) = _TriggerExecutionResult;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TriggerExecutionResult &&
-            triggerId == other.triggerId &&
-            methodologyId == other.methodologyId &&
-            executedAt == other.executedAt &&
-            success == other.success);
-  }
-
-  @override
-  int get hashCode => Object.hash(triggerId, methodologyId, executedAt, success);
+  factory TriggerExecutionResult.fromJson(Map<String, dynamic> json) => _$TriggerExecutionResultFromJson(json);
 }
 
 // =============================================================================

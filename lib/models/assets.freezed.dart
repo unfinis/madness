@@ -13,574 +13,6 @@ part of 'assets.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$NetworkFirewallRule {
-
- String get id; String get name; FirewallAction get action; String get sourceNetwork;// CIDR or "any"
- String get destinationNetwork;// CIDR or "any"
- String get protocol;// tcp/udp/icmp/any
- String get ports;// "80", "80-443", "any"
- String? get description; bool get enabled; DateTime? get lastModified;
-/// Create a copy of NetworkFirewallRule
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$NetworkFirewallRuleCopyWith<NetworkFirewallRule> get copyWith => _$NetworkFirewallRuleCopyWithImpl<NetworkFirewallRule>(this as NetworkFirewallRule, _$identity);
-
-  /// Serializes this NetworkFirewallRule to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkFirewallRule&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.action, action) || other.action == action)&&(identical(other.sourceNetwork, sourceNetwork) || other.sourceNetwork == sourceNetwork)&&(identical(other.destinationNetwork, destinationNetwork) || other.destinationNetwork == destinationNetwork)&&(identical(other.protocol, protocol) || other.protocol == protocol)&&(identical(other.ports, ports) || other.ports == ports)&&(identical(other.description, description) || other.description == description)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,name,action,sourceNetwork,destinationNetwork,protocol,ports,description,enabled,lastModified);
-
-@override
-String toString() {
-  return 'NetworkFirewallRule(id: $id, name: $name, action: $action, sourceNetwork: $sourceNetwork, destinationNetwork: $destinationNetwork, protocol: $protocol, ports: $ports, description: $description, enabled: $enabled, lastModified: $lastModified)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $NetworkFirewallRuleCopyWith<$Res>  {
-  factory $NetworkFirewallRuleCopyWith(NetworkFirewallRule value, $Res Function(NetworkFirewallRule) _then) = _$NetworkFirewallRuleCopyWithImpl;
-@useResult
-$Res call({
- String id, String name, FirewallAction action, String sourceNetwork, String destinationNetwork, String protocol, String ports, String? description, bool enabled, DateTime? lastModified
-});
-
-
-
-
-}
-/// @nodoc
-class _$NetworkFirewallRuleCopyWithImpl<$Res>
-    implements $NetworkFirewallRuleCopyWith<$Res> {
-  _$NetworkFirewallRuleCopyWithImpl(this._self, this._then);
-
-  final NetworkFirewallRule _self;
-  final $Res Function(NetworkFirewallRule) _then;
-
-/// Create a copy of NetworkFirewallRule
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? action = null,Object? sourceNetwork = null,Object? destinationNetwork = null,Object? protocol = null,Object? ports = null,Object? description = freezed,Object? enabled = null,Object? lastModified = freezed,}) {
-  return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as FirewallAction,sourceNetwork: null == sourceNetwork ? _self.sourceNetwork : sourceNetwork // ignore: cast_nullable_to_non_nullable
-as String,destinationNetwork: null == destinationNetwork ? _self.destinationNetwork : destinationNetwork // ignore: cast_nullable_to_non_nullable
-as String,protocol: null == protocol ? _self.protocol : protocol // ignore: cast_nullable_to_non_nullable
-as String,ports: null == ports ? _self.ports : ports // ignore: cast_nullable_to_non_nullable
-as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
-as bool,lastModified: freezed == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
-as DateTime?,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [NetworkFirewallRule].
-extension NetworkFirewallRulePatterns on NetworkFirewallRule {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _NetworkFirewallRule value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _NetworkFirewallRule() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _NetworkFirewallRule value)  $default,){
-final _that = this;
-switch (_that) {
-case _NetworkFirewallRule():
-return $default(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _NetworkFirewallRule value)?  $default,){
-final _that = this;
-switch (_that) {
-case _NetworkFirewallRule() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  FirewallAction action,  String sourceNetwork,  String destinationNetwork,  String protocol,  String ports,  String? description,  bool enabled,  DateTime? lastModified)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _NetworkFirewallRule() when $default != null:
-return $default(_that.id,_that.name,_that.action,_that.sourceNetwork,_that.destinationNetwork,_that.protocol,_that.ports,_that.description,_that.enabled,_that.lastModified);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  FirewallAction action,  String sourceNetwork,  String destinationNetwork,  String protocol,  String ports,  String? description,  bool enabled,  DateTime? lastModified)  $default,) {final _that = this;
-switch (_that) {
-case _NetworkFirewallRule():
-return $default(_that.id,_that.name,_that.action,_that.sourceNetwork,_that.destinationNetwork,_that.protocol,_that.ports,_that.description,_that.enabled,_that.lastModified);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  FirewallAction action,  String sourceNetwork,  String destinationNetwork,  String protocol,  String ports,  String? description,  bool enabled,  DateTime? lastModified)?  $default,) {final _that = this;
-switch (_that) {
-case _NetworkFirewallRule() when $default != null:
-return $default(_that.id,_that.name,_that.action,_that.sourceNetwork,_that.destinationNetwork,_that.protocol,_that.ports,_that.description,_that.enabled,_that.lastModified);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class _NetworkFirewallRule implements NetworkFirewallRule {
-  const _NetworkFirewallRule({required this.id, required this.name, required this.action, required this.sourceNetwork, required this.destinationNetwork, required this.protocol, required this.ports, this.description, this.enabled = true, this.lastModified});
-  factory _NetworkFirewallRule.fromJson(Map<String, dynamic> json) => _$NetworkFirewallRuleFromJson(json);
-
-@override final  String id;
-@override final  String name;
-@override final  FirewallAction action;
-@override final  String sourceNetwork;
-// CIDR or "any"
-@override final  String destinationNetwork;
-// CIDR or "any"
-@override final  String protocol;
-// tcp/udp/icmp/any
-@override final  String ports;
-// "80", "80-443", "any"
-@override final  String? description;
-@override@JsonKey() final  bool enabled;
-@override final  DateTime? lastModified;
-
-/// Create a copy of NetworkFirewallRule
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$NetworkFirewallRuleCopyWith<_NetworkFirewallRule> get copyWith => __$NetworkFirewallRuleCopyWithImpl<_NetworkFirewallRule>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$NetworkFirewallRuleToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NetworkFirewallRule&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.action, action) || other.action == action)&&(identical(other.sourceNetwork, sourceNetwork) || other.sourceNetwork == sourceNetwork)&&(identical(other.destinationNetwork, destinationNetwork) || other.destinationNetwork == destinationNetwork)&&(identical(other.protocol, protocol) || other.protocol == protocol)&&(identical(other.ports, ports) || other.ports == ports)&&(identical(other.description, description) || other.description == description)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,name,action,sourceNetwork,destinationNetwork,protocol,ports,description,enabled,lastModified);
-
-@override
-String toString() {
-  return 'NetworkFirewallRule(id: $id, name: $name, action: $action, sourceNetwork: $sourceNetwork, destinationNetwork: $destinationNetwork, protocol: $protocol, ports: $ports, description: $description, enabled: $enabled, lastModified: $lastModified)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$NetworkFirewallRuleCopyWith<$Res> implements $NetworkFirewallRuleCopyWith<$Res> {
-  factory _$NetworkFirewallRuleCopyWith(_NetworkFirewallRule value, $Res Function(_NetworkFirewallRule) _then) = __$NetworkFirewallRuleCopyWithImpl;
-@override @useResult
-$Res call({
- String id, String name, FirewallAction action, String sourceNetwork, String destinationNetwork, String protocol, String ports, String? description, bool enabled, DateTime? lastModified
-});
-
-
-
-
-}
-/// @nodoc
-class __$NetworkFirewallRuleCopyWithImpl<$Res>
-    implements _$NetworkFirewallRuleCopyWith<$Res> {
-  __$NetworkFirewallRuleCopyWithImpl(this._self, this._then);
-
-  final _NetworkFirewallRule _self;
-  final $Res Function(_NetworkFirewallRule) _then;
-
-/// Create a copy of NetworkFirewallRule
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? action = null,Object? sourceNetwork = null,Object? destinationNetwork = null,Object? protocol = null,Object? ports = null,Object? description = freezed,Object? enabled = null,Object? lastModified = freezed,}) {
-  return _then(_NetworkFirewallRule(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as FirewallAction,sourceNetwork: null == sourceNetwork ? _self.sourceNetwork : sourceNetwork // ignore: cast_nullable_to_non_nullable
-as String,destinationNetwork: null == destinationNetwork ? _self.destinationNetwork : destinationNetwork // ignore: cast_nullable_to_non_nullable
-as String,protocol: null == protocol ? _self.protocol : protocol // ignore: cast_nullable_to_non_nullable
-as String,ports: null == ports ? _self.ports : ports // ignore: cast_nullable_to_non_nullable
-as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
-as bool,lastModified: freezed == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
-as DateTime?,
-  ));
-}
-
-
-}
-
-
-/// @nodoc
-mixin _$NetworkRoute {
-
- String get id; String get destinationNetwork;// Target network CIDR
- String get nextHop;// Gateway IP
- int get metric; bool get active; String? get description;
-/// Create a copy of NetworkRoute
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$NetworkRouteCopyWith<NetworkRoute> get copyWith => _$NetworkRouteCopyWithImpl<NetworkRoute>(this as NetworkRoute, _$identity);
-
-  /// Serializes this NetworkRoute to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkRoute&&(identical(other.id, id) || other.id == id)&&(identical(other.destinationNetwork, destinationNetwork) || other.destinationNetwork == destinationNetwork)&&(identical(other.nextHop, nextHop) || other.nextHop == nextHop)&&(identical(other.metric, metric) || other.metric == metric)&&(identical(other.active, active) || other.active == active)&&(identical(other.description, description) || other.description == description));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,destinationNetwork,nextHop,metric,active,description);
-
-@override
-String toString() {
-  return 'NetworkRoute(id: $id, destinationNetwork: $destinationNetwork, nextHop: $nextHop, metric: $metric, active: $active, description: $description)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $NetworkRouteCopyWith<$Res>  {
-  factory $NetworkRouteCopyWith(NetworkRoute value, $Res Function(NetworkRoute) _then) = _$NetworkRouteCopyWithImpl;
-@useResult
-$Res call({
- String id, String destinationNetwork, String nextHop, int metric, bool active, String? description
-});
-
-
-
-
-}
-/// @nodoc
-class _$NetworkRouteCopyWithImpl<$Res>
-    implements $NetworkRouteCopyWith<$Res> {
-  _$NetworkRouteCopyWithImpl(this._self, this._then);
-
-  final NetworkRoute _self;
-  final $Res Function(NetworkRoute) _then;
-
-/// Create a copy of NetworkRoute
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? destinationNetwork = null,Object? nextHop = null,Object? metric = null,Object? active = null,Object? description = freezed,}) {
-  return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,destinationNetwork: null == destinationNetwork ? _self.destinationNetwork : destinationNetwork // ignore: cast_nullable_to_non_nullable
-as String,nextHop: null == nextHop ? _self.nextHop : nextHop // ignore: cast_nullable_to_non_nullable
-as String,metric: null == metric ? _self.metric : metric // ignore: cast_nullable_to_non_nullable
-as int,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
-as bool,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [NetworkRoute].
-extension NetworkRoutePatterns on NetworkRoute {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _NetworkRoute value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _NetworkRoute() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _NetworkRoute value)  $default,){
-final _that = this;
-switch (_that) {
-case _NetworkRoute():
-return $default(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _NetworkRoute value)?  $default,){
-final _that = this;
-switch (_that) {
-case _NetworkRoute() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String destinationNetwork,  String nextHop,  int metric,  bool active,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _NetworkRoute() when $default != null:
-return $default(_that.id,_that.destinationNetwork,_that.nextHop,_that.metric,_that.active,_that.description);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String destinationNetwork,  String nextHop,  int metric,  bool active,  String? description)  $default,) {final _that = this;
-switch (_that) {
-case _NetworkRoute():
-return $default(_that.id,_that.destinationNetwork,_that.nextHop,_that.metric,_that.active,_that.description);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String destinationNetwork,  String nextHop,  int metric,  bool active,  String? description)?  $default,) {final _that = this;
-switch (_that) {
-case _NetworkRoute() when $default != null:
-return $default(_that.id,_that.destinationNetwork,_that.nextHop,_that.metric,_that.active,_that.description);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class _NetworkRoute implements NetworkRoute {
-  const _NetworkRoute({required this.id, required this.destinationNetwork, required this.nextHop, required this.metric, this.active = true, this.description});
-  factory _NetworkRoute.fromJson(Map<String, dynamic> json) => _$NetworkRouteFromJson(json);
-
-@override final  String id;
-@override final  String destinationNetwork;
-// Target network CIDR
-@override final  String nextHop;
-// Gateway IP
-@override final  int metric;
-@override@JsonKey() final  bool active;
-@override final  String? description;
-
-/// Create a copy of NetworkRoute
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$NetworkRouteCopyWith<_NetworkRoute> get copyWith => __$NetworkRouteCopyWithImpl<_NetworkRoute>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$NetworkRouteToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NetworkRoute&&(identical(other.id, id) || other.id == id)&&(identical(other.destinationNetwork, destinationNetwork) || other.destinationNetwork == destinationNetwork)&&(identical(other.nextHop, nextHop) || other.nextHop == nextHop)&&(identical(other.metric, metric) || other.metric == metric)&&(identical(other.active, active) || other.active == active)&&(identical(other.description, description) || other.description == description));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,destinationNetwork,nextHop,metric,active,description);
-
-@override
-String toString() {
-  return 'NetworkRoute(id: $id, destinationNetwork: $destinationNetwork, nextHop: $nextHop, metric: $metric, active: $active, description: $description)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$NetworkRouteCopyWith<$Res> implements $NetworkRouteCopyWith<$Res> {
-  factory _$NetworkRouteCopyWith(_NetworkRoute value, $Res Function(_NetworkRoute) _then) = __$NetworkRouteCopyWithImpl;
-@override @useResult
-$Res call({
- String id, String destinationNetwork, String nextHop, int metric, bool active, String? description
-});
-
-
-
-
-}
-/// @nodoc
-class __$NetworkRouteCopyWithImpl<$Res>
-    implements _$NetworkRouteCopyWith<$Res> {
-  __$NetworkRouteCopyWithImpl(this._self, this._then);
-
-  final _NetworkRoute _self;
-  final $Res Function(_NetworkRoute) _then;
-
-/// Create a copy of NetworkRoute
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? destinationNetwork = null,Object? nextHop = null,Object? metric = null,Object? active = null,Object? description = freezed,}) {
-  return _then(_NetworkRoute(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,destinationNetwork: null == destinationNetwork ? _self.destinationNetwork : destinationNetwork // ignore: cast_nullable_to_non_nullable
-as String,nextHop: null == nextHop ? _self.nextHop : nextHop // ignore: cast_nullable_to_non_nullable
-as String,metric: null == metric ? _self.metric : metric // ignore: cast_nullable_to_non_nullable
-as int,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
-as bool,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
-  ));
-}
-
-
-}
-
-
-/// @nodoc
 mixin _$NetworkAccessPoint {
 
  String get id; String get name; NetworkAccessType get accessType; String? get sourceAssetId;// Host/device we're accessing from
@@ -697,7 +129,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkAccessPoint():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -756,7 +191,10 @@ return $default(_that.id,_that.name,_that.accessType,_that.sourceAssetId,_that.s
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  NetworkAccessType accessType,  String? sourceAssetId,  String? sourceNetworkId,  String? description,  bool active,  String? credentials,  Map<String, String>? accessDetails,  DateTime? discoveredAt,  DateTime? lastTested)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkAccessPoint():
-return $default(_that.id,_that.name,_that.accessType,_that.sourceAssetId,_that.sourceNetworkId,_that.description,_that.active,_that.credentials,_that.accessDetails,_that.discoveredAt,_that.lastTested);}
+return $default(_that.id,_that.name,_that.accessType,_that.sourceAssetId,_that.sourceNetworkId,_that.description,_that.active,_that.credentials,_that.accessDetails,_that.discoveredAt,_that.lastTested);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -996,7 +434,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkHostReference():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1055,7 +496,10 @@ return $default(_that.hostAssetId,_that.ipAddress,_that.hostname,_that.macAddres
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String hostAssetId,  String ipAddress,  String? hostname,  String? macAddress,  bool isGateway,  bool isDhcpServer,  bool isDnsServer,  bool isCompromised,  List<String>? openPorts,  DateTime? lastSeen)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkHostReference():
-return $default(_that.hostAssetId,_that.ipAddress,_that.hostname,_that.macAddress,_that.isGateway,_that.isDhcpServer,_that.isDnsServer,_that.isCompromised,_that.openPorts,_that.lastSeen);}
+return $default(_that.hostAssetId,_that.ipAddress,_that.hostname,_that.macAddress,_that.isGateway,_that.isDhcpServer,_that.isDnsServer,_that.isCompromised,_that.openPorts,_that.lastSeen);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1294,7 +738,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _RestrictedEnvironment():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1353,7 +800,10 @@ return $default(_that.id,_that.name,_that.environmentType,_that.restrictions,_th
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  EnvironmentType environmentType,  List<RestrictionMechanism> restrictions,  String hostAssetId,  String? applicationAssetId,  String? networkAssetId,  String? description,  List<String> securityControlIds,  List<String> breakoutAttemptIds,  Map<String, String>? environmentDetails,  DateTime? discoveredAt,  DateTime? lastTested)  $default,) {final _that = this;
 switch (_that) {
 case _RestrictedEnvironment():
-return $default(_that.id,_that.name,_that.environmentType,_that.restrictions,_that.hostAssetId,_that.applicationAssetId,_that.networkAssetId,_that.description,_that.securityControlIds,_that.breakoutAttemptIds,_that.environmentDetails,_that.discoveredAt,_that.lastTested);}
+return $default(_that.id,_that.name,_that.environmentType,_that.restrictions,_that.hostAssetId,_that.applicationAssetId,_that.networkAssetId,_that.description,_that.securityControlIds,_that.breakoutAttemptIds,_that.environmentDetails,_that.discoveredAt,_that.lastTested);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1629,7 +1079,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _BreakoutAttempt():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1688,7 +1141,10 @@ return $default(_that.id,_that.name,_that.restrictedEnvironmentId,_that.techniqu
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String restrictedEnvironmentId,  String techniqueId,  BreakoutStatus status,  DateTime attemptedAt,  String? testerAssetId,  String? description,  String? command,  String? output,  String? evidence,  BreakoutImpact? impact,  List<String>? assetsGained,  List<String>? credentialsGained,  Map<String, String>? attemptDetails,  String? blockedBy,  DateTime? completedAt,  String? notes)  $default,) {final _that = this;
 switch (_that) {
 case _BreakoutAttempt():
-return $default(_that.id,_that.name,_that.restrictedEnvironmentId,_that.techniqueId,_that.status,_that.attemptedAt,_that.testerAssetId,_that.description,_that.command,_that.output,_that.evidence,_that.impact,_that.assetsGained,_that.credentialsGained,_that.attemptDetails,_that.blockedBy,_that.completedAt,_that.notes);}
+return $default(_that.id,_that.name,_that.restrictedEnvironmentId,_that.techniqueId,_that.status,_that.attemptedAt,_that.testerAssetId,_that.description,_that.command,_that.output,_that.evidence,_that.impact,_that.assetsGained,_that.credentialsGained,_that.attemptDetails,_that.blockedBy,_that.completedAt,_that.notes);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1977,7 +1433,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _BreakoutTechnique():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2036,7 +1495,10 @@ return $default(_that.id,_that.name,_that.category,_that.applicableEnvironments,
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  TechniqueCategory category,  List<EnvironmentType> applicableEnvironments,  List<RestrictionMechanism> targetsRestrictions,  String? description,  String? methodology,  String? payload,  List<String>? prerequisites,  List<String>? indicators,  List<String>? mitigations,  String? cveReference,  String? source,  Map<String, String>? metadata,  DateTime? discoveredAt,  DateTime? lastUpdated)  $default,) {final _that = this;
 switch (_that) {
 case _BreakoutTechnique():
-return $default(_that.id,_that.name,_that.category,_that.applicableEnvironments,_that.targetsRestrictions,_that.description,_that.methodology,_that.payload,_that.prerequisites,_that.indicators,_that.mitigations,_that.cveReference,_that.source,_that.metadata,_that.discoveredAt,_that.lastUpdated);}
+return $default(_that.id,_that.name,_that.category,_that.applicableEnvironments,_that.targetsRestrictions,_that.description,_that.methodology,_that.payload,_that.prerequisites,_that.indicators,_that.mitigations,_that.cveReference,_that.source,_that.metadata,_that.discoveredAt,_that.lastUpdated);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2333,7 +1795,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _SecurityControl():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2392,7 +1857,10 @@ return $default(_that.id,_that.name,_that.type,_that.hostAssetId,_that.descripti
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String hostAssetId,  String? description,  String? version,  String? configuration,  bool enabled,  List<String> protectedAssets,  List<String> bypassTechniques,  Map<String, String>? settings,  DateTime? installedAt,  DateTime? lastUpdated)  $default,) {final _that = this;
 switch (_that) {
 case _SecurityControl():
-return $default(_that.id,_that.name,_that.type,_that.hostAssetId,_that.description,_that.version,_that.configuration,_that.enabled,_that.protectedAssets,_that.bypassTechniques,_that.settings,_that.installedAt,_that.lastUpdated);}
+return $default(_that.id,_that.name,_that.type,_that.hostAssetId,_that.description,_that.version,_that.configuration,_that.enabled,_that.protectedAssets,_that.bypassTechniques,_that.settings,_that.installedAt,_that.lastUpdated);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2531,1627 +1999,6 @@ as DateTime?,
 
 }
 
-AssetPropertyValue _$AssetPropertyValueFromJson(
-  Map<String, dynamic> json
-) {
-        switch (json['runtimeType']) {
-                  case 'string':
-          return StringAssetProperty.fromJson(
-            json
-          );
-                case 'integer':
-          return IntegerAssetProperty.fromJson(
-            json
-          );
-                case 'double':
-          return DoubleAssetProperty.fromJson(
-            json
-          );
-                case 'boolean':
-          return BooleanAssetProperty.fromJson(
-            json
-          );
-                case 'stringList':
-          return StringListAssetProperty.fromJson(
-            json
-          );
-                case 'dateTime':
-          return DateTimeAssetProperty.fromJson(
-            json
-          );
-                case 'map':
-          return MapAssetProperty.fromJson(
-            json
-          );
-                case 'objectList':
-          return ObjectListAssetProperty.fromJson(
-            json
-          );
-        
-          default:
-            throw CheckedFromJsonException(
-  json,
-  'runtimeType',
-  'AssetPropertyValue',
-  'Invalid union type "${json['runtimeType']}"!'
-);
-        }
-      
-}
-
-/// @nodoc
-mixin _$AssetPropertyValue {
-
-
-
-  /// Serializes this AssetPropertyValue to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetPropertyValue);
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-  return 'AssetPropertyValue()';
-}
-
-
-}
-
-/// @nodoc
-class $AssetPropertyValueCopyWith<$Res>  {
-$AssetPropertyValueCopyWith(AssetPropertyValue _, $Res Function(AssetPropertyValue) __);
-}
-
-
-/// Adds pattern-matching-related methods to [AssetPropertyValue].
-extension AssetPropertyValuePatterns on AssetPropertyValue {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( StringAssetProperty value)?  string,TResult Function( IntegerAssetProperty value)?  integer,TResult Function( DoubleAssetProperty value)?  double,TResult Function( BooleanAssetProperty value)?  boolean,TResult Function( StringListAssetProperty value)?  stringList,TResult Function( DateTimeAssetProperty value)?  dateTime,TResult Function( MapAssetProperty value)?  map,TResult Function( ObjectListAssetProperty value)?  objectList,required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case StringAssetProperty() when string != null:
-return string(_that);case IntegerAssetProperty() when integer != null:
-return integer(_that);case DoubleAssetProperty() when double != null:
-return double(_that);case BooleanAssetProperty() when boolean != null:
-return boolean(_that);case StringListAssetProperty() when stringList != null:
-return stringList(_that);case DateTimeAssetProperty() when dateTime != null:
-return dateTime(_that);case MapAssetProperty() when map != null:
-return map(_that);case ObjectListAssetProperty() when objectList != null:
-return objectList(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( StringAssetProperty value)  string,required TResult Function( IntegerAssetProperty value)  integer,required TResult Function( DoubleAssetProperty value)  double,required TResult Function( BooleanAssetProperty value)  boolean,required TResult Function( StringListAssetProperty value)  stringList,required TResult Function( DateTimeAssetProperty value)  dateTime,required TResult Function( MapAssetProperty value)  map,required TResult Function( ObjectListAssetProperty value)  objectList,}){
-final _that = this;
-switch (_that) {
-case StringAssetProperty():
-return string(_that);case IntegerAssetProperty():
-return integer(_that);case DoubleAssetProperty():
-return double(_that);case BooleanAssetProperty():
-return boolean(_that);case StringListAssetProperty():
-return stringList(_that);case DateTimeAssetProperty():
-return dateTime(_that);case MapAssetProperty():
-return map(_that);case ObjectListAssetProperty():
-return objectList(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( StringAssetProperty value)?  string,TResult? Function( IntegerAssetProperty value)?  integer,TResult? Function( DoubleAssetProperty value)?  double,TResult? Function( BooleanAssetProperty value)?  boolean,TResult? Function( StringListAssetProperty value)?  stringList,TResult? Function( DateTimeAssetProperty value)?  dateTime,TResult? Function( MapAssetProperty value)?  map,TResult? Function( ObjectListAssetProperty value)?  objectList,}){
-final _that = this;
-switch (_that) {
-case StringAssetProperty() when string != null:
-return string(_that);case IntegerAssetProperty() when integer != null:
-return integer(_that);case DoubleAssetProperty() when double != null:
-return double(_that);case BooleanAssetProperty() when boolean != null:
-return boolean(_that);case StringListAssetProperty() when stringList != null:
-return stringList(_that);case DateTimeAssetProperty() when dateTime != null:
-return dateTime(_that);case MapAssetProperty() when map != null:
-return map(_that);case ObjectListAssetProperty() when objectList != null:
-return objectList(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String value)?  string,TResult Function( int value)?  integer,TResult Function( double value)?  double,TResult Function( bool value)?  boolean,TResult Function( List<String> values)?  stringList,TResult Function( DateTime value)?  dateTime,TResult Function( Map<String, dynamic> value)?  map,TResult Function( List<Map<String, dynamic>> objects)?  objectList,required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case StringAssetProperty() when string != null:
-return string(_that.value);case IntegerAssetProperty() when integer != null:
-return integer(_that.value);case DoubleAssetProperty() when double != null:
-return double(_that.value);case BooleanAssetProperty() when boolean != null:
-return boolean(_that.value);case StringListAssetProperty() when stringList != null:
-return stringList(_that.values);case DateTimeAssetProperty() when dateTime != null:
-return dateTime(_that.value);case MapAssetProperty() when map != null:
-return map(_that.value);case ObjectListAssetProperty() when objectList != null:
-return objectList(_that.objects);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String value)  string,required TResult Function( int value)  integer,required TResult Function( double value)  double,required TResult Function( bool value)  boolean,required TResult Function( List<String> values)  stringList,required TResult Function( DateTime value)  dateTime,required TResult Function( Map<String, dynamic> value)  map,required TResult Function( List<Map<String, dynamic>> objects)  objectList,}) {final _that = this;
-switch (_that) {
-case StringAssetProperty():
-return string(_that.value);case IntegerAssetProperty():
-return integer(_that.value);case DoubleAssetProperty():
-return double(_that.value);case BooleanAssetProperty():
-return boolean(_that.value);case StringListAssetProperty():
-return stringList(_that.values);case DateTimeAssetProperty():
-return dateTime(_that.value);case MapAssetProperty():
-return map(_that.value);case ObjectListAssetProperty():
-return objectList(_that.objects);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String value)?  string,TResult? Function( int value)?  integer,TResult? Function( double value)?  double,TResult? Function( bool value)?  boolean,TResult? Function( List<String> values)?  stringList,TResult? Function( DateTime value)?  dateTime,TResult? Function( Map<String, dynamic> value)?  map,TResult? Function( List<Map<String, dynamic>> objects)?  objectList,}) {final _that = this;
-switch (_that) {
-case StringAssetProperty() when string != null:
-return string(_that.value);case IntegerAssetProperty() when integer != null:
-return integer(_that.value);case DoubleAssetProperty() when double != null:
-return double(_that.value);case BooleanAssetProperty() when boolean != null:
-return boolean(_that.value);case StringListAssetProperty() when stringList != null:
-return stringList(_that.values);case DateTimeAssetProperty() when dateTime != null:
-return dateTime(_that.value);case MapAssetProperty() when map != null:
-return map(_that.value);case ObjectListAssetProperty() when objectList != null:
-return objectList(_that.objects);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class StringAssetProperty implements AssetPropertyValue {
-  const StringAssetProperty(this.value, {final  String? $type}): $type = $type ?? 'string';
-  factory StringAssetProperty.fromJson(Map<String, dynamic> json) => _$StringAssetPropertyFromJson(json);
-
- final  String value;
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$StringAssetPropertyCopyWith<StringAssetProperty> get copyWith => _$StringAssetPropertyCopyWithImpl<StringAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$StringAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StringAssetProperty&&(identical(other.value, value) || other.value == value));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,value);
-
-@override
-String toString() {
-  return 'AssetPropertyValue.string(value: $value)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $StringAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $StringAssetPropertyCopyWith(StringAssetProperty value, $Res Function(StringAssetProperty) _then) = _$StringAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- String value
-});
-
-
-
-
-}
-/// @nodoc
-class _$StringAssetPropertyCopyWithImpl<$Res>
-    implements $StringAssetPropertyCopyWith<$Res> {
-  _$StringAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final StringAssetProperty _self;
-  final $Res Function(StringAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(StringAssetProperty(
-null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class IntegerAssetProperty implements AssetPropertyValue {
-  const IntegerAssetProperty(this.value, {final  String? $type}): $type = $type ?? 'integer';
-  factory IntegerAssetProperty.fromJson(Map<String, dynamic> json) => _$IntegerAssetPropertyFromJson(json);
-
- final  int value;
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$IntegerAssetPropertyCopyWith<IntegerAssetProperty> get copyWith => _$IntegerAssetPropertyCopyWithImpl<IntegerAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$IntegerAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IntegerAssetProperty&&(identical(other.value, value) || other.value == value));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,value);
-
-@override
-String toString() {
-  return 'AssetPropertyValue.integer(value: $value)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $IntegerAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $IntegerAssetPropertyCopyWith(IntegerAssetProperty value, $Res Function(IntegerAssetProperty) _then) = _$IntegerAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- int value
-});
-
-
-
-
-}
-/// @nodoc
-class _$IntegerAssetPropertyCopyWithImpl<$Res>
-    implements $IntegerAssetPropertyCopyWith<$Res> {
-  _$IntegerAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final IntegerAssetProperty _self;
-  final $Res Function(IntegerAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(IntegerAssetProperty(
-null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as int,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class DoubleAssetProperty implements AssetPropertyValue {
-  const DoubleAssetProperty(this.value, {final  String? $type}): $type = $type ?? 'double';
-  factory DoubleAssetProperty.fromJson(Map<String, dynamic> json) => _$DoubleAssetPropertyFromJson(json);
-
- final  double value;
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$DoubleAssetPropertyCopyWith<DoubleAssetProperty> get copyWith => _$DoubleAssetPropertyCopyWithImpl<DoubleAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$DoubleAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DoubleAssetProperty&&(identical(other.value, value) || other.value == value));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,value);
-
-@override
-String toString() {
-  return 'AssetPropertyValue.double(value: $value)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $DoubleAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $DoubleAssetPropertyCopyWith(DoubleAssetProperty value, $Res Function(DoubleAssetProperty) _then) = _$DoubleAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- double value
-});
-
-
-
-
-}
-/// @nodoc
-class _$DoubleAssetPropertyCopyWithImpl<$Res>
-    implements $DoubleAssetPropertyCopyWith<$Res> {
-  _$DoubleAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final DoubleAssetProperty _self;
-  final $Res Function(DoubleAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(DoubleAssetProperty(
-null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as double,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class BooleanAssetProperty implements AssetPropertyValue {
-  const BooleanAssetProperty(this.value, {final  String? $type}): $type = $type ?? 'boolean';
-  factory BooleanAssetProperty.fromJson(Map<String, dynamic> json) => _$BooleanAssetPropertyFromJson(json);
-
- final  bool value;
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$BooleanAssetPropertyCopyWith<BooleanAssetProperty> get copyWith => _$BooleanAssetPropertyCopyWithImpl<BooleanAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$BooleanAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BooleanAssetProperty&&(identical(other.value, value) || other.value == value));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,value);
-
-@override
-String toString() {
-  return 'AssetPropertyValue.boolean(value: $value)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $BooleanAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $BooleanAssetPropertyCopyWith(BooleanAssetProperty value, $Res Function(BooleanAssetProperty) _then) = _$BooleanAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- bool value
-});
-
-
-
-
-}
-/// @nodoc
-class _$BooleanAssetPropertyCopyWithImpl<$Res>
-    implements $BooleanAssetPropertyCopyWith<$Res> {
-  _$BooleanAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final BooleanAssetProperty _self;
-  final $Res Function(BooleanAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(BooleanAssetProperty(
-null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as bool,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class StringListAssetProperty implements AssetPropertyValue {
-  const StringListAssetProperty(final  List<String> values, {final  String? $type}): _values = values,$type = $type ?? 'stringList';
-  factory StringListAssetProperty.fromJson(Map<String, dynamic> json) => _$StringListAssetPropertyFromJson(json);
-
- final  List<String> _values;
- List<String> get values {
-  if (_values is EqualUnmodifiableListView) return _values;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_values);
-}
-
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$StringListAssetPropertyCopyWith<StringListAssetProperty> get copyWith => _$StringListAssetPropertyCopyWithImpl<StringListAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$StringListAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StringListAssetProperty&&const DeepCollectionEquality().equals(other._values, _values));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_values));
-
-@override
-String toString() {
-  return 'AssetPropertyValue.stringList(values: $values)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $StringListAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $StringListAssetPropertyCopyWith(StringListAssetProperty value, $Res Function(StringListAssetProperty) _then) = _$StringListAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- List<String> values
-});
-
-
-
-
-}
-/// @nodoc
-class _$StringListAssetPropertyCopyWithImpl<$Res>
-    implements $StringListAssetPropertyCopyWith<$Res> {
-  _$StringListAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final StringListAssetProperty _self;
-  final $Res Function(StringListAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? values = null,}) {
-  return _then(StringListAssetProperty(
-null == values ? _self._values : values // ignore: cast_nullable_to_non_nullable
-as List<String>,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class DateTimeAssetProperty implements AssetPropertyValue {
-  const DateTimeAssetProperty(this.value, {final  String? $type}): $type = $type ?? 'dateTime';
-  factory DateTimeAssetProperty.fromJson(Map<String, dynamic> json) => _$DateTimeAssetPropertyFromJson(json);
-
- final  DateTime value;
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$DateTimeAssetPropertyCopyWith<DateTimeAssetProperty> get copyWith => _$DateTimeAssetPropertyCopyWithImpl<DateTimeAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$DateTimeAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DateTimeAssetProperty&&(identical(other.value, value) || other.value == value));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,value);
-
-@override
-String toString() {
-  return 'AssetPropertyValue.dateTime(value: $value)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $DateTimeAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $DateTimeAssetPropertyCopyWith(DateTimeAssetProperty value, $Res Function(DateTimeAssetProperty) _then) = _$DateTimeAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- DateTime value
-});
-
-
-
-
-}
-/// @nodoc
-class _$DateTimeAssetPropertyCopyWithImpl<$Res>
-    implements $DateTimeAssetPropertyCopyWith<$Res> {
-  _$DateTimeAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final DateTimeAssetProperty _self;
-  final $Res Function(DateTimeAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(DateTimeAssetProperty(
-null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as DateTime,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class MapAssetProperty implements AssetPropertyValue {
-  const MapAssetProperty(final  Map<String, dynamic> value, {final  String? $type}): _value = value,$type = $type ?? 'map';
-  factory MapAssetProperty.fromJson(Map<String, dynamic> json) => _$MapAssetPropertyFromJson(json);
-
- final  Map<String, dynamic> _value;
- Map<String, dynamic> get value {
-  if (_value is EqualUnmodifiableMapView) return _value;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_value);
-}
-
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$MapAssetPropertyCopyWith<MapAssetProperty> get copyWith => _$MapAssetPropertyCopyWithImpl<MapAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$MapAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MapAssetProperty&&const DeepCollectionEquality().equals(other._value, _value));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_value));
-
-@override
-String toString() {
-  return 'AssetPropertyValue.map(value: $value)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $MapAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $MapAssetPropertyCopyWith(MapAssetProperty value, $Res Function(MapAssetProperty) _then) = _$MapAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- Map<String, dynamic> value
-});
-
-
-
-
-}
-/// @nodoc
-class _$MapAssetPropertyCopyWithImpl<$Res>
-    implements $MapAssetPropertyCopyWith<$Res> {
-  _$MapAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final MapAssetProperty _self;
-  final $Res Function(MapAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(MapAssetProperty(
-null == value ? _self._value : value // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,
-  ));
-}
-
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class ObjectListAssetProperty implements AssetPropertyValue {
-  const ObjectListAssetProperty(final  List<Map<String, dynamic>> objects, {final  String? $type}): _objects = objects,$type = $type ?? 'objectList';
-  factory ObjectListAssetProperty.fromJson(Map<String, dynamic> json) => _$ObjectListAssetPropertyFromJson(json);
-
- final  List<Map<String, dynamic>> _objects;
- List<Map<String, dynamic>> get objects {
-  if (_objects is EqualUnmodifiableListView) return _objects;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_objects);
-}
-
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ObjectListAssetPropertyCopyWith<ObjectListAssetProperty> get copyWith => _$ObjectListAssetPropertyCopyWithImpl<ObjectListAssetProperty>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$ObjectListAssetPropertyToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ObjectListAssetProperty&&const DeepCollectionEquality().equals(other._objects, _objects));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_objects));
-
-@override
-String toString() {
-  return 'AssetPropertyValue.objectList(objects: $objects)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ObjectListAssetPropertyCopyWith<$Res> implements $AssetPropertyValueCopyWith<$Res> {
-  factory $ObjectListAssetPropertyCopyWith(ObjectListAssetProperty value, $Res Function(ObjectListAssetProperty) _then) = _$ObjectListAssetPropertyCopyWithImpl;
-@useResult
-$Res call({
- List<Map<String, dynamic>> objects
-});
-
-
-
-
-}
-/// @nodoc
-class _$ObjectListAssetPropertyCopyWithImpl<$Res>
-    implements $ObjectListAssetPropertyCopyWith<$Res> {
-  _$ObjectListAssetPropertyCopyWithImpl(this._self, this._then);
-
-  final ObjectListAssetProperty _self;
-  final $Res Function(ObjectListAssetProperty) _then;
-
-/// Create a copy of AssetPropertyValue
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? objects = null,}) {
-  return _then(ObjectListAssetProperty(
-null == objects ? _self._objects : objects // ignore: cast_nullable_to_non_nullable
-as List<Map<String, dynamic>>,
-  ));
-}
-
-
-}
-
-
-/// @nodoc
-mixin _$Asset {
-
- String get id; AssetType get type; String get projectId; String get name; String? get description;// Rich property system - contains all asset-specific data
- Map<String, AssetPropertyValue> get properties;// Discovery and status
- AssetDiscoveryStatus get discoveryStatus; DateTime get discoveredAt; DateTime? get lastUpdated; String? get discoveryMethod; double get confidence;// Hierarchical relationships
- List<String> get parentAssetIds; List<String> get childAssetIds; List<String> get relatedAssetIds;// Cross-references
-// Methodology integration
- List<String> get completedTriggers; Map<String, TriggerExecutionResult> get triggerResults;// Organization and filtering
- List<String> get tags; Map<String, String>? get metadata;// Security context
- AccessLevel? get accessLevel; List<String>? get securityControls;// NEW RELATIONSHIP SYSTEM FIELDS:
- Map<String, List<String>> get relationships;// Relationship type -> List of asset IDs
- Map<String, dynamic> get inheritedProperties;// Properties inherited from parent
- String get lifecycleState;// Current state in lifecycle
- Map<String, DateTime> get stateTransitions;// History of state changes
- Map<String, String> get dependencyMap;// Service/asset dependencies
- List<String> get discoveryPath;// How this asset was discovered
- Map<String, dynamic> get relationshipMetadata;
-/// Create a copy of Asset
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$AssetCopyWith<Asset> get copyWith => _$AssetCopyWithImpl<Asset>(this as Asset, _$identity);
-
-  /// Serializes this Asset to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Asset&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.properties, properties)&&(identical(other.discoveryStatus, discoveryStatus) || other.discoveryStatus == discoveryStatus)&&(identical(other.discoveredAt, discoveredAt) || other.discoveredAt == discoveredAt)&&(identical(other.lastUpdated, lastUpdated) || other.lastUpdated == lastUpdated)&&(identical(other.discoveryMethod, discoveryMethod) || other.discoveryMethod == discoveryMethod)&&(identical(other.confidence, confidence) || other.confidence == confidence)&&const DeepCollectionEquality().equals(other.parentAssetIds, parentAssetIds)&&const DeepCollectionEquality().equals(other.childAssetIds, childAssetIds)&&const DeepCollectionEquality().equals(other.relatedAssetIds, relatedAssetIds)&&const DeepCollectionEquality().equals(other.completedTriggers, completedTriggers)&&const DeepCollectionEquality().equals(other.triggerResults, triggerResults)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.metadata, metadata)&&(identical(other.accessLevel, accessLevel) || other.accessLevel == accessLevel)&&const DeepCollectionEquality().equals(other.securityControls, securityControls)&&const DeepCollectionEquality().equals(other.relationships, relationships)&&const DeepCollectionEquality().equals(other.inheritedProperties, inheritedProperties)&&(identical(other.lifecycleState, lifecycleState) || other.lifecycleState == lifecycleState)&&const DeepCollectionEquality().equals(other.stateTransitions, stateTransitions)&&const DeepCollectionEquality().equals(other.dependencyMap, dependencyMap)&&const DeepCollectionEquality().equals(other.discoveryPath, discoveryPath)&&const DeepCollectionEquality().equals(other.relationshipMetadata, relationshipMetadata));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hashAll([runtimeType,id,type,projectId,name,description,const DeepCollectionEquality().hash(properties),discoveryStatus,discoveredAt,lastUpdated,discoveryMethod,confidence,const DeepCollectionEquality().hash(parentAssetIds),const DeepCollectionEquality().hash(childAssetIds),const DeepCollectionEquality().hash(relatedAssetIds),const DeepCollectionEquality().hash(completedTriggers),const DeepCollectionEquality().hash(triggerResults),const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(metadata),accessLevel,const DeepCollectionEquality().hash(securityControls),const DeepCollectionEquality().hash(relationships),const DeepCollectionEquality().hash(inheritedProperties),lifecycleState,const DeepCollectionEquality().hash(stateTransitions),const DeepCollectionEquality().hash(dependencyMap),const DeepCollectionEquality().hash(discoveryPath),const DeepCollectionEquality().hash(relationshipMetadata)]);
-
-@override
-String toString() {
-  return 'Asset(id: $id, type: $type, projectId: $projectId, name: $name, description: $description, properties: $properties, discoveryStatus: $discoveryStatus, discoveredAt: $discoveredAt, lastUpdated: $lastUpdated, discoveryMethod: $discoveryMethod, confidence: $confidence, parentAssetIds: $parentAssetIds, childAssetIds: $childAssetIds, relatedAssetIds: $relatedAssetIds, completedTriggers: $completedTriggers, triggerResults: $triggerResults, tags: $tags, metadata: $metadata, accessLevel: $accessLevel, securityControls: $securityControls, relationships: $relationships, inheritedProperties: $inheritedProperties, lifecycleState: $lifecycleState, stateTransitions: $stateTransitions, dependencyMap: $dependencyMap, discoveryPath: $discoveryPath, relationshipMetadata: $relationshipMetadata)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $AssetCopyWith<$Res>  {
-  factory $AssetCopyWith(Asset value, $Res Function(Asset) _then) = _$AssetCopyWithImpl;
-@useResult
-$Res call({
- String id, AssetType type, String projectId, String name, String? description, Map<String, AssetPropertyValue> properties, AssetDiscoveryStatus discoveryStatus, DateTime discoveredAt, DateTime? lastUpdated, String? discoveryMethod, double confidence, List<String> parentAssetIds, List<String> childAssetIds, List<String> relatedAssetIds, List<String> completedTriggers, Map<String, TriggerExecutionResult> triggerResults, List<String> tags, Map<String, String>? metadata, AccessLevel? accessLevel, List<String>? securityControls, Map<String, List<String>> relationships, Map<String, dynamic> inheritedProperties, String lifecycleState, Map<String, DateTime> stateTransitions, Map<String, String> dependencyMap, List<String> discoveryPath, Map<String, dynamic> relationshipMetadata
-});
-
-
-
-
-}
-/// @nodoc
-class _$AssetCopyWithImpl<$Res>
-    implements $AssetCopyWith<$Res> {
-  _$AssetCopyWithImpl(this._self, this._then);
-
-  final Asset _self;
-  final $Res Function(Asset) _then;
-
-/// Create a copy of Asset
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? projectId = null,Object? name = null,Object? description = freezed,Object? properties = null,Object? discoveryStatus = null,Object? discoveredAt = null,Object? lastUpdated = freezed,Object? discoveryMethod = freezed,Object? confidence = null,Object? parentAssetIds = null,Object? childAssetIds = null,Object? relatedAssetIds = null,Object? completedTriggers = null,Object? triggerResults = null,Object? tags = null,Object? metadata = freezed,Object? accessLevel = freezed,Object? securityControls = freezed,Object? relationships = null,Object? inheritedProperties = null,Object? lifecycleState = null,Object? stateTransitions = null,Object? dependencyMap = null,Object? discoveryPath = null,Object? relationshipMetadata = null,}) {
-  return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as AssetType,projectId: null == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,properties: null == properties ? _self.properties : properties // ignore: cast_nullable_to_non_nullable
-as Map<String, AssetPropertyValue>,discoveryStatus: null == discoveryStatus ? _self.discoveryStatus : discoveryStatus // ignore: cast_nullable_to_non_nullable
-as AssetDiscoveryStatus,discoveredAt: null == discoveredAt ? _self.discoveredAt : discoveredAt // ignore: cast_nullable_to_non_nullable
-as DateTime,lastUpdated: freezed == lastUpdated ? _self.lastUpdated : lastUpdated // ignore: cast_nullable_to_non_nullable
-as DateTime?,discoveryMethod: freezed == discoveryMethod ? _self.discoveryMethod : discoveryMethod // ignore: cast_nullable_to_non_nullable
-as String?,confidence: null == confidence ? _self.confidence : confidence // ignore: cast_nullable_to_non_nullable
-as double,parentAssetIds: null == parentAssetIds ? _self.parentAssetIds : parentAssetIds // ignore: cast_nullable_to_non_nullable
-as List<String>,childAssetIds: null == childAssetIds ? _self.childAssetIds : childAssetIds // ignore: cast_nullable_to_non_nullable
-as List<String>,relatedAssetIds: null == relatedAssetIds ? _self.relatedAssetIds : relatedAssetIds // ignore: cast_nullable_to_non_nullable
-as List<String>,completedTriggers: null == completedTriggers ? _self.completedTriggers : completedTriggers // ignore: cast_nullable_to_non_nullable
-as List<String>,triggerResults: null == triggerResults ? _self.triggerResults : triggerResults // ignore: cast_nullable_to_non_nullable
-as Map<String, TriggerExecutionResult>,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,metadata: freezed == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
-as Map<String, String>?,accessLevel: freezed == accessLevel ? _self.accessLevel : accessLevel // ignore: cast_nullable_to_non_nullable
-as AccessLevel?,securityControls: freezed == securityControls ? _self.securityControls : securityControls // ignore: cast_nullable_to_non_nullable
-as List<String>?,relationships: null == relationships ? _self.relationships : relationships // ignore: cast_nullable_to_non_nullable
-as Map<String, List<String>>,inheritedProperties: null == inheritedProperties ? _self.inheritedProperties : inheritedProperties // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,lifecycleState: null == lifecycleState ? _self.lifecycleState : lifecycleState // ignore: cast_nullable_to_non_nullable
-as String,stateTransitions: null == stateTransitions ? _self.stateTransitions : stateTransitions // ignore: cast_nullable_to_non_nullable
-as Map<String, DateTime>,dependencyMap: null == dependencyMap ? _self.dependencyMap : dependencyMap // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,discoveryPath: null == discoveryPath ? _self.discoveryPath : discoveryPath // ignore: cast_nullable_to_non_nullable
-as List<String>,relationshipMetadata: null == relationshipMetadata ? _self.relationshipMetadata : relationshipMetadata // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [Asset].
-extension AssetPatterns on Asset {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Asset value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _Asset() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Asset value)  $default,){
-final _that = this;
-switch (_that) {
-case _Asset():
-return $default(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Asset value)?  $default,){
-final _that = this;
-switch (_that) {
-case _Asset() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls,  Map<String, List<String>> relationships,  Map<String, dynamic> inheritedProperties,  String lifecycleState,  Map<String, DateTime> stateTransitions,  Map<String, String> dependencyMap,  List<String> discoveryPath,  Map<String, dynamic> relationshipMetadata)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _Asset() when $default != null:
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls,_that.relationships,_that.inheritedProperties,_that.lifecycleState,_that.stateTransitions,_that.dependencyMap,_that.discoveryPath,_that.relationshipMetadata);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls,  Map<String, List<String>> relationships,  Map<String, dynamic> inheritedProperties,  String lifecycleState,  Map<String, DateTime> stateTransitions,  Map<String, String> dependencyMap,  List<String> discoveryPath,  Map<String, dynamic> relationshipMetadata)  $default,) {final _that = this;
-switch (_that) {
-case _Asset():
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls,_that.relationships,_that.inheritedProperties,_that.lifecycleState,_that.stateTransitions,_that.dependencyMap,_that.discoveryPath,_that.relationshipMetadata);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  AssetType type,  String projectId,  String name,  String? description,  Map<String, AssetPropertyValue> properties,  AssetDiscoveryStatus discoveryStatus,  DateTime discoveredAt,  DateTime? lastUpdated,  String? discoveryMethod,  double confidence,  List<String> parentAssetIds,  List<String> childAssetIds,  List<String> relatedAssetIds,  List<String> completedTriggers,  Map<String, TriggerExecutionResult> triggerResults,  List<String> tags,  Map<String, String>? metadata,  AccessLevel? accessLevel,  List<String>? securityControls,  Map<String, List<String>> relationships,  Map<String, dynamic> inheritedProperties,  String lifecycleState,  Map<String, DateTime> stateTransitions,  Map<String, String> dependencyMap,  List<String> discoveryPath,  Map<String, dynamic> relationshipMetadata)?  $default,) {final _that = this;
-switch (_that) {
-case _Asset() when $default != null:
-return $default(_that.id,_that.type,_that.projectId,_that.name,_that.description,_that.properties,_that.discoveryStatus,_that.discoveredAt,_that.lastUpdated,_that.discoveryMethod,_that.confidence,_that.parentAssetIds,_that.childAssetIds,_that.relatedAssetIds,_that.completedTriggers,_that.triggerResults,_that.tags,_that.metadata,_that.accessLevel,_that.securityControls,_that.relationships,_that.inheritedProperties,_that.lifecycleState,_that.stateTransitions,_that.dependencyMap,_that.discoveryPath,_that.relationshipMetadata);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class _Asset implements Asset {
-  const _Asset({required this.id, required this.type, required this.projectId, required this.name, this.description, required final  Map<String, AssetPropertyValue> properties, required this.discoveryStatus, required this.discoveredAt, this.lastUpdated, this.discoveryMethod, this.confidence = 1.0, required final  List<String> parentAssetIds, required final  List<String> childAssetIds, required final  List<String> relatedAssetIds, required final  List<String> completedTriggers, required final  Map<String, TriggerExecutionResult> triggerResults, required final  List<String> tags, final  Map<String, String>? metadata, this.accessLevel, final  List<String>? securityControls, final  Map<String, List<String>> relationships = const {}, final  Map<String, dynamic> inheritedProperties = const {}, this.lifecycleState = 'unknown', final  Map<String, DateTime> stateTransitions = const {}, final  Map<String, String> dependencyMap = const {}, final  List<String> discoveryPath = const [], final  Map<String, dynamic> relationshipMetadata = const {}}): _properties = properties,_parentAssetIds = parentAssetIds,_childAssetIds = childAssetIds,_relatedAssetIds = relatedAssetIds,_completedTriggers = completedTriggers,_triggerResults = triggerResults,_tags = tags,_metadata = metadata,_securityControls = securityControls,_relationships = relationships,_inheritedProperties = inheritedProperties,_stateTransitions = stateTransitions,_dependencyMap = dependencyMap,_discoveryPath = discoveryPath,_relationshipMetadata = relationshipMetadata;
-  factory _Asset.fromJson(Map<String, dynamic> json) => _$AssetFromJson(json);
-
-@override final  String id;
-@override final  AssetType type;
-@override final  String projectId;
-@override final  String name;
-@override final  String? description;
-// Rich property system - contains all asset-specific data
- final  Map<String, AssetPropertyValue> _properties;
-// Rich property system - contains all asset-specific data
-@override Map<String, AssetPropertyValue> get properties {
-  if (_properties is EqualUnmodifiableMapView) return _properties;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_properties);
-}
-
-// Discovery and status
-@override final  AssetDiscoveryStatus discoveryStatus;
-@override final  DateTime discoveredAt;
-@override final  DateTime? lastUpdated;
-@override final  String? discoveryMethod;
-@override@JsonKey() final  double confidence;
-// Hierarchical relationships
- final  List<String> _parentAssetIds;
-// Hierarchical relationships
-@override List<String> get parentAssetIds {
-  if (_parentAssetIds is EqualUnmodifiableListView) return _parentAssetIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_parentAssetIds);
-}
-
- final  List<String> _childAssetIds;
-@override List<String> get childAssetIds {
-  if (_childAssetIds is EqualUnmodifiableListView) return _childAssetIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_childAssetIds);
-}
-
- final  List<String> _relatedAssetIds;
-@override List<String> get relatedAssetIds {
-  if (_relatedAssetIds is EqualUnmodifiableListView) return _relatedAssetIds;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_relatedAssetIds);
-}
-
-// Cross-references
-// Methodology integration
- final  List<String> _completedTriggers;
-// Cross-references
-// Methodology integration
-@override List<String> get completedTriggers {
-  if (_completedTriggers is EqualUnmodifiableListView) return _completedTriggers;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_completedTriggers);
-}
-
- final  Map<String, TriggerExecutionResult> _triggerResults;
-@override Map<String, TriggerExecutionResult> get triggerResults {
-  if (_triggerResults is EqualUnmodifiableMapView) return _triggerResults;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_triggerResults);
-}
-
-// Organization and filtering
- final  List<String> _tags;
-// Organization and filtering
-@override List<String> get tags {
-  if (_tags is EqualUnmodifiableListView) return _tags;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_tags);
-}
-
- final  Map<String, String>? _metadata;
-@override Map<String, String>? get metadata {
-  final value = _metadata;
-  if (value == null) return null;
-  if (_metadata is EqualUnmodifiableMapView) return _metadata;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(value);
-}
-
-// Security context
-@override final  AccessLevel? accessLevel;
- final  List<String>? _securityControls;
-@override List<String>? get securityControls {
-  final value = _securityControls;
-  if (value == null) return null;
-  if (_securityControls is EqualUnmodifiableListView) return _securityControls;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(value);
-}
-
-// NEW RELATIONSHIP SYSTEM FIELDS:
- final  Map<String, List<String>> _relationships;
-// NEW RELATIONSHIP SYSTEM FIELDS:
-@override@JsonKey() Map<String, List<String>> get relationships {
-  if (_relationships is EqualUnmodifiableMapView) return _relationships;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_relationships);
-}
-
-// Relationship type -> List of asset IDs
- final  Map<String, dynamic> _inheritedProperties;
-// Relationship type -> List of asset IDs
-@override@JsonKey() Map<String, dynamic> get inheritedProperties {
-  if (_inheritedProperties is EqualUnmodifiableMapView) return _inheritedProperties;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_inheritedProperties);
-}
-
-// Properties inherited from parent
-@override@JsonKey() final  String lifecycleState;
-// Current state in lifecycle
- final  Map<String, DateTime> _stateTransitions;
-// Current state in lifecycle
-@override@JsonKey() Map<String, DateTime> get stateTransitions {
-  if (_stateTransitions is EqualUnmodifiableMapView) return _stateTransitions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_stateTransitions);
-}
-
-// History of state changes
- final  Map<String, String> _dependencyMap;
-// History of state changes
-@override@JsonKey() Map<String, String> get dependencyMap {
-  if (_dependencyMap is EqualUnmodifiableMapView) return _dependencyMap;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_dependencyMap);
-}
-
-// Service/asset dependencies
- final  List<String> _discoveryPath;
-// Service/asset dependencies
-@override@JsonKey() List<String> get discoveryPath {
-  if (_discoveryPath is EqualUnmodifiableListView) return _discoveryPath;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_discoveryPath);
-}
-
-// How this asset was discovered
- final  Map<String, dynamic> _relationshipMetadata;
-// How this asset was discovered
-@override@JsonKey() Map<String, dynamic> get relationshipMetadata {
-  if (_relationshipMetadata is EqualUnmodifiableMapView) return _relationshipMetadata;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_relationshipMetadata);
-}
-
-
-/// Create a copy of Asset
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$AssetCopyWith<_Asset> get copyWith => __$AssetCopyWithImpl<_Asset>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$AssetToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Asset&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._properties, _properties)&&(identical(other.discoveryStatus, discoveryStatus) || other.discoveryStatus == discoveryStatus)&&(identical(other.discoveredAt, discoveredAt) || other.discoveredAt == discoveredAt)&&(identical(other.lastUpdated, lastUpdated) || other.lastUpdated == lastUpdated)&&(identical(other.discoveryMethod, discoveryMethod) || other.discoveryMethod == discoveryMethod)&&(identical(other.confidence, confidence) || other.confidence == confidence)&&const DeepCollectionEquality().equals(other._parentAssetIds, _parentAssetIds)&&const DeepCollectionEquality().equals(other._childAssetIds, _childAssetIds)&&const DeepCollectionEquality().equals(other._relatedAssetIds, _relatedAssetIds)&&const DeepCollectionEquality().equals(other._completedTriggers, _completedTriggers)&&const DeepCollectionEquality().equals(other._triggerResults, _triggerResults)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._metadata, _metadata)&&(identical(other.accessLevel, accessLevel) || other.accessLevel == accessLevel)&&const DeepCollectionEquality().equals(other._securityControls, _securityControls)&&const DeepCollectionEquality().equals(other._relationships, _relationships)&&const DeepCollectionEquality().equals(other._inheritedProperties, _inheritedProperties)&&(identical(other.lifecycleState, lifecycleState) || other.lifecycleState == lifecycleState)&&const DeepCollectionEquality().equals(other._stateTransitions, _stateTransitions)&&const DeepCollectionEquality().equals(other._dependencyMap, _dependencyMap)&&const DeepCollectionEquality().equals(other._discoveryPath, _discoveryPath)&&const DeepCollectionEquality().equals(other._relationshipMetadata, _relationshipMetadata));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hashAll([runtimeType,id,type,projectId,name,description,const DeepCollectionEquality().hash(_properties),discoveryStatus,discoveredAt,lastUpdated,discoveryMethod,confidence,const DeepCollectionEquality().hash(_parentAssetIds),const DeepCollectionEquality().hash(_childAssetIds),const DeepCollectionEquality().hash(_relatedAssetIds),const DeepCollectionEquality().hash(_completedTriggers),const DeepCollectionEquality().hash(_triggerResults),const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_metadata),accessLevel,const DeepCollectionEquality().hash(_securityControls),const DeepCollectionEquality().hash(_relationships),const DeepCollectionEquality().hash(_inheritedProperties),lifecycleState,const DeepCollectionEquality().hash(_stateTransitions),const DeepCollectionEquality().hash(_dependencyMap),const DeepCollectionEquality().hash(_discoveryPath),const DeepCollectionEquality().hash(_relationshipMetadata)]);
-
-@override
-String toString() {
-  return 'Asset(id: $id, type: $type, projectId: $projectId, name: $name, description: $description, properties: $properties, discoveryStatus: $discoveryStatus, discoveredAt: $discoveredAt, lastUpdated: $lastUpdated, discoveryMethod: $discoveryMethod, confidence: $confidence, parentAssetIds: $parentAssetIds, childAssetIds: $childAssetIds, relatedAssetIds: $relatedAssetIds, completedTriggers: $completedTriggers, triggerResults: $triggerResults, tags: $tags, metadata: $metadata, accessLevel: $accessLevel, securityControls: $securityControls, relationships: $relationships, inheritedProperties: $inheritedProperties, lifecycleState: $lifecycleState, stateTransitions: $stateTransitions, dependencyMap: $dependencyMap, discoveryPath: $discoveryPath, relationshipMetadata: $relationshipMetadata)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$AssetCopyWith<$Res> implements $AssetCopyWith<$Res> {
-  factory _$AssetCopyWith(_Asset value, $Res Function(_Asset) _then) = __$AssetCopyWithImpl;
-@override @useResult
-$Res call({
- String id, AssetType type, String projectId, String name, String? description, Map<String, AssetPropertyValue> properties, AssetDiscoveryStatus discoveryStatus, DateTime discoveredAt, DateTime? lastUpdated, String? discoveryMethod, double confidence, List<String> parentAssetIds, List<String> childAssetIds, List<String> relatedAssetIds, List<String> completedTriggers, Map<String, TriggerExecutionResult> triggerResults, List<String> tags, Map<String, String>? metadata, AccessLevel? accessLevel, List<String>? securityControls, Map<String, List<String>> relationships, Map<String, dynamic> inheritedProperties, String lifecycleState, Map<String, DateTime> stateTransitions, Map<String, String> dependencyMap, List<String> discoveryPath, Map<String, dynamic> relationshipMetadata
-});
-
-
-
-
-}
-/// @nodoc
-class __$AssetCopyWithImpl<$Res>
-    implements _$AssetCopyWith<$Res> {
-  __$AssetCopyWithImpl(this._self, this._then);
-
-  final _Asset _self;
-  final $Res Function(_Asset) _then;
-
-/// Create a copy of Asset
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? projectId = null,Object? name = null,Object? description = freezed,Object? properties = null,Object? discoveryStatus = null,Object? discoveredAt = null,Object? lastUpdated = freezed,Object? discoveryMethod = freezed,Object? confidence = null,Object? parentAssetIds = null,Object? childAssetIds = null,Object? relatedAssetIds = null,Object? completedTriggers = null,Object? triggerResults = null,Object? tags = null,Object? metadata = freezed,Object? accessLevel = freezed,Object? securityControls = freezed,Object? relationships = null,Object? inheritedProperties = null,Object? lifecycleState = null,Object? stateTransitions = null,Object? dependencyMap = null,Object? discoveryPath = null,Object? relationshipMetadata = null,}) {
-  return _then(_Asset(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as AssetType,projectId: null == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,properties: null == properties ? _self._properties : properties // ignore: cast_nullable_to_non_nullable
-as Map<String, AssetPropertyValue>,discoveryStatus: null == discoveryStatus ? _self.discoveryStatus : discoveryStatus // ignore: cast_nullable_to_non_nullable
-as AssetDiscoveryStatus,discoveredAt: null == discoveredAt ? _self.discoveredAt : discoveredAt // ignore: cast_nullable_to_non_nullable
-as DateTime,lastUpdated: freezed == lastUpdated ? _self.lastUpdated : lastUpdated // ignore: cast_nullable_to_non_nullable
-as DateTime?,discoveryMethod: freezed == discoveryMethod ? _self.discoveryMethod : discoveryMethod // ignore: cast_nullable_to_non_nullable
-as String?,confidence: null == confidence ? _self.confidence : confidence // ignore: cast_nullable_to_non_nullable
-as double,parentAssetIds: null == parentAssetIds ? _self._parentAssetIds : parentAssetIds // ignore: cast_nullable_to_non_nullable
-as List<String>,childAssetIds: null == childAssetIds ? _self._childAssetIds : childAssetIds // ignore: cast_nullable_to_non_nullable
-as List<String>,relatedAssetIds: null == relatedAssetIds ? _self._relatedAssetIds : relatedAssetIds // ignore: cast_nullable_to_non_nullable
-as List<String>,completedTriggers: null == completedTriggers ? _self._completedTriggers : completedTriggers // ignore: cast_nullable_to_non_nullable
-as List<String>,triggerResults: null == triggerResults ? _self._triggerResults : triggerResults // ignore: cast_nullable_to_non_nullable
-as Map<String, TriggerExecutionResult>,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,metadata: freezed == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
-as Map<String, String>?,accessLevel: freezed == accessLevel ? _self.accessLevel : accessLevel // ignore: cast_nullable_to_non_nullable
-as AccessLevel?,securityControls: freezed == securityControls ? _self._securityControls : securityControls // ignore: cast_nullable_to_non_nullable
-as List<String>?,relationships: null == relationships ? _self._relationships : relationships // ignore: cast_nullable_to_non_nullable
-as Map<String, List<String>>,inheritedProperties: null == inheritedProperties ? _self._inheritedProperties : inheritedProperties // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,lifecycleState: null == lifecycleState ? _self.lifecycleState : lifecycleState // ignore: cast_nullable_to_non_nullable
-as String,stateTransitions: null == stateTransitions ? _self._stateTransitions : stateTransitions // ignore: cast_nullable_to_non_nullable
-as Map<String, DateTime>,dependencyMap: null == dependencyMap ? _self._dependencyMap : dependencyMap // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,discoveryPath: null == discoveryPath ? _self._discoveryPath : discoveryPath // ignore: cast_nullable_to_non_nullable
-as List<String>,relationshipMetadata: null == relationshipMetadata ? _self._relationshipMetadata : relationshipMetadata // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,
-  ));
-}
-
-
-}
-
-
-/// @nodoc
-mixin _$TriggerExecutionResult {
-
- String get triggerId; String get methodologyId; DateTime get executedAt; bool get success; String? get output; String? get error; Map<String, AssetPropertyValue>? get discoveredProperties; List<Asset>? get discoveredAssets; List<String>? get triggeredMethodologies;
-/// Create a copy of TriggerExecutionResult
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$TriggerExecutionResultCopyWith<TriggerExecutionResult> get copyWith => _$TriggerExecutionResultCopyWithImpl<TriggerExecutionResult>(this as TriggerExecutionResult, _$identity);
-
-  /// Serializes this TriggerExecutionResult to a JSON map.
-  Map<String, dynamic> toJson();
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TriggerExecutionResult&&(identical(other.triggerId, triggerId) || other.triggerId == triggerId)&&(identical(other.methodologyId, methodologyId) || other.methodologyId == methodologyId)&&(identical(other.executedAt, executedAt) || other.executedAt == executedAt)&&(identical(other.success, success) || other.success == success)&&(identical(other.output, output) || other.output == output)&&(identical(other.error, error) || other.error == error)&&const DeepCollectionEquality().equals(other.discoveredProperties, discoveredProperties)&&const DeepCollectionEquality().equals(other.discoveredAssets, discoveredAssets)&&const DeepCollectionEquality().equals(other.triggeredMethodologies, triggeredMethodologies));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,triggerId,methodologyId,executedAt,success,output,error,const DeepCollectionEquality().hash(discoveredProperties),const DeepCollectionEquality().hash(discoveredAssets),const DeepCollectionEquality().hash(triggeredMethodologies));
-
-@override
-String toString() {
-  return 'TriggerExecutionResult(triggerId: $triggerId, methodologyId: $methodologyId, executedAt: $executedAt, success: $success, output: $output, error: $error, discoveredProperties: $discoveredProperties, discoveredAssets: $discoveredAssets, triggeredMethodologies: $triggeredMethodologies)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $TriggerExecutionResultCopyWith<$Res>  {
-  factory $TriggerExecutionResultCopyWith(TriggerExecutionResult value, $Res Function(TriggerExecutionResult) _then) = _$TriggerExecutionResultCopyWithImpl;
-@useResult
-$Res call({
- String triggerId, String methodologyId, DateTime executedAt, bool success, String? output, String? error, Map<String, AssetPropertyValue>? discoveredProperties, List<Asset>? discoveredAssets, List<String>? triggeredMethodologies
-});
-
-
-
-
-}
-/// @nodoc
-class _$TriggerExecutionResultCopyWithImpl<$Res>
-    implements $TriggerExecutionResultCopyWith<$Res> {
-  _$TriggerExecutionResultCopyWithImpl(this._self, this._then);
-
-  final TriggerExecutionResult _self;
-  final $Res Function(TriggerExecutionResult) _then;
-
-/// Create a copy of TriggerExecutionResult
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? triggerId = null,Object? methodologyId = null,Object? executedAt = null,Object? success = null,Object? output = freezed,Object? error = freezed,Object? discoveredProperties = freezed,Object? discoveredAssets = freezed,Object? triggeredMethodologies = freezed,}) {
-  return _then(_self.copyWith(
-triggerId: null == triggerId ? _self.triggerId : triggerId // ignore: cast_nullable_to_non_nullable
-as String,methodologyId: null == methodologyId ? _self.methodologyId : methodologyId // ignore: cast_nullable_to_non_nullable
-as String,executedAt: null == executedAt ? _self.executedAt : executedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,success: null == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
-as bool,output: freezed == output ? _self.output : output // ignore: cast_nullable_to_non_nullable
-as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as String?,discoveredProperties: freezed == discoveredProperties ? _self.discoveredProperties : discoveredProperties // ignore: cast_nullable_to_non_nullable
-as Map<String, AssetPropertyValue>?,discoveredAssets: freezed == discoveredAssets ? _self.discoveredAssets : discoveredAssets // ignore: cast_nullable_to_non_nullable
-as List<Asset>?,triggeredMethodologies: freezed == triggeredMethodologies ? _self.triggeredMethodologies : triggeredMethodologies // ignore: cast_nullable_to_non_nullable
-as List<String>?,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [TriggerExecutionResult].
-extension TriggerExecutionResultPatterns on TriggerExecutionResult {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TriggerExecutionResult value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _TriggerExecutionResult() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TriggerExecutionResult value)  $default,){
-final _that = this;
-switch (_that) {
-case _TriggerExecutionResult():
-return $default(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TriggerExecutionResult value)?  $default,){
-final _that = this;
-switch (_that) {
-case _TriggerExecutionResult() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String triggerId,  String methodologyId,  DateTime executedAt,  bool success,  String? output,  String? error,  Map<String, AssetPropertyValue>? discoveredProperties,  List<Asset>? discoveredAssets,  List<String>? triggeredMethodologies)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _TriggerExecutionResult() when $default != null:
-return $default(_that.triggerId,_that.methodologyId,_that.executedAt,_that.success,_that.output,_that.error,_that.discoveredProperties,_that.discoveredAssets,_that.triggeredMethodologies);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String triggerId,  String methodologyId,  DateTime executedAt,  bool success,  String? output,  String? error,  Map<String, AssetPropertyValue>? discoveredProperties,  List<Asset>? discoveredAssets,  List<String>? triggeredMethodologies)  $default,) {final _that = this;
-switch (_that) {
-case _TriggerExecutionResult():
-return $default(_that.triggerId,_that.methodologyId,_that.executedAt,_that.success,_that.output,_that.error,_that.discoveredProperties,_that.discoveredAssets,_that.triggeredMethodologies);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String triggerId,  String methodologyId,  DateTime executedAt,  bool success,  String? output,  String? error,  Map<String, AssetPropertyValue>? discoveredProperties,  List<Asset>? discoveredAssets,  List<String>? triggeredMethodologies)?  $default,) {final _that = this;
-switch (_that) {
-case _TriggerExecutionResult() when $default != null:
-return $default(_that.triggerId,_that.methodologyId,_that.executedAt,_that.success,_that.output,_that.error,_that.discoveredProperties,_that.discoveredAssets,_that.triggeredMethodologies);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-@JsonSerializable()
-
-class _TriggerExecutionResult implements TriggerExecutionResult {
-  const _TriggerExecutionResult({required this.triggerId, required this.methodologyId, required this.executedAt, required this.success, this.output, this.error, final  Map<String, AssetPropertyValue>? discoveredProperties, final  List<Asset>? discoveredAssets, final  List<String>? triggeredMethodologies}): _discoveredProperties = discoveredProperties,_discoveredAssets = discoveredAssets,_triggeredMethodologies = triggeredMethodologies;
-  factory _TriggerExecutionResult.fromJson(Map<String, dynamic> json) => _$TriggerExecutionResultFromJson(json);
-
-@override final  String triggerId;
-@override final  String methodologyId;
-@override final  DateTime executedAt;
-@override final  bool success;
-@override final  String? output;
-@override final  String? error;
- final  Map<String, AssetPropertyValue>? _discoveredProperties;
-@override Map<String, AssetPropertyValue>? get discoveredProperties {
-  final value = _discoveredProperties;
-  if (value == null) return null;
-  if (_discoveredProperties is EqualUnmodifiableMapView) return _discoveredProperties;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(value);
-}
-
- final  List<Asset>? _discoveredAssets;
-@override List<Asset>? get discoveredAssets {
-  final value = _discoveredAssets;
-  if (value == null) return null;
-  if (_discoveredAssets is EqualUnmodifiableListView) return _discoveredAssets;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(value);
-}
-
- final  List<String>? _triggeredMethodologies;
-@override List<String>? get triggeredMethodologies {
-  final value = _triggeredMethodologies;
-  if (value == null) return null;
-  if (_triggeredMethodologies is EqualUnmodifiableListView) return _triggeredMethodologies;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(value);
-}
-
-
-/// Create a copy of TriggerExecutionResult
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$TriggerExecutionResultCopyWith<_TriggerExecutionResult> get copyWith => __$TriggerExecutionResultCopyWithImpl<_TriggerExecutionResult>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$TriggerExecutionResultToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TriggerExecutionResult&&(identical(other.triggerId, triggerId) || other.triggerId == triggerId)&&(identical(other.methodologyId, methodologyId) || other.methodologyId == methodologyId)&&(identical(other.executedAt, executedAt) || other.executedAt == executedAt)&&(identical(other.success, success) || other.success == success)&&(identical(other.output, output) || other.output == output)&&(identical(other.error, error) || other.error == error)&&const DeepCollectionEquality().equals(other._discoveredProperties, _discoveredProperties)&&const DeepCollectionEquality().equals(other._discoveredAssets, _discoveredAssets)&&const DeepCollectionEquality().equals(other._triggeredMethodologies, _triggeredMethodologies));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,triggerId,methodologyId,executedAt,success,output,error,const DeepCollectionEquality().hash(_discoveredProperties),const DeepCollectionEquality().hash(_discoveredAssets),const DeepCollectionEquality().hash(_triggeredMethodologies));
-
-@override
-String toString() {
-  return 'TriggerExecutionResult(triggerId: $triggerId, methodologyId: $methodologyId, executedAt: $executedAt, success: $success, output: $output, error: $error, discoveredProperties: $discoveredProperties, discoveredAssets: $discoveredAssets, triggeredMethodologies: $triggeredMethodologies)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$TriggerExecutionResultCopyWith<$Res> implements $TriggerExecutionResultCopyWith<$Res> {
-  factory _$TriggerExecutionResultCopyWith(_TriggerExecutionResult value, $Res Function(_TriggerExecutionResult) _then) = __$TriggerExecutionResultCopyWithImpl;
-@override @useResult
-$Res call({
- String triggerId, String methodologyId, DateTime executedAt, bool success, String? output, String? error, Map<String, AssetPropertyValue>? discoveredProperties, List<Asset>? discoveredAssets, List<String>? triggeredMethodologies
-});
-
-
-
-
-}
-/// @nodoc
-class __$TriggerExecutionResultCopyWithImpl<$Res>
-    implements _$TriggerExecutionResultCopyWith<$Res> {
-  __$TriggerExecutionResultCopyWithImpl(this._self, this._then);
-
-  final _TriggerExecutionResult _self;
-  final $Res Function(_TriggerExecutionResult) _then;
-
-/// Create a copy of TriggerExecutionResult
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? triggerId = null,Object? methodologyId = null,Object? executedAt = null,Object? success = null,Object? output = freezed,Object? error = freezed,Object? discoveredProperties = freezed,Object? discoveredAssets = freezed,Object? triggeredMethodologies = freezed,}) {
-  return _then(_TriggerExecutionResult(
-triggerId: null == triggerId ? _self.triggerId : triggerId // ignore: cast_nullable_to_non_nullable
-as String,methodologyId: null == methodologyId ? _self.methodologyId : methodologyId // ignore: cast_nullable_to_non_nullable
-as String,executedAt: null == executedAt ? _self.executedAt : executedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,success: null == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
-as bool,output: freezed == output ? _self.output : output // ignore: cast_nullable_to_non_nullable
-as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as String?,discoveredProperties: freezed == discoveredProperties ? _self._discoveredProperties : discoveredProperties // ignore: cast_nullable_to_non_nullable
-as Map<String, AssetPropertyValue>?,discoveredAssets: freezed == discoveredAssets ? _self._discoveredAssets : discoveredAssets // ignore: cast_nullable_to_non_nullable
-as List<Asset>?,triggeredMethodologies: freezed == triggeredMethodologies ? _self._triggeredMethodologies : triggeredMethodologies // ignore: cast_nullable_to_non_nullable
-as List<String>?,
-  ));
-}
-
-
-}
-
 
 /// @nodoc
 mixin _$SoftwareVersion {
@@ -4261,7 +2108,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _SoftwareVersion():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -4320,7 +2170,10 @@ return $default(_that.major,_that.minor,_that.patch,_that.build,_that.edition,_t
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int major,  int minor,  int patch,  String? build,  String? edition,  DateTime? releaseDate)  $default,) {final _that = this;
 switch (_that) {
 case _SoftwareVersion():
-return $default(_that.major,_that.minor,_that.patch,_that.build,_that.edition,_that.releaseDate);}
+return $default(_that.major,_that.minor,_that.patch,_that.build,_that.edition,_that.releaseDate);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -4533,7 +2386,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkAddress():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -4592,7 +2448,10 @@ return $default(_that.ip,_that.subnet,_that.gateway,_that.dnsServers,_that.macAd
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String ip,  String? subnet,  String? gateway,  List<String>? dnsServers,  String? macAddress,  bool? isStatic)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkAddress():
-return $default(_that.ip,_that.subnet,_that.gateway,_that.dnsServers,_that.macAddress,_that.isStatic);}
+return $default(_that.ip,_that.subnet,_that.gateway,_that.dnsServers,_that.macAddress,_that.isStatic);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -4817,7 +2676,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _PhysicalLocation():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -4876,7 +2738,10 @@ return $default(_that.address,_that.city,_that.state,_that.country,_that.postalC
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? address,  String? city,  String? state,  String? country,  String? postalCode,  double? latitude,  double? longitude,  String? building,  String? floor,  String? room)  $default,) {final _that = this;
 switch (_that) {
 case _PhysicalLocation():
-return $default(_that.address,_that.city,_that.state,_that.country,_that.postalCode,_that.latitude,_that.longitude,_that.building,_that.floor,_that.room);}
+return $default(_that.address,_that.city,_that.state,_that.country,_that.postalCode,_that.latitude,_that.longitude,_that.building,_that.floor,_that.room);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -5108,7 +2973,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkInterface():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -5167,7 +3035,10 @@ return $default(_that.id,_that.name,_that.type,_that.macAddress,_that.isEnabled,
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String macAddress,  bool isEnabled,  List<NetworkAddress> addresses,  String? description,  String? vendor,  String? driver,  int? speedMbps,  bool? isConnected,  String? connectedSwitchPort,  String? vlanId,  Map<String, String>? driverInfo,  DateTime? lastSeen)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkInterface():
-return $default(_that.id,_that.name,_that.type,_that.macAddress,_that.isEnabled,_that.addresses,_that.description,_that.vendor,_that.driver,_that.speedMbps,_that.isConnected,_that.connectedSwitchPort,_that.vlanId,_that.driverInfo,_that.lastSeen);}
+return $default(_that.id,_that.name,_that.type,_that.macAddress,_that.isEnabled,_that.addresses,_that.description,_that.vendor,_that.driver,_that.speedMbps,_that.isConnected,_that.connectedSwitchPort,_that.vlanId,_that.driverInfo,_that.lastSeen);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -5427,7 +3298,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HostService():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -5486,7 +3360,10 @@ return $default(_that.id,_that.name,_that.port,_that.protocol,_that.state,_that.
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int port,  String protocol,  String state,  String? version,  String? banner,  String? productName,  String? productVersion,  Map<String, String>? extraInfo,  List<String>? vulnerabilities,  bool? requiresAuthentication,  List<String>? authenticationMethods,  String? sslVersion,  List<String>? sslCiphers,  DateTime? lastChecked,  String? confidence)  $default,) {final _that = this;
 switch (_that) {
 case _HostService():
-return $default(_that.id,_that.name,_that.port,_that.protocol,_that.state,_that.version,_that.banner,_that.productName,_that.productVersion,_that.extraInfo,_that.vulnerabilities,_that.requiresAuthentication,_that.authenticationMethods,_that.sslVersion,_that.sslCiphers,_that.lastChecked,_that.confidence);}
+return $default(_that.id,_that.name,_that.port,_that.protocol,_that.state,_that.version,_that.banner,_that.productName,_that.productVersion,_that.extraInfo,_that.vulnerabilities,_that.requiresAuthentication,_that.authenticationMethods,_that.sslVersion,_that.sslCiphers,_that.lastChecked,_that.confidence);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -5772,7 +3649,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HostApplication():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -5831,7 +3711,10 @@ return $default(_that.id,_that.name,_that.type,_that.version,_that.vendor,_that.
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String? version,  String? vendor,  String? architecture,  String? installLocation,  DateTime? installDate,  int? sizeMB,  List<String>? configFiles,  List<String>? dataDirectories,  List<String>? registryKeys,  List<String>? associatedServices,  List<String>? networkPorts,  List<String>? vulnerabilities,  bool? isSystemCritical,  bool? hasUpdateAvailable,  String? licenseType,  String? licenseKey,  Map<String, String>? metadata)  $default,) {final _that = this;
 switch (_that) {
 case _HostApplication():
-return $default(_that.id,_that.name,_that.type,_that.version,_that.vendor,_that.architecture,_that.installLocation,_that.installDate,_that.sizeMB,_that.configFiles,_that.dataDirectories,_that.registryKeys,_that.associatedServices,_that.networkPorts,_that.vulnerabilities,_that.isSystemCritical,_that.hasUpdateAvailable,_that.licenseType,_that.licenseKey,_that.metadata);}
+return $default(_that.id,_that.name,_that.type,_that.version,_that.vendor,_that.architecture,_that.installLocation,_that.installDate,_that.sizeMB,_that.configFiles,_that.dataDirectories,_that.registryKeys,_that.associatedServices,_that.networkPorts,_that.vulnerabilities,_that.isSystemCritical,_that.hasUpdateAvailable,_that.licenseType,_that.licenseKey,_that.metadata);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -6143,7 +4026,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HostAccount():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -6202,7 +4088,10 @@ return $default(_that.id,_that.username,_that.type,_that.isEnabled,_that.fullNam
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String username,  String type,  bool isEnabled,  String? fullName,  String? description,  List<String>? groups,  String? homeDirectory,  String? shell,  DateTime? lastLogin,  DateTime? passwordLastSet,  bool? passwordNeverExpires,  bool? accountLocked,  bool? isAdmin,  List<String>? privileges,  Map<String, String>? environment)  $default,) {final _that = this;
 switch (_that) {
 case _HostAccount():
-return $default(_that.id,_that.username,_that.type,_that.isEnabled,_that.fullName,_that.description,_that.groups,_that.homeDirectory,_that.shell,_that.lastLogin,_that.passwordLastSet,_that.passwordNeverExpires,_that.accountLocked,_that.isAdmin,_that.privileges,_that.environment);}
+return $default(_that.id,_that.username,_that.type,_that.isEnabled,_that.fullName,_that.description,_that.groups,_that.homeDirectory,_that.shell,_that.lastLogin,_that.passwordLastSet,_that.passwordNeverExpires,_that.accountLocked,_that.isAdmin,_that.privileges,_that.environment);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -6466,7 +4355,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HardwareComponent():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -6525,7 +4417,10 @@ return $default(_that.id,_that.type,_that.name,_that.manufacturer,_that.model,_t
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String type,  String name,  String? manufacturer,  String? model,  String? serialNumber,  String? version,  Map<String, String>? specifications,  String? health,  DateTime? lastChecked)  $default,) {final _that = this;
 switch (_that) {
 case _HardwareComponent():
-return $default(_that.id,_that.type,_that.name,_that.manufacturer,_that.model,_that.serialNumber,_that.version,_that.specifications,_that.health,_that.lastChecked);}
+return $default(_that.id,_that.type,_that.name,_that.manufacturer,_that.model,_that.serialNumber,_that.version,_that.specifications,_that.health,_that.lastChecked);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -6757,7 +4652,10 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _AuthenticationInfo():
-return $default(_that);}
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -6816,7 +4714,10 @@ return $default(_that.mechanism,_that.details,_that.isMultiFactor,_that.mfaMetho
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String mechanism,  Map<String, String>? details,  bool? isMultiFactor,  List<String>? mfaMethods,  DateTime? lastAuthentication,  bool? isServiceAccount)  $default,) {final _that = this;
 switch (_that) {
 case _AuthenticationInfo():
-return $default(_that.mechanism,_that.details,_that.isMultiFactor,_that.mfaMethods,_that.lastAuthentication,_that.isServiceAccount);}
+return $default(_that.mechanism,_that.details,_that.isMultiFactor,_that.mfaMethods,_that.lastAuthentication,_that.isServiceAccount);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

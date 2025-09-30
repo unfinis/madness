@@ -65,9 +65,10 @@ class MadnessDatabase extends _$MadnessDatabase {
         // as per CLAUDE.md instructions
         if (to >= 15) {
           // Drop and recreate assets table with new relationship fields
-          await customStatement('DROP TABLE IF EXISTS assets CASCADE');
-          await customStatement('DROP TABLE IF EXISTS asset_relationships CASCADE');
-          await customStatement('DROP TABLE IF EXISTS asset_property_index CASCADE');
+          // Note: SQLite doesn't support CASCADE in DROP TABLE
+          await customStatement('DROP TABLE IF EXISTS assets');
+          await customStatement('DROP TABLE IF EXISTS asset_relationships');
+          await customStatement('DROP TABLE IF EXISTS asset_property_index');
           await m.createAll();
         } else if (to >= 14) {
           // Add isPlaceholder column to screenshots table

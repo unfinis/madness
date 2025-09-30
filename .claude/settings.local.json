@@ -435,7 +435,18 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze example/asset_relationship_system_example.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/repositories/asset_repository.dart lib/services/asset_relationship_manager.dart lib/providers/asset_repository_provider.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/repositories/asset_repository.dart --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze test/asset_repository_simple_test.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze test/asset_repository_simple_test.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset_relationships.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset_relationships.freezed.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe run build_runner build lib/models/asset_relationships.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/assets.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/assets.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze /mnt/c/Projects/madness/madness/example/asset_relationship_system_example.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/asset_relationship_manager.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/asset_repository_provider.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/flutter.bat analyze --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/flutter analyze --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset.dart --no-fatal-warnings)"
     ],
     "deny": [],
     "ask": []

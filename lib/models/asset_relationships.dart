@@ -1,61 +1,36 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'assets.dart';
-
-part 'asset_relationships.freezed.dart';
-part 'asset_relationships.g.dart';
 
 /// Defines all possible relationship types between assets
 enum AssetRelationshipType {
   // Hierarchical relationships
-  @JsonValue('parent_of')
   parentOf,
-  @JsonValue('child_of')
   childOf,
 
   // Network relationships
-  @JsonValue('connected_to')
   connectedTo,
-  @JsonValue('routes_to')
   routesTo,
-  @JsonValue('bridged_to')
   bridgedTo,
-  @JsonValue('vlanned_to')
   vlannedTo,
 
   // Security relationships
-  @JsonValue('trusts')
   trusts,
-  @JsonValue('trusted_by')
   trustedBy,
-  @JsonValue('authenticates_to')
   authenticatesTo,
-  @JsonValue('authenticated_by')
   authenticatedBy,
-  @JsonValue('manages')
   manages,
-  @JsonValue('managed_by')
   managedBy,
 
   // Service relationships
-  @JsonValue('hosts')
   hosts,
-  @JsonValue('hosted_by')
   hostedBy,
-  @JsonValue('depends_on')
   dependsOn,
-  @JsonValue('dependency_of')
   dependencyOf,
-  @JsonValue('communicates_with')
   communicatesWith,
 
   // Discovery relationships
-  @JsonValue('discovered_via')
   discoveredVia,
-  @JsonValue('led_to_discovery_of')
   ledToDiscoveryOf,
-  @JsonValue('shares_credentials_with')
   sharesCredentialsWith,
-  @JsonValue('vulnerable_to')
   vulnerableTo,
 }
 
@@ -204,37 +179,186 @@ class AssetLifecycleStates {
 }
 
 /// Relationship metadata for tracking additional information
-@freezed
-class RelationshipMetadata with _$RelationshipMetadata {
-  const factory RelationshipMetadata({
-    @Default('') String discoveryMethod,
-    @Default('') String confidence,
+class RelationshipMetadata {
+  final String discoveryMethod;
+  final String confidence;
+  final DateTime? discoveredAt;
+  final DateTime? validatedAt;
+  final Map<String, dynamic> additionalData;
+  final String notes;
+
+  const RelationshipMetadata({
+    this.discoveryMethod = '',
+    this.confidence = '',
+    this.discoveredAt,
+    this.validatedAt,
+    this.additionalData = const {},
+    this.notes = '',
+  });
+
+  factory RelationshipMetadata.fromJson(Map<String, dynamic> json) {
+    return RelationshipMetadata(
+      discoveryMethod: json['discoveryMethod'] as String? ?? '',
+      confidence: json['confidence'] as String? ?? '',
+      discoveredAt: json['discoveredAt'] != null
+        ? DateTime.parse(json['discoveredAt'] as String)
+        : null,
+      validatedAt: json['validatedAt'] != null
+        ? DateTime.parse(json['validatedAt'] as String)
+        : null,
+      additionalData: Map<String, dynamic>.from(json['additionalData'] ?? {}),
+      notes: json['notes'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'discoveryMethod': discoveryMethod,
+      'confidence': confidence,
+      'discoveredAt': discoveredAt?.toIso8601String(),
+      'validatedAt': validatedAt?.toIso8601String(),
+      'additionalData': additionalData,
+      'notes': notes,
+    };
+  }
+
+  RelationshipMetadata copyWith({
+    String? discoveryMethod,
+    String? confidence,
     DateTime? discoveredAt,
     DateTime? validatedAt,
-    @Default({}) Map<String, dynamic> additionalData,
-    @Default('') String notes,
-  }) = _RelationshipMetadata;
+    Map<String, dynamic>? additionalData,
+    String? notes,
+  }) {
+    return RelationshipMetadata(
+      discoveryMethod: discoveryMethod ?? this.discoveryMethod,
+      confidence: confidence ?? this.confidence,
+      discoveredAt: discoveredAt ?? this.discoveredAt,
+      validatedAt: validatedAt ?? this.validatedAt,
+      additionalData: additionalData ?? this.additionalData,
+      notes: notes ?? this.notes,
+    );
+  }
 
-  factory RelationshipMetadata.fromJson(Map<String, dynamic> json) =>
-      _$RelationshipMetadataFromJson(json);
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is RelationshipMetadata &&
+            discoveryMethod == other.discoveryMethod &&
+            confidence == other.confidence &&
+            discoveredAt == other.discoveredAt &&
+            validatedAt == other.validatedAt &&
+            notes == other.notes);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    discoveryMethod,
+    confidence,
+    discoveredAt,
+    validatedAt,
+    notes,
+  );
 }
 
 /// Relationship definition with full context
-@freezed
-class AssetRelationship with _$AssetRelationship {
-  const factory AssetRelationship({
-    required String id,
-    required String sourceAssetId,
-    required String targetAssetId,
-    required AssetRelationshipType relationshipType,
-    @Default(false) bool isBidirectional,
+class AssetRelationship {
+  final String id;
+  final String sourceAssetId;
+  final String targetAssetId;
+  final AssetRelationshipType relationshipType;
+  final bool isBidirectional;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final RelationshipMetadata? metadata;
+
+  const AssetRelationship({
+    required this.id,
+    required this.sourceAssetId,
+    required this.targetAssetId,
+    required this.relationshipType,
+    this.isBidirectional = false,
+    this.createdAt,
+    this.updatedAt,
+    this.metadata,
+  });
+
+  factory AssetRelationship.fromJson(Map<String, dynamic> json) {
+    return AssetRelationship(
+      id: json['id'] as String,
+      sourceAssetId: json['sourceAssetId'] as String,
+      targetAssetId: json['targetAssetId'] as String,
+      relationshipType: AssetRelationshipType.values.firstWhere(
+        (e) => e.toString().split('.').last == json['relationshipType'],
+        orElse: () => AssetRelationshipType.connectedTo,
+      ),
+      isBidirectional: json['isBidirectional'] as bool? ?? false,
+      createdAt: json['createdAt'] != null
+        ? DateTime.parse(json['createdAt'] as String)
+        : null,
+      updatedAt: json['updatedAt'] != null
+        ? DateTime.parse(json['updatedAt'] as String)
+        : null,
+      metadata: json['metadata'] != null
+        ? RelationshipMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
+        : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'sourceAssetId': sourceAssetId,
+      'targetAssetId': targetAssetId,
+      'relationshipType': relationshipType.toString().split('.').last,
+      'isBidirectional': isBidirectional,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'metadata': metadata?.toJson(),
+    };
+  }
+
+  AssetRelationship copyWith({
+    String? id,
+    String? sourceAssetId,
+    String? targetAssetId,
+    AssetRelationshipType? relationshipType,
+    bool? isBidirectional,
     DateTime? createdAt,
     DateTime? updatedAt,
     RelationshipMetadata? metadata,
-  }) = _AssetRelationship;
+  }) {
+    return AssetRelationship(
+      id: id ?? this.id,
+      sourceAssetId: sourceAssetId ?? this.sourceAssetId,
+      targetAssetId: targetAssetId ?? this.targetAssetId,
+      relationshipType: relationshipType ?? this.relationshipType,
+      isBidirectional: isBidirectional ?? this.isBidirectional,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      metadata: metadata ?? this.metadata,
+    );
+  }
 
-  factory AssetRelationship.fromJson(Map<String, dynamic> json) =>
-      _$AssetRelationshipFromJson(json);
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is AssetRelationship &&
+            id == other.id &&
+            sourceAssetId == other.sourceAssetId &&
+            targetAssetId == other.targetAssetId &&
+            relationshipType == other.relationshipType &&
+            isBidirectional == other.isBidirectional);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sourceAssetId,
+    targetAssetId,
+    relationshipType,
+    isBidirectional,
+  );
 }
 
 /// Helper class for relationship operations
