@@ -476,6 +476,16 @@ class AssetsTable extends Table {
   TextColumn get accessLevel => text().named('access_level').nullable()(); // AccessLevel enum as string
   TextColumn get securityControls => text().named('security_controls').nullable()(); // List<String> as JSON
 
+  // NEW RELATIONSHIP SYSTEM FIELDS:
+  // Relationship system fields
+  TextColumn get relationships => text().withDefault(const Constant('{}'))();
+  TextColumn get inheritedProperties => text().named('inherited_properties').withDefault(const Constant('{}'))();
+  TextColumn get lifecycleState => text().named('lifecycle_state').withDefault(const Constant('unknown'))();
+  TextColumn get stateTransitions => text().named('state_transitions').withDefault(const Constant('{}'))();
+  TextColumn get dependencyMap => text().named('dependency_map').withDefault(const Constant('{}'))();
+  TextColumn get discoveryPath => text().named('discovery_path').withDefault(const Constant('[]'))();
+  TextColumn get relationshipMetadata => text().named('relationship_metadata').withDefault(const Constant('{}'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

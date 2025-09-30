@@ -52,7 +52,7 @@ class MadnessDatabase extends _$MadnessDatabase {
   MadnessDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration {
@@ -63,7 +63,13 @@ class MadnessDatabase extends _$MadnessDatabase {
       onUpgrade: (Migrator m, int from, int to) async {
         // For now, we recreate all tables on schema changes
         // as per CLAUDE.md instructions
-        if (to >= 14) {
+        if (to >= 15) {
+          // Drop and recreate assets table with new relationship fields
+          await customStatement('DROP TABLE IF EXISTS assets CASCADE');
+          await customStatement('DROP TABLE IF EXISTS asset_relationships CASCADE');
+          await customStatement('DROP TABLE IF EXISTS asset_property_index CASCADE');
+          await m.createAll();
+        } else if (to >= 14) {
           // Add isPlaceholder column to screenshots table
           await m.addColumn(screenshotsTable, screenshotsTable.isPlaceholder);
         } else if (to >= 12) {

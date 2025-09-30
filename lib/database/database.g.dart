@@ -14433,6 +14433,90 @@ class $AssetsTableTable extends AssetsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _relationshipsMeta = const VerificationMeta(
+    'relationships',
+  );
+  @override
+  late final GeneratedColumn<String> relationships = GeneratedColumn<String>(
+    'relationships',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _inheritedPropertiesMeta =
+      const VerificationMeta('inheritedProperties');
+  @override
+  late final GeneratedColumn<String> inheritedProperties =
+      GeneratedColumn<String>(
+        'inherited_properties',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      );
+  static const VerificationMeta _lifecycleStateMeta = const VerificationMeta(
+    'lifecycleState',
+  );
+  @override
+  late final GeneratedColumn<String> lifecycleState = GeneratedColumn<String>(
+    'lifecycle_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('unknown'),
+  );
+  static const VerificationMeta _stateTransitionsMeta = const VerificationMeta(
+    'stateTransitions',
+  );
+  @override
+  late final GeneratedColumn<String> stateTransitions = GeneratedColumn<String>(
+    'state_transitions',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _dependencyMapMeta = const VerificationMeta(
+    'dependencyMap',
+  );
+  @override
+  late final GeneratedColumn<String> dependencyMap = GeneratedColumn<String>(
+    'dependency_map',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _discoveryPathMeta = const VerificationMeta(
+    'discoveryPath',
+  );
+  @override
+  late final GeneratedColumn<String> discoveryPath = GeneratedColumn<String>(
+    'discovery_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _relationshipMetadataMeta =
+      const VerificationMeta('relationshipMetadata');
+  @override
+  late final GeneratedColumn<String> relationshipMetadata =
+      GeneratedColumn<String>(
+        'relationship_metadata',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -14455,6 +14539,13 @@ class $AssetsTableTable extends AssetsTable
     metadata,
     accessLevel,
     securityControls,
+    relationships,
+    inheritedProperties,
+    lifecycleState,
+    stateTransitions,
+    dependencyMap,
+    discoveryPath,
+    relationshipMetadata,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -14647,6 +14738,69 @@ class $AssetsTableTable extends AssetsTable
         ),
       );
     }
+    if (data.containsKey('relationships')) {
+      context.handle(
+        _relationshipsMeta,
+        relationships.isAcceptableOrUnknown(
+          data['relationships']!,
+          _relationshipsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inherited_properties')) {
+      context.handle(
+        _inheritedPropertiesMeta,
+        inheritedProperties.isAcceptableOrUnknown(
+          data['inherited_properties']!,
+          _inheritedPropertiesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('lifecycle_state')) {
+      context.handle(
+        _lifecycleStateMeta,
+        lifecycleState.isAcceptableOrUnknown(
+          data['lifecycle_state']!,
+          _lifecycleStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('state_transitions')) {
+      context.handle(
+        _stateTransitionsMeta,
+        stateTransitions.isAcceptableOrUnknown(
+          data['state_transitions']!,
+          _stateTransitionsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('dependency_map')) {
+      context.handle(
+        _dependencyMapMeta,
+        dependencyMap.isAcceptableOrUnknown(
+          data['dependency_map']!,
+          _dependencyMapMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discovery_path')) {
+      context.handle(
+        _discoveryPathMeta,
+        discoveryPath.isAcceptableOrUnknown(
+          data['discovery_path']!,
+          _discoveryPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('relationship_metadata')) {
+      context.handle(
+        _relationshipMetadataMeta,
+        relationshipMetadata.isAcceptableOrUnknown(
+          data['relationship_metadata']!,
+          _relationshipMetadataMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14736,6 +14890,34 @@ class $AssetsTableTable extends AssetsTable
         DriftSqlType.string,
         data['${effectivePrefix}security_controls'],
       ),
+      relationships: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relationships'],
+      )!,
+      inheritedProperties: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inherited_properties'],
+      )!,
+      lifecycleState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lifecycle_state'],
+      )!,
+      stateTransitions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state_transitions'],
+      )!,
+      dependencyMap: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dependency_map'],
+      )!,
+      discoveryPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discovery_path'],
+      )!,
+      relationshipMetadata: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relationship_metadata'],
+      )!,
     );
   }
 
@@ -14766,6 +14948,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
   final String? metadata;
   final String? accessLevel;
   final String? securityControls;
+  final String relationships;
+  final String inheritedProperties;
+  final String lifecycleState;
+  final String stateTransitions;
+  final String dependencyMap;
+  final String discoveryPath;
+  final String relationshipMetadata;
   const AssetRow({
     required this.id,
     required this.type,
@@ -14787,6 +14976,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
     this.metadata,
     this.accessLevel,
     this.securityControls,
+    required this.relationships,
+    required this.inheritedProperties,
+    required this.lifecycleState,
+    required this.stateTransitions,
+    required this.dependencyMap,
+    required this.discoveryPath,
+    required this.relationshipMetadata,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14823,6 +15019,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
     if (!nullToAbsent || securityControls != null) {
       map['security_controls'] = Variable<String>(securityControls);
     }
+    map['relationships'] = Variable<String>(relationships);
+    map['inherited_properties'] = Variable<String>(inheritedProperties);
+    map['lifecycle_state'] = Variable<String>(lifecycleState);
+    map['state_transitions'] = Variable<String>(stateTransitions);
+    map['dependency_map'] = Variable<String>(dependencyMap);
+    map['discovery_path'] = Variable<String>(discoveryPath);
+    map['relationship_metadata'] = Variable<String>(relationshipMetadata);
     return map;
   }
 
@@ -14860,6 +15063,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
       securityControls: securityControls == null && nullToAbsent
           ? const Value.absent()
           : Value(securityControls),
+      relationships: Value(relationships),
+      inheritedProperties: Value(inheritedProperties),
+      lifecycleState: Value(lifecycleState),
+      stateTransitions: Value(stateTransitions),
+      dependencyMap: Value(dependencyMap),
+      discoveryPath: Value(discoveryPath),
+      relationshipMetadata: Value(relationshipMetadata),
     );
   }
 
@@ -14889,6 +15099,17 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
       metadata: serializer.fromJson<String?>(json['metadata']),
       accessLevel: serializer.fromJson<String?>(json['accessLevel']),
       securityControls: serializer.fromJson<String?>(json['securityControls']),
+      relationships: serializer.fromJson<String>(json['relationships']),
+      inheritedProperties: serializer.fromJson<String>(
+        json['inheritedProperties'],
+      ),
+      lifecycleState: serializer.fromJson<String>(json['lifecycleState']),
+      stateTransitions: serializer.fromJson<String>(json['stateTransitions']),
+      dependencyMap: serializer.fromJson<String>(json['dependencyMap']),
+      discoveryPath: serializer.fromJson<String>(json['discoveryPath']),
+      relationshipMetadata: serializer.fromJson<String>(
+        json['relationshipMetadata'],
+      ),
     );
   }
   @override
@@ -14915,6 +15136,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
       'metadata': serializer.toJson<String?>(metadata),
       'accessLevel': serializer.toJson<String?>(accessLevel),
       'securityControls': serializer.toJson<String?>(securityControls),
+      'relationships': serializer.toJson<String>(relationships),
+      'inheritedProperties': serializer.toJson<String>(inheritedProperties),
+      'lifecycleState': serializer.toJson<String>(lifecycleState),
+      'stateTransitions': serializer.toJson<String>(stateTransitions),
+      'dependencyMap': serializer.toJson<String>(dependencyMap),
+      'discoveryPath': serializer.toJson<String>(discoveryPath),
+      'relationshipMetadata': serializer.toJson<String>(relationshipMetadata),
     };
   }
 
@@ -14939,6 +15167,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
     Value<String?> metadata = const Value.absent(),
     Value<String?> accessLevel = const Value.absent(),
     Value<String?> securityControls = const Value.absent(),
+    String? relationships,
+    String? inheritedProperties,
+    String? lifecycleState,
+    String? stateTransitions,
+    String? dependencyMap,
+    String? discoveryPath,
+    String? relationshipMetadata,
   }) => AssetRow(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -14964,6 +15199,13 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
     securityControls: securityControls.present
         ? securityControls.value
         : this.securityControls,
+    relationships: relationships ?? this.relationships,
+    inheritedProperties: inheritedProperties ?? this.inheritedProperties,
+    lifecycleState: lifecycleState ?? this.lifecycleState,
+    stateTransitions: stateTransitions ?? this.stateTransitions,
+    dependencyMap: dependencyMap ?? this.dependencyMap,
+    discoveryPath: discoveryPath ?? this.discoveryPath,
+    relationshipMetadata: relationshipMetadata ?? this.relationshipMetadata,
   );
   AssetRow copyWithCompanion(AssetsTableCompanion data) {
     return AssetRow(
@@ -15015,6 +15257,27 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
       securityControls: data.securityControls.present
           ? data.securityControls.value
           : this.securityControls,
+      relationships: data.relationships.present
+          ? data.relationships.value
+          : this.relationships,
+      inheritedProperties: data.inheritedProperties.present
+          ? data.inheritedProperties.value
+          : this.inheritedProperties,
+      lifecycleState: data.lifecycleState.present
+          ? data.lifecycleState.value
+          : this.lifecycleState,
+      stateTransitions: data.stateTransitions.present
+          ? data.stateTransitions.value
+          : this.stateTransitions,
+      dependencyMap: data.dependencyMap.present
+          ? data.dependencyMap.value
+          : this.dependencyMap,
+      discoveryPath: data.discoveryPath.present
+          ? data.discoveryPath.value
+          : this.discoveryPath,
+      relationshipMetadata: data.relationshipMetadata.present
+          ? data.relationshipMetadata.value
+          : this.relationshipMetadata,
     );
   }
 
@@ -15040,13 +15303,20 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
           ..write('tags: $tags, ')
           ..write('metadata: $metadata, ')
           ..write('accessLevel: $accessLevel, ')
-          ..write('securityControls: $securityControls')
+          ..write('securityControls: $securityControls, ')
+          ..write('relationships: $relationships, ')
+          ..write('inheritedProperties: $inheritedProperties, ')
+          ..write('lifecycleState: $lifecycleState, ')
+          ..write('stateTransitions: $stateTransitions, ')
+          ..write('dependencyMap: $dependencyMap, ')
+          ..write('discoveryPath: $discoveryPath, ')
+          ..write('relationshipMetadata: $relationshipMetadata')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     type,
     projectId,
@@ -15067,7 +15337,14 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
     metadata,
     accessLevel,
     securityControls,
-  );
+    relationships,
+    inheritedProperties,
+    lifecycleState,
+    stateTransitions,
+    dependencyMap,
+    discoveryPath,
+    relationshipMetadata,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -15091,7 +15368,14 @@ class AssetRow extends DataClass implements Insertable<AssetRow> {
           other.tags == this.tags &&
           other.metadata == this.metadata &&
           other.accessLevel == this.accessLevel &&
-          other.securityControls == this.securityControls);
+          other.securityControls == this.securityControls &&
+          other.relationships == this.relationships &&
+          other.inheritedProperties == this.inheritedProperties &&
+          other.lifecycleState == this.lifecycleState &&
+          other.stateTransitions == this.stateTransitions &&
+          other.dependencyMap == this.dependencyMap &&
+          other.discoveryPath == this.discoveryPath &&
+          other.relationshipMetadata == this.relationshipMetadata);
 }
 
 class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
@@ -15115,6 +15399,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
   final Value<String?> metadata;
   final Value<String?> accessLevel;
   final Value<String?> securityControls;
+  final Value<String> relationships;
+  final Value<String> inheritedProperties;
+  final Value<String> lifecycleState;
+  final Value<String> stateTransitions;
+  final Value<String> dependencyMap;
+  final Value<String> discoveryPath;
+  final Value<String> relationshipMetadata;
   final Value<int> rowid;
   const AssetsTableCompanion({
     this.id = const Value.absent(),
@@ -15137,6 +15428,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
     this.metadata = const Value.absent(),
     this.accessLevel = const Value.absent(),
     this.securityControls = const Value.absent(),
+    this.relationships = const Value.absent(),
+    this.inheritedProperties = const Value.absent(),
+    this.lifecycleState = const Value.absent(),
+    this.stateTransitions = const Value.absent(),
+    this.dependencyMap = const Value.absent(),
+    this.discoveryPath = const Value.absent(),
+    this.relationshipMetadata = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AssetsTableCompanion.insert({
@@ -15160,6 +15458,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
     this.metadata = const Value.absent(),
     this.accessLevel = const Value.absent(),
     this.securityControls = const Value.absent(),
+    this.relationships = const Value.absent(),
+    this.inheritedProperties = const Value.absent(),
+    this.lifecycleState = const Value.absent(),
+    this.stateTransitions = const Value.absent(),
+    this.dependencyMap = const Value.absent(),
+    this.discoveryPath = const Value.absent(),
+    this.relationshipMetadata = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type),
@@ -15195,6 +15500,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
     Expression<String>? metadata,
     Expression<String>? accessLevel,
     Expression<String>? securityControls,
+    Expression<String>? relationships,
+    Expression<String>? inheritedProperties,
+    Expression<String>? lifecycleState,
+    Expression<String>? stateTransitions,
+    Expression<String>? dependencyMap,
+    Expression<String>? discoveryPath,
+    Expression<String>? relationshipMetadata,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -15218,6 +15530,15 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
       if (metadata != null) 'metadata': metadata,
       if (accessLevel != null) 'access_level': accessLevel,
       if (securityControls != null) 'security_controls': securityControls,
+      if (relationships != null) 'relationships': relationships,
+      if (inheritedProperties != null)
+        'inherited_properties': inheritedProperties,
+      if (lifecycleState != null) 'lifecycle_state': lifecycleState,
+      if (stateTransitions != null) 'state_transitions': stateTransitions,
+      if (dependencyMap != null) 'dependency_map': dependencyMap,
+      if (discoveryPath != null) 'discovery_path': discoveryPath,
+      if (relationshipMetadata != null)
+        'relationship_metadata': relationshipMetadata,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -15243,6 +15564,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
     Value<String?>? metadata,
     Value<String?>? accessLevel,
     Value<String?>? securityControls,
+    Value<String>? relationships,
+    Value<String>? inheritedProperties,
+    Value<String>? lifecycleState,
+    Value<String>? stateTransitions,
+    Value<String>? dependencyMap,
+    Value<String>? discoveryPath,
+    Value<String>? relationshipMetadata,
     Value<int>? rowid,
   }) {
     return AssetsTableCompanion(
@@ -15266,6 +15594,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
       metadata: metadata ?? this.metadata,
       accessLevel: accessLevel ?? this.accessLevel,
       securityControls: securityControls ?? this.securityControls,
+      relationships: relationships ?? this.relationships,
+      inheritedProperties: inheritedProperties ?? this.inheritedProperties,
+      lifecycleState: lifecycleState ?? this.lifecycleState,
+      stateTransitions: stateTransitions ?? this.stateTransitions,
+      dependencyMap: dependencyMap ?? this.dependencyMap,
+      discoveryPath: discoveryPath ?? this.discoveryPath,
+      relationshipMetadata: relationshipMetadata ?? this.relationshipMetadata,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -15333,6 +15668,29 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
     if (securityControls.present) {
       map['security_controls'] = Variable<String>(securityControls.value);
     }
+    if (relationships.present) {
+      map['relationships'] = Variable<String>(relationships.value);
+    }
+    if (inheritedProperties.present) {
+      map['inherited_properties'] = Variable<String>(inheritedProperties.value);
+    }
+    if (lifecycleState.present) {
+      map['lifecycle_state'] = Variable<String>(lifecycleState.value);
+    }
+    if (stateTransitions.present) {
+      map['state_transitions'] = Variable<String>(stateTransitions.value);
+    }
+    if (dependencyMap.present) {
+      map['dependency_map'] = Variable<String>(dependencyMap.value);
+    }
+    if (discoveryPath.present) {
+      map['discovery_path'] = Variable<String>(discoveryPath.value);
+    }
+    if (relationshipMetadata.present) {
+      map['relationship_metadata'] = Variable<String>(
+        relationshipMetadata.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -15362,6 +15720,13 @@ class AssetsTableCompanion extends UpdateCompanion<AssetRow> {
           ..write('metadata: $metadata, ')
           ..write('accessLevel: $accessLevel, ')
           ..write('securityControls: $securityControls, ')
+          ..write('relationships: $relationships, ')
+          ..write('inheritedProperties: $inheritedProperties, ')
+          ..write('lifecycleState: $lifecycleState, ')
+          ..write('stateTransitions: $stateTransitions, ')
+          ..write('dependencyMap: $dependencyMap, ')
+          ..write('discoveryPath: $discoveryPath, ')
+          ..write('relationshipMetadata: $relationshipMetadata, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -32232,6 +32597,13 @@ typedef $$AssetsTableTableCreateCompanionBuilder =
       Value<String?> metadata,
       Value<String?> accessLevel,
       Value<String?> securityControls,
+      Value<String> relationships,
+      Value<String> inheritedProperties,
+      Value<String> lifecycleState,
+      Value<String> stateTransitions,
+      Value<String> dependencyMap,
+      Value<String> discoveryPath,
+      Value<String> relationshipMetadata,
       Value<int> rowid,
     });
 typedef $$AssetsTableTableUpdateCompanionBuilder =
@@ -32256,6 +32628,13 @@ typedef $$AssetsTableTableUpdateCompanionBuilder =
       Value<String?> metadata,
       Value<String?> accessLevel,
       Value<String?> securityControls,
+      Value<String> relationships,
+      Value<String> inheritedProperties,
+      Value<String> lifecycleState,
+      Value<String> stateTransitions,
+      Value<String> dependencyMap,
+      Value<String> discoveryPath,
+      Value<String> relationshipMetadata,
       Value<int> rowid,
     });
 
@@ -32463,6 +32842,41 @@ class $$AssetsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get relationships => $composableBuilder(
+    column: $table.relationships,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inheritedProperties => $composableBuilder(
+    column: $table.inheritedProperties,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lifecycleState => $composableBuilder(
+    column: $table.lifecycleState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stateTransitions => $composableBuilder(
+    column: $table.stateTransitions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dependencyMap => $composableBuilder(
+    column: $table.dependencyMap,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discoveryPath => $composableBuilder(
+    column: $table.discoveryPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relationshipMetadata => $composableBuilder(
+    column: $table.relationshipMetadata,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$ProjectsTableTableFilterComposer get projectId {
     final $$ProjectsTableTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -32667,6 +33081,41 @@ class $$AssetsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get relationships => $composableBuilder(
+    column: $table.relationships,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inheritedProperties => $composableBuilder(
+    column: $table.inheritedProperties,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lifecycleState => $composableBuilder(
+    column: $table.lifecycleState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stateTransitions => $composableBuilder(
+    column: $table.stateTransitions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dependencyMap => $composableBuilder(
+    column: $table.dependencyMap,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discoveryPath => $composableBuilder(
+    column: $table.discoveryPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relationshipMetadata => $composableBuilder(
+    column: $table.relationshipMetadata,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProjectsTableTableOrderingComposer get projectId {
     final $$ProjectsTableTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -32782,6 +33231,41 @@ class $$AssetsTableTableAnnotationComposer
 
   GeneratedColumn<String> get securityControls => $composableBuilder(
     column: $table.securityControls,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get relationships => $composableBuilder(
+    column: $table.relationships,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inheritedProperties => $composableBuilder(
+    column: $table.inheritedProperties,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lifecycleState => $composableBuilder(
+    column: $table.lifecycleState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get stateTransitions => $composableBuilder(
+    column: $table.stateTransitions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dependencyMap => $composableBuilder(
+    column: $table.dependencyMap,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discoveryPath => $composableBuilder(
+    column: $table.discoveryPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get relationshipMetadata => $composableBuilder(
+    column: $table.relationshipMetadata,
     builder: (column) => column,
   );
 
@@ -32941,6 +33425,13 @@ class $$AssetsTableTableTableManager
                 Value<String?> metadata = const Value.absent(),
                 Value<String?> accessLevel = const Value.absent(),
                 Value<String?> securityControls = const Value.absent(),
+                Value<String> relationships = const Value.absent(),
+                Value<String> inheritedProperties = const Value.absent(),
+                Value<String> lifecycleState = const Value.absent(),
+                Value<String> stateTransitions = const Value.absent(),
+                Value<String> dependencyMap = const Value.absent(),
+                Value<String> discoveryPath = const Value.absent(),
+                Value<String> relationshipMetadata = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AssetsTableCompanion(
                 id: id,
@@ -32963,6 +33454,13 @@ class $$AssetsTableTableTableManager
                 metadata: metadata,
                 accessLevel: accessLevel,
                 securityControls: securityControls,
+                relationships: relationships,
+                inheritedProperties: inheritedProperties,
+                lifecycleState: lifecycleState,
+                stateTransitions: stateTransitions,
+                dependencyMap: dependencyMap,
+                discoveryPath: discoveryPath,
+                relationshipMetadata: relationshipMetadata,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -32987,6 +33485,13 @@ class $$AssetsTableTableTableManager
                 Value<String?> metadata = const Value.absent(),
                 Value<String?> accessLevel = const Value.absent(),
                 Value<String?> securityControls = const Value.absent(),
+                Value<String> relationships = const Value.absent(),
+                Value<String> inheritedProperties = const Value.absent(),
+                Value<String> lifecycleState = const Value.absent(),
+                Value<String> stateTransitions = const Value.absent(),
+                Value<String> dependencyMap = const Value.absent(),
+                Value<String> discoveryPath = const Value.absent(),
+                Value<String> relationshipMetadata = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AssetsTableCompanion.insert(
                 id: id,
@@ -33009,6 +33514,13 @@ class $$AssetsTableTableTableManager
                 metadata: metadata,
                 accessLevel: accessLevel,
                 securityControls: securityControls,
+                relationships: relationships,
+                inheritedProperties: inheritedProperties,
+                lifecycleState: lifecycleState,
+                stateTransitions: stateTransitions,
+                dependencyMap: dependencyMap,
+                discoveryPath: discoveryPath,
+                relationshipMetadata: relationshipMetadata,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

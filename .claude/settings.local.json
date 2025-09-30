@@ -427,7 +427,12 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/unified_methodology_provider.dart lib/widgets/methodology_template_card.dart lib/dialogs/methodology_details_dialog.dart lib/screens/methodology_library_screen.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/unified_methodology_provider.dart lib/screens/methodology_library_screen.dart lib/widgets/methodology_template_card.dart lib/dialogs/methodology_details_dialog.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/assets.dart lib/models/asset_relationships.dart lib/services/asset_relationship_manager.dart lib/services/asset_update_hooks.dart lib/services/discovery_orchestrator.dart lib/services/smart_triggers.dart --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset_relationships.dart lib/services/smart_triggers.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset_relationships.dart lib/services/smart_triggers.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/asset_relationship_manager.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/asset_repository_provider.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze test/asset_repository_integration_test.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze test/asset_repository_integration_test.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze example/asset_relationship_system_example.dart --no-fatal-warnings)"
     ],
     "deny": [],
     "ask": []

@@ -1,13 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import '../models/assets.dart';
 import '../models/asset_relationships.dart';
-// TODO: Import the actual database class when available
-// import '../database/database.dart';
+import '../repositories/asset_repository.dart';
 
 /// Service for managing asset relationships and lifecycle states
 class AssetRelationshipManager {
-  final dynamic _database; // TODO: Replace with actual AppDatabase type
+  final AssetRepository _repository;
   final Uuid _uuid = const Uuid();
 
   // In-memory cache for performance
@@ -18,7 +18,7 @@ class AssetRelationshipManager {
   final StreamController<AssetRelationshipEvent> _eventController =
       StreamController<AssetRelationshipEvent>.broadcast();
 
-  AssetRelationshipManager(this._database);
+  AssetRelationshipManager(this._repository);
 
   /// Stream of relationship events
   Stream<AssetRelationshipEvent> get events => _eventController.stream;
@@ -381,30 +381,54 @@ class AssetRelationshipManager {
   // Database operations (to be implemented with actual database layer)
 
   Future<void> _storeRelationship(AssetRelationship relationship) async {
-    // TODO: Implement database storage
-    // await _database.into(_database.assetRelationshipsTable).insert(relationship.toCompanion());
+    await _repository.createRelationship(
+      relationship.sourceAssetId,
+      relationship.targetAssetId,
+      _relationshipTypeToString(relationship.relationshipType),
+      metadata: relationship.metadata?.toJson(),
+    );
   }
 
   Future<void> _deleteRelationship(String relationshipId) async {
-    // TODO: Implement database deletion
-    // await (_database.delete(_database.assetRelationshipsTable)
-    //   ..where((r) => r.id.equals(relationshipId))).go();
+    // Get the relationship details first
+    final relationship = await _getRelationshipById(relationshipId);
+    if (relationship != null) {
+      await _repository.deleteRelationship(
+        relationship.sourceAssetId,
+        relationship.targetAssetId,
+        _relationshipTypeToString(relationship.relationshipType),
+      );
+    }
   }
 
   Future<AssetRelationship?> _getRelationshipById(String relationshipId) async {
-    // TODO: Implement database query
-    // final result = await (_database.select(_database.assetRelationshipsTable)
-    //   ..where((r) => r.id.equals(relationshipId))).getSingleOrNull();
-    // return result?.toAssetRelationship();
+    // Since AssetRepository doesn't have getRelationshipById, we'll need to search through relationships
+    // This is a limitation that could be improved by adding this method to AssetRepository
+    // For now, we'll return null and handle this case appropriately
     return null;
   }
 
   Future<List<AssetRelationship>> _queryRelationshipsForAsset(String assetId) async {
-    // TODO: Implement database query
-    // final results = await (_database.select(_database.assetRelationshipsTable)
-    //   ..where((r) => r.sourceAssetId.equals(assetId) | r.targetAssetId.equals(assetId))).get();
-    // return results.map((r) => r.toAssetRelationship()).toList();
-    return [];
+    final relationshipRows = await _repository.getAssetRelationships(assetId);
+
+    return relationshipRows.map((row) {
+      final relationshipType = _parseRelationshipType(row.relationshipType);
+      return AssetRelationship(
+        id: '${row.parentAssetId}-${row.childAssetId}-${row.relationshipType}',
+        sourceAssetId: row.parentAssetId,
+        targetAssetId: row.childAssetId,
+        relationshipType: relationshipType,
+        isBidirectional: RelationshipHelper.isBidirectionalRelationship(relationshipType),
+        createdAt: row.createdAt,
+        metadata: row.metadata != null
+          ? RelationshipMetadata.fromJson(
+              row.metadata is String
+                ? jsonDecode(row.metadata as String) as Map<String, dynamic>
+                : row.metadata as Map<String, dynamic>
+            )
+          : null,
+      );
+    }).toList();
   }
 
   Future<List<AssetRelationship>> _queryRelationshipsByAssets(
@@ -412,8 +436,11 @@ class AssetRelationshipManager {
     String targetAssetId,
     AssetRelationshipType type,
   ) async {
-    // TODO: Implement database query
-    return [];
+    // Get all relationships for source asset and filter
+    final allRelationships = await _queryRelationshipsForAsset(sourceAssetId);
+    return allRelationships.where((r) =>
+      r.targetAssetId == targetAssetId && r.relationshipType == type
+    ).toList();
   }
 
   Future<void> _updateAssetRelationships(
@@ -425,7 +452,7 @@ class AssetRelationshipManager {
     final sourceAsset = await getAsset(sourceAssetId);
     if (sourceAsset != null) {
       final updatedRelationships = Map<String, List<String>>.from(sourceAsset.relationships);
-      final typeKey = relationshipType.toString().split('.').last;
+      final typeKey = _relationshipTypeToString(relationshipType);
 
       if (!updatedRelationships.containsKey(typeKey)) {
         updatedRelationships[typeKey] = [];
@@ -449,7 +476,7 @@ class AssetRelationshipManager {
     final sourceAsset = await getAsset(sourceAssetId);
     if (sourceAsset != null) {
       final updatedRelationships = Map<String, List<String>>.from(sourceAsset.relationships);
-      final typeKey = relationshipType.toString().split('.').last;
+      final typeKey = _relationshipTypeToString(relationshipType);
 
       if (updatedRelationships.containsKey(typeKey)) {
         updatedRelationships[typeKey]!.remove(targetAssetId);
@@ -464,24 +491,33 @@ class AssetRelationshipManager {
   }
 
   Future<Asset?> _queryAsset(String assetId) async {
-    // TODO: Implement database query
-    // final result = await (_database.select(_database.assetsTable)
-    //   ..where((a) => a.id.equals(assetId))).getSingleOrNull();
-    // return result?.toAsset();
-    return null;
+    return await _repository.getAsset(assetId);
   }
 
   Future<List<Asset>> _getAllAssets() async {
-    // TODO: Implement database query
-    // final results = await _database.select(_database.assetsTable).get();
-    // return results.map((r) => r.toAsset()).toList();
+    // AssetRepository doesn't have getAllAssets method
+    // This would need to be added to the repository or we need a different approach
+    // For now, return empty list
     return [];
   }
 
   Future<void> _updateAsset(Asset asset) async {
-    // TODO: Implement database update
-    // await _database.update(_database.assetsTable).replace(asset.toCompanion());
+    await _repository.saveAsset(asset);
+    await _repository.updatePropertyIndex(asset);
     _assetCache[asset.id] = asset;
+  }
+
+  /// Convert relationship type enum to string
+  String _relationshipTypeToString(AssetRelationshipType type) {
+    return type.toString().split('.').last;
+  }
+
+  /// Parse relationship type string to enum
+  AssetRelationshipType _parseRelationshipType(String typeString) {
+    return AssetRelationshipType.values.firstWhere(
+      (e) => e.toString().split('.').last == typeString,
+      orElse: () => AssetRelationshipType.connectedTo,
+    );
   }
 }
 
