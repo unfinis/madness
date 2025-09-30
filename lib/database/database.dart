@@ -52,7 +52,7 @@ class MadnessDatabase extends _$MadnessDatabase {
   MadnessDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 17; // Updated for critical asset types and cloud resources
 
   @override
   MigrationStrategy get migration {

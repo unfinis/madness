@@ -129,10 +129,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkAccessPoint():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -191,10 +188,7 @@ return $default(_that.id,_that.name,_that.accessType,_that.sourceAssetId,_that.s
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  NetworkAccessType accessType,  String? sourceAssetId,  String? sourceNetworkId,  String? description,  bool active,  String? credentials,  Map<String, String>? accessDetails,  DateTime? discoveredAt,  DateTime? lastTested)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkAccessPoint():
-return $default(_that.id,_that.name,_that.accessType,_that.sourceAssetId,_that.sourceNetworkId,_that.description,_that.active,_that.credentials,_that.accessDetails,_that.discoveredAt,_that.lastTested);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.accessType,_that.sourceAssetId,_that.sourceNetworkId,_that.description,_that.active,_that.credentials,_that.accessDetails,_that.discoveredAt,_that.lastTested);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -434,10 +428,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkHostReference():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -496,10 +487,7 @@ return $default(_that.hostAssetId,_that.ipAddress,_that.hostname,_that.macAddres
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String hostAssetId,  String ipAddress,  String? hostname,  String? macAddress,  bool isGateway,  bool isDhcpServer,  bool isDnsServer,  bool isCompromised,  List<String>? openPorts,  DateTime? lastSeen)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkHostReference():
-return $default(_that.hostAssetId,_that.ipAddress,_that.hostname,_that.macAddress,_that.isGateway,_that.isDhcpServer,_that.isDnsServer,_that.isCompromised,_that.openPorts,_that.lastSeen);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.hostAssetId,_that.ipAddress,_that.hostname,_that.macAddress,_that.isGateway,_that.isDhcpServer,_that.isDnsServer,_that.isCompromised,_that.openPorts,_that.lastSeen);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -738,10 +726,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _RestrictedEnvironment():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -800,10 +785,7 @@ return $default(_that.id,_that.name,_that.environmentType,_that.restrictions,_th
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  EnvironmentType environmentType,  List<RestrictionMechanism> restrictions,  String hostAssetId,  String? applicationAssetId,  String? networkAssetId,  String? description,  List<String> securityControlIds,  List<String> breakoutAttemptIds,  Map<String, String>? environmentDetails,  DateTime? discoveredAt,  DateTime? lastTested)  $default,) {final _that = this;
 switch (_that) {
 case _RestrictedEnvironment():
-return $default(_that.id,_that.name,_that.environmentType,_that.restrictions,_that.hostAssetId,_that.applicationAssetId,_that.networkAssetId,_that.description,_that.securityControlIds,_that.breakoutAttemptIds,_that.environmentDetails,_that.discoveredAt,_that.lastTested);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.environmentType,_that.restrictions,_that.hostAssetId,_that.applicationAssetId,_that.networkAssetId,_that.description,_that.securityControlIds,_that.breakoutAttemptIds,_that.environmentDetails,_that.discoveredAt,_that.lastTested);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1079,10 +1061,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _BreakoutAttempt():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1141,10 +1120,7 @@ return $default(_that.id,_that.name,_that.restrictedEnvironmentId,_that.techniqu
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String restrictedEnvironmentId,  String techniqueId,  BreakoutStatus status,  DateTime attemptedAt,  String? testerAssetId,  String? description,  String? command,  String? output,  String? evidence,  BreakoutImpact? impact,  List<String>? assetsGained,  List<String>? credentialsGained,  Map<String, String>? attemptDetails,  String? blockedBy,  DateTime? completedAt,  String? notes)  $default,) {final _that = this;
 switch (_that) {
 case _BreakoutAttempt():
-return $default(_that.id,_that.name,_that.restrictedEnvironmentId,_that.techniqueId,_that.status,_that.attemptedAt,_that.testerAssetId,_that.description,_that.command,_that.output,_that.evidence,_that.impact,_that.assetsGained,_that.credentialsGained,_that.attemptDetails,_that.blockedBy,_that.completedAt,_that.notes);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.restrictedEnvironmentId,_that.techniqueId,_that.status,_that.attemptedAt,_that.testerAssetId,_that.description,_that.command,_that.output,_that.evidence,_that.impact,_that.assetsGained,_that.credentialsGained,_that.attemptDetails,_that.blockedBy,_that.completedAt,_that.notes);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1433,10 +1409,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _BreakoutTechnique():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1495,10 +1468,7 @@ return $default(_that.id,_that.name,_that.category,_that.applicableEnvironments,
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  TechniqueCategory category,  List<EnvironmentType> applicableEnvironments,  List<RestrictionMechanism> targetsRestrictions,  String? description,  String? methodology,  String? payload,  List<String>? prerequisites,  List<String>? indicators,  List<String>? mitigations,  String? cveReference,  String? source,  Map<String, String>? metadata,  DateTime? discoveredAt,  DateTime? lastUpdated)  $default,) {final _that = this;
 switch (_that) {
 case _BreakoutTechnique():
-return $default(_that.id,_that.name,_that.category,_that.applicableEnvironments,_that.targetsRestrictions,_that.description,_that.methodology,_that.payload,_that.prerequisites,_that.indicators,_that.mitigations,_that.cveReference,_that.source,_that.metadata,_that.discoveredAt,_that.lastUpdated);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.category,_that.applicableEnvironments,_that.targetsRestrictions,_that.description,_that.methodology,_that.payload,_that.prerequisites,_that.indicators,_that.mitigations,_that.cveReference,_that.source,_that.metadata,_that.discoveredAt,_that.lastUpdated);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1795,10 +1765,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _SecurityControl():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1857,10 +1824,7 @@ return $default(_that.id,_that.name,_that.type,_that.hostAssetId,_that.descripti
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String hostAssetId,  String? description,  String? version,  String? configuration,  bool enabled,  List<String> protectedAssets,  List<String> bypassTechniques,  Map<String, String>? settings,  DateTime? installedAt,  DateTime? lastUpdated)  $default,) {final _that = this;
 switch (_that) {
 case _SecurityControl():
-return $default(_that.id,_that.name,_that.type,_that.hostAssetId,_that.description,_that.version,_that.configuration,_that.enabled,_that.protectedAssets,_that.bypassTechniques,_that.settings,_that.installedAt,_that.lastUpdated);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.type,_that.hostAssetId,_that.description,_that.version,_that.configuration,_that.enabled,_that.protectedAssets,_that.bypassTechniques,_that.settings,_that.installedAt,_that.lastUpdated);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2108,10 +2072,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _SoftwareVersion():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2170,10 +2131,7 @@ return $default(_that.major,_that.minor,_that.patch,_that.build,_that.edition,_t
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int major,  int minor,  int patch,  String? build,  String? edition,  DateTime? releaseDate)  $default,) {final _that = this;
 switch (_that) {
 case _SoftwareVersion():
-return $default(_that.major,_that.minor,_that.patch,_that.build,_that.edition,_that.releaseDate);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.major,_that.minor,_that.patch,_that.build,_that.edition,_that.releaseDate);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2386,10 +2344,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkAddress():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2448,10 +2403,7 @@ return $default(_that.ip,_that.subnet,_that.gateway,_that.dnsServers,_that.macAd
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String ip,  String? subnet,  String? gateway,  List<String>? dnsServers,  String? macAddress,  bool? isStatic)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkAddress():
-return $default(_that.ip,_that.subnet,_that.gateway,_that.dnsServers,_that.macAddress,_that.isStatic);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.ip,_that.subnet,_that.gateway,_that.dnsServers,_that.macAddress,_that.isStatic);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2676,10 +2628,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _PhysicalLocation():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -2738,10 +2687,7 @@ return $default(_that.address,_that.city,_that.state,_that.country,_that.postalC
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? address,  String? city,  String? state,  String? country,  String? postalCode,  double? latitude,  double? longitude,  String? building,  String? floor,  String? room)  $default,) {final _that = this;
 switch (_that) {
 case _PhysicalLocation():
-return $default(_that.address,_that.city,_that.state,_that.country,_that.postalCode,_that.latitude,_that.longitude,_that.building,_that.floor,_that.room);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.address,_that.city,_that.state,_that.country,_that.postalCode,_that.latitude,_that.longitude,_that.building,_that.floor,_that.room);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2973,10 +2919,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _NetworkInterface():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -3035,10 +2978,7 @@ return $default(_that.id,_that.name,_that.type,_that.macAddress,_that.isEnabled,
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String macAddress,  bool isEnabled,  List<NetworkAddress> addresses,  String? description,  String? vendor,  String? driver,  int? speedMbps,  bool? isConnected,  String? connectedSwitchPort,  String? vlanId,  Map<String, String>? driverInfo,  DateTime? lastSeen)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkInterface():
-return $default(_that.id,_that.name,_that.type,_that.macAddress,_that.isEnabled,_that.addresses,_that.description,_that.vendor,_that.driver,_that.speedMbps,_that.isConnected,_that.connectedSwitchPort,_that.vlanId,_that.driverInfo,_that.lastSeen);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.type,_that.macAddress,_that.isEnabled,_that.addresses,_that.description,_that.vendor,_that.driver,_that.speedMbps,_that.isConnected,_that.connectedSwitchPort,_that.vlanId,_that.driverInfo,_that.lastSeen);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -3298,10 +3238,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HostService():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -3360,10 +3297,7 @@ return $default(_that.id,_that.name,_that.port,_that.protocol,_that.state,_that.
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int port,  String protocol,  String state,  String? version,  String? banner,  String? productName,  String? productVersion,  Map<String, String>? extraInfo,  List<String>? vulnerabilities,  bool? requiresAuthentication,  List<String>? authenticationMethods,  String? sslVersion,  List<String>? sslCiphers,  DateTime? lastChecked,  String? confidence)  $default,) {final _that = this;
 switch (_that) {
 case _HostService():
-return $default(_that.id,_that.name,_that.port,_that.protocol,_that.state,_that.version,_that.banner,_that.productName,_that.productVersion,_that.extraInfo,_that.vulnerabilities,_that.requiresAuthentication,_that.authenticationMethods,_that.sslVersion,_that.sslCiphers,_that.lastChecked,_that.confidence);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.port,_that.protocol,_that.state,_that.version,_that.banner,_that.productName,_that.productVersion,_that.extraInfo,_that.vulnerabilities,_that.requiresAuthentication,_that.authenticationMethods,_that.sslVersion,_that.sslCiphers,_that.lastChecked,_that.confidence);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -3649,10 +3583,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HostApplication():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -3711,10 +3642,7 @@ return $default(_that.id,_that.name,_that.type,_that.version,_that.vendor,_that.
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String type,  String? version,  String? vendor,  String? architecture,  String? installLocation,  DateTime? installDate,  int? sizeMB,  List<String>? configFiles,  List<String>? dataDirectories,  List<String>? registryKeys,  List<String>? associatedServices,  List<String>? networkPorts,  List<String>? vulnerabilities,  bool? isSystemCritical,  bool? hasUpdateAvailable,  String? licenseType,  String? licenseKey,  Map<String, String>? metadata)  $default,) {final _that = this;
 switch (_that) {
 case _HostApplication():
-return $default(_that.id,_that.name,_that.type,_that.version,_that.vendor,_that.architecture,_that.installLocation,_that.installDate,_that.sizeMB,_that.configFiles,_that.dataDirectories,_that.registryKeys,_that.associatedServices,_that.networkPorts,_that.vulnerabilities,_that.isSystemCritical,_that.hasUpdateAvailable,_that.licenseType,_that.licenseKey,_that.metadata);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.name,_that.type,_that.version,_that.vendor,_that.architecture,_that.installLocation,_that.installDate,_that.sizeMB,_that.configFiles,_that.dataDirectories,_that.registryKeys,_that.associatedServices,_that.networkPorts,_that.vulnerabilities,_that.isSystemCritical,_that.hasUpdateAvailable,_that.licenseType,_that.licenseKey,_that.metadata);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -4026,10 +3954,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HostAccount():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -4088,10 +4013,7 @@ return $default(_that.id,_that.username,_that.type,_that.isEnabled,_that.fullNam
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String username,  String type,  bool isEnabled,  String? fullName,  String? description,  List<String>? groups,  String? homeDirectory,  String? shell,  DateTime? lastLogin,  DateTime? passwordLastSet,  bool? passwordNeverExpires,  bool? accountLocked,  bool? isAdmin,  List<String>? privileges,  Map<String, String>? environment)  $default,) {final _that = this;
 switch (_that) {
 case _HostAccount():
-return $default(_that.id,_that.username,_that.type,_that.isEnabled,_that.fullName,_that.description,_that.groups,_that.homeDirectory,_that.shell,_that.lastLogin,_that.passwordLastSet,_that.passwordNeverExpires,_that.accountLocked,_that.isAdmin,_that.privileges,_that.environment);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.username,_that.type,_that.isEnabled,_that.fullName,_that.description,_that.groups,_that.homeDirectory,_that.shell,_that.lastLogin,_that.passwordLastSet,_that.passwordNeverExpires,_that.accountLocked,_that.isAdmin,_that.privileges,_that.environment);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -4355,10 +4277,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _HardwareComponent():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -4417,10 +4336,7 @@ return $default(_that.id,_that.type,_that.name,_that.manufacturer,_that.model,_t
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String type,  String name,  String? manufacturer,  String? model,  String? serialNumber,  String? version,  Map<String, String>? specifications,  String? health,  DateTime? lastChecked)  $default,) {final _that = this;
 switch (_that) {
 case _HardwareComponent():
-return $default(_that.id,_that.type,_that.name,_that.manufacturer,_that.model,_that.serialNumber,_that.version,_that.specifications,_that.health,_that.lastChecked);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.type,_that.name,_that.manufacturer,_that.model,_that.serialNumber,_that.version,_that.specifications,_that.health,_that.lastChecked);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -4652,10 +4568,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _AuthenticationInfo():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -4714,10 +4627,7 @@ return $default(_that.mechanism,_that.details,_that.isMultiFactor,_that.mfaMetho
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String mechanism,  Map<String, String>? details,  bool? isMultiFactor,  List<String>? mfaMethods,  DateTime? lastAuthentication,  bool? isServiceAccount)  $default,) {final _that = this;
 switch (_that) {
 case _AuthenticationInfo():
-return $default(_that.mechanism,_that.details,_that.isMultiFactor,_that.mfaMethods,_that.lastAuthentication,_that.isServiceAccount);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.mechanism,_that.details,_that.isMultiFactor,_that.mfaMethods,_that.lastAuthentication,_that.isServiceAccount);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

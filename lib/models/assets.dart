@@ -53,8 +53,46 @@ enum AssetType {
   breakoutTechnique,     // Reusable attack methods
   securityControl,       // Controls preventing breakouts
 
+  // Critical Application Types
+  webApplication,    // Web applications
+  apiEndpoint,       // API endpoints (REST, GraphQL, SOAP)
+  container,         // Docker/K8s containers
+
+  // Comprehensive Azure Resources
+  azureResource,           // Generic Azure resource
+  azureVM,                 // Azure Virtual Machine
+  azureStorageAccount,     // Azure Storage (Blobs, Files, Tables, Queues)
+  azureKeyVault,           // Azure Key Vault
+  azureSQLDatabase,        // Azure SQL Database
+  azureCosmosDB,           // Azure Cosmos DB
+  azureFunction,           // Azure Function App
+  azureAppService,         // Azure App Service/Web App
+  azureAD,                 // Azure Active Directory specific items
+  azureNetworking,         // VNets, NSGs, Load Balancers
+  azureAKS,                // Azure Kubernetes Service
+
+  // AWS Resources
+  awsResource,       // Generic AWS resource
+  ec2Instance,       // AWS EC2
+  s3Bucket,          // AWS S3
+  rdsDatabase,       // AWS RDS
+  lambdaFunction,    // AWS Lambda
+  iamRole,           // AWS IAM
+  awsSecret,         // AWS Secrets Manager
+
+  // GCP Resources
+  gcpResource,       // Generic GCP resource
+  computeInstance,   // GCP Compute
+  cloudStorage,      // GCP Storage
+  cloudSQL,          // GCP Cloud SQL
+  cloudFunction,     // GCP Cloud Function
+
+  // Supporting Types
+  dnsRecord,         // DNS records
+  email,             // Email addresses/mailboxes
+
   // Special
-  unknown,               // Unidentified asset
+  unknown,           // Unidentified asset
 }
 
 /// Asset discovery and access status
@@ -2359,6 +2397,371 @@ class AssetFactory {
       relationshipMetadata: {},
     );
   }
+
+  // =============================================================================
+  // Critical Asset Type Factory Methods
+  // =============================================================================
+
+  /// Create a Web Application asset
+  static Asset createWebApplication({
+    required String projectId,
+    required String baseUrl,
+    String? framework,
+    String? authenticationType,
+    bool wafPresent = false,
+    String? environmentId,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final uri = Uri.parse(baseUrl);
+
+    final properties = <String, AssetPropertyValue>{
+      'base_url': AssetPropertyValue.string(baseUrl),
+      'domain': AssetPropertyValue.string(uri.host),
+      'protocol': AssetPropertyValue.string(uri.scheme),
+      'ports': AssetPropertyValue.stringList([uri.port.toString()]),
+      if (framework != null) 'framework': AssetPropertyValue.string(framework),
+      if (authenticationType != null) 'authentication_type': AssetPropertyValue.stringList([authenticationType]),
+      'waf_present': AssetPropertyValue.boolean(wafPresent),
+      'https_enforced': AssetPropertyValue.boolean(uri.scheme == 'https'),
+      'vulnerabilities': const AssetPropertyValue.objectList([]),
+      'api_endpoints': const AssetPropertyValue.objectList([]),
+      'admin_panels': const AssetPropertyValue.objectList([]),
+      'test_coverage': const AssetPropertyValue.string('None'),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.webApplication,
+      projectId: projectId,
+      name: uri.host,
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: environmentId != null ? [environmentId] : [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['web', 'application', framework?.toLowerCase() ?? 'unknown'],
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
+    );
+  }
+
+  /// Create an API Endpoint asset
+  static Asset createApiEndpoint({
+    required String projectId,
+    required String endpointUrl,
+    required List<String> methods,
+    required String apiType,
+    String? parentWebAppId,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final uri = Uri.parse(endpointUrl);
+
+    final properties = <String, AssetPropertyValue>{
+      'endpoint_url': AssetPropertyValue.string(endpointUrl),
+      'base_path': AssetPropertyValue.string(uri.path),
+      'methods': AssetPropertyValue.stringList(methods),
+      'api_type': AssetPropertyValue.string(apiType),
+      'authentication_required': const AssetPropertyValue.boolean(false),
+      'rate_limited': const AssetPropertyValue.boolean(false),
+      'documented': const AssetPropertyValue.boolean(false),
+      'publicly_accessible': const AssetPropertyValue.boolean(true),
+      'vulnerabilities': const AssetPropertyValue.objectList([]),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.apiEndpoint,
+      projectId: projectId,
+      name: '${methods.join(',')} ${uri.path}',
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: parentWebAppId != null ? [parentWebAppId] : [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['api', apiType.toLowerCase()],
+      relationships: parentWebAppId != null ? {
+        'childOf': [parentWebAppId]
+      } : {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: parentWebAppId != null ? [parentWebAppId] : [],
+      relationshipMetadata: {},
+    );
+  }
+
+  /// Create a Container asset
+  static Asset createContainer({
+    required String projectId,
+    required String containerId,
+    required String image,
+    String? orchestrator,
+    String? hostId,
+    bool privileged = false,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final properties = <String, AssetPropertyValue>{
+      'container_id': AssetPropertyValue.string(containerId),
+      'image': AssetPropertyValue.string(image),
+      if (orchestrator != null) 'orchestrator': AssetPropertyValue.string(orchestrator),
+      'privileged': AssetPropertyValue.boolean(privileged),
+      'run_as_root': const AssetPropertyValue.boolean(false),
+      'exposed_ports': const AssetPropertyValue.objectList([]),
+      'environment_variables': const AssetPropertyValue.objectList([]),
+      'escape_possible': const AssetPropertyValue.boolean(false),
+      'vulnerable_packages': const AssetPropertyValue.objectList([]),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.container,
+      projectId: projectId,
+      name: '${image.split(':').first}:${containerId.substring(0, 8)}',
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: hostId != null ? [hostId] : [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['container', orchestrator?.toLowerCase() ?? 'docker'],
+      relationships: hostId != null ? {
+        'hostedBy': [hostId]
+      } : {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: hostId != null ? [hostId] : [],
+      relationshipMetadata: {},
+    );
+  }
+
+  /// Create a Certificate asset
+  static Asset createCertificate({
+    required String projectId,
+    required String fingerprint,
+    required String subjectCN,
+    required DateTime validFrom,
+    required DateTime validTo,
+    String? issuerCN,
+    bool selfSigned = false,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final now = DateTime.now();
+    final expired = now.isAfter(validTo);
+    final daysRemaining = expired ? 0 : validTo.difference(now).inDays;
+
+    final properties = <String, AssetPropertyValue>{
+      'fingerprint_sha256': AssetPropertyValue.string(fingerprint),
+      'subject_cn': AssetPropertyValue.string(subjectCN),
+      'valid_from': AssetPropertyValue.dateTime(validFrom),
+      'valid_to': AssetPropertyValue.dateTime(validTo),
+      'days_remaining': AssetPropertyValue.integer(daysRemaining),
+      'expired': AssetPropertyValue.boolean(expired),
+      if (issuerCN != null) 'issuer_cn': AssetPropertyValue.string(issuerCN),
+      'self_signed': AssetPropertyValue.boolean(selfSigned),
+      'weak_signature': const AssetPropertyValue.boolean(false),
+      'chain_valid': const AssetPropertyValue.boolean(true),
+      'vulnerabilities': const AssetPropertyValue.objectList([]),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.certificate,
+      projectId: projectId,
+      name: subjectCN,
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['certificate', expired ? 'expired' : 'valid', selfSigned ? 'self-signed' : 'ca-signed'],
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
+    );
+  }
+
+  // =============================================================================
+  // Azure Resource Factory Methods
+  // =============================================================================
+
+  /// Create an Azure VM asset
+  static Asset createAzureVM({
+    required String projectId,
+    required String resourceId,
+    required String vmName,
+    required String resourceGroup,
+    required String subscriptionId,
+    String? osType,
+    String? vmSize,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final properties = <String, AssetPropertyValue>{
+      'resource_id': AssetPropertyValue.string(resourceId),
+      'resource_name': AssetPropertyValue.string(vmName),
+      'resource_group': AssetPropertyValue.string(resourceGroup),
+      'subscription_id': AssetPropertyValue.string(subscriptionId),
+      'vm_id': AssetPropertyValue.string(resourceId.split('/').last),
+      if (osType != null) 'os_type': AssetPropertyValue.string(osType),
+      if (vmSize != null) 'vm_size': AssetPropertyValue.string(vmSize),
+      'power_state': const AssetPropertyValue.string('Unknown'),
+      'managed_identity_enabled': const AssetPropertyValue.boolean(false),
+      'disk_encryption_enabled': const AssetPropertyValue.boolean(false),
+      'backup_enabled': const AssetPropertyValue.boolean(false),
+      'patch_status': const AssetPropertyValue.string('Unknown'),
+      'vulnerability_findings': const AssetPropertyValue.objectList([]),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.azureVM,
+      projectId: projectId,
+      name: vmName,
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['azure', 'vm', osType?.toLowerCase() ?? 'unknown'],
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
+    );
+  }
+
+  /// Create an Azure Storage Account asset
+  static Asset createAzureStorageAccount({
+    required String projectId,
+    required String resourceId,
+    required String accountName,
+    required String resourceGroup,
+    required String subscriptionId,
+    String? accountKind,
+    bool publicAccessEnabled = false,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final properties = <String, AssetPropertyValue>{
+      'resource_id': AssetPropertyValue.string(resourceId),
+      'resource_name': AssetPropertyValue.string(accountName),
+      'resource_group': AssetPropertyValue.string(resourceGroup),
+      'subscription_id': AssetPropertyValue.string(subscriptionId),
+      if (accountKind != null) 'account_kind': AssetPropertyValue.string(accountKind),
+      'public_access_enabled': AssetPropertyValue.boolean(publicAccessEnabled),
+      'blob_endpoint': AssetPropertyValue.string('https://$accountName.blob.core.windows.net/'),
+      'require_encrypted_transfer': const AssetPropertyValue.boolean(true),
+      'containers': const AssetPropertyValue.objectList([]),
+      'public_containers': const AssetPropertyValue.objectList([]),
+      'sensitive_data_found': const AssetPropertyValue.objectList([]),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.azureStorageAccount,
+      projectId: projectId,
+      name: accountName,
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['azure', 'storage', accountKind?.toLowerCase() ?? 'standard'],
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
+    );
+  }
+
+  /// Create an Azure Key Vault asset
+  static Asset createAzureKeyVault({
+    required String projectId,
+    required String resourceId,
+    required String vaultName,
+    required String resourceGroup,
+    required String subscriptionId,
+    Map<String, AssetPropertyValue>? additionalProperties,
+  }) {
+    final properties = <String, AssetPropertyValue>{
+      'resource_id': AssetPropertyValue.string(resourceId),
+      'resource_name': AssetPropertyValue.string(vaultName),
+      'resource_group': AssetPropertyValue.string(resourceGroup),
+      'subscription_id': AssetPropertyValue.string(subscriptionId),
+      'vault_uri': AssetPropertyValue.string('https://$vaultName.vault.azure.net/'),
+      'enable_soft_delete': const AssetPropertyValue.boolean(true),
+      'rbac_authorization': const AssetPropertyValue.boolean(false),
+      'public_network_access': const AssetPropertyValue.string('Enabled'),
+      'keys': const AssetPropertyValue.objectList([]),
+      'secrets': const AssetPropertyValue.objectList([]),
+      'certificates': const AssetPropertyValue.objectList([]),
+      if (additionalProperties != null) ...additionalProperties,
+    };
+
+    return Asset(
+      id: _uuid.v4(),
+      type: AssetType.azureKeyVault,
+      projectId: projectId,
+      name: vaultName,
+      properties: properties,
+      discoveryStatus: AssetDiscoveryStatus.discovered,
+      discoveredAt: DateTime.now(),
+      parentAssetIds: [],
+      childAssetIds: [],
+      relatedAssetIds: [],
+      completedTriggers: [],
+      triggerResults: {},
+      tags: ['azure', 'keyvault', 'secrets'],
+      relationships: {},
+      inheritedProperties: {},
+      lifecycleState: 'unknown',
+      stateTransitions: {'unknown': DateTime.now()},
+      dependencyMap: {},
+      discoveryPath: [],
+      relationshipMetadata: {},
+    );
+  }
+
+  // Additional AWS/GCP factory methods can be added similarly...
 }
 
 // =============================================================================

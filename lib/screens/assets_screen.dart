@@ -950,6 +950,45 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
         return Icons.build;
       case AssetType.securityControl:
         return Icons.shield;
+      case AssetType.webApplication:
+        return Icons.web;
+      case AssetType.apiEndpoint:
+        return Icons.api;
+      case AssetType.container:
+        return Icons.inventory_2;
+      case AssetType.dnsRecord:
+        return Icons.dns;
+      case AssetType.email:
+        return Icons.email;
+      // Azure resources
+      case AssetType.azureResource:
+      case AssetType.azureVM:
+      case AssetType.azureStorageAccount:
+      case AssetType.azureKeyVault:
+      case AssetType.azureSQLDatabase:
+      case AssetType.azureCosmosDB:
+      case AssetType.azureFunction:
+      case AssetType.azureAppService:
+      case AssetType.azureAD:
+      case AssetType.azureNetworking:
+      case AssetType.azureAKS:
+        return Icons.cloud_outlined;
+      // AWS resources
+      case AssetType.awsResource:
+      case AssetType.ec2Instance:
+      case AssetType.s3Bucket:
+      case AssetType.rdsDatabase:
+      case AssetType.lambdaFunction:
+      case AssetType.iamRole:
+      case AssetType.awsSecret:
+        return Icons.cloud_queue;
+      // GCP resources
+      case AssetType.gcpResource:
+      case AssetType.computeInstance:
+      case AssetType.cloudStorage:
+      case AssetType.cloudSQL:
+      case AssetType.cloudFunction:
+        return Icons.cloud_circle;
       case AssetType.unknown:
         return Icons.help_outline;
     }
@@ -1002,6 +1041,45 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
         return Colors.purple.shade700;
       case AssetType.securityControl:
         return Colors.blue.shade700;
+      case AssetType.webApplication:
+        return Colors.deepPurple;
+      case AssetType.apiEndpoint:
+        return Colors.purple;
+      case AssetType.container:
+        return Colors.blueGrey;
+      case AssetType.dnsRecord:
+        return Colors.cyan;
+      case AssetType.email:
+        return Colors.lightBlue;
+      // Azure resources
+      case AssetType.azureResource:
+      case AssetType.azureVM:
+      case AssetType.azureStorageAccount:
+      case AssetType.azureKeyVault:
+      case AssetType.azureSQLDatabase:
+      case AssetType.azureCosmosDB:
+      case AssetType.azureFunction:
+      case AssetType.azureAppService:
+      case AssetType.azureAD:
+      case AssetType.azureNetworking:
+      case AssetType.azureAKS:
+        return Colors.blue.shade600;
+      // AWS resources
+      case AssetType.awsResource:
+      case AssetType.ec2Instance:
+      case AssetType.s3Bucket:
+      case AssetType.rdsDatabase:
+      case AssetType.lambdaFunction:
+      case AssetType.iamRole:
+      case AssetType.awsSecret:
+        return Colors.orange.shade700;
+      // GCP resources
+      case AssetType.gcpResource:
+      case AssetType.computeInstance:
+      case AssetType.cloudStorage:
+      case AssetType.cloudSQL:
+      case AssetType.cloudFunction:
+        return Colors.red.shade600;
       case AssetType.unknown:
         return Colors.grey;
     }

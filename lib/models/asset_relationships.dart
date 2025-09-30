@@ -123,6 +123,113 @@ class AssetLifecycleStates {
     'completed': []
   };
 
+  // Web Application States
+  static const Map<String, List<String>> webApplicationStates = {
+    'unknown': ['discovered'],
+    'discovered': ['fingerprinted', 'authenticated'],
+    'fingerprinted': ['tested', 'authenticated'],
+    'authenticated': ['tested'],
+    'tested': ['vulnerable', 'secure'],
+    'vulnerable': ['exploited', 'remediated'],
+    'exploited': ['compromised'],
+    'compromised': ['controlled'],
+    'controlled': [],
+    'secure': [],
+    'remediated': ['verified'],
+    'verified': []
+  };
+
+  // API Endpoint States
+  static const Map<String, List<String>> apiEndpointStates = {
+    'unknown': ['discovered'],
+    'discovered': ['documented', 'tested'],
+    'documented': ['tested'],
+    'tested': ['vulnerable', 'secure'],
+    'vulnerable': ['exploited', 'remediated'],
+    'exploited': ['abused'],
+    'abused': [],
+    'secure': [],
+    'remediated': ['verified'],
+    'verified': []
+  };
+
+  // Container States
+  static const Map<String, List<String>> containerStates = {
+    'unknown': ['running'],
+    'running': ['analyzed', 'stopped'],
+    'analyzed': ['vulnerable', 'secure', 'stopped'],
+    'vulnerable': ['exploited', 'patched'],
+    'exploited': ['escaped', 'contained'],
+    'escaped': [],
+    'contained': [],
+    'stopped': ['removed'],
+    'removed': [],
+    'secure': [],
+    'patched': ['verified'],
+    'verified': []
+  };
+
+  // Certificate States
+  static const Map<String, List<String>> certificateStates = {
+    'unknown': ['valid'],
+    'valid': ['expiring', 'trusted'],
+    'expiring': ['expired', 'renewed'],
+    'expired': ['replaced'],
+    'trusted': ['compromised'],
+    'compromised': ['revoked'],
+    'revoked': ['replaced'],
+    'replaced': [],
+    'renewed': ['valid']
+  };
+
+  // Azure Resource States (base for all Azure resources)
+  static const Map<String, List<String>> azureResourceStates = {
+    'unknown': ['discovered'],
+    'discovered': ['enumerated'],
+    'enumerated': ['assessed'],
+    'assessed': ['vulnerable', 'compliant'],
+    'vulnerable': ['exploited', 'remediated'],
+    'exploited': ['compromised'],
+    'compromised': ['controlled'],
+    'controlled': [],
+    'compliant': ['monitored'],
+    'monitored': [],
+    'remediated': ['verified'],
+    'verified': []
+  };
+
+  // AWS Resource States
+  static const Map<String, List<String>> awsResourceStates = {
+    'unknown': ['discovered'],
+    'discovered': ['enumerated'],
+    'enumerated': ['assessed'],
+    'assessed': ['vulnerable', 'compliant'],
+    'vulnerable': ['exploited', 'remediated'],
+    'exploited': ['compromised'],
+    'compromised': ['controlled'],
+    'controlled': [],
+    'compliant': ['monitored'],
+    'monitored': [],
+    'remediated': ['verified'],
+    'verified': []
+  };
+
+  // GCP Resource States
+  static const Map<String, List<String>> gcpResourceStates = {
+    'unknown': ['discovered'],
+    'discovered': ['enumerated'],
+    'enumerated': ['assessed'],
+    'assessed': ['vulnerable', 'compliant'],
+    'vulnerable': ['exploited', 'remediated'],
+    'exploited': ['compromised'],
+    'compromised': ['controlled'],
+    'controlled': [],
+    'compliant': ['monitored'],
+    'monitored': [],
+    'remediated': ['verified'],
+    'verified': []
+  };
+
   /// Get valid states for an asset type
   static Map<String, List<String>> getValidStates(AssetType assetType) {
     switch (assetType) {
@@ -136,8 +243,49 @@ class AssetLifecycleStates {
         return credentialStates;
       case AssetType.vulnerability:
         return vulnerabilityStates;
-      // case AssetType.finding: (when finding asset type is added)
-      //   return findingStates;
+
+      // Critical Asset Types
+      case AssetType.webApplication:
+        return webApplicationStates;
+      case AssetType.apiEndpoint:
+        return apiEndpointStates;
+      case AssetType.container:
+        return containerStates;
+      case AssetType.certificate:
+        return certificateStates;
+
+      // Azure Resources
+      case AssetType.azureResource:
+      case AssetType.azureVM:
+      case AssetType.azureStorageAccount:
+      case AssetType.azureKeyVault:
+      case AssetType.azureSQLDatabase:
+      case AssetType.azureCosmosDB:
+      case AssetType.azureFunction:
+      case AssetType.azureAppService:
+      case AssetType.azureAD:
+      case AssetType.azureNetworking:
+      case AssetType.azureAKS:
+        return azureResourceStates;
+
+      // AWS Resources
+      case AssetType.awsResource:
+      case AssetType.ec2Instance:
+      case AssetType.s3Bucket:
+      case AssetType.rdsDatabase:
+      case AssetType.lambdaFunction:
+      case AssetType.iamRole:
+      case AssetType.awsSecret:
+        return awsResourceStates;
+
+      // GCP Resources
+      case AssetType.gcpResource:
+      case AssetType.computeInstance:
+      case AssetType.cloudStorage:
+      case AssetType.cloudSQL:
+      case AssetType.cloudFunction:
+        return gcpResourceStates;
+
       default:
         return defaultStates;
     }
