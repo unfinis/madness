@@ -364,8 +364,8 @@ class _AutoDetectionDialogState extends State<AutoDetectionDialog> {
             ),
             const SizedBox(height: 12),
             CheckboxListTile(
-              title: const Text('Auto-apply High Confidence Redactions'),
-              subtitle: const Text('Automatically apply redactions with confidence > 90%'),
+              title: const Text('Auto-apply High-Priority Redactions'),
+              subtitle: const Text('Automatically apply high-priority redaction suggestions'),
               value: _config.autoApplyHighConfidenceRedactions,
               onChanged: (value) {
                 setState(() {
@@ -436,7 +436,11 @@ class _AutoDetectionDialogState extends State<AutoDetectionDialog> {
                       ),
                       title: Text(guide.category),
                       subtitle: Text(guide.description),
-                      trailing: Text('${(guide.confidence * 100).toInt()}%'),
+                      trailing: Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 20,
+                      ),
                     ),
                   )),
                   if (_generatedGuides.length > 10)
@@ -469,7 +473,17 @@ class _AutoDetectionDialogState extends State<AutoDetectionDialog> {
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('${(suggestion.sensitiveMatch.confidence * 100).toInt()}%'),
+                          Icon(
+                            suggestion.sensitiveMatch.category == 'Hash' ||
+                                   suggestion.sensitiveMatch.category == 'Password'
+                                ? Icons.warning
+                                : Icons.info,
+                            color: suggestion.sensitiveMatch.category == 'Hash' ||
+                                   suggestion.sensitiveMatch.category == 'Password'
+                                ? Colors.red
+                                : Colors.orange,
+                            size: 20,
+                          ),
                           if (suggestion.isAccepted)
                             const Icon(Icons.check, color: Colors.green, size: 16),
                         ],

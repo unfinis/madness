@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/trigger_implementation_fix.dart';
 import '../services/property_driven_engine.dart';
 import '../providers/task_queue_provider.dart';
+import '../widgets/trigger_system_ui/trigger_notifications.dart';
 
 /// Widget to test the trigger system with sample data
 class TriggerTestWidget extends ConsumerWidget {
@@ -11,21 +12,30 @@ class TriggerTestWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Trigger System Test',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                const Icon(Icons.science, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text(
+                  'Trigger System Test',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
-              'Test the methodology trigger system with sample assets',
-              style: Theme.of(context).textTheme.bodyMedium,
+              'Test the methodology trigger system with sample assets and evaluate trigger matching.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[700],
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -35,12 +45,20 @@ class TriggerTestWidget extends ConsumerWidget {
                 ElevatedButton.icon(
                   onPressed: () => _initializeTriggerSystem(context, ref),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Initialize Triggers'),
+                  label: const Text('Initialize System'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
                 ElevatedButton.icon(
                   onPressed: () => _testTriggerEvaluation(context, ref),
                   icon: const Icon(Icons.play_arrow),
-                  label: const Text('Test Evaluation'),
+                  label: const Text('Evaluate Triggers'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
                 ElevatedButton.icon(
                   onPressed: () => _createTestTasks(context, ref),
@@ -50,7 +68,7 @@ class TriggerTestWidget extends ConsumerWidget {
                 OutlinedButton.icon(
                   onPressed: () => _showTriggerDetails(context),
                   icon: const Icon(Icons.info),
-                  label: const Text('Show Details'),
+                  label: const Text('Details'),
                 ),
               ],
             ),
@@ -68,14 +86,18 @@ class TriggerTestWidget extends ConsumerWidget {
       await engine.initialize();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Trigger system initialized successfully')),
+        TriggerNotifications.showExecutionComplete(
+          context,
+          success: true,
+          message: 'Trigger system initialized successfully',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error initializing triggers: $e')),
+        TriggerNotifications.showError(
+          context,
+          'Failed to initialize trigger system',
+          details: e.toString(),
         );
       }
     }
@@ -102,21 +124,36 @@ class TriggerTestWidget extends ConsumerWidget {
             results.add('   - ${match['name']} (${match['type']})');
           }
         } else {
-          results.add('❌ ${trigger.name}: No matches');
+          results.add('⚪ ${trigger.name}: No matches');
         }
       }
+
+      // Show evaluation summary notification
+      final matchedTriggers = triggers.where((t) =>
+        TriggerEvaluatorFixed.findMatchingAssets(t, testAssets).isNotEmpty
+      ).length;
+
+      TriggerNotifications.showEvaluationSummary(
+        context,
+        totalTriggers: triggers.length,
+        matchedTriggers: matchedTriggers,
+        decisionsToExecute: totalMatches,
+      );
 
       // Show results dialog
       _showResultsDialog(context,
         'Trigger Evaluation Results',
         'Evaluated ${triggers.length} triggers against ${testAssets.length} assets.\n'
-        'Total matches found: $totalMatches\n\n'
+        'Matched triggers: $matchedTriggers\n'
+        'Total asset matches: $totalMatches\n\n'
         '${results.join('\n')}'
       );
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error testing triggers: $e')),
+      TriggerNotifications.showError(
+        context,
+        'Trigger evaluation failed',
+        details: e.toString(),
       );
     }
   }
@@ -143,13 +180,24 @@ class TriggerTestWidget extends ConsumerWidget {
         }
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Created ${createdTasks.length} test tasks')),
-      );
+      if (createdTasks.isNotEmpty) {
+        TriggerNotifications.showExecutionComplete(
+          context,
+          success: true,
+          message: 'Created ${createdTasks.length} test tasks',
+        );
+      } else {
+        TriggerNotifications.showWarning(
+          context,
+          'No tasks created - no trigger matches found',
+        );
+      }
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating tasks: $e')),
+      TriggerNotifications.showError(
+        context,
+        'Failed to create tasks',
+        details: e.toString(),
       );
     }
   }
