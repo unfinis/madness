@@ -446,7 +446,12 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/providers/asset_repository_provider.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/flutter.bat analyze --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/flutter analyze --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/asset.dart --no-fatal-warnings)",
+      "Bash(mkdir:*)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze /mnt/c/Projects/madness/madness/lib/services/trigger_system/models/trigger_match_result.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/ --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/ --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/ lib/services/trigger_evaluator.dart lib/services/smart_triggers.dart --fatal-warnings)"
     ],
     "deny": [],
     "ask": []

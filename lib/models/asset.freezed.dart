@@ -14,28 +14,28 @@ T _$identity<T>(T value) => value;
 PropertyValue _$PropertyValueFromJson(
   Map<String, dynamic> json
 ) {
-        switch (json['runtimeType']) {
-                  case 'string':
+        switch (json['type']) {
+                  case 'String':
           return StringProperty.fromJson(
             json
           );
-                case 'integer':
+                case 'Integer':
           return IntegerProperty.fromJson(
             json
           );
-                case 'boolean':
+                case 'Boolean':
           return BooleanProperty.fromJson(
             json
           );
-                case 'stringList':
+                case 'StringList':
           return StringListProperty.fromJson(
             json
           );
-                case 'map':
+                case 'Map':
           return MapProperty.fromJson(
             json
           );
-                case 'objectList':
+                case 'ObjectList':
           return ObjectListProperty.fromJson(
             json
           );
@@ -43,9 +43,9 @@ PropertyValue _$PropertyValueFromJson(
           default:
             throw CheckedFromJsonException(
   json,
-  'runtimeType',
+  'type',
   'PropertyValue',
-  'Invalid union type "${json['runtimeType']}"!'
+  'Invalid union type "${json['type']}"!'
 );
         }
       
@@ -241,12 +241,12 @@ return objectList(_that.objects);case _:
 @JsonSerializable()
 
 class StringProperty implements PropertyValue {
-  const StringProperty(this.value, {final  String? $type}): $type = $type ?? 'string';
+  const StringProperty(this.value, {final  String? $type}): $type = $type ?? 'String';
   factory StringProperty.fromJson(Map<String, dynamic> json) => _$StringPropertyFromJson(json);
 
  final  String value;
 
-@JsonKey(name: 'runtimeType')
+@JsonKey(name: 'type')
 final String $type;
 
 
@@ -314,12 +314,12 @@ as String,
 @JsonSerializable()
 
 class IntegerProperty implements PropertyValue {
-  const IntegerProperty(this.value, {final  String? $type}): $type = $type ?? 'integer';
+  const IntegerProperty(this.value, {final  String? $type}): $type = $type ?? 'Integer';
   factory IntegerProperty.fromJson(Map<String, dynamic> json) => _$IntegerPropertyFromJson(json);
 
  final  int value;
 
-@JsonKey(name: 'runtimeType')
+@JsonKey(name: 'type')
 final String $type;
 
 
@@ -387,12 +387,12 @@ as int,
 @JsonSerializable()
 
 class BooleanProperty implements PropertyValue {
-  const BooleanProperty(this.value, {final  String? $type}): $type = $type ?? 'boolean';
+  const BooleanProperty(this.value, {final  String? $type}): $type = $type ?? 'Boolean';
   factory BooleanProperty.fromJson(Map<String, dynamic> json) => _$BooleanPropertyFromJson(json);
 
  final  bool value;
 
-@JsonKey(name: 'runtimeType')
+@JsonKey(name: 'type')
 final String $type;
 
 
@@ -460,7 +460,7 @@ as bool,
 @JsonSerializable()
 
 class StringListProperty implements PropertyValue {
-  const StringListProperty(final  List<String> values, {final  String? $type}): _values = values,$type = $type ?? 'stringList';
+  const StringListProperty(final  List<String> values, {final  String? $type}): _values = values,$type = $type ?? 'StringList';
   factory StringListProperty.fromJson(Map<String, dynamic> json) => _$StringListPropertyFromJson(json);
 
  final  List<String> _values;
@@ -471,7 +471,7 @@ class StringListProperty implements PropertyValue {
 }
 
 
-@JsonKey(name: 'runtimeType')
+@JsonKey(name: 'type')
 final String $type;
 
 
@@ -539,7 +539,7 @@ as List<String>,
 @JsonSerializable()
 
 class MapProperty implements PropertyValue {
-  const MapProperty(final  Map<String, dynamic> value, {final  String? $type}): _value = value,$type = $type ?? 'map';
+  const MapProperty(final  Map<String, dynamic> value, {final  String? $type}): _value = value,$type = $type ?? 'Map';
   factory MapProperty.fromJson(Map<String, dynamic> json) => _$MapPropertyFromJson(json);
 
  final  Map<String, dynamic> _value;
@@ -550,7 +550,7 @@ class MapProperty implements PropertyValue {
 }
 
 
-@JsonKey(name: 'runtimeType')
+@JsonKey(name: 'type')
 final String $type;
 
 
@@ -618,7 +618,7 @@ as Map<String, dynamic>,
 @JsonSerializable()
 
 class ObjectListProperty implements PropertyValue {
-  const ObjectListProperty(final  List<Map<String, dynamic>> objects, {final  String? $type}): _objects = objects,$type = $type ?? 'objectList';
+  const ObjectListProperty(final  List<Map<String, dynamic>> objects, {final  String? $type}): _objects = objects,$type = $type ?? 'ObjectList';
   factory ObjectListProperty.fromJson(Map<String, dynamic> json) => _$ObjectListPropertyFromJson(json);
 
  final  List<Map<String, dynamic>> _objects;
@@ -629,7 +629,7 @@ class ObjectListProperty implements PropertyValue {
 }
 
 
-@JsonKey(name: 'runtimeType')
+@JsonKey(name: 'type')
 final String $type;
 
 

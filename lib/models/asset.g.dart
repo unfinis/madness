@@ -7,62 +7,53 @@ part of 'asset.dart';
 // **************************************************************************
 
 StringProperty _$StringPropertyFromJson(Map<String, dynamic> json) =>
-    StringProperty(
-      json['value'] as String,
-      $type: json['runtimeType'] as String?,
-    );
+    StringProperty(json['value'] as String, $type: json['type'] as String?);
 
 Map<String, dynamic> _$StringPropertyToJson(StringProperty instance) =>
-    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
+    <String, dynamic>{'value': instance.value, 'type': instance.$type};
 
 IntegerProperty _$IntegerPropertyFromJson(Map<String, dynamic> json) =>
     IntegerProperty(
       (json['value'] as num).toInt(),
-      $type: json['runtimeType'] as String?,
+      $type: json['type'] as String?,
     );
 
 Map<String, dynamic> _$IntegerPropertyToJson(IntegerProperty instance) =>
-    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
+    <String, dynamic>{'value': instance.value, 'type': instance.$type};
 
 BooleanProperty _$BooleanPropertyFromJson(Map<String, dynamic> json) =>
-    BooleanProperty(
-      json['value'] as bool,
-      $type: json['runtimeType'] as String?,
-    );
+    BooleanProperty(json['value'] as bool, $type: json['type'] as String?);
 
 Map<String, dynamic> _$BooleanPropertyToJson(BooleanProperty instance) =>
-    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
+    <String, dynamic>{'value': instance.value, 'type': instance.$type};
 
 StringListProperty _$StringListPropertyFromJson(Map<String, dynamic> json) =>
     StringListProperty(
       (json['values'] as List<dynamic>).map((e) => e as String).toList(),
-      $type: json['runtimeType'] as String?,
+      $type: json['type'] as String?,
     );
 
 Map<String, dynamic> _$StringListPropertyToJson(StringListProperty instance) =>
-    <String, dynamic>{'values': instance.values, 'runtimeType': instance.$type};
+    <String, dynamic>{'values': instance.values, 'type': instance.$type};
 
 MapProperty _$MapPropertyFromJson(Map<String, dynamic> json) => MapProperty(
   json['value'] as Map<String, dynamic>,
-  $type: json['runtimeType'] as String?,
+  $type: json['type'] as String?,
 );
 
 Map<String, dynamic> _$MapPropertyToJson(MapProperty instance) =>
-    <String, dynamic>{'value': instance.value, 'runtimeType': instance.$type};
+    <String, dynamic>{'value': instance.value, 'type': instance.$type};
 
 ObjectListProperty _$ObjectListPropertyFromJson(Map<String, dynamic> json) =>
     ObjectListProperty(
       (json['objects'] as List<dynamic>)
           .map((e) => e as Map<String, dynamic>)
           .toList(),
-      $type: json['runtimeType'] as String?,
+      $type: json['type'] as String?,
     );
 
 Map<String, dynamic> _$ObjectListPropertyToJson(ObjectListProperty instance) =>
-    <String, dynamic>{
-      'objects': instance.objects,
-      'runtimeType': instance.$type,
-    };
+    <String, dynamic>{'objects': instance.objects, 'type': instance.$type};
 
 _Asset _$AssetFromJson(Map<String, dynamic> json) => _Asset(
   id: json['id'] as String,

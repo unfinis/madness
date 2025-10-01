@@ -51,7 +51,7 @@ enum AccessLevel {
 }
 
 // Generic property value that can hold different types
-@freezed
+@Freezed(unionKey: 'type', unionValueCase: FreezedUnionCase.pascal)
 sealed class PropertyValue with _$PropertyValue {
   const factory PropertyValue.string(String value) = StringProperty;
   const factory PropertyValue.integer(int value) = IntegerProperty;

@@ -1202,6 +1202,9 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
   }
 
   void _showAddAssetDialog(BuildContext context, String projectId) async {
+    // Capture ScaffoldMessenger early before entering dialog context
+    final messenger = ScaffoldMessenger.of(context);
+
     // First, let user select the asset type
     AssetType? selectedType;
     await showDialog(
@@ -1238,7 +1241,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
             print('Provider refreshed, asset should be visible now');
 
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text('${_getAssetTypeDisplayName(asset.type)} "${asset.name}" created successfully!'),
                   backgroundColor: Colors.green,
@@ -1248,7 +1251,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
           } catch (e) {
             print('Error saving asset: $e');
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text('Failed to create asset: $e'),
                   backgroundColor: Colors.red,
