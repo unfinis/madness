@@ -451,7 +451,9 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze /mnt/c/Projects/madness/madness/lib/services/trigger_system/models/trigger_match_result.dart --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/ --fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/ --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/ lib/services/trigger_evaluator.dart lib/services/smart_triggers.dart --fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/ lib/services/trigger_evaluator.dart lib/services/smart_triggers.dart --fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/finding_editor.dart lib/src/models/ lib/src/editor/ lib/src/templates/ lib/src/storage/ --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/dynamic_title_app.dart --no-fatal-warnings)"
     ],
     "deny": [],
     "ask": []
