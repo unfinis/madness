@@ -49,6 +49,8 @@ class AttackPlanGenerator {
             print('AttackPlanGenerator: MATCH! Trigger ${trigger.name} in methodology ${methodology.name} matches asset ${asset.name}');
 
             // Create trigger event data
+            // Note: confidence field maintained for backward compatibility
+            // New system uses boolean match (1.0 = matched, 0.0 = not matched)
             final triggerEvent = TriggerEvent(
               triggerId: trigger.name,
               assetId: asset.id,
@@ -57,7 +59,7 @@ class AttackPlanGenerator {
               matchedConditions: trigger.conditions ?? {},
               extractedValues: _extractValuesFromAsset(asset),
               evaluatedAt: DateTime.now(),
-              confidence: 0.9, // High confidence for direct property matches
+              confidence: 1.0, // Boolean match: 1.0 = matched (trigger conditions met)
             );
 
             // Group trigger events by methodology and procedure

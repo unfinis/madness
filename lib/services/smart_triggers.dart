@@ -4,6 +4,10 @@ import '../models/asset_relationships.dart';
 import 'asset_relationship_manager.dart';
 import 'asset_update_hooks.dart';
 import 'discovery_orchestrator.dart';
+import 'trigger_system/execution_policy.dart';
+import 'trigger_system/execution_history.dart';
+import 'trigger_system/models/execution_decision.dart';
+import 'trigger_system/models/trigger_match_result.dart';
 
 /// Smart trigger system that automatically evaluates and executes methodologies
 /// based on asset properties, relationships, and state changes
@@ -17,6 +21,10 @@ class SmartTriggerSystem {
   final Map<String, List<TriggerEvaluation>> _evaluationHistory = {};
   final Map<String, DateTime> _lastEvaluationTime = {};
 
+  // New trigger system components
+  late final ExecutionHistory _executionHistory;
+  late final ExecutionPolicy _executionPolicy;
+
   // Event streams
   final StreamController<TriggerEvent> _triggerEventController =
       StreamController<TriggerEvent>.broadcast();
@@ -26,6 +34,10 @@ class SmartTriggerSystem {
     this._updateHooks,
     this._discoveryOrchestrator,
   ) {
+    // Initialize new trigger system
+    _executionHistory = ExecutionHistory();
+    _executionPolicy = ExecutionPolicy(history: _executionHistory);
+
     _initializeDefaultTriggers();
     _subscribeToAssetEvents();
   }
@@ -434,8 +446,8 @@ class SmartTriggerSystem {
     Asset asset,
   ) {
     bool allConditionsMet = true;
-    double confidence = 1.0;
     final reasons = <String>[];
+    final List<ConditionCheckResult> conditionChecks = [];
 
     for (final entry in conditions.entries) {
       final key = entry.key;
@@ -448,36 +460,40 @@ class SmartTriggerSystem {
 
       bool conditionMet = false;
       String reason = '';
+      dynamic actualValue;
 
       if (expectedValue == 'exists') {
         conditionMet = actualProperty != null;
+        actualValue = actualProperty != null ? 'exists' : 'null';
         reason = conditionMet ? '$key exists' : '$key does not exist';
       } else if (expectedValue is bool) {
-        conditionMet = actualProperty?.when(
-          string: (value) => false,
-          integer: (value) => false,
-          double: (value) => false,
-          boolean: (value) => value == expectedValue,
-          stringList: (value) => false,
-          dateTime: (value) => false,
-          map: (value) => false,
-          objectList: (value) => false,
-        ) ?? false;
+        actualValue = actualProperty?.when(
+          string: (value) => null,
+          integer: (value) => null,
+          double: (value) => null,
+          boolean: (value) => value,
+          stringList: (value) => null,
+          dateTime: (value) => null,
+          map: (value) => null,
+          objectList: (value) => null,
+        );
+        conditionMet = actualValue == expectedValue;
         reason = conditionMet ? '$key matches $expectedValue' : '$key does not match $expectedValue';
       } else if (expectedValue is String) {
-        conditionMet = actualProperty?.when(
-          string: (value) => value == expectedValue,
-          integer: (value) => false,
-          double: (value) => false,
-          boolean: (value) => false,
-          stringList: (value) => false,
-          dateTime: (value) => false,
-          map: (value) => false,
-          objectList: (value) => false,
-        ) ?? false;
+        actualValue = actualProperty?.when(
+          string: (value) => value,
+          integer: (value) => null,
+          double: (value) => null,
+          boolean: (value) => null,
+          stringList: (value) => null,
+          dateTime: (value) => null,
+          map: (value) => null,
+          objectList: (value) => null,
+        );
+        conditionMet = actualValue == expectedValue;
         reason = conditionMet ? '$key matches "$expectedValue"' : '$key does not match "$expectedValue"';
       } else if (expectedValue is List) {
-        final actualValue = actualProperty?.when(
+        actualValue = actualProperty?.when(
           string: (value) => value,
           integer: (value) => null,
           double: (value) => null,
@@ -491,13 +507,26 @@ class SmartTriggerSystem {
         reason = conditionMet ? '$key is in allowed values' : '$key is not in allowed values';
       }
 
+      // Track condition check for new system
+      conditionChecks.add(ConditionCheckResult(
+        property: key,
+        operator: expectedValue == 'exists' ? 'exists' : '==',
+        expectedValue: expectedValue,
+        actualValue: actualValue,
+        passed: conditionMet,
+        description: reason,
+      ));
+
       if (!conditionMet) {
         allConditionsMet = false;
-        confidence *= 0.5; // Reduce confidence for unmet conditions
       }
 
       reasons.add(reason);
     }
+
+    // For backward compatibility, return confidence as 1.0 (match) or 0.0 (no match)
+    // The new system uses boolean matching + separate priority
+    final confidence = allConditionsMet ? 1.0 : 0.0;
 
     return (allConditionsMet, confidence, reasons.join(', '));
   }
@@ -515,12 +544,15 @@ class SmartTriggerSystem {
       final otherConditions = Map<String, dynamic>.from(conditions);
       otherConditions.remove('lifecycle_state');
 
-      final (othersMet, confidence, reason) = _evaluatePropertyConditions(otherConditions, asset);
+      final (othersMet, _, reason) = _evaluatePropertyConditions(otherConditions, asset);
 
       final allMet = stateMatches && othersMet;
       final stateReason = stateMatches ? 'state is ${asset.lifecycleState}' : 'state is not $lifecycleCondition';
 
-      return (allMet, allMet ? confidence : confidence * 0.3, '$stateReason, $reason');
+      // Boolean matching: either all conditions met (1.0) or not (0.0)
+      final confidence = allMet ? 1.0 : 0.0;
+
+      return (allMet, confidence, '$stateReason, $reason');
     }
 
     return _evaluatePropertyConditions(conditions, asset);
@@ -549,7 +581,8 @@ class SmartTriggerSystem {
       // Execute the trigger
       print('Executing trigger: ${trigger.name} for asset: ${asset.name}');
       print('Conditions: ${evaluation.conditions}');
-      print('Confidence: ${evaluation.confidence}');
+      print('Match: ${evaluation.confidence == 1.0 ? "YES" : "NO"}');
+      print('Priority: ${trigger.priority.name}');
       print('Reason: ${evaluation.reason}');
 
       // TODO: Integrate with actual methodology execution system

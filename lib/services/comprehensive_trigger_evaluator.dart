@@ -160,16 +160,14 @@ class ComprehensiveTriggerEvaluator {
         matched = _evaluateConditions(trigger.conditions, asset, extractedValues, debugInfo);
       }
 
-      // Calculate confidence based on match quality
+      // Boolean matching: 1.0 = matched, 0.0 = not matched
+      // No more confidence boosting - match is binary
       double confidence = matched ? 1.0 : 0.0;
-      if (matched && extractedValues.isNotEmpty) {
-        // Boost confidence if we extracted meaningful values
-        confidence = min(1.0, confidence + (extractedValues.length * 0.1));
-      }
 
       debugInfo['matched'] = matched;
-      debugInfo['confidence'] = confidence;
+      debugInfo['confidence'] = confidence; // Kept for backward compatibility
       debugInfo['extractedValues'] = extractedValues;
+      debugInfo['extractedValueCount'] = extractedValues.length;
 
       return TriggerMatch(
         id: matchId,

@@ -455,7 +455,9 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/finding_editor.dart lib/src/models/ lib/src/editor/ lib/src/templates/ lib/src/storage/ --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/dynamic_title_app.dart --no-fatal-warnings)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/trigger_system_ui/ lib/screens/trigger_evaluation_screen.dart lib/screens/trigger_monitoring_dashboard.dart lib/theme/trigger_system_theme.dart --no-fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/trigger_test_widget.dart lib/dialogs/auto_detection_dialog.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/widgets/trigger_test_widget.dart lib/dialogs/auto_detection_dialog.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe test test/services/trigger_system_test.dart)",
+      "Bash(/mnt/c/tools/flutter/bin/flutter.bat test test/services/trigger_system_test.dart)"
     ],
     "deny": [],
     "ask": []

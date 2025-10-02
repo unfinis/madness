@@ -64,11 +64,36 @@ class MethodologyExecutionOrchestrator {
     // Check for existing pending run instances
     await _processPendingRunInstances();
 
-    // Start periodic monitoring for new pending instances
-    _monitoringTimer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) => _processPendingRunInstances(),
-    );
+    // Start adaptive monitoring - timer adjusts based on queue size
+    _scheduleNextCheck();
+  }
+
+  /// Schedule next check with adaptive timing based on queue size
+  void _scheduleNextCheck() {
+    final delay = _calculateAdaptiveDelay();
+    _monitoringTimer = Timer(delay, () async {
+      await _processPendingRunInstances();
+      if (_autoExecutionEnabled) {
+        _scheduleNextCheck(); // Reschedule for next check
+      }
+    });
+  }
+
+  /// Calculate adaptive delay based on pending instances and active executions
+  Duration _calculateAdaptiveDelay() {
+    // More pending work = shorter delay, less work = longer delay
+    final pendingCount = _activeExecutions.length;
+
+    if (pendingCount >= _maxConcurrentExecutions) {
+      // At capacity - check frequently for slot availability
+      return const Duration(milliseconds: 500);
+    } else if (pendingCount > 0) {
+      // Some work active - moderate checking
+      return const Duration(seconds: 2);
+    } else {
+      // Idle - slower checking to save resources
+      return const Duration(seconds: 5);
+    }
   }
 
   /// Stop the orchestrator

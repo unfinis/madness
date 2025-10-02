@@ -21,19 +21,16 @@ class TriggerEvaluator {
         matches.add(MethodologyTriggerMatch(
           trigger: trigger,
           matchingAssets: matchingAssets,
-          confidence: _calculateConfidence(trigger, matchingAssets),
+          // Boolean matching: matched triggers get 1.0, not matched get 0.0
+          confidence: 1.0,
           priority: _calculatePriority(trigger, matchingAssets),
           context: _buildExecutionContext(trigger, matchingAssets),
         ));
       }
     }
 
-    // Sort by priority and confidence
-    matches.sort((a, b) {
-      final priorityComparison = b.priority.compareTo(a.priority);
-      if (priorityComparison != 0) return priorityComparison;
-      return b.confidence.compareTo(a.confidence);
-    });
+    // Sort by priority (all matched triggers have confidence = 1.0)
+    matches.sort((a, b) => b.priority.compareTo(a.priority));
 
     return matches;
   }
@@ -128,32 +125,22 @@ class TriggerEvaluator {
     );
   }
 
-  /// Calculate confidence score for a trigger match
+  /// DEPRECATED: Confidence calculation no longer used
+  ///
+  /// The new trigger system uses boolean matching (matched/not matched)
+  /// instead of confidence scores. Priority is calculated separately.
+  ///
+  /// This method is kept for reference but is no longer called.
+  @Deprecated('Use boolean matching with separate priority calculation')
   static double _calculateConfidence(
     MethodologyTriggerDefinition trigger,
     List<Asset> matchingAssets,
   ) {
-    // Base confidence based on number of matching assets
-    double confidence = 0.5;
-
-    // Increase confidence for high-value assets
-    for (final asset in matchingAssets) {
-      if (asset.type == AssetType.activeDirectoryDomain ||
-          asset.type == AssetType.domainController ||
-          asset.type == AssetType.azureTenant) {
-        confidence += 0.1;
-      }
-    }
-
-    // Increase confidence based on asset confidence scores
-    if (matchingAssets.isNotEmpty) {
-      final avgAssetConfidence = matchingAssets.fold<double>(
-        0.0, (sum, asset) => sum + (asset.confidence ?? 0.5)) / matchingAssets.length;
-      confidence *= avgAssetConfidence;
-    }
-
-    // Cap confidence at 1.0
-    return confidence.clamp(0.0, 1.0);
+    // LEGACY CODE - NOT USED
+    // All matched triggers now return confidence = 1.0
+    // Priority factors (asset type, access level, etc.) are now
+    // calculated in _calculatePriority() method
+    return 1.0;
   }
 
   /// Calculate priority for methodology execution
