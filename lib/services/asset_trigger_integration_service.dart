@@ -3,6 +3,8 @@ import '../models/asset.dart';
 import '../models/trigger_evaluation.dart';
 import '../services/drift_storage_service.dart';
 import '../services/comprehensive_trigger_evaluator.dart';
+import '../services/error_tracking_service.dart';
+import '../services/performance_monitor.dart';
 
 /// Service responsible for managing automatic trigger evaluation when assets change
 /// Provides intelligent re-evaluation, notifications, and batch processing
@@ -39,6 +41,8 @@ class AssetTriggerIntegrationService {
 
   /// Handle asset creation with automatic trigger evaluation
   Future<List<TriggerMatch>> onAssetCreated(Asset asset) async {
+    PerformanceMonitor.startTimer('asset_creation_trigger_evaluation',
+      metadata: {'assetId': asset.id, 'assetType': asset.type.name});
     _emitEvent(TriggerEvaluationEvent.assetCreated(asset.id));
 
     try {
@@ -54,8 +58,18 @@ class AssetTriggerIntegrationService {
       _emitEvent(TriggerEvaluationEvent.evaluationCompleted(asset.id, matches.length));
       _triggerMatchesController.add(matches);
 
+      PerformanceMonitor.endTimer('asset_creation_trigger_evaluation',
+        metadata: {'assetId': asset.id, 'matchCount': matches.length});
       return matches;
-    } catch (e) {
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'asset_creation_trigger_evaluation',
+        e,
+        stack,
+        additionalData: {'assetId': asset.id, 'assetType': asset.type.name},
+      );
+      PerformanceMonitor.endTimer('asset_creation_trigger_evaluation',
+        metadata: {'assetId': asset.id, 'error': true});
       _emitEvent(TriggerEvaluationEvent.evaluationError(asset.id, e.toString()));
       rethrow;
     }
@@ -63,6 +77,8 @@ class AssetTriggerIntegrationService {
 
   /// Handle asset updates with intelligent re-evaluation
   Future<List<TriggerMatch>> onAssetUpdated(Asset oldAsset, Asset newAsset) async {
+    PerformanceMonitor.startTimer('asset_update_trigger_evaluation',
+      metadata: {'assetId': newAsset.id, 'assetType': newAsset.type.name});
     _emitEvent(TriggerEvaluationEvent.assetUpdated(newAsset.id));
 
     try {
@@ -72,13 +88,25 @@ class AssetTriggerIntegrationService {
       if (significantChanges.isNotEmpty) {
         // Schedule batch evaluation to avoid rapid re-evaluations
         _scheduleBatchEvaluation(newAsset);
+        PerformanceMonitor.endTimer('asset_update_trigger_evaluation',
+          metadata: {'assetId': newAsset.id, 'changeCount': significantChanges.length, 'batchScheduled': true});
         return [];
       } else {
         // No significant changes, return existing matches
         final existingMatches = await _storage.getTriggerMatchesForAsset(_projectId, newAsset.id);
+        PerformanceMonitor.endTimer('asset_update_trigger_evaluation',
+          metadata: {'assetId': newAsset.id, 'noChanges': true});
         return existingMatches;
       }
-    } catch (e) {
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'asset_update_trigger_evaluation',
+        e,
+        stack,
+        additionalData: {'assetId': newAsset.id, 'assetType': newAsset.type.name},
+      );
+      PerformanceMonitor.endTimer('asset_update_trigger_evaluation',
+        metadata: {'assetId': newAsset.id, 'error': true});
       _emitEvent(TriggerEvaluationEvent.evaluationError(newAsset.id, e.toString()));
       rethrow;
     }
@@ -104,6 +132,7 @@ class AssetTriggerIntegrationService {
 
   /// Schedule evaluation of all assets (useful for methodology changes)
   Future<void> scheduleFullEvaluation() async {
+    PerformanceMonitor.startTimer('full_evaluation_scheduling');
     _emitEvent(TriggerEvaluationEvent.batchEvaluationStarted());
 
     try {
@@ -114,7 +143,17 @@ class AssetTriggerIntegrationService {
       }
 
       _emitEvent(TriggerEvaluationEvent.batchEvaluationScheduled(assets.length));
-    } catch (e) {
+      PerformanceMonitor.endTimer('full_evaluation_scheduling',
+        metadata: {'assetCount': assets.length});
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'full_evaluation_scheduling',
+        e,
+        stack,
+        additionalData: {'projectId': _projectId},
+      );
+      PerformanceMonitor.endTimer('full_evaluation_scheduling',
+        metadata: {'error': true});
       _emitEvent(TriggerEvaluationEvent.batchEvaluationError(e.toString()));
       rethrow;
     }
@@ -209,6 +248,8 @@ class AssetTriggerIntegrationService {
     final assetIds = Set<String>.from(_pendingAssetEvaluations);
     _pendingAssetEvaluations.clear();
 
+    PerformanceMonitor.startTimer('batch_trigger_evaluation',
+      metadata: {'assetCount': assetIds.length});
     _emitEvent(TriggerEvaluationEvent.batchEvaluationStarted());
 
     try {
@@ -227,7 +268,17 @@ class AssetTriggerIntegrationService {
 
       _triggerMatchesController.add(allMatches);
       _emitEvent(TriggerEvaluationEvent.batchEvaluationCompleted(assetIds.length));
-    } catch (e) {
+      PerformanceMonitor.endTimer('batch_trigger_evaluation',
+        metadata: {'assetCount': assetIds.length, 'totalMatches': allMatches.length});
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'batch_trigger_evaluation',
+        e,
+        stack,
+        additionalData: {'assetCount': assetIds.length, 'assetIds': assetIds.toList()},
+      );
+      PerformanceMonitor.endTimer('batch_trigger_evaluation',
+        metadata: {'assetCount': assetIds.length, 'error': true});
       _emitEvent(TriggerEvaluationEvent.batchEvaluationError(e.toString()));
     }
   }

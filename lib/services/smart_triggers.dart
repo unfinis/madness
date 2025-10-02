@@ -8,6 +8,8 @@ import 'trigger_system/execution_policy.dart';
 import 'trigger_system/execution_history.dart';
 import 'trigger_system/models/execution_decision.dart';
 import 'trigger_system/models/trigger_match_result.dart';
+import 'error_tracking_service.dart';
+import 'performance_monitor.dart';
 
 /// Smart trigger system that automatically evaluates and executes methodologies
 /// based on asset properties, relationships, and state changes
@@ -53,37 +55,64 @@ class SmartTriggerSystem {
 
   /// Evaluate all triggers for a specific asset
   Future<List<TriggerEvaluation>> evaluateTriggersForAsset(String assetId) async {
-    final asset = await _relationshipManager.getAsset(assetId);
-    if (asset == null) {
-      throw TriggerException('Asset not found: $assetId');
-    }
+    PerformanceMonitor.startTimer('smart_trigger_evaluation',
+      metadata: {'assetId': assetId, 'triggerCount': _triggers.length});
 
-    final evaluations = <TriggerEvaluation>[];
-
-    for (final trigger in _triggers.values) {
-      try {
-        final evaluation = await _evaluateTrigger(trigger, asset);
-        if (evaluation != null) {
-          evaluations.add(evaluation);
-
-          // Store evaluation history
-          if (!_evaluationHistory.containsKey(assetId)) {
-            _evaluationHistory[assetId] = [];
-          }
-          _evaluationHistory[assetId]!.add(evaluation);
-
-          // Execute trigger if conditions are met
-          if (evaluation.shouldExecute && !evaluation.alreadyExecuted) {
-            await _executeTrigger(evaluation, asset);
-          }
-        }
-      } catch (e) {
-        print('Error evaluating trigger ${trigger.name}: $e');
+    try {
+      final asset = await _relationshipManager.getAsset(assetId);
+      if (asset == null) {
+        throw TriggerException('Asset not found: $assetId');
       }
-    }
 
-    _lastEvaluationTime[assetId] = DateTime.now();
-    return evaluations;
+      final evaluations = <TriggerEvaluation>[];
+
+      for (final trigger in _triggers.values) {
+        try {
+          final evaluation = await _evaluateTrigger(trigger, asset);
+          if (evaluation != null) {
+            evaluations.add(evaluation);
+
+            // Store evaluation history
+            if (!_evaluationHistory.containsKey(assetId)) {
+              _evaluationHistory[assetId] = [];
+            }
+            _evaluationHistory[assetId]!.add(evaluation);
+
+            // Execute trigger if conditions are met
+            if (evaluation.shouldExecute && !evaluation.alreadyExecuted) {
+              await _executeTrigger(evaluation, asset);
+            }
+          }
+        } catch (e, stack) {
+          ErrorTrackingService().trackError(
+            'trigger_evaluation',
+            e,
+            stack,
+            additionalData: {
+              'assetId': assetId,
+              'triggerId': trigger.id,
+              'triggerName': trigger.name,
+            },
+          );
+          print('Error evaluating trigger ${trigger.name}: $e');
+        }
+      }
+
+      _lastEvaluationTime[assetId] = DateTime.now();
+      PerformanceMonitor.endTimer('smart_trigger_evaluation',
+        metadata: {'assetId': assetId, 'evaluationCount': evaluations.length});
+      return evaluations;
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'smart_trigger_evaluation',
+        e,
+        stack,
+        additionalData: {'assetId': assetId},
+      );
+      PerformanceMonitor.endTimer('smart_trigger_evaluation',
+        metadata: {'assetId': assetId, 'error': true});
+      rethrow;
+    }
   }
 
   /// Evaluate triggers based on property combinations

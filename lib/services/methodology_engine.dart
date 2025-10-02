@@ -6,6 +6,8 @@ import '../models/methodology_execution.dart';
 import 'methodology_service.dart';
 import 'output_parser_service.dart';
 import 'attack_chain_service.dart';
+import 'error_tracking_service.dart';
+import 'performance_monitor.dart';
 
 class MethodologyEngine {
   static final MethodologyEngine _instance = MethodologyEngine._internal();
@@ -306,42 +308,62 @@ class MethodologyEngine {
 
   // Execution Management
   Future<MethodologyExecution> startMethodologyExecution(
-    String projectId, 
+    String projectId,
     String methodologyId,
     {Map<String, dynamic>? additionalContext}
   ) async {
-    final methodology = _methodologyService.getMethodologyById(methodologyId);
-    if (methodology == null) {
-      throw MethodologyEngineException('Methodology not found: $methodologyId');
+    PerformanceMonitor.startTimer('methodology_execution_start',
+      metadata: {'projectId': projectId, 'methodologyId': methodologyId});
+
+    try {
+      final methodology = _methodologyService.getMethodologyById(methodologyId);
+      if (methodology == null) {
+        throw MethodologyEngineException('Methodology not found: $methodologyId');
+      }
+
+      final executionId = _uuid.v4();
+      final assets = getProjectAssets(projectId);
+      final context = _buildExecutionContext(methodology, assets);
+
+      if (additionalContext != null) {
+        context.addAll(additionalContext);
+      }
+
+      final execution = MethodologyExecution(
+        id: executionId,
+        methodologyId: methodologyId,
+        projectId: projectId,
+        status: ExecutionStatus.pending,
+        startedDate: DateTime.now(),
+        executionContext: context,
+      );
+
+      _activeExecutions[executionId] = execution;
+      _executionsController.add(activeExecutions);
+
+      // Start execution asynchronously
+      _executeMethodology(execution, methodology);
+
+      PerformanceMonitor.endTimer('methodology_execution_start',
+        metadata: {'projectId': projectId, 'methodologyId': methodologyId, 'executionId': executionId});
+      return execution;
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'methodology_execution_start',
+        e,
+        stack,
+        additionalData: {'projectId': projectId, 'methodologyId': methodologyId},
+      );
+      PerformanceMonitor.endTimer('methodology_execution_start',
+        metadata: {'projectId': projectId, 'methodologyId': methodologyId, 'error': true});
+      rethrow;
     }
-    
-    final executionId = _uuid.v4();
-    final assets = getProjectAssets(projectId);
-    final context = _buildExecutionContext(methodology, assets);
-    
-    if (additionalContext != null) {
-      context.addAll(additionalContext);
-    }
-    
-    final execution = MethodologyExecution(
-      id: executionId,
-      methodologyId: methodologyId,
-      projectId: projectId,
-      status: ExecutionStatus.pending,
-      startedDate: DateTime.now(),
-      executionContext: context,
-    );
-    
-    _activeExecutions[executionId] = execution;
-    _executionsController.add(activeExecutions);
-    
-    // Start execution asynchronously
-    _executeMethodology(execution, methodology);
-    
-    return execution;
   }
 
   Future<void> _executeMethodology(MethodologyExecution execution, Methodology methodology) async {
+    PerformanceMonitor.startTimer('methodology_execution_full',
+      metadata: {'executionId': execution.id, 'methodologyId': execution.methodologyId, 'stepCount': methodology.steps.length});
+
     try {
       // Update status to in progress
       final updatedExecution = execution.copyWith(
@@ -350,14 +372,14 @@ class MethodologyEngine {
       );
       _activeExecutions[execution.id] = updatedExecution;
       _executionsController.add(activeExecutions);
-      
+
       final stepExecutions = <StepExecution>[];
-      
+
       for (int i = 0; i < methodology.steps.length; i++) {
         final step = methodology.steps[i];
         final stepExecution = await _executeStep(step, updatedExecution, i);
         stepExecutions.add(stepExecution);
-        
+
         // Update progress
         final progress = (i + 1) / methodology.steps.length;
         final progressExecution = updatedExecution.copyWith(
@@ -367,7 +389,7 @@ class MethodologyEngine {
         );
         _activeExecutions[execution.id] = progressExecution;
         _executionsController.add(activeExecutions);
-        
+
         // Stop if step failed
         if (stepExecution.status == ExecutionStatus.failed) {
           final failedExecution = progressExecution.copyWith(
@@ -377,10 +399,12 @@ class MethodologyEngine {
           );
           _activeExecutions[execution.id] = failedExecution;
           _executionsController.add(activeExecutions);
+          PerformanceMonitor.endTimer('methodology_execution_full',
+            metadata: {'executionId': execution.id, 'status': 'failed', 'failedStep': i});
           return;
         }
       }
-      
+
       // Mark as completed
       final completedExecution = updatedExecution.copyWith(
         status: ExecutionStatus.completed,
@@ -390,11 +414,24 @@ class MethodologyEngine {
       );
       _activeExecutions[execution.id] = completedExecution;
       _executionsController.add(activeExecutions);
-      
+
       // Process discovered assets
       await _processDiscoveredAssets(completedExecution, stepExecutions);
-      
-    } catch (e) {
+
+      PerformanceMonitor.endTimer('methodology_execution_full',
+        metadata: {'executionId': execution.id, 'status': 'completed', 'stepCount': stepExecutions.length});
+
+    } catch (e, stack) {
+      ErrorTrackingService().trackError(
+        'methodology_execution',
+        e,
+        stack,
+        additionalData: {
+          'executionId': execution.id,
+          'methodologyId': execution.methodologyId,
+          'projectId': execution.projectId,
+        },
+      );
       final failedExecution = execution.copyWith(
         status: ExecutionStatus.failed,
         completedDate: DateTime.now(),
