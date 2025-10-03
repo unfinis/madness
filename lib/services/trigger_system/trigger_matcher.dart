@@ -1,12 +1,15 @@
 import '../../models/asset.dart';
 import '../../models/methodology_trigger.dart' as mt;
 import 'models/trigger_match_result.dart';
+import 'indexed_trigger_matcher.dart';
 
 /// Pure boolean trigger matching - no confidence scores
 ///
 /// Evaluates whether a trigger's conditions match an asset's properties.
 /// Returns only true/false with detailed reasoning.
 class TriggerMatcher {
+  /// Indexed matcher for O(1) trigger lookups
+  static final IndexedTriggerMatcher _indexedMatcher = IndexedTriggerMatcher();
   /// Evaluate a trigger against an asset
   ///
   /// Returns a [TriggerMatchResult] indicating whether the trigger matched
@@ -333,5 +336,62 @@ class TriggerMatcher {
     final passed = checks.where((c) => c.passed).length;
     final total = checks.length;
     return '$passed/$total checks passed';
+  }
+
+  // ===== OPTIMIZED METHODS FOR LARGE DATASETS =====
+
+  /// Evaluate asset using indexed matching (O(1) lookup)
+  ///
+  /// Much faster than evaluating all triggers when you have many triggers
+  static List<TriggerMatchResult> evaluateAssetOptimized(
+    Asset asset,
+    List<mt.MethodologyTrigger> allTriggers,
+  ) {
+    // Build indexes if not already built or stale
+    if (_indexedMatcher.isStale() ||
+        _indexedMatcher.getIndexStats()['totalTriggers'] != allTriggers.length) {
+      _indexedMatcher.buildIndexes(allTriggers);
+    }
+
+    // Get only relevant triggers (O(1) instead of O(n))
+    final relevantTriggers = _indexedMatcher.getRelevantTriggers(asset);
+
+    final results = <TriggerMatchResult>[];
+    for (final trigger in relevantTriggers) {
+      if (!trigger.enabled) continue;
+
+      final result = evaluateTrigger(
+        trigger: trigger,
+        asset: asset,
+      );
+
+      if (result.matched) {
+        results.add(result);
+      }
+    }
+
+    return results;
+  }
+
+  /// Rebuild trigger indexes
+  ///
+  /// Call this when triggers are added, removed, or modified
+  static void rebuildIndexes(List<mt.MethodologyTrigger> triggers) {
+    _indexedMatcher.buildIndexes(triggers);
+  }
+
+  /// Get index statistics
+  static Map<String, dynamic> getIndexStats() {
+    return _indexedMatcher.getIndexStats();
+  }
+
+  /// Print debug information about indexes
+  static void printIndexDebugInfo() {
+    _indexedMatcher.printDebugInfo();
+  }
+
+  /// Clear all indexes
+  static void clearIndexes() {
+    _indexedMatcher.reset();
   }
 }

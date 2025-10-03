@@ -459,7 +459,9 @@
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe test test/services/trigger_system_test.dart)",
       "Bash(/mnt/c/tools/flutter/bin/flutter.bat test test/services/trigger_system_test.dart)",
       "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/models/error_report.dart lib/models/performance_metrics.dart lib/services/error_tracking_service.dart lib/services/performance_monitor.dart --fatal-warnings)",
-      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/asset_trigger_integration_service.dart lib/services/smart_triggers.dart lib/services/methodology_engine.dart --no-fatal-warnings)"
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/asset_trigger_integration_service.dart lib/services/smart_triggers.dart lib/services/methodology_engine.dart --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/ --no-fatal-warnings)",
+      "Bash(/mnt/c/tools/flutter/bin/cache/dart-sdk/bin/dart.exe analyze lib/services/trigger_system/)"
     ],
     "deny": [],
     "ask": []
