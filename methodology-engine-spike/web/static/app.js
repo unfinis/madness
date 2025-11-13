@@ -1,29 +1,33 @@
-// API base URL
+// Methodology Engine - Tabbed Interface
+// Handles Assets, Attack Queue, and Playbook Library tabs
+
 const API_BASE = '';
+let currentTab = 'assets';
+let allAssets = [];
+let allMethodologies = [];
+let allTriggers = [];
+let allCommands = [];
 
-// State
-let autoRefresh = true;
-
-// Initialize
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     refreshAll();
-    // Auto-refresh every 3 seconds
-    setInterval(() => {
-        if (autoRefresh) {
-            refreshAll();
-        }
-    }, 3000);
+    setInterval(() => refreshAll(), 3000); // Auto-refresh every 3s
 });
 
-// Refresh all data
+// Main refresh function
 async function refreshAll() {
-    await Promise.all([
-        loadStats(),
-        loadAssets(),
-        loadMethodologies(),
-        loadTriggerMatches(),
-        loadBatchCommands()
-    ]);
+    try {
+        await Promise.all([
+            loadStats(),
+            loadAssets(),
+            loadMethodologies(),
+            loadTriggerMatches(),
+            loadBatchCommands()
+        ]);
+        renderCurrentTab();
+    } catch (error) {
+        console.error('Error refreshing:', error);
+    }
 }
 
 // Load statistics
@@ -36,275 +40,449 @@ async function loadStats() {
         document.getElementById('stat-methodologies').textContent = stats.total_methodologies;
         document.getElementById('stat-triggers').textContent = stats.total_trigger_matches;
         document.getElementById('stat-commands').textContent = stats.total_batch_commands;
+
+        // Update queue badge
+        document.getElementById('queue-badge').textContent = stats.total_batch_commands;
     } catch (error) {
         console.error('Error loading stats:', error);
     }
 }
 
-// Load assets
+// Load all data
 async function loadAssets() {
-    try {
-        const response = await fetch(`${API_BASE}/api/assets`);
-        const assets = await response.json();
-
-        const container = document.getElementById('assets');
-
-        if (assets.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><p>No assets yet. Add one or run a demo scenario!</p></div>';
-            return;
-        }
-
-        container.innerHTML = assets.map(asset => `
-            <div class="item-card">
-                <div class="item-header">
-                    <div class="item-title">${escapeHtml(asset.name)}</div>
-                    <span class="badge info">${asset.type}</span>
-                </div>
-                <div class="item-meta">
-                    ID: ${asset.id}<br>
-                    Confidence: ${(asset.confidence * 100).toFixed(0)}%<br>
-                    Discovered: ${new Date(asset.discovered_at).toLocaleString()}
-                </div>
-                ${Object.keys(asset.properties).length > 0 ? `
-                    <div class="command-box">
-                        ${Object.entries(asset.properties).map(([k, v]) => `${k}: ${v}`).join('<br>')}
-                    </div>
-                ` : ''}
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading assets:', error);
-    }
+    const response = await fetch(`${API_BASE}/api/assets`);
+    allAssets = await response.json();
 }
 
-// Load methodologies
 async function loadMethodologies() {
-    try {
-        const response = await fetch(`${API_BASE}/api/methodologies`);
-        const methodologies = await response.json();
-
-        const container = document.getElementById('methodologies');
-
-        if (methodologies.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📚</div><p>No methodologies loaded.</p></div>';
-            return;
-        }
-
-        container.innerHTML = methodologies.map(m => `
-            <div class="methodology-card">
-                <div class="item-header">
-                    <div class="item-title">${escapeHtml(m.name)}</div>
-                    <div>
-                        <span class="badge ${m.risk_level}">${m.risk_level.toUpperCase()}</span>
-                        ${m.batch_compatible ? '<span class="badge success">BATCH</span>' : ''}
-                    </div>
-                </div>
-                <div class="item-meta">
-                    Category: ${m.category} | Triggers: ${m.trigger_count} | Steps: ${m.step_count}<br>
-                    ${escapeHtml(m.description)}
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading methodologies:', error);
-    }
+    const response = await fetch(`${API_BASE}/api/methodologies`);
+    allMethodologies = await response.json();
 }
 
-// Load trigger matches
 async function loadTriggerMatches() {
-    try {
-        const response = await fetch(`${API_BASE}/api/trigger-matches`);
-        const matches = await response.json();
-
-        const container = document.getElementById('trigger-matches');
-
-        if (matches.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎯</div><p>No triggers fired yet. Add assets to trigger methodologies!</p></div>';
-            return;
-        }
-
-        container.innerHTML = matches.map(match => `
-            <div class="item-card triggered">
-                <div class="item-header">
-                    <div class="item-title">${escapeHtml(match.methodology_name)}</div>
-                    <div>
-                        <span class="badge ${match.priority <= 2 ? 'high' : match.priority <= 4 ? 'medium' : 'low'}">
-                            Priority ${match.priority}
-                        </span>
-                        ${match.executed ? '<span class="badge success">EXECUTED</span>' : ''}
-                    </div>
-                </div>
-                <div class="item-meta">
-                    Confidence: ${(match.confidence * 100).toFixed(0)}% |
-                    Matched Assets: ${match.matched_assets.length} |
-                    ${new Date(match.matched_at).toLocaleString()}
-                </div>
-                <div style="margin-top: 10px; color: #94a3b8;">
-                    <strong>Matched Assets:</strong><br>
-                    ${match.matched_assets.map(a => `• ${escapeHtml(a.name)} (${a.type})`).join('<br>')}
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading trigger matches:', error);
-    }
+    const response = await fetch(`${API_BASE}/api/trigger-matches`);
+    allTriggers = await response.json();
 }
 
-// Load batch commands
 async function loadBatchCommands() {
-    try {
-        const response = await fetch(`${API_BASE}/api/batch-commands`);
-        const commands = await response.json();
+    const response = await fetch(`${API_BASE}/api/batch-commands`);
+    allCommands = await response.json();
+}
 
-        const container = document.getElementById('batch-commands');
+// Tab switching
+function switchTab(tabName) {
+    currentTab = tabName;
 
-        if (commands.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚡</div><p>No commands generated yet.</p></div>';
-            return;
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+
+    renderCurrentTab();
+}
+
+// Render current tab content
+function renderCurrentTab() {
+    switch (currentTab) {
+        case 'assets':
+            renderAssetsTab();
+            break;
+        case 'queue':
+            renderAttackQueueTab();
+            break;
+        case 'library':
+            renderPlaybookLibraryTab();
+            break;
+    }
+}
+
+// ============================================================================
+// ASSETS TAB
+// ============================================================================
+function renderAssetsTab() {
+    const container = document.getElementById('tab-assets');
+
+    if (allAssets.length === 0) {
+        container.innerHTML = `
+            <div class="section">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <h2>No Assets Yet</h2>
+                    <p>Assets represent discovered network elements, hosts, services, and credentials.</p>
+                    <p style="margin-top: 15px;">Run a demo scenario to see assets in action!</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // Group assets by type
+    const assetsByType = {};
+    allAssets.forEach(asset => {
+        if (!assetsByType[asset.type]) {
+            assetsByType[asset.type] = [];
         }
+        assetsByType[asset.type].push(asset);
+    });
 
-        container.innerHTML = commands.map(cmd => `
-            <div class="item-card ${cmd.batched ? 'batched' : ''}">
-                <div class="item-header">
-                    <div class="item-title">${escapeHtml(cmd.methodology_name)}</div>
-                    <div>
-                        ${cmd.batched ? '<span class="badge success">BATCHED</span>' : '<span class="badge info">SINGLE</span>'}
-                        <span class="badge info">${cmd.target_count} target${cmd.target_count > 1 ? 's' : ''}</span>
+    let html = '';
+
+    Object.entries(assetsByType).forEach(([type, assets]) => {
+        const typeColor = getAssetTypeColor(type);
+
+        html += `
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">${getAssetTypeIcon(type)} ${formatAssetType(type)} (${assets.length})</div>
+                </div>
+                <div class="card-grid">
+                    ${assets.map(asset => createAssetCard(asset, typeColor)).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function createAssetCard(asset, colorClass) {
+    const mainProps = getMainProperties(asset);
+
+    return `
+        <div class="card ${colorClass}">
+            <div class="card-header">
+                <div class="card-title">${escapeHtml(asset.name)}</div>
+                <span class="card-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+                    ${(asset.confidence * 100).toFixed(0)}%
+                </span>
+            </div>
+            <div class="card-body">
+                ${mainProps.length > 0 ? `
+                    <div class="property-list">
+                        ${mainProps.map(([key, value]) => `
+                            <div class="property-item">
+                                <span class="property-key">${formatKey(key)}</span>
+                                <span class="property-value">${formatValue(value)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div style="color: #64748b; font-style: italic;">No properties</div>'}
+            </div>
+            <div style="color: #64748b; font-size: 0.85em; margin-top: 10px;">
+                Added: ${new Date(asset.discovered_at).toLocaleString()}
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================================
+// ATTACK QUEUE TAB
+// ============================================================================
+function renderAttackQueueTab() {
+    const container = document.getElementById('tab-queue');
+
+    if (allCommands.length === 0) {
+        container.innerHTML = `
+            <div class="section">
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚡</div>
+                    <h2>No Commands in Queue</h2>
+                    <p>When asset properties match methodology triggers, commands appear here ready to execute.</p>
+                    <p style="margin-top: 15px;">Add assets or run demo scenarios to populate the queue!</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort by methodology
+    const commandsByMethodology = {};
+    allCommands.forEach(cmd => {
+        if (!commandsByMethodology[cmd.methodology_name]) {
+            commandsByMethodology[cmd.methodology_name] = [];
+        }
+        commandsByMethodology[cmd.methodology_name].push(cmd);
+    });
+
+    let html = '';
+
+    Object.entries(commandsByMethodology).forEach(([methodName, commands]) => {
+        html += `
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">⚡ ${methodName}</div>
+                    <span class="card-badge priority-high">${commands.length} ${commands.length === 1 ? 'command' : 'commands'}</span>
+                </div>
+                <div>
+                    ${commands.map(cmd => createCommandCard(cmd)).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function createCommandCard(cmd) {
+    return `
+        <div class="list-item" style="border-left-color: ${cmd.batched ? '#10b981' : '#f59e0b'};">
+            <div class="list-item-header">
+                <div class="list-item-title">${escapeHtml(cmd.methodology_name)}</div>
+                <div style="display: flex; gap: 10px;">
+                    ${cmd.batched ? '<span class="card-badge" style="background: #10b981; color: white;">BATCHED</span>' : ''}
+                    <span class="card-badge priority-medium">${cmd.target_count} ${cmd.target_count === 1 ? 'target' : 'targets'}</span>
+                </div>
+            </div>
+            <div class="command-box">${escapeHtml(cmd.command)}</div>
+            <div class="list-item-meta">
+                Generated: ${new Date(cmd.created_at).toLocaleString()}
+                ${cmd.batched ? ' • Intelligently batched for parallel execution' : ''}
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================================
+// PLAYBOOK LIBRARY TAB
+// ============================================================================
+function renderPlaybookLibraryTab() {
+    const container = document.getElementById('tab-library');
+
+    if (allMethodologies.length === 0) {
+        container.innerHTML = `
+            <div class="section">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <h2>No Playbooks Loaded</h2>
+                    <p>Playbooks (methodologies) contain trigger conditions and execution steps.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // Group by category
+    const methodsByCategory = {};
+    allMethodologies.forEach(m => {
+        const category = m.category || 'uncategorized';
+        if (!methodsByCategory[category]) {
+            methodsByCategory[category] = [];
+        }
+        methodsByCategory[category].push(m);
+    });
+
+    let html = '';
+
+    Object.entries(methodsByCategory).forEach(([category, methods]) => {
+        html += `
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">${getCategoryIcon(category)} ${formatCategory(category)}</div>
+                    <span class="card-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+                        ${methods.length} ${methods.length === 1 ? 'playbook' : 'playbooks'}
+                    </span>
+                </div>
+                <div class="card-grid">
+                    ${methods.map(m => createMethodologyCard(m)).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function createMethodologyCard(methodology) {
+    const riskColors = {
+        critical: '#ef4444',
+        high: '#f59e0b',
+        medium: '#3b82f6',
+        low: '#10b981'
+    };
+
+    return `
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">${escapeHtml(methodology.name)}</div>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <span class="card-badge" style="background: ${riskColors[methodology.risk_level]}; color: white;">
+                        ${methodology.risk_level.toUpperCase()}
+                    </span>
+                    ${methodology.batch_compatible ? '<span class="card-badge" style="background: #10b981; color: white;">BATCH</span>' : ''}
+                </div>
+            </div>
+            <div class="card-body">
+                ${methodology.description ? `<p style="margin-bottom: 15px;">${escapeHtml(methodology.description)}</p>` : ''}
+                <div class="property-list">
+                    <div class="property-item">
+                        <span class="property-key">Triggers</span>
+                        <span class="property-value">${methodology.trigger_count}</span>
+                    </div>
+                    <div class="property-item">
+                        <span class="property-key">Steps</span>
+                        <span class="property-value">${methodology.step_count}</span>
+                    </div>
+                    <div class="property-item">
+                        <span class="property-key">Category</span>
+                        <span class="property-value">${formatCategory(methodology.category)}</span>
                     </div>
                 </div>
-                <div class="item-meta">
-                    ${new Date(cmd.created_at).toLocaleString()}
-                    ${cmd.batched ? ` | ⚡ Batched ${cmd.target_count} targets into single command!` : ''}
-                </div>
-                <div class="command-box">${escapeHtml(cmd.command)}</div>
             </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading batch commands:', error);
-    }
+        </div>
+    `;
 }
 
-// Add asset
-async function addAsset(event) {
-    event.preventDefault();
-
-    const type = document.getElementById('asset-type').value;
-    const name = document.getElementById('asset-name').value;
-    const propertiesText = document.getElementById('asset-properties').value;
-
-    let properties = {};
-    if (propertiesText.trim()) {
-        try {
-            properties = JSON.parse(propertiesText);
-        } catch (e) {
-            showNotification('Invalid JSON in properties field', 'error');
-            return;
-        }
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/api/assets`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: type,
-                name: name,
-                properties: properties
-            })
-        });
-
-        const result = await response.json();
-
-        showNotification(`Asset created! Triggered ${result.triggered_matches} matches, generated ${result.generated_commands} commands.`);
-
-        // Clear form
-        document.getElementById('asset-form').reset();
-        toggleAssetForm();
-
-        // Refresh data
-        refreshAll();
-    } catch (error) {
-        console.error('Error adding asset:', error);
-        showNotification('Error creating asset: ' + error.message, 'error');
-    }
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+function getAssetTypeIcon(type) {
+    const icons = {
+        network_segment: '🌐',
+        host: '💻',
+        service: '⚙️',
+        credential: '🔑',
+        web_application: '🌍'
+    };
+    return icons[type] || '📦';
 }
 
-// Run demo scenario
+function getAssetTypeColor(type) {
+    const colors = {
+        network_segment: 'asset-network',
+        host: 'asset-host',
+        service: 'asset-service',
+        credential: 'asset-credential',
+        web_application: 'asset-web'
+    };
+    return colors[type] || '';
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        recon: '🔍',
+        reconnaissance: '🔍',
+        enumeration: '📋',
+        exploitation: '💥',
+        post_exploitation: '🎯',
+        lateral_movement: '↔️'
+    };
+    return icons[category] || '📚';
+}
+
+function formatAssetType(type) {
+    return type.split('_').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+function formatCategory(category) {
+    return category.split('_').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+function formatKey(key) {
+    return key.split('_').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+function formatValue(value) {
+    if (typeof value === 'boolean') {
+        return value ? '✓ Yes' : '✗ No';
+    }
+    if (Array.isArray(value)) {
+        return value.length > 0 ? value.join(', ') : 'None';
+    }
+    if (typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+    return value || 'N/A';
+}
+
+function getMainProperties(asset) {
+    const props = Object.entries(asset.properties);
+
+    // Prioritize certain properties based on asset type
+    const priorities = {
+        network_segment: ['cidr', 'vlan', 'nac_enabled', 'access_level'],
+        host: ['ip', 'hostname', 'os', 'status'],
+        service: ['host', 'port', 'protocol', 'url'],
+        credential: ['username', 'type', 'domain', 'valid'],
+        web_application: ['url', 'technology', 'version']
+    };
+
+    const priorityKeys = priorities[asset.type] || [];
+    const priorityProps = props.filter(([key]) => priorityKeys.includes(key));
+    const otherProps = props.filter(([key]) => !priorityKeys.includes(key));
+
+    return [...priorityProps, ...otherProps].slice(0, 5);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================================
+// DEMO SCENARIOS
+// ============================================================================
 async function runScenario(scenarioName) {
     try {
-        showNotification(`Running ${scenarioName} scenario...`, 'info');
-
+        showNotification(`Running ${scenarioName} scenario...`);
         const response = await fetch(`${API_BASE}/api/demo/scenario/${scenarioName}`, {
             method: 'POST'
         });
 
-        const result = await response.json();
-
-        showNotification(`${scenarioName} completed! Check out the generated batch commands.`);
-
-        // Refresh data
-        setTimeout(() => refreshAll(), 500);
+        if (response.ok) {
+            const result = await response.json();
+            showNotification(`✓ Scenario completed! ${result.stats.total_assets} assets, ${result.stats.total_trigger_matches} triggers`);
+            await refreshAll();
+        } else {
+            showNotification('Failed to run scenario', 'error');
+        }
     } catch (error) {
         console.error('Error running scenario:', error);
-        showNotification('Error running scenario: ' + error.message, 'error');
+        showNotification('Error running scenario', 'error');
     }
 }
 
-// Reset engine
 async function resetEngine() {
-    if (!confirm('Are you sure you want to reset the engine? This will clear all assets, triggers, and commands.')) {
+    if (!confirm('Are you sure you want to reset the engine? All data will be cleared.')) {
         return;
     }
 
     try {
-        await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
-        showNotification('Engine reset successfully');
-        refreshAll();
+        const response = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
+        if (response.ok) {
+            showNotification('✓ Engine reset successfully');
+            await refreshAll();
+        } else {
+            showNotification('Failed to reset engine', 'error');
+        }
     } catch (error) {
         console.error('Error resetting engine:', error);
-        showNotification('Error resetting engine: ' + error.message, 'error');
+        showNotification('Error resetting engine', 'error');
     }
 }
 
-// Toggle asset form
-function toggleAssetForm() {
-    const section = document.getElementById('asset-form-section');
-    section.style.display = section.style.display === 'none' ? 'block' : 'none';
-}
-
-// Update property fields based on asset type
-function updatePropertyFields() {
-    const type = document.getElementById('asset-type').value;
-    const propertiesField = document.getElementById('asset-properties');
-
-    const templates = {
-        network_segment: '{"cidr": "10.0.0.0/24", "vlan": "100"}',
-        host: '{"ip": "10.0.0.1", "hostname": "server01", "os": "Linux"}',
-        service: '{"host": "10.0.0.1", "port": 80, "protocol": "http", "url": "http://10.0.0.1"}',
-        credential: '{"username": "admin", "password": "password123", "type": "domain"}',
-        web_application: '{"url": "http://example.com", "technology": "PHP"}'
-    };
-
-    propertiesField.placeholder = templates[type] || '{"key": "value"}';
-}
-
-// Show notification
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
     notification.textContent = message;
+    notification.className = type;
     notification.style.display = 'block';
-    notification.style.background = type === 'error' ? '#ef4444' : type === 'info' ? '#3b82f6' : '#10b981';
 
     setTimeout(() => {
         notification.style.display = 'none';
     }, 3000);
 }
 
-// Escape HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// For old functionality (Quick Add Asset)
+function toggleAssetForm() {
+    // This can be removed or integrated into Assets tab in future
+    showNotification('Use the Assets tab to manage assets!');
 }

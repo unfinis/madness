@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Methodology Engine Spike</title>
+    <title>Methodology Engine - Asset-Driven Attack Platform</title>
     <style>
         * {
             margin: 0;
@@ -16,43 +16,55 @@
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: #e2e8f0;
             line-height: 1.6;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
 
+        /* Header */
         header {
             background: rgba(15, 23, 42, 0.8);
-            padding: 30px;
+            padding: 20px 30px;
             border-radius: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        h1 {
-            font-size: 2.5em;
+        .header-left h1 {
+            font-size: 1.8em;
             color: #38bdf8;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        .subtitle {
+        .header-left .subtitle {
             color: #94a3b8;
-            font-size: 1.1em;
+            font-size: 0.9em;
         }
 
-        .stats-grid {
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background: rgba(30, 41, 59, 0.8);
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px solid #334155;
             text-align: center;
@@ -60,31 +72,89 @@
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             border-color: #38bdf8;
         }
 
         .stat-value {
-            font-size: 2.5em;
+            font-size: 2em;
             font-weight: bold;
             color: #38bdf8;
         }
 
         .stat-label {
             color: #94a3b8;
-            font-size: 0.9em;
+            font-size: 0.85em;
             margin-top: 5px;
         }
 
-        .controls {
+        /* Tabs */
+        .tab-navigation {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
             display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
+            gap: 10px;
         }
 
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-button:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #e2e8f0;
+        }
+
+        .tab-button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .tab-button .badge {
+            background: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Buttons */
         button {
-            padding: 12px 24px;
+            padding: 10px 20px;
             background: #3b82f6;
             color: white;
             border: none;
@@ -100,14 +170,6 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
         }
 
-        button.danger {
-            background: #ef4444;
-        }
-
-        button.danger:hover {
-            background: #dc2626;
-        }
-
         button.success {
             background: #10b981;
         }
@@ -116,173 +178,134 @@
             background: #059669;
         }
 
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        button.secondary {
+            background: #64748b;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        /* Section */
         .section {
             background: rgba(30, 41, 59, 0.6);
             padding: 25px;
             border-radius: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border: 1px solid #334155;
         }
 
-        .section-title {
-            font-size: 1.8em;
-            color: #38bdf8;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .badge.high {
-            background: #ef4444;
-            color: white;
-        }
-
-        .badge.medium {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .badge.low {
-            background: #10b981;
-            color: white;
-        }
-
-        .badge.info {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .item-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .item-card {
-            background: rgba(15, 23, 42, 0.8);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
-            transition: all 0.3s;
-        }
-
-        .item-card:hover {
-            border-left-color: #38bdf8;
-            background: rgba(15, 23, 42, 0.95);
-        }
-
-        .item-card.triggered {
-            border-left-color: #f59e0b;
-            animation: pulse 2s infinite;
-        }
-
-        .item-card.batched {
-            border-left-color: #10b981;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
-            }
-        }
-
-        .item-header {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
-        .item-title {
+        .section-title {
+            font-size: 1.5em;
+            color: #38bdf8;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-left-color: #38bdf8;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
             font-size: 1.2em;
             font-weight: 600;
             color: #e2e8f0;
         }
 
-        .item-meta {
-            color: #94a3b8;
-            font-size: 0.9em;
-            margin-top: 5px;
+        .card-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
+        .card-body {
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+
+        .card-footer {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Priority badges */
+        .priority-critical { background: #ef4444; color: white; }
+        .priority-high { background: #f59e0b; color: white; }
+        .priority-medium { background: #3b82f6; color: white; }
+        .priority-low { background: #10b981; color: white; }
+
+        /* Command box */
         .command-box {
             background: #0f172a;
             padding: 15px;
             border-radius: 6px;
             border: 1px solid #334155;
-            margin-top: 10px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
             color: #22d3ee;
             overflow-x: auto;
+            margin: 10px 0;
         }
 
-        .asset-form {
-            background: rgba(15, 23, 42, 0.8);
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid #334155;
-            border-radius: 6px;
-            color: #e2e8f0;
-            font-size: 1em;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #38bdf8;
-        }
-
-        .property-inputs {
-            display: grid;
-            gap: 10px;
-        }
-
+        /* Empty state */
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             color: #64748b;
         }
 
         .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
+            font-size: 4em;
+            margin-bottom: 15px;
         }
 
-        .demo-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
+        /* Notification */
         #notification {
             position: fixed;
             top: 20px;
@@ -293,45 +316,131 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             display: none;
-            z-index: 1000;
+            z-index: 2000;
             animation: slideIn 0.3s;
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-            }
-            to {
-                transform: translateX(0);
-            }
+        #notification.error {
+            background: #ef4444;
         }
 
-        .methodology-card {
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+
+        /* List items */
+        .list-item {
             background: rgba(15, 23, 42, 0.8);
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #334155;
+            border-left: 4px solid #3b82f6;
             margin-bottom: 15px;
+            transition: all 0.3s;
         }
+
+        .list-item:hover {
+            border-left-color: #38bdf8;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .list-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .list-item-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .list-item-meta {
+            color: #94a3b8;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        /* Property display */
+        .property-list {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .property-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .property-item:last-child {
+            border-bottom: none;
+        }
+
+        .property-key {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+
+        .property-value {
+            color: #e2e8f0;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        /* Demo buttons */
+        .demo-section {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        /* Asset type colors */
+        .asset-network { border-left-color: #8b5cf6; }
+        .asset-host { border-left-color: #10b981; }
+        .asset-service { border-left-color: #f59e0b; }
+        .asset-credential { border-left-color: #ef4444; }
+        .asset-web { border-left-color: #06b6d4; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎯 Methodology Engine Spike</h1>
-            <p class="subtitle">Asset-Property-Driven Trigger System with Intelligent Batch Command Generation</p>
+            <div class="header-left">
+                <h1>🎯 Methodology Engine</h1>
+                <p class="subtitle">Asset-Driven Attack Platform with Intelligent Batch Generation</p>
+            </div>
+            <div class="header-right">
+                <button onclick="refreshAll()">🔄 Refresh</button>
+                <button class="danger" onclick="resetEngine()">🗑️ Reset</button>
+            </div>
         </header>
 
         <div id="notification"></div>
 
-        <div class="stats-grid" id="stats">
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar">
             <div class="stat-card">
                 <div class="stat-value" id="stat-assets">0</div>
                 <div class="stat-label">Assets</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="stat-methodologies">0</div>
-                <div class="stat-label">Methodologies</div>
+                <div class="stat-label">Playbooks</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="stat-triggers">0</div>
@@ -339,46 +448,15 @@
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="stat-commands">0</div>
-                <div class="stat-label">Commands Generated</div>
+                <div class="stat-label">Commands Ready</div>
             </div>
         </div>
 
-        <div class="controls">
-            <button onclick="window.location.href='/static/assets.html'">📦 Assets Manager</button>
-            <button onclick="refreshAll()">🔄 Refresh</button>
-            <button class="danger" onclick="resetEngine()">🗑️ Reset Engine</button>
-            <button class="success" onclick="toggleAssetForm()">➕ Quick Add Asset</button>
-        </div>
-
-        <div class="section" id="asset-form-section" style="display: none;">
-            <div class="section-title">Add New Asset</div>
-            <div class="asset-form">
-                <form id="asset-form" onsubmit="addAsset(event)">
-                    <div class="form-group">
-                        <label>Asset Type</label>
-                        <select id="asset-type" onchange="updatePropertyFields()">
-                            <option value="network_segment">Network Segment</option>
-                            <option value="host">Host</option>
-                            <option value="service">Service</option>
-                            <option value="credential">Credential</option>
-                            <option value="web_application">Web Application</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="asset-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Properties (JSON)</label>
-                        <textarea id="asset-properties" rows="4" placeholder='{"key": "value"}'></textarea>
-                    </div>
-                    <button type="submit">Create Asset</button>
-                </form>
+        <!-- Demo Scenarios -->
+        <div class="demo-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="color: #38bdf8; font-size: 1.1em;">🚀 Demo Scenarios</strong>
             </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">🚀 Demo Scenarios</div>
             <div class="demo-buttons">
                 <button onclick="runScenario('network_discovery')">Network Discovery</button>
                 <button onclick="runScenario('nac_bypass')">NAC Bypass (Batching!)</button>
@@ -386,24 +464,31 @@
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-title">⚡ Generated Batch Commands</div>
-            <div id="batch-commands" class="item-list"></div>
+        <!-- Tabs Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('assets')">
+                📦 Assets
+            </button>
+            <button class="tab-button" onclick="switchTab('queue')">
+                ⚡ Attack Queue
+                <span class="badge" id="queue-badge">0</span>
+            </button>
+            <button class="tab-button" onclick="switchTab('library')">
+                📚 Playbook Library
+            </button>
         </div>
 
-        <div class="section">
-            <div class="section-title">🎯 Trigger Matches</div>
-            <div id="trigger-matches" class="item-list"></div>
+        <!-- Tab Content -->
+        <div id="tab-assets" class="tab-content active">
+            <!-- Assets content loaded here -->
         </div>
 
-        <div class="section">
-            <div class="section-title">📦 Assets</div>
-            <div id="assets" class="item-list"></div>
+        <div id="tab-queue" class="tab-content">
+            <!-- Attack Queue content loaded here -->
         </div>
 
-        <div class="section">
-            <div class="section-title">📚 Loaded Methodologies</div>
-            <div id="methodologies" class="item-list"></div>
+        <div id="tab-library" class="tab-content">
+            <!-- Playbook Library content loaded here -->
         </div>
     </div>
 
