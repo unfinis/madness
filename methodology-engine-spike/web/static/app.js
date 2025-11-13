@@ -769,3 +769,357 @@ document.getElementById('methodology-modal').addEventListener('click', (e) => {
         closeMethodologyModal();
     }
 });
+
+// ============================================================================
+// ADD ASSET MODAL
+// ============================================================================
+
+// Asset property templates for different asset types
+const ASSET_PROPERTY_TEMPLATES = {
+    network_segment: [
+        { name: 'cidr', label: 'CIDR', type: 'text', placeholder: '10.1.1.0/24', required: true },
+        { name: 'vlan', label: 'VLAN', type: 'number', placeholder: '100' },
+        { name: 'gateway', label: 'Gateway', type: 'text', placeholder: '10.1.1.1' },
+        { name: 'nac_enabled', label: 'NAC Enabled', type: 'checkbox' },
+        { name: 'access_level', label: 'Access Level', type: 'select', options: ['blocked', 'limited', 'partial', 'full'] },
+    ],
+    host: [
+        { name: 'hostname', label: 'Hostname', type: 'text', placeholder: 'WEB01.corp.local', required: true },
+        { name: 'ip', label: 'IP Address', type: 'text', placeholder: '10.1.1.50' },
+        { name: 'os', label: 'Operating System', type: 'text', placeholder: 'Ubuntu 20.04' },
+        { name: 'status', label: 'Status', type: 'select', options: ['unknown', 'up', 'down', 'unreachable'] },
+        { name: 'access_level', label: 'Access Level', type: 'select', options: ['none', 'limited', 'user', 'admin', 'full'] },
+        { name: 'compromised', label: 'Compromised', type: 'checkbox' },
+        { name: 'network_interfaces', label: 'Network Interfaces', type: 'array', fields: [
+            { name: 'name', label: 'Interface Name', type: 'text', placeholder: 'eth0' },
+            { name: 'ip', label: 'IP Address', type: 'text', placeholder: '10.1.1.50' },
+            { name: 'mac', label: 'MAC Address', type: 'text', placeholder: '00:0c:29:3a:2b:1c' },
+            { name: 'network', label: 'Network', type: 'text', placeholder: '10.1.1.0/24' },
+            { name: 'status', label: 'Status', type: 'select', options: ['up', 'down'] },
+        ]},
+    ],
+    service: [
+        { name: 'host', label: 'Host', type: 'text', placeholder: '10.1.1.50', required: true },
+        { name: 'port', label: 'Port', type: 'number', placeholder: '445', required: true },
+        { name: 'protocol', label: 'Protocol', type: 'select', options: ['tcp', 'udp'], required: true },
+        { name: 'service_name', label: 'Service Name', type: 'text', placeholder: 'smb' },
+        { name: 'banner', label: 'Banner', type: 'textarea', placeholder: 'Service version info...' },
+    ],
+    web_application: [
+        { name: 'url', label: 'URL', type: 'text', placeholder: 'http://10.1.1.50', required: true },
+        { name: 'technology', label: 'Technology', type: 'text', placeholder: 'Apache/2.4.41' },
+        { name: 'version', label: 'Version', type: 'text', placeholder: '2.4.41' },
+        { name: 'title', label: 'Page Title', type: 'text', placeholder: 'Corporate Portal' },
+        { name: 'status_code', label: 'Status Code', type: 'number', placeholder: '200' },
+    ],
+    application: [
+        { name: 'name', label: 'Application Name', type: 'text', placeholder: 'Apache Tomcat', required: true },
+        { name: 'version', label: 'Version', type: 'text', placeholder: '9.0.45' },
+        { name: 'install_path', label: 'Install Path', type: 'text', placeholder: '/opt/tomcat' },
+        { name: 'writable_by', label: 'Writable By (comma-separated)', type: 'text', placeholder: 'tomcat,www-data' },
+        { name: 'privesc_potential', label: 'Privilege Escalation Potential', type: 'select', options: ['none', 'low', 'medium', 'high', 'critical'] },
+        { name: 'exploitable', label: 'Exploitable', type: 'checkbox' },
+    ],
+    credential: [
+        { name: 'username', label: 'Username', type: 'text', placeholder: 'admin', required: true },
+        { name: 'password', label: 'Password', type: 'password', placeholder: '••••••••' },
+        { name: 'hash', label: 'Hash', type: 'text', placeholder: 'NTLM hash...' },
+        { name: 'type', label: 'Credential Type', type: 'select', options: ['password', 'hash', 'key', 'token'], required: true },
+        { name: 'domain', label: 'Domain', type: 'text', placeholder: 'CORP' },
+        { name: 'valid', label: 'Valid', type: 'checkbox' },
+    ],
+    firewall: [
+        { name: 'vendor', label: 'Vendor', type: 'text', placeholder: 'Cisco ASA' },
+        { name: 'model', label: 'Model', type: 'text', placeholder: 'ASA 5505' },
+        { name: 'management_ip', label: 'Management IP', type: 'text', placeholder: '192.168.1.1' },
+        { name: 'version', label: 'Version', type: 'text', placeholder: '9.8(2)' },
+    ],
+    database: [
+        { name: 'type', label: 'Database Type', type: 'select', options: ['mysql', 'postgresql', 'mssql', 'oracle', 'mongodb'], required: true },
+        { name: 'host', label: 'Host', type: 'text', placeholder: '10.1.1.100', required: true },
+        { name: 'port', label: 'Port', type: 'number', placeholder: '3306' },
+        { name: 'database_name', label: 'Database Name', type: 'text', placeholder: 'production' },
+        { name: 'version', label: 'Version', type: 'text', placeholder: '8.0.25' },
+    ],
+    user_account: [
+        { name: 'username', label: 'Username', type: 'text', placeholder: 'jdoe', required: true },
+        { name: 'domain', label: 'Domain', type: 'text', placeholder: 'CORP' },
+        { name: 'email', label: 'Email', type: 'email', placeholder: 'jdoe@corp.com' },
+        { name: 'groups', label: 'Groups (comma-separated)', type: 'text', placeholder: 'Domain Admins,IT Staff' },
+        { name: 'privileged', label: 'Privileged Account', type: 'checkbox' },
+    ],
+    vulnerability: [
+        { name: 'cve_id', label: 'CVE ID', type: 'text', placeholder: 'CVE-2021-44228' },
+        { name: 'severity', label: 'Severity', type: 'select', options: ['info', 'low', 'medium', 'high', 'critical'], required: true },
+        { name: 'affected_asset', label: 'Affected Asset ID', type: 'text', placeholder: 'asset-id-here' },
+        { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Vulnerability details...' },
+        { name: 'exploitable', label: 'Exploitable', type: 'checkbox' },
+    ],
+};
+
+function showAddAssetModal() {
+    // Reset form
+    document.getElementById('asset-form').reset();
+    document.getElementById('dynamic-properties').innerHTML = '';
+
+    // Show modal
+    document.getElementById('asset-modal').classList.add('active');
+}
+
+function closeAssetModal() {
+    document.getElementById('asset-modal').classList.remove('active');
+}
+
+function updateAssetForm() {
+    const assetType = document.getElementById('asset-type').value;
+    const container = document.getElementById('dynamic-properties');
+
+    if (!assetType) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const template = ASSET_PROPERTY_TEMPLATES[assetType];
+
+    if (!template) {
+        container.innerHTML = '<p style="color: #94a3b8;">No specific properties for this asset type.</p>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="property-section">
+            <div class="property-section-title">Asset Properties</div>
+            ${template.map(field => renderPropertyField(field)).join('')}
+        </div>
+    `;
+
+    // Update confidence display
+    const confidenceInput = document.getElementById('asset-confidence');
+    const confidenceDisplay = document.getElementById('confidence-display');
+    confidenceInput.addEventListener('input', (e) => {
+        confidenceDisplay.textContent = `${(e.target.value * 100).toFixed(0)}%`;
+    });
+}
+
+function renderPropertyField(field) {
+    const fieldId = `prop-${field.name}`;
+
+    if (field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'number') {
+        return `
+            <div class="form-group">
+                <label for="${fieldId}">${field.label}${field.required ? ' *' : ''}</label>
+                <input
+                    type="${field.type}"
+                    id="${fieldId}"
+                    name="${field.name}"
+                    placeholder="${field.placeholder || ''}"
+                    ${field.required ? 'required' : ''}
+                >
+            </div>
+        `;
+    } else if (field.type === 'textarea') {
+        return `
+            <div class="form-group">
+                <label for="${fieldId}">${field.label}${field.required ? ' *' : ''}</label>
+                <textarea
+                    id="${fieldId}"
+                    name="${field.name}"
+                    placeholder="${field.placeholder || ''}"
+                    ${field.required ? 'required' : ''}
+                ></textarea>
+            </div>
+        `;
+    } else if (field.type === 'select') {
+        return `
+            <div class="form-group">
+                <label for="${fieldId}">${field.label}${field.required ? ' *' : ''}</label>
+                <select id="${fieldId}" name="${field.name}" ${field.required ? 'required' : ''}>
+                    <option value="">Select...</option>
+                    ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                </select>
+            </div>
+        `;
+    } else if (field.type === 'checkbox') {
+        return `
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="${fieldId}" name="${field.name}">
+                    ${field.label}
+                </label>
+            </div>
+        `;
+    } else if (field.type === 'array') {
+        return `
+            <div class="form-group">
+                <label>${field.label}</label>
+                <div id="${fieldId}-container"></div>
+                <button type="button" class="add-btn" onclick="addArrayItem('${field.name}', ${JSON.stringify(field.fields).replace(/"/g, '&quot;')})">
+                    ➕ Add ${field.label.replace(/s$/, '')}
+                </button>
+            </div>
+        `;
+    }
+
+    return '';
+}
+
+let arrayItemCounters = {};
+
+function addArrayItem(fieldName, fields) {
+    if (!arrayItemCounters[fieldName]) {
+        arrayItemCounters[fieldName] = 0;
+    }
+    const index = arrayItemCounters[fieldName]++;
+    const container = document.getElementById(`prop-${fieldName}-container`);
+
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'array-item';
+    itemDiv.id = `${fieldName}-item-${index}`;
+
+    itemDiv.innerHTML = `
+        <button type="button" class="remove-btn" onclick="removeArrayItem('${fieldName}', ${index})">✕ Remove</button>
+        ${fields.map(field => {
+            const itemFieldId = `prop-${fieldName}-${index}-${field.name}`;
+            if (field.type === 'select') {
+                return `
+                    <div class="form-group">
+                        <label for="${itemFieldId}">${field.label}</label>
+                        <select id="${itemFieldId}" name="${fieldName}[${index}].${field.name}">
+                            <option value="">Select...</option>
+                            ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="form-group">
+                        <label for="${itemFieldId}">${field.label}</label>
+                        <input
+                            type="${field.type}"
+                            id="${itemFieldId}"
+                            name="${fieldName}[${index}].${field.name}"
+                            placeholder="${field.placeholder || ''}"
+                        >
+                    </div>
+                `;
+            }
+        }).join('')}
+    `;
+
+    container.appendChild(itemDiv);
+}
+
+function removeArrayItem(fieldName, index) {
+    const item = document.getElementById(`${fieldName}-item-${index}`);
+    if (item) {
+        item.remove();
+    }
+}
+
+async function submitAsset(event) {
+    event.preventDefault();
+
+    const assetType = document.getElementById('asset-type').value;
+    const assetName = document.getElementById('asset-name').value;
+    const confidence = parseFloat(document.getElementById('asset-confidence').value);
+
+    // Collect all properties
+    const properties = {};
+    const formData = new FormData(event.target);
+
+    for (let [key, value] of formData.entries()) {
+        // Handle array items (e.g., "network_interfaces[0].name")
+        if (key.includes('[')) {
+            const arrayMatch = key.match(/^(.+?)\[(\d+)\]\.(.+)$/);
+            if (arrayMatch) {
+                const [, arrayName, index, fieldName] = arrayMatch;
+                if (!properties[arrayName]) {
+                    properties[arrayName] = [];
+                }
+                if (!properties[arrayName][index]) {
+                    properties[arrayName][index] = {};
+                }
+                properties[arrayName][index][fieldName] = value;
+            }
+        } else {
+            // Regular field
+            const input = event.target.elements[key];
+            if (input) {
+                if (input.type === 'checkbox') {
+                    properties[key] = input.checked;
+                } else if (input.type === 'number') {
+                    properties[key] = value ? parseFloat(value) : null;
+                } else if (key === 'writable_by' || key === 'groups') {
+                    // Split comma-separated values into arrays
+                    properties[key] = value ? value.split(',').map(s => s.trim()) : [];
+                } else {
+                    properties[key] = value;
+                }
+            }
+        }
+    }
+
+    // Clean up array properties (remove sparse arrays)
+    for (let key in properties) {
+        if (Array.isArray(properties[key])) {
+            properties[key] = properties[key].filter(item => item !== null && item !== undefined);
+        }
+    }
+
+    const assetData = {
+        type: assetType,
+        name: assetName,
+        properties: properties,
+        confidence: confidence
+    };
+
+    try {
+        showNotification('Creating asset...', 'info');
+
+        const response = await fetch(`${API_BASE}/api/assets`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(assetData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showNotification(`✓ Asset created successfully! ${result.triggered_methodologies || 0} methodologies triggered.`);
+            closeAssetModal();
+            await refreshAll();
+
+            // Switch to Assets tab to show the new asset
+            if (currentTab !== 'assets') {
+                const assetsTab = document.querySelector('.tab-button');
+                if (assetsTab) {
+                    assetsTab.click();
+                }
+            }
+        } else {
+            const error = await response.json();
+            showNotification(`Failed to create asset: ${error.detail || 'Unknown error'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating asset:', error);
+        showNotification('Error creating asset', 'error');
+    }
+}
+
+// Close asset modal on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const assetModal = document.getElementById('asset-modal');
+        if (assetModal.classList.contains('active')) {
+            closeAssetModal();
+        }
+    }
+});
+
+// Close asset modal when clicking outside
+document.getElementById('asset-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'asset-modal') {
+        closeAssetModal();
+    }
+});
