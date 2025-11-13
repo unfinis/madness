@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime
 
 from engine import MethodologyEngine, Asset, AssetType, AssetRelationship, RelationshipType
+from demo_scenarios import load_scenario, load_all_scenarios, SCENARIOS
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -509,118 +510,41 @@ async def reset_engine():
     return {"message": "Engine reset successfully"}
 
 
+@app.get("/api/demo/scenarios")
+async def list_demo_scenarios():
+    """List available demo scenarios."""
+    return {
+        "scenarios": [
+            {
+                "id": sid,
+                "name": info["name"],
+                "description": info["description"]
+            }
+            for sid, info in SCENARIOS.items()
+        ]
+    }
+
+
 @app.post("/api/demo/scenario/{scenario_name}")
 async def run_demo_scenario(scenario_name: str):
     """Run a predefined demo scenario."""
-    if scenario_name == "network_discovery":
-        return await demo_network_discovery()
-    elif scenario_name == "nac_bypass":
-        return await demo_nac_bypass()
-    elif scenario_name == "web_enumeration":
-        return await demo_web_enumeration()
-    else:
-        raise HTTPException(status_code=404, detail=f"Scenario '{scenario_name}' not found")
-
-
-async def demo_network_discovery():
-    """Demo: Network discovery progression."""
-    # Add a network segment
-    subnet = Asset(
-        id=str(uuid.uuid4()),
-        type=AssetType.NETWORK_SEGMENT,
-        name="Corporate Network",
-        properties={
-            "cidr": "10.10.10.0/24",
-            "vlan": "100",
-            "description": "Main corporate network"
-        }
-    )
-    engine.add_asset(subnet)
-
-    # Simulate discovering hosts
-    for i in range(1, 6):
-        host = Asset(
-            id=str(uuid.uuid4()),
-            type=AssetType.HOST,
-            name=f"host-10.10.10.{i}",
-            properties={
-                "ip": f"10.10.10.{i}",
-                "hostname": f"WKS-{i:03d}",
-                "os": "Windows 10" if i % 2 == 0 else "Ubuntu 20.04"
+    try:
+        if scenario_name == "all":
+            load_all_scenarios(engine)
+            return {
+                "message": "All scenarios loaded successfully",
+                "stats": engine.get_stats(),
+                "compromise_candidates": engine.get_compromise_candidates()[:10]
             }
-        )
-        engine.add_asset(host)
-
-    return {"message": "Network discovery scenario completed", "stats": engine.get_stats()}
-
-
-async def demo_nac_bypass():
-    """Demo: NAC bypass with credentials."""
-    # Add NAC-protected network
-    nac_network = Asset(
-        id=str(uuid.uuid4()),
-        type=AssetType.NETWORK_SEGMENT,
-        name="Guest WiFi with NAC",
-        properties={
-            "network_id": "guest_wifi_01",
-            "nac_enabled": True,
-            "access_level": "blocked",
-            "ssid": "CorpGuest"
-        }
-    )
-    engine.add_asset(nac_network)
-
-    # Add multiple credentials (triggers batching!)
-    credentials = [
-        ("user1", "Password123!"),
-        ("user2", "Summer2024"),
-        ("admin", "AdminPass"),
-        ("guest", "Guest123"),
-    ]
-
-    for username, password in credentials:
-        cred = Asset(
-            id=str(uuid.uuid4()),
-            type=AssetType.CREDENTIAL,
-            name=f"{username} credentials",
-            properties={
-                "username": username,
-                "password": password,
-                "type": "domain",
-                "source": "credential_dump"
+        else:
+            load_scenario(engine, scenario_name)
+            return {
+                "message": f"Scenario '{scenario_name}' loaded successfully",
+                "stats": engine.get_stats(),
+                "compromise_candidates": engine.get_compromise_candidates()[:5]
             }
-        )
-        engine.add_asset(cred)
-
-    return {"message": "NAC bypass scenario completed", "stats": engine.get_stats()}
-
-
-async def demo_web_enumeration():
-    """Demo: Web service enumeration with batching."""
-    # Discover multiple web services
-    web_services = [
-        ("10.10.10.5", 80, "http"),
-        ("10.10.10.5", 443, "https"),
-        ("10.10.10.7", 8080, "http"),
-        ("10.10.10.12", 443, "https"),
-    ]
-
-    for ip, port, protocol in web_services:
-        service = Asset(
-            id=str(uuid.uuid4()),
-            type=AssetType.SERVICE,
-            name=f"{protocol.upper()} on {ip}:{port}",
-            properties={
-                "host": ip,
-                "port": port,
-                "protocol": "http",
-                "url": f"{protocol}://{ip}:{port}",
-                "service_name": "http"
-            }
-        )
-        engine.add_asset(service)
-
-    return {"message": "Web enumeration scenario completed", "stats": engine.get_stats()}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 # Mount static files
