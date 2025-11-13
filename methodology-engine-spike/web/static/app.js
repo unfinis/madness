@@ -152,7 +152,7 @@ function createAssetCard(asset, colorClass) {
     const mainProps = getMainProperties(asset);
 
     return `
-        <div class="card ${colorClass}">
+        <div class="card ${colorClass}" onclick="showEditAssetModal('${asset.id}')" style="cursor: pointer;">
             <div class="card-header">
                 <div class="card-title">${escapeHtml(asset.name)}</div>
                 <span class="card-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
@@ -173,6 +173,9 @@ function createAssetCard(asset, colorClass) {
             </div>
             <div style="color: #64748b; font-size: 0.85em; margin-top: 10px;">
                 Added: ${new Date(asset.discovered_at).toLocaleString()}
+                <div style="color: #38bdf8; margin-top: 5px; font-size: 0.9em;">
+                    Click to edit →
+                </div>
             </div>
         </div>
     `;
@@ -774,6 +777,9 @@ document.getElementById('methodology-modal').addEventListener('click', (e) => {
 // ADD ASSET MODAL
 // ============================================================================
 
+// Track if we're in edit mode
+let editingAsset = null;
+
 // Asset property templates for different asset types
 const ASSET_PROPERTY_TEMPLATES = {
     network_segment: [
@@ -858,9 +864,16 @@ const ASSET_PROPERTY_TEMPLATES = {
 };
 
 function showAddAssetModal() {
+    // Reset edit mode
+    editingAsset = null;
+
     // Reset form
     document.getElementById('asset-form').reset();
     document.getElementById('dynamic-properties').innerHTML = '';
+
+    // Update modal title and button
+    document.querySelector('#asset-modal .modal-title').textContent = '➕ Add New Asset';
+    document.querySelector('#asset-form button[type="submit"]').textContent = 'Create Asset';
 
     // Show modal
     document.getElementById('asset-modal').classList.add('active');
@@ -868,6 +881,93 @@ function showAddAssetModal() {
 
 function closeAssetModal() {
     document.getElementById('asset-modal').classList.remove('active');
+    editingAsset = null;
+}
+
+function showEditAssetModal(assetId) {
+    // Find the asset
+    const asset = allAssets.find(a => a.id === assetId);
+    if (!asset) {
+        showNotification('Asset not found', 'error');
+        return;
+    }
+
+    // Set edit mode
+    editingAsset = asset;
+
+    // Reset array counters
+    arrayItemCounters = {};
+
+    // Update modal title and button
+    document.querySelector('#asset-modal .modal-title').textContent = '✏️ Edit Asset';
+    document.querySelector('#asset-form button[type="submit"]').textContent = 'Update Asset';
+
+    // Set asset type
+    document.getElementById('asset-type').value = asset.type;
+
+    // Set asset name
+    document.getElementById('asset-name').value = asset.name;
+
+    // Set confidence
+    document.getElementById('asset-confidence').value = asset.confidence;
+    document.getElementById('confidence-display').textContent = `${(asset.confidence * 100).toFixed(0)}%`;
+
+    // Trigger form update to show properties
+    updateAssetForm();
+
+    // Pre-fill properties after a brief delay to ensure form is rendered
+    setTimeout(() => {
+        fillAssetProperties(asset.properties);
+    }, 50);
+
+    // Show modal
+    document.getElementById('asset-modal').classList.add('active');
+}
+
+function fillAssetProperties(properties) {
+    // Fill simple properties
+    Object.entries(properties).forEach(([key, value]) => {
+        const input = document.querySelector(`#prop-${key}`);
+        if (input) {
+            if (input.type === 'checkbox') {
+                input.checked = value;
+            } else if (Array.isArray(value) && !document.getElementById(`prop-${key}-container`)) {
+                // Handle comma-separated arrays (like writable_by, groups)
+                input.value = value.join(', ');
+            } else if (!Array.isArray(value)) {
+                input.value = value;
+            }
+        }
+    });
+
+    // Handle array fields (like network_interfaces)
+    Object.entries(properties).forEach(([key, value]) => {
+        if (Array.isArray(value) && document.getElementById(`prop-${key}-container`)) {
+            const template = ASSET_PROPERTY_TEMPLATES[editingAsset.type];
+            const fieldTemplate = template.find(f => f.name === key);
+
+            if (fieldTemplate && fieldTemplate.type === 'array') {
+                // Add each array item
+                value.forEach((item, index) => {
+                    addArrayItem(key, fieldTemplate.fields);
+
+                    // Fill the item's fields
+                    setTimeout(() => {
+                        Object.entries(item).forEach(([fieldName, fieldValue]) => {
+                            const itemInput = document.querySelector(`#prop-${key}-${index}-${fieldName}`);
+                            if (itemInput) {
+                                if (itemInput.type === 'checkbox') {
+                                    itemInput.checked = fieldValue;
+                                } else {
+                                    itemInput.value = fieldValue;
+                                }
+                            }
+                        });
+                    }, 10);
+                });
+            }
+        }
+    });
 }
 
 function updateAssetForm() {
@@ -1074,10 +1174,15 @@ async function submitAsset(event) {
     };
 
     try {
-        showNotification('Creating asset...', 'info');
+        // Determine if we're creating or updating
+        const isEditing = editingAsset !== null;
+        const url = isEditing ? `${API_BASE}/api/assets/${editingAsset.id}` : `${API_BASE}/api/assets`;
+        const method = isEditing ? 'PUT' : 'POST';
 
-        const response = await fetch(`${API_BASE}/api/assets`, {
-            method: 'POST',
+        showNotification(isEditing ? 'Updating asset...' : 'Creating asset...', 'info');
+
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1086,7 +1191,11 @@ async function submitAsset(event) {
 
         if (response.ok) {
             const result = await response.json();
-            showNotification(`✓ Asset created successfully! ${result.triggered_methodologies || 0} methodologies triggered.`);
+            if (isEditing) {
+                showNotification('✓ Asset updated successfully!');
+            } else {
+                showNotification(`✓ Asset created successfully! ${result.triggered_methodologies || 0} methodologies triggered.`);
+            }
             closeAssetModal();
             await refreshAll();
 
