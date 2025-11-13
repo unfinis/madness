@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/asset.dart';
 import '../providers/comprehensive_asset_provider.dart';
+import 'enhanced_asset_property_editor.dart';
 
 enum AssetDialogMode { view, create, edit }
 
@@ -26,6 +27,7 @@ class ComprehensiveAssetDetailDialog extends ConsumerStatefulWidget {
 
 class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAssetDetailDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _propertyFormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _uuid = const Uuid();
@@ -400,6 +402,20 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
   }
 
   Widget _buildPropertiesSection(bool isViewMode) {
+    if (_selectedAssetType == null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Please select an asset type to configure properties',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -414,21 +430,27 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
                 ),
                 const Spacer(),
                 if (!isViewMode)
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _addCustomProperty,
+                  Chip(
+                    label: Text('${_properties.length} properties'),
+                    avatar: const Icon(Icons.settings, size: 16),
                   ),
               ],
             ),
             const SizedBox(height: 16),
-            if (_properties.isEmpty)
-              const Text('No properties defined')
-            else
-              ..._properties.entries.map((entry) => _buildPropertyField(
-                entry.key,
-                entry.value,
-                isViewMode,
-              )),
+            SizedBox(
+              height: 400,
+              child: EnhancedAssetPropertyEditor(
+                assetType: _selectedAssetType!,
+                properties: _properties,
+                readOnly: isViewMode,
+                formKey: _propertyFormKey,
+                onPropertiesChanged: (updatedProperties) {
+                  setState(() {
+                    _properties = updatedProperties;
+                  });
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -731,7 +753,22 @@ class _ComprehensiveAssetDetailDialogState extends ConsumerState<ComprehensiveAs
   }
 
   Future<void> _saveAsset() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Validate main form (name, description, etc.)
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all required fields')),
+      );
+      return;
+    }
+
+    // Validate property form if available
+    if (_propertyFormKey.currentState != null && !_propertyFormKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fix validation errors in properties')),
+      );
+      return;
+    }
+
     if (_selectedAssetType == null) return;
 
     setState(() {
