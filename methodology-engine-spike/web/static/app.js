@@ -1123,3 +1123,266 @@ document.getElementById('asset-modal').addEventListener('click', (e) => {
         closeAssetModal();
     }
 });
+
+// ============================================================================
+// ADD RELATIONSHIP MODAL
+// ============================================================================
+
+// Relationship type descriptions and suggested properties
+const RELATIONSHIP_INFO = {
+    can_pivot_to: {
+        description: "🌐 Critical for pivoting! Indicates a dual-homed host that can route traffic to another network segment.",
+        properties: [
+            { name: 'interface', label: 'Network Interface', type: 'text', placeholder: 'eth1' },
+            { name: 'requires_routing', label: 'Requires Routing', type: 'checkbox' },
+            { name: 'direct_access', label: 'Direct Access', type: 'checkbox' }
+        ]
+    },
+    allowed_by: {
+        description: "🔥 Firewall traversal opportunity! Asset is allowlisted by firewall rules for accessing restricted networks.",
+        properties: [
+            { name: 'firewall_rule_id', label: 'Firewall Rule ID', type: 'text', placeholder: 'RULE-100' },
+            { name: 'protocol', label: 'Protocol', type: 'select', options: ['any', 'tcp', 'udp', 'icmp'] },
+            { name: 'ports', label: 'Allowed Ports', type: 'text', placeholder: '22,80,443' }
+        ]
+    },
+    enables: {
+        description: "⬆️ Privilege escalation vector! Application or misconfiguration that enables privilege escalation.",
+        properties: [
+            { name: 'technique', label: 'Technique', type: 'text', placeholder: 'Writable service binary' },
+            { name: 'risk_level', label: 'Risk Level', type: 'select', options: ['low', 'medium', 'high', 'critical'] },
+            { name: 'requires_user_interaction', label: 'Requires User Interaction', type: 'checkbox' }
+        ]
+    },
+    works_on: {
+        description: "🔑 Valid credential! This credential has been confirmed to work on the target.",
+        properties: [
+            { name: 'access_level', label: 'Access Level', type: 'select', options: ['user', 'admin', 'system'] },
+            { name: 'tested_at', label: 'Tested At', type: 'text', placeholder: new Date().toISOString().split('T')[0] }
+        ]
+    },
+    contains: {
+        description: "📦 Hierarchical containment. Parent contains child (e.g., Network contains Host).",
+        properties: []
+    },
+    connected_to: {
+        description: "🔗 Network connectivity. Two networks are connected via routing.",
+        properties: [
+            { name: 'route_type', label: 'Route Type', type: 'select', options: ['static', 'dynamic', 'vpn'] }
+        ]
+    },
+    exposes: {
+        description: "⚠️ Vulnerability exposure. Service exposes a specific vulnerability.",
+        properties: [
+            { name: 'cve_id', label: 'CVE ID', type: 'text', placeholder: 'CVE-2021-44228' },
+            { name: 'exploitable', label: 'Exploitable', type: 'checkbox' }
+        ]
+    }
+};
+
+function showAddRelationshipModal() {
+    // Reset form
+    document.getElementById('relationship-form').reset();
+
+    // Populate asset dropdowns
+    populateAssetDropdowns();
+
+    // Reset dynamic properties
+    document.getElementById('rel-dynamic-properties').innerHTML = '<p style="color: #94a3b8; font-style: italic;">Select a relationship type to see suggested properties</p>';
+    document.getElementById('rel-type-description').style.display = 'none';
+
+    // Show modal
+    document.getElementById('relationship-modal').classList.add('active');
+
+    // Setup confidence display
+    const confidenceInput = document.getElementById('rel-confidence');
+    const confidenceDisplay = document.getElementById('rel-confidence-display');
+    confidenceInput.addEventListener('input', (e) => {
+        confidenceDisplay.textContent = `${(e.target.value * 100).toFixed(0)}%`;
+    });
+}
+
+function closeRelationshipModal() {
+    document.getElementById('relationship-modal').classList.remove('active');
+}
+
+function populateAssetDropdowns() {
+    const sourceSelect = document.getElementById('rel-source-asset');
+    const targetSelect = document.getElementById('rel-target-asset');
+
+    // Clear existing options except the first
+    sourceSelect.innerHTML = '<option value="">Select source asset...</option>';
+    targetSelect.innerHTML = '<option value="">Select target asset...</option>';
+
+    // Group assets by type
+    const assetsByType = {};
+    allAssets.forEach(asset => {
+        if (!assetsByType[asset.type]) {
+            assetsByType[asset.type] = [];
+        }
+        assetsByType[asset.type].push(asset);
+    });
+
+    // Add options grouped by type
+    Object.entries(assetsByType).forEach(([type, assets]) => {
+        const sourceGroup = document.createElement('optgroup');
+        sourceGroup.label = formatAssetType(type);
+
+        const targetGroup = document.createElement('optgroup');
+        targetGroup.label = formatAssetType(type);
+
+        assets.forEach(asset => {
+            const sourceOption = document.createElement('option');
+            sourceOption.value = asset.id;
+            sourceOption.textContent = `${asset.name} (${asset.id.substring(0, 8)})`;
+            sourceGroup.appendChild(sourceOption);
+
+            const targetOption = document.createElement('option');
+            targetOption.value = asset.id;
+            targetOption.textContent = `${asset.name} (${asset.id.substring(0, 8)})`;
+            targetGroup.appendChild(targetOption);
+        });
+
+        sourceSelect.appendChild(sourceGroup);
+        targetSelect.appendChild(targetGroup);
+    });
+}
+
+function updateRelationshipDescription() {
+    const relType = document.getElementById('rel-type').value;
+    const descriptionDiv = document.getElementById('rel-type-description');
+    const propertiesDiv = document.getElementById('rel-dynamic-properties');
+
+    if (!relType) {
+        descriptionDiv.style.display = 'none';
+        propertiesDiv.innerHTML = '<p style="color: #94a3b8; font-style: italic;">Select a relationship type to see suggested properties</p>';
+        return;
+    }
+
+    const info = RELATIONSHIP_INFO[relType];
+
+    if (info) {
+        // Show description
+        descriptionDiv.textContent = info.description;
+        descriptionDiv.style.display = 'block';
+
+        // Show suggested properties
+        if (info.properties && info.properties.length > 0) {
+            propertiesDiv.innerHTML = info.properties.map(prop => {
+                if (prop.type === 'checkbox') {
+                    return `
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="rel-prop-${prop.name}" name="${prop.name}">
+                                ${prop.label}
+                            </label>
+                        </div>
+                    `;
+                } else if (prop.type === 'select') {
+                    return `
+                        <div class="form-group">
+                            <label for="rel-prop-${prop.name}">${prop.label}</label>
+                            <select id="rel-prop-${prop.name}" name="${prop.name}">
+                                <option value="">Select...</option>
+                                ${prop.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="form-group">
+                            <label for="rel-prop-${prop.name}">${prop.label}</label>
+                            <input type="${prop.type}" id="rel-prop-${prop.name}" name="${prop.name}" placeholder="${prop.placeholder || ''}">
+                        </div>
+                    `;
+                }
+            }).join('');
+        } else {
+            propertiesDiv.innerHTML = '<p style="color: #94a3b8; font-style: italic;">No additional properties suggested for this relationship type</p>';
+        }
+    } else {
+        descriptionDiv.style.display = 'none';
+        propertiesDiv.innerHTML = '<p style="color: #94a3b8; font-style: italic;">No additional properties suggested for this relationship type</p>';
+    }
+}
+
+async function submitRelationship(event) {
+    event.preventDefault();
+
+    const sourceAssetId = document.getElementById('rel-source-asset').value;
+    const targetAssetId = document.getElementById('rel-target-asset').value;
+    const relationshipType = document.getElementById('rel-type').value;
+    const confidence = parseFloat(document.getElementById('rel-confidence').value);
+
+    // Validate source != target
+    if (sourceAssetId === targetAssetId) {
+        showNotification('Source and target assets must be different', 'error');
+        return;
+    }
+
+    // Collect properties from dynamic form
+    const properties = {};
+    const propertiesDiv = document.getElementById('rel-dynamic-properties');
+    const inputs = propertiesDiv.querySelectorAll('input, select');
+
+    inputs.forEach(input => {
+        const name = input.name;
+        if (!name) return;
+
+        if (input.type === 'checkbox') {
+            properties[name] = input.checked;
+        } else if (input.value) {
+            properties[name] = input.value;
+        }
+    });
+
+    const relationshipData = {
+        source_asset_id: sourceAssetId,
+        target_asset_id: targetAssetId,
+        relationship_type: relationshipType,
+        properties: properties,
+        confidence: confidence
+    };
+
+    try {
+        showNotification('Creating relationship...', 'info');
+
+        const response = await fetch(`${API_BASE}/api/relationships`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(relationshipData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showNotification('✓ Relationship created successfully!');
+            closeRelationshipModal();
+            await refreshAll();
+        } else {
+            const error = await response.json();
+            showNotification(`Failed to create relationship: ${error.detail || 'Unknown error'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating relationship:', error);
+        showNotification('Error creating relationship', 'error');
+    }
+}
+
+// Close relationship modal on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const relModal = document.getElementById('relationship-modal');
+        if (relModal.classList.contains('active')) {
+            closeRelationshipModal();
+        }
+    }
+});
+
+// Close relationship modal when clicking outside
+document.getElementById('relationship-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'relationship-modal') {
+        closeRelationshipModal();
+    }
+});

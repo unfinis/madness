@@ -799,6 +799,9 @@
                 <button onclick="showAddAssetModal()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                     ➕ Add Asset
                 </button>
+                <button onclick="showAddRelationshipModal()" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                    🔗 Add Relationship
+                </button>
                 <button onclick="runScenario('multi_nic_pivot')">🌐 Multi-NIC Pivot</button>
                 <button onclick="runScenario('firewall_traversal')">🔥 Firewall Traversal</button>
                 <button onclick="runScenario('privilege_escalation')">⬆️ Privilege Escalation</button>
@@ -921,6 +924,104 @@
                     <div class="form-actions">
                         <button type="button" onclick="closeAssetModal()" class="btn-secondary">Cancel</button>
                         <button type="submit" class="btn-primary">Create Asset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Relationship Modal -->
+    <div id="relationship-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🔗 Add Asset Relationship</div>
+                <button class="close-btn" onclick="closeRelationshipModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="relationship-form" onsubmit="submitRelationship(event)">
+                    <!-- Source Asset -->
+                    <div class="form-group">
+                        <label for="rel-source-asset">Source Asset *</label>
+                        <select id="rel-source-asset" required>
+                            <option value="">Select source asset...</option>
+                        </select>
+                    </div>
+
+                    <!-- Relationship Type -->
+                    <div class="form-group">
+                        <label for="rel-type">Relationship Type *</label>
+                        <select id="rel-type" required onchange="updateRelationshipDescription()">
+                            <option value="">Select relationship type...</option>
+                            <optgroup label="Containment & Hierarchy">
+                                <option value="contains">Contains</option>
+                                <option value="member_of">Member Of</option>
+                                <option value="installed_on">Installed On</option>
+                                <option value="runs_on">Runs On</option>
+                                <option value="hosted_on">Hosted On</option>
+                            </optgroup>
+                            <optgroup label="Connectivity & Network">
+                                <option value="connected_to">Connected To</option>
+                                <option value="can_pivot_to">⭐ Can Pivot To (Multi-NIC)</option>
+                                <option value="routes_to">Routes To</option>
+                                <option value="accessible_from">Accessible From</option>
+                            </optgroup>
+                            <optgroup label="Access Control & Permissions">
+                                <option value="blocked_by">Blocked By</option>
+                                <option value="allowed_by">⭐ Allowed By (Firewall)</option>
+                                <option value="allows_access_to">Allows Access To</option>
+                                <option value="requires">Requires</option>
+                                <option value="works_on">Works On</option>
+                                <option value="grants_access_to">Grants Access To</option>
+                                <option value="has_permission_on">Has Permission On</option>
+                            </optgroup>
+                            <optgroup label="Service & Execution">
+                                <option value="exposes">Exposes</option>
+                                <option value="exploits">Exploits</option>
+                                <option value="enables">⭐ Enables (PrivEsc)</option>
+                            </optgroup>
+                            <optgroup label="Identity & Trust">
+                                <option value="trusts">Trusts</option>
+                                <option value="domain_member">Domain Member</option>
+                                <option value="owns">Owns</option>
+                                <option value="manages">Manages</option>
+                            </optgroup>
+                            <optgroup label="Data Flow">
+                                <option value="communicates_with">Communicates With</option>
+                                <option value="depends_on">Depends On</option>
+                                <option value="replicates_to">Replicates To</option>
+                            </optgroup>
+                        </select>
+                        <div id="rel-type-description" style="margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; border-radius: 4px; color: #94a3b8; font-size: 0.9em; display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Target Asset -->
+                    <div class="form-group">
+                        <label for="rel-target-asset">Target Asset *</label>
+                        <select id="rel-target-asset" required>
+                            <option value="">Select target asset...</option>
+                        </select>
+                    </div>
+
+                    <!-- Confidence -->
+                    <div class="form-group">
+                        <label for="rel-confidence">Confidence Level</label>
+                        <input type="range" id="rel-confidence" min="0" max="1" step="0.1" value="1.0">
+                        <span id="rel-confidence-display">100%</span>
+                    </div>
+
+                    <!-- Optional Properties -->
+                    <div class="property-section">
+                        <div class="property-section-title">Additional Properties (Optional)</div>
+                        <div id="rel-dynamic-properties">
+                            <p style="color: #94a3b8; font-style: italic;">Select a relationship type to see suggested properties</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" onclick="closeRelationshipModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Create Relationship</button>
                     </div>
                 </form>
             </div>
