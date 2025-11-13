@@ -8,7 +8,7 @@ from pathlib import Path
 import uuid
 from datetime import datetime
 
-from engine import MethodologyEngine, Asset, AssetType
+from engine import MethodologyEngine, Asset, AssetType, AssetRelationship, RelationshipType
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -38,6 +38,24 @@ class AssetResponse(BaseModel):
     id: str
     type: str
     name: str
+    properties: Dict[str, Any]
+    confidence: float
+    discovered_at: str
+
+
+class RelationshipCreate(BaseModel):
+    source_asset_id: str
+    target_asset_id: str
+    relationship_type: str
+    properties: Dict[str, Any] = {}
+    confidence: float = 1.0
+
+
+class RelationshipResponse(BaseModel):
+    id: str
+    source_asset_id: str
+    target_asset_id: str
+    relationship_type: str
     properties: Dict[str, Any]
     confidence: float
     discovered_at: str
@@ -215,6 +233,128 @@ async def delete_asset(asset_id: str):
 
     engine.assets = [a for a in engine.assets if a.id != asset_id]
     return {"message": f"Asset {asset_id} deleted successfully"}
+
+
+@app.get("/api/relationships", response_model=List[RelationshipResponse])
+async def get_relationships(asset_id: Optional[str] = None, relationship_type: Optional[str] = None):
+    """Get all relationships, optionally filtered by asset and type."""
+    rel_type = RelationshipType[relationship_type.upper()] if relationship_type else None
+    relationships = engine.get_relationships(asset_id, rel_type)
+
+    return [
+        RelationshipResponse(
+            id=rel.id,
+            source_asset_id=rel.source_asset_id,
+            target_asset_id=rel.target_asset_id,
+            relationship_type=rel.relationship_type.value,
+            properties=rel.properties,
+            confidence=rel.confidence,
+            discovered_at=rel.discovered_at.isoformat()
+        )
+        for rel in relationships
+    ]
+
+
+@app.post("/api/relationships", response_model=RelationshipResponse)
+async def create_relationship(rel_data: RelationshipCreate):
+    """Create a new relationship between two assets."""
+    try:
+        # Create relationship
+        relationship = AssetRelationship(
+            id=str(uuid.uuid4()),
+            source_asset_id=rel_data.source_asset_id,
+            target_asset_id=rel_data.target_asset_id,
+            relationship_type=RelationshipType[rel_data.relationship_type.upper()],
+            properties=rel_data.properties,
+            confidence=rel_data.confidence
+        )
+
+        # Add to engine
+        engine.add_relationship(relationship)
+
+        return RelationshipResponse(
+            id=relationship.id,
+            source_asset_id=relationship.source_asset_id,
+            target_asset_id=relationship.target_asset_id,
+            relationship_type=relationship.relationship_type.value,
+            properties=relationship.properties,
+            confidence=relationship.confidence,
+            discovered_at=relationship.discovered_at.isoformat()
+        )
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid relationship type: {rel_data.relationship_type}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/assets/{asset_id}/related")
+async def get_related_assets(asset_id: str, relationship_type: Optional[str] = None):
+    """Get assets related to a specific asset."""
+    rel_type = RelationshipType[relationship_type.upper()] if relationship_type else None
+    related_assets = engine.get_related_assets(asset_id, rel_type)
+
+    return [
+        AssetResponse(
+            id=asset.id,
+            type=asset.type.value,
+            name=asset.name,
+            properties=asset.properties,
+            confidence=asset.confidence,
+            discovered_at=asset.discovered_at.isoformat()
+        )
+        for asset in related_assets
+    ]
+
+
+@app.get("/api/pivot-paths/{from_asset_id}/{to_network_cidr}")
+async def get_pivot_paths(from_asset_id: str, to_network_cidr: str):
+    """Find pivot paths from a compromised host to a target network."""
+    paths = engine.find_pivot_paths(from_asset_id, to_network_cidr)
+
+    return {
+        "from_asset_id": from_asset_id,
+        "to_network": to_network_cidr,
+        "paths_found": len(paths),
+        "paths": [
+            {
+                "length": len(path),
+                "assets": [
+                    {
+                        "id": asset.id,
+                        "name": asset.name,
+                        "type": asset.type.value
+                    }
+                    for asset in path
+                ]
+            }
+            for path in paths
+        ]
+    }
+
+
+@app.get("/api/compromise-candidates")
+async def get_compromise_candidates():
+    """Get high-value compromise candidates based on relationships."""
+    candidates = engine.get_compromise_candidates()
+
+    return {
+        "total_candidates": len(candidates),
+        "candidates": [
+            {
+                "asset": AssetResponse(
+                    id=c["asset"].id,
+                    type=c["asset"].type.value,
+                    name=c["asset"].name,
+                    properties=c["asset"].properties,
+                    confidence=c["asset"].confidence,
+                    discovered_at=c["asset"].discovered_at.isoformat()
+                ),
+                "score": c["score"],
+                "reasons": c["reasons"]
+            }
+            for c in candidates[:20]  # Top 20
+        ]
+    }
 
 
 @app.get("/api/methodologies")

@@ -5,11 +5,12 @@ from pathlib import Path
 from .models import (
     Asset, Methodology, TriggerMatch, BatchCommand,
     Trigger, TriggerType, AssetType, DeduplicationConfig,
-    MethodologyStep, CommandAlternative
+    MethodologyStep, CommandAlternative, AssetRelationship, RelationshipType
 )
 from .trigger_matcher import TriggerMatcher
 from .batch_generator import BatchGenerator
 from .deduplicator import Deduplicator
+from .relationship_manager import RelationshipManager
 
 
 class MethodologyEngine:
@@ -23,6 +24,7 @@ class MethodologyEngine:
         self.batch_generator = BatchGenerator()
         self.trigger_matches: List[TriggerMatch] = []
         self.batch_commands: List[BatchCommand] = []
+        self.relationship_manager = RelationshipManager()
 
     def load_methodologies_from_yaml(self, directory: Path):
         """Load methodology definitions from YAML files."""
@@ -107,6 +109,9 @@ class MethodologyEngine:
         """Add a new asset and evaluate triggers."""
         self.assets.append(asset)
 
+        # Register with relationship manager
+        self.relationship_manager.add_asset(asset)
+
         # Evaluate what triggers fire
         new_matches = self.trigger_matcher.evaluate_new_asset(
             asset,
@@ -158,6 +163,7 @@ class MethodologyEngine:
             "pending_commands": len([c for c in self.batch_commands if not any(m.executed for m in c.trigger_matches)]),
             "deduplication_stats": self.deduplicator.get_stats(),
             "assets_by_type": self._count_assets_by_type(),
+            "relationship_stats": self.relationship_manager.get_stats(),
         }
 
     def _count_assets_by_type(self) -> Dict[str, int]:
@@ -168,9 +174,38 @@ class MethodologyEngine:
             counts[type_name] = counts.get(type_name, 0) + 1
         return counts
 
+    def add_relationship(self, relationship: AssetRelationship):
+        """Add a relationship between two assets."""
+        self.relationship_manager.add_relationship(relationship)
+
+    def get_relationships(
+        self,
+        asset_id: Optional[str] = None,
+        relationship_type: Optional[RelationshipType] = None
+    ) -> List[AssetRelationship]:
+        """Get relationships, optionally filtered by asset and type."""
+        return self.relationship_manager.get_relationships(asset_id, relationship_type)
+
+    def get_related_assets(
+        self,
+        asset_id: str,
+        relationship_type: Optional[RelationshipType] = None
+    ) -> List[Asset]:
+        """Get assets related to the given asset."""
+        return self.relationship_manager.get_related_assets(asset_id, relationship_type)
+
+    def find_pivot_paths(self, from_asset_id: str, to_network_cidr: str) -> List[List[Asset]]:
+        """Find all pivot paths from a compromised host to a target network."""
+        return self.relationship_manager.find_pivot_paths(from_asset_id, to_network_cidr)
+
+    def get_compromise_candidates(self) -> List[Dict]:
+        """Identify high-value compromise candidates based on relationships."""
+        return self.relationship_manager.get_compromise_candidates()
+
     def clear(self):
         """Clear all state."""
         self.assets.clear()
         self.trigger_matches.clear()
         self.batch_commands.clear()
         self.deduplicator.clear()
+        self.relationship_manager.clear()

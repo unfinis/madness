@@ -8,15 +8,40 @@ import json
 
 
 class AssetType(Enum):
-    """Types of assets that can be discovered."""
-    HOST = "host"
-    SERVICE = "service"
-    CREDENTIAL = "credential"
-    NETWORK_SEGMENT = "network_segment"
-    WEB_APPLICATION = "web_application"
-    DATABASE = "database"
-    DOMAIN_CONTROLLER = "domain_controller"
-    VULNERABILITY = "vulnerability"
+    """Types of assets that can be discovered during an engagement."""
+    # Network Layer
+    NETWORK_SEGMENT = "network_segment"      # 10.1.1.0/24, VLAN 100
+    NETWORK_INTERFACE = "network_interface"  # NIC on a host (for pivoting)
+    FIREWALL = "firewall"                    # Firewall/gateway device
+    ROUTER = "router"                        # Router device
+
+    # Host Layer
+    HOST = "host"                            # Physical/virtual machine
+
+    # Service Layer
+    SERVICE = "service"                      # Running service (SMB, HTTP, SSH)
+    WEB_APPLICATION = "web_application"      # Web app/CMS (WordPress, etc)
+    DATABASE = "database"                    # Database instance
+    DOMAIN_CONTROLLER = "domain_controller"  # Active Directory DC
+
+    # Application Layer
+    APPLICATION = "application"              # Installed software (Tomcat, IIS)
+    FILE_SHARE = "file_share"               # SMB/NFS share
+
+    # Data Layer
+    FILE = "file"                           # Individual file
+    CREDENTIAL = "credential"               # Username/password/hash/key/token
+    CERTIFICATE = "certificate"             # SSL/TLS certificate
+    SECRET = "secret"                       # API key, token, secret
+
+    # Identity Layer
+    USER_ACCOUNT = "user_account"           # User account on system
+    GROUP = "group"                         # User group (local or AD)
+
+    # Security Layer
+    VULNERABILITY = "vulnerability"          # CVE, misconfiguration
+
+    # Other
     OTHER = "other"
 
 
@@ -26,6 +51,73 @@ class TriggerType(Enum):
     PROPERTY_MATCH = "property_match"
     ASSET_COMBINATION = "asset_combination"
     THRESHOLD_REACHED = "threshold_reached"
+
+
+class RelationshipType(Enum):
+    """Types of relationships between assets."""
+    # Containment & Hierarchy
+    CONTAINS = "contains"                    # Segment contains Host, Host contains Service
+    MEMBER_OF = "member_of"                 # Host member of Segment, User member of Group
+    INSTALLED_ON = "installed_on"           # Application installed on Host
+    RUNS_ON = "runs_on"                     # Service runs on Host
+    HOSTED_ON = "hosted_on"                 # File hosted on FileShare
+
+    # Connectivity & Network
+    CONNECTED_TO = "connected_to"           # Network connected to Network via Router
+    CAN_PIVOT_TO = "can_pivot_to"          # Host can pivot to Network (multi-NIC)
+    ROUTES_TO = "routes_to"                 # Network routes to Network
+    ACCESSIBLE_FROM = "accessible_from"     # Service accessible from Network
+
+    # Access Control & Permissions
+    BLOCKED_BY = "blocked_by"               # Network blocked by Firewall
+    ALLOWED_BY = "allowed_by"               # Host allowed by Firewall rule
+    ALLOWS_ACCESS_TO = "allows_access_to"   # Firewall allows access to Network
+    REQUIRES = "requires"                   # Service requires Credential
+    WORKS_ON = "works_on"                   # Credential works on Host/Service
+    GRANTS_ACCESS_TO = "grants_access_to"   # Credential grants access to Host
+    HAS_PERMISSION_ON = "has_permission_on" # User has permission on File/Share
+
+    # Service & Execution
+    EXPOSES = "exposes"                     # Service exposes Vulnerability
+    EXPLOITS = "exploits"                   # Vulnerability exploits Service
+    ENABLES = "enables"                     # Application enables PrivEsc
+
+    # Identity & Trust
+    TRUSTS = "trusts"                       # Domain trusts Domain, Host trusts Host
+    DOMAIN_MEMBER = "domain_member"         # Host member of Domain
+    OWNS = "owns"                           # User owns File/Process
+    MANAGES = "manages"                     # User manages Host/Service
+
+    # Data Flow
+    COMMUNICATES_WITH = "communicates_with" # Service communicates with Service
+    DEPENDS_ON = "depends_on"               # Service depends on Database
+    REPLICATES_TO = "replicates_to"        # DC replicates to DC
+
+
+@dataclass
+class AssetRelationship:
+    """Represents a relationship between two assets."""
+    id: str
+    source_asset_id: str
+    target_asset_id: str
+    relationship_type: RelationshipType
+    properties: Dict[str, Any] = field(default_factory=dict)
+    confidence: float = 1.0
+    discovered_at: datetime = field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "source_asset_id": self.source_asset_id,
+            "target_asset_id": self.target_asset_id,
+            "relationship_type": self.relationship_type.value,
+            "properties": self.properties,
+            "confidence": self.confidence,
+            "discovered_at": self.discovered_at.isoformat(),
+            "metadata": self.metadata
+        }
 
 
 @dataclass
