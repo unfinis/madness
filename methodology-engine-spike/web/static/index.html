@@ -415,6 +415,174 @@
         .asset-service { border-left-color: #f59e0b; }
         .asset-credential { border-left-color: #ef4444; }
         .asset-web { border-left-color: #06b6d4; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            position: sticky;
+            top: 0;
+            background: #1e293b;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #38bdf8;
+            flex: 1;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 2em;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #e2e8f0;
+            background: none;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-section {
+            margin-bottom: 30px;
+        }
+
+        .modal-section-title {
+            font-size: 1.3em;
+            color: #38bdf8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trigger-item, .step-item, .issue-item {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 15px;
+        }
+
+        .step-item {
+            border-left-color: #10b981;
+        }
+
+        .issue-item {
+            border-left-color: #f59e0b;
+        }
+
+        .item-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .item-title-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .tool-tag {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            color: #38bdf8;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            color: #fca5a5;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            color: #93c5fd;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            color: #6ee7b7;
+            margin: 15px 0;
+        }
+
+        .requirement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .requirement-item {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border-left: 3px solid #38bdf8;
+        }
     </style>
 </head>
 <body>
@@ -489,6 +657,19 @@
 
         <div id="tab-library" class="tab-content">
             <!-- Playbook Library content loaded here -->
+        </div>
+    </div>
+
+    <!-- Methodology Detail Modal -->
+    <div id="methodology-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-methodology-name">Loading...</div>
+                <button class="close-btn" onclick="closeMethodologyModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-methodology-body">
+                <!-- Content loaded dynamically -->
+            </div>
         </div>
     </div>
 

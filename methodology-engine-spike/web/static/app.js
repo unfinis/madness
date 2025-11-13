@@ -304,7 +304,7 @@ function createMethodologyCard(methodology) {
     };
 
     return `
-        <div class="card">
+        <div class="card" onclick="showMethodologyDetail('${methodology.id}')">
             <div class="card-header">
                 <div class="card-title">${escapeHtml(methodology.name)}</div>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
@@ -329,6 +329,9 @@ function createMethodologyCard(methodology) {
                         <span class="property-key">Category</span>
                         <span class="property-value">${formatCategory(methodology.category)}</span>
                     </div>
+                </div>
+                <div style="text-align: center; margin-top: 15px; color: #38bdf8; font-size: 0.9em;">
+                    Click to view details →
                 </div>
             </div>
         </div>
@@ -486,3 +489,246 @@ function toggleAssetForm() {
     // This can be removed or integrated into Assets tab in future
     showNotification('Use the Assets tab to manage assets!');
 }
+
+// ============================================================================
+// METHODOLOGY DETAIL MODAL
+// ============================================================================
+async function showMethodologyDetail(methodologyId) {
+    try {
+        const response = await fetch(`${API_BASE}/api/methodologies/${methodologyId}`);
+        if (!response.ok) {
+            showNotification('Failed to load methodology details', 'error');
+            return;
+        }
+
+        const methodology = await response.json();
+
+        // Update modal title
+        document.getElementById('modal-methodology-name').textContent = methodology.name;
+
+        // Build modal body content
+        const modalBody = document.getElementById('modal-methodology-body');
+        modalBody.innerHTML = renderMethodologyDetail(methodology);
+
+        // Show modal
+        document.getElementById('methodology-modal').classList.add('active');
+    } catch (error) {
+        console.error('Error loading methodology:', error);
+        showNotification('Error loading methodology details', 'error');
+    }
+}
+
+function renderMethodologyDetail(m) {
+    const riskColors = {
+        critical: '#ef4444',
+        high: '#f59e0b',
+        medium: '#3b82f6',
+        low: '#10b981'
+    };
+
+    let html = '';
+
+    // Overview Section
+    html += `
+        <div class="modal-section">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <span class="card-badge" style="background: ${riskColors[m.risk_level]}; color: white;">
+                    ${m.risk_level.toUpperCase()} RISK
+                </span>
+                <span class="card-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+                    ${formatCategory(m.category)}
+                </span>
+                ${m.batch_compatible ? '<span class="card-badge" style="background: #10b981; color: white;">BATCH COMPATIBLE</span>' : ''}
+            </div>
+            <p style="color: #94a3b8; line-height: 1.8;">${escapeHtml(m.description || 'No description available')}</p>
+        </div>
+    `;
+
+    // Risk Warning
+    if (m.metadata.risk_warning) {
+        html += `
+            <div class="modal-section">
+                <div class="warning-box">
+                    <strong>⚠️ Risk Warning:</strong><br>
+                    ${escapeHtml(m.metadata.risk_warning)}
+                </div>
+            </div>
+        `;
+    }
+
+    // Tools Required
+    if (m.metadata.tools && m.metadata.tools.length > 0) {
+        html += `
+            <div class="modal-section">
+                <div class="modal-section-title">🔧 Required Tools</div>
+                <div>
+                    ${m.metadata.tools.map(tool => `<span class="tool-tag">${escapeHtml(tool)}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Trigger Conditions
+    if (m.triggers && m.triggers.length > 0) {
+        html += `
+            <div class="modal-section">
+                <div class="modal-section-title">🎯 Trigger Conditions</div>
+                <p style="color: #94a3b8; margin-bottom: 15px;">
+                    This methodology will automatically trigger when the following conditions are met:
+                </p>
+                ${m.triggers.map((trigger, idx) => `
+                    <div class="trigger-item">
+                        <div class="item-title-row">
+                            <div class="item-title-text">Trigger ${idx + 1}: ${escapeHtml(trigger.description || trigger.id)}</div>
+                            <span class="card-badge priority-${trigger.priority === 1 ? 'critical' : trigger.priority === 2 ? 'high' : 'medium'}">
+                                Priority ${trigger.priority}
+                            </span>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <div style="color: #94a3b8; margin-bottom: 8px;">
+                                <strong>Type:</strong> ${escapeHtml(trigger.type)}
+                                ${trigger.asset_type ? ` | <strong>Asset Type:</strong> ${formatAssetType(trigger.asset_type)}` : ''}
+                                | <strong>Required Assets:</strong> ${trigger.required_count}
+                            </div>
+                            ${Object.keys(trigger.required_properties || {}).length > 0 ? `
+                                <div style="margin-top: 10px;">
+                                    <strong style="color: #e2e8f0;">Required Properties:</strong>
+                                    <div class="requirement-grid">
+                                        ${Object.entries(trigger.required_properties).map(([key, value]) => `
+                                            <div class="requirement-item">
+                                                <div style="color: #94a3b8; font-size: 0.85em;">${formatKey(key)}</div>
+                                                <div style="color: #e2e8f0; font-weight: 500;">${formatValue(value)}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${trigger.deduplication.enabled ? `
+                                <div class="info-box" style="margin-top: 10px;">
+                                    <strong>Deduplication:</strong> ${escapeHtml(trigger.deduplication.strategy || 'enabled')}
+                                    ${trigger.deduplication.cooldown_seconds ? ` • Cooldown: ${trigger.deduplication.cooldown_seconds}s` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Execution Steps
+    if (m.steps && m.steps.length > 0) {
+        html += `
+            <div class="modal-section">
+                <div class="modal-section-title">📝 Execution Steps</div>
+                <p style="color: #94a3b8; margin-bottom: 15px;">
+                    ${m.steps.length} step${m.steps.length > 1 ? 's' : ''} will be executed in order:
+                </p>
+                ${m.steps.map((step, idx) => `
+                    <div class="step-item">
+                        <div class="item-title-row">
+                            <div class="item-title-text">Step ${step.order}: ${escapeHtml(step.name)}</div>
+                            <span class="card-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">
+                                ${step.timeout_seconds}s timeout
+                            </span>
+                        </div>
+                        <p style="color: #94a3b8; margin: 10px 0;">${escapeHtml(step.description)}</p>
+                        <div class="command-box" style="margin-top: 10px;">
+                            ${escapeHtml(step.command)}
+                        </div>
+                        ${step.requires_confirmation ? `
+                            <div class="warning-box" style="margin-top: 10px;">
+                                ⚠️ This step requires manual confirmation before execution
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Batch Strategy
+    if (m.metadata.batch_strategy) {
+        html += `
+            <div class="modal-section">
+                <div class="info-box">
+                    <strong>💡 Batch Strategy:</strong><br>
+                    ${escapeHtml(m.metadata.batch_strategy).replace(/\n/g, '<br>')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Expected Outcomes
+    if (m.metadata.expected_outcomes && m.metadata.expected_outcomes.length > 0) {
+        html += `
+            <div class="modal-section">
+                <div class="modal-section-title">✓ Expected Outcomes</div>
+                <ul style="color: #94a3b8; line-height: 2;">
+                    ${m.metadata.expected_outcomes.map(outcome => `
+                        <li>${escapeHtml(outcome)}</li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    // Common Issues & Troubleshooting
+    if ((m.metadata.common_issues && m.metadata.common_issues.length > 0) ||
+        (m.metadata.troubleshooting && Object.keys(m.metadata.troubleshooting).length > 0)) {
+        html += `
+            <div class="modal-section">
+                <div class="modal-section-title">⚠️ Common Issues & Troubleshooting</div>
+        `;
+
+        if (m.metadata.common_issues && m.metadata.common_issues.length > 0) {
+            html += m.metadata.common_issues.map(issue => `
+                <div class="issue-item">
+                    <div class="item-title-text">${escapeHtml(issue.issue || issue)}</div>
+                    ${issue.solution ? `
+                        <div style="color: #94a3b8; margin-top: 10px;">
+                            <strong style="color: #6ee7b7;">Solution:</strong> ${escapeHtml(issue.solution)}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        if (m.metadata.troubleshooting && Object.keys(m.metadata.troubleshooting).length > 0) {
+            html += `<div style="margin-top: 15px;">`;
+            Object.entries(m.metadata.troubleshooting).forEach(([problem, solution]) => {
+                html += `
+                    <div class="issue-item">
+                        <div class="item-title-text">${escapeHtml(problem)}</div>
+                        <div style="color: #94a3b8; margin-top: 10px;">
+                            <strong style="color: #6ee7b7;">Solution:</strong> ${escapeHtml(solution)}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+    }
+
+    return html;
+}
+
+function closeMethodologyModal() {
+    document.getElementById('methodology-modal').classList.remove('active');
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeMethodologyModal();
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('methodology-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'methodology-modal') {
+        closeMethodologyModal();
+    }
+});

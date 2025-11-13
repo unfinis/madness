@@ -236,6 +236,63 @@ async def get_methodologies():
     ]
 
 
+@app.get("/api/methodologies/{methodology_id}")
+async def get_methodology_detail(methodology_id: str):
+    """Get detailed information about a specific methodology."""
+    methodologies = engine.get_methodologies()
+    methodology = next((m for m in methodologies if m.id == methodology_id), None)
+
+    if not methodology:
+        raise HTTPException(status_code=404, detail=f"Methodology {methodology_id} not found")
+
+    return {
+        "id": methodology.id,
+        "name": methodology.name,
+        "description": methodology.description,
+        "category": methodology.category,
+        "risk_level": methodology.risk_level,
+        "batch_compatible": methodology.batch_compatible,
+        "triggers": [
+            {
+                "id": t.id,
+                "type": t.type,
+                "description": t.description,
+                "priority": t.priority,
+                "asset_type": getattr(t, 'asset_type', None),
+                "required_properties": getattr(t, 'required_properties', {}),
+                "required_count": getattr(t, 'required_count', 1),
+                "deduplication": {
+                    "enabled": t.deduplication.enabled if t.deduplication else False,
+                    "strategy": t.deduplication.strategy if t.deduplication else None,
+                    "signature_fields": t.deduplication.signature_fields if t.deduplication else [],
+                    "cooldown_seconds": t.deduplication.cooldown_seconds if t.deduplication else None,
+                }
+            }
+            for t in methodology.triggers
+        ],
+        "steps": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "description": s.description,
+                "command": s.command,
+                "order": s.order,
+                "timeout_seconds": s.timeout_seconds,
+                "requires_confirmation": getattr(s, 'requires_confirmation', False)
+            }
+            for s in methodology.steps
+        ],
+        "metadata": {
+            "tools": methodology.metadata.get("tools", []) if methodology.metadata else [],
+            "risk_warning": methodology.metadata.get("risk_warning", "") if methodology.metadata else "",
+            "batch_strategy": methodology.metadata.get("batch_strategy", "") if methodology.metadata else "",
+            "expected_outcomes": methodology.metadata.get("expected_outcomes", []) if methodology.metadata else [],
+            "common_issues": methodology.metadata.get("common_issues", []) if methodology.metadata else [],
+            "troubleshooting": methodology.metadata.get("troubleshooting", {}) if methodology.metadata else {}
+        }
+    }
+
+
 @app.get("/api/trigger-matches", response_model=List[TriggerMatchResponse])
 async def get_trigger_matches():
     """Get all trigger matches."""
