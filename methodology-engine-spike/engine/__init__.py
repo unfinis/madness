@@ -1,5 +1,5 @@
 """Methodology engine for asset-driven trigger systems."""
-from .models import Asset, AssetType, Methodology, TriggerMatch, BatchCommand
+from .models import Asset, AssetType, Methodology, TriggerMatch, BatchCommand, AssetRelationship, RelationshipType
 from .methodology_engine import MethodologyEngine
 
 __all__ = [
@@ -8,5 +8,7 @@ __all__ = [
     "Methodology",
     "TriggerMatch",
     "BatchCommand",
+    "AssetRelationship",
+    "RelationshipType",
     "MethodologyEngine",
 ]
