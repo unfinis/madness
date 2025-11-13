@@ -275,7 +275,7 @@ async def get_methodology_detail(methodology_id: str):
                 "id": s.id,
                 "name": s.name,
                 "description": s.description,
-                "command": s.command,
+                "command": s.command_template,
                 "order": s.order,
                 "timeout_seconds": s.timeout_seconds,
                 "requires_confirmation": getattr(s, 'requires_confirmation', False)
