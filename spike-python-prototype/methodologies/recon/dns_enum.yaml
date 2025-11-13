@@ -1,0 +1,51 @@
+id: dns_enumeration
+name: DNS Enumeration
+description: Comprehensive DNS reconnaissance including zone transfers and subdomain discovery
+category: reconnaissance
+risk_level: low
+batch_compatible: true
+
+triggers:
+  - id: trigger_domain_discovered
+    type: asset_discovered
+    asset_type: host
+    required_properties:
+      has_domain: true
+      dns_server: { "$exists": true }
+    required_count: 1
+    priority: 2
+    description: Triggers when a domain with DNS server is discovered
+    deduplication:
+      enabled: true
+      strategy: signature_based
+      signature_fields: ["domain"]
+
+steps:
+  - id: dns_zone_transfer
+    name: DNS Zone Transfer Attempt
+    description: Attempt AXFR zone transfer
+    command: "dig axfr @{dns_server} {domain} | tee dns_axfr_{domain}.txt"
+    order: 1
+    timeout_seconds: 60
+
+  - id: subdomain_enumeration
+    name: Subdomain Enumeration
+    description: Discover subdomains using multiple techniques
+    command: "subfinder -d {domain} -all -o subdomains_{domain}.txt"
+    order: 2
+    timeout_seconds: 300
+
+  - id: dns_bruteforce
+    name: DNS Subdomain Bruteforce
+    description: Bruteforce common subdomains
+    command: "dnsrecon -d {domain} -D /usr/share/wordlists/dns.txt -t brt"
+    order: 3
+    timeout_seconds: 600
+
+metadata:
+  tools:
+    - dig
+    - subfinder
+    - dnsrecon
+  batch_compatible_with:
+    - dns_enumeration
