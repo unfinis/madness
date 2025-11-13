@@ -1,0 +1,54 @@
+id: web_service_enumeration
+name: Web Service Enumeration
+description: Enumerate web services with eyewitness, nikto, and directory bruteforcing
+category: enumeration
+risk_level: low
+batch_compatible: true
+
+triggers:
+  - id: trigger_web_service_discovered
+    type: asset_discovered
+    asset_type: service
+    required_properties:
+      port: { "$in": [80, 443, 8080, 8443] }
+      protocol: http
+    required_count: 1
+    priority: 3
+    description: Triggers when HTTP/HTTPS services are discovered
+    deduplication:
+      enabled: true
+      strategy: signature_based
+      signature_fields: ["host", "port"]
+
+steps:
+  - id: eyewitness_screenshot
+    name: EyeWitness Screenshots
+    description: Capture screenshots of web services
+    command: "eyewitness --web -f {targets_file} --no-prompt -d eyewitness_output"
+    order: 1
+    timeout_seconds: 120
+
+  - id: nikto_scan
+    name: Nikto Web Vulnerability Scan
+    description: Scan for common web vulnerabilities
+    command: "parallel -j 4 'nikto -h {} -output nikto_{#}.txt' ::: {targets}"
+    order: 2
+    timeout_seconds: 600
+
+  - id: gobuster_dir
+    name: Directory Bruteforce
+    description: Enumerate directories and files
+    command: "gobuster dir -u {url} -w /usr/share/wordlists/dirb/common.txt -o gobuster_{host}_{port}.txt"
+    order: 3
+    timeout_seconds: 900
+
+metadata:
+  tools:
+    - eyewitness
+    - nikto
+    - gobuster
+  batch_compatible_with:
+    - web_service_enumeration
+  batch_commands:
+    eyewitness: "eyewitness --web -f {targets_file} --no-prompt -d eyewitness_batch"
+    nikto: "parallel -j 4 'nikto -h {} -output nikto_{#}.txt' :::: {targets_file}"

@@ -1,0 +1,51 @@
+id: smb_enumeration
+name: SMB/CIFS Enumeration
+description: Enumerate SMB shares, users, and system information
+category: enumeration
+risk_level: medium
+batch_compatible: true
+
+triggers:
+  - id: trigger_smb_service
+    type: asset_discovered
+    asset_type: service
+    required_properties:
+      port: { "$in": [139, 445] }
+      protocol: smb
+    required_count: 1
+    priority: 4
+    description: Triggers when SMB service is discovered
+    deduplication:
+      enabled: true
+      strategy: signature_based
+      signature_fields: ["host", "port"]
+
+steps:
+  - id: enum4linux
+    name: Enum4Linux Full Enumeration
+    description: Comprehensive SMB enumeration
+    command: "enum4linux -a {host} | tee enum4linux_{host}.txt"
+    order: 1
+    timeout_seconds: 300
+
+  - id: smbclient_shares
+    name: List SMB Shares
+    description: List available shares
+    command: "smbclient -L //{host} -N | tee smbshares_{host}.txt"
+    order: 2
+    timeout_seconds: 60
+
+  - id: crackmapexec_smb
+    name: CrackMapExec SMB
+    description: Advanced SMB enumeration and null session checks
+    command: "crackmapexec smb {host} --shares --users --groups"
+    order: 3
+    timeout_seconds: 180
+
+metadata:
+  tools:
+    - enum4linux
+    - smbclient
+    - crackmapexec
+  batch_commands:
+    crackmapexec: "crackmapexec smb {targets} --shares --users"

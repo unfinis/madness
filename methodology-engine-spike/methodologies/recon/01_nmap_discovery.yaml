@@ -1,0 +1,43 @@
+id: nmap_network_discovery
+name: Nmap Network Discovery
+description: Comprehensive network discovery using nmap to identify live hosts and open ports
+category: reconnaissance
+risk_level: low
+batch_compatible: true
+
+triggers:
+  - id: trigger_subnet_discovered
+    type: asset_discovered
+    asset_type: network_segment
+    required_properties:
+      cidr: { "$exists": true }
+    required_count: 1
+    priority: 1
+    description: Triggers when a new network segment is discovered
+    deduplication:
+      enabled: true
+      strategy: signature_based
+      signature_fields: ["cidr"]
+
+steps:
+  - id: nmap_ping_sweep
+    name: Nmap Ping Sweep
+    description: Discover live hosts using ICMP and TCP SYN
+    command: "nmap -sn -PE -PS80,443,22 {cidr} -oA nmap_discovery_{cidr}"
+    order: 1
+    timeout_seconds: 300
+
+  - id: nmap_port_scan
+    name: Nmap Port Scan
+    description: Scan top 1000 ports on discovered hosts
+    command: "nmap -sS -sV -T4 -p- {cidr} -oA nmap_portscan_{cidr}"
+    order: 2
+    timeout_seconds: 1800
+
+metadata:
+  tools:
+    - nmap
+  expected_findings:
+    - live_hosts
+    - open_ports
+    - service_versions
