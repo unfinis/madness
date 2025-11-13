@@ -275,7 +275,18 @@ async def get_methodology_detail(methodology_id: str):
                 "id": s.id,
                 "name": s.name,
                 "description": s.description,
-                "command": s.command_template,
+                "command": s.command_template,  # Legacy single command (for backward compatibility)
+                "commands": [  # New multi-command alternatives
+                    {
+                        "tool": cmd.tool,
+                        "platforms": cmd.platforms,
+                        "command": cmd.command,
+                        "preferred": cmd.preferred,
+                        "notes": cmd.notes,
+                        "requires_elevation": cmd.requires_elevation
+                    }
+                    for cmd in s.commands
+                ] if s.commands else [],
                 "order": s.order,
                 "timeout_seconds": s.timeout_seconds,
                 "requires_confirmation": getattr(s, 'requires_confirmation', False)

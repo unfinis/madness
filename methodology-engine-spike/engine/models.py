@@ -155,28 +155,78 @@ class Trigger:
 
 
 @dataclass
+class CommandAlternative:
+    """A command alternative for a methodology step."""
+    tool: str
+    platforms: List[str] = field(default_factory=lambda: ["any"])
+    command: str = ""
+    preferred: bool = False
+    notes: str = ""
+    requires_elevation: bool = False
+
+    def resolve_command(self, assets: List[Asset]) -> str:
+        """Resolve command template with asset values."""
+        resolved = self.command
+
+        # Replace placeholders with asset values
+        for asset in assets:
+            # Common replacements
+            resolved = resolved.replace("{asset_id}", asset.id)
+            resolved = resolved.replace("{asset_name}", asset.name)
+
+            # Property-based replacements
+            for key, value in asset.properties.items():
+                placeholder = f"{{{key}}}"
+                resolved = resolved.replace(placeholder, str(value))
+
+        return resolved
+
+
+@dataclass
 class MethodologyStep:
     """A single step in a methodology."""
     id: str
     name: str
     description: str
-    command_template: str
+    command_template: str = ""  # Legacy: single command (kept for backward compatibility)
+    commands: List[CommandAlternative] = field(default_factory=list)  # New: multiple command alternatives
     order: int = 0
     timeout_seconds: Optional[int] = None
     expected_outputs: List[str] = field(default_factory=list)
     asset_discovery_patterns: List[Dict[str, str]] = field(default_factory=list)
 
-    def resolve_command(self, assets: List[Asset]) -> str:
-        """Resolve command template with asset values."""
-        command = self.command_template
+    def resolve_command(self, assets: List[Asset], platform: str = "linux") -> str:
+        """Resolve command template with asset values.
 
-        # Replace placeholders with asset values
+        Args:
+            assets: List of assets to use for placeholder replacement
+            platform: Target platform (linux, windows, macos, any)
+
+        Returns:
+            Resolved command string
+        """
+        # If using new multi-command format
+        if self.commands:
+            # Find preferred command for platform
+            for cmd_alt in self.commands:
+                if cmd_alt.preferred and (platform in cmd_alt.platforms or "any" in cmd_alt.platforms):
+                    return cmd_alt.resolve_command(assets)
+
+            # Fall back to any compatible command
+            for cmd_alt in self.commands:
+                if platform in cmd_alt.platforms or "any" in cmd_alt.platforms:
+                    return cmd_alt.resolve_command(assets)
+
+            # Last resort: first command
+            if self.commands:
+                return self.commands[0].resolve_command(assets)
+
+        # Fall back to legacy single command template
+        command = self.command_template
         for asset in assets:
-            # Common replacements
             command = command.replace("{asset_id}", asset.id)
             command = command.replace("{asset_name}", asset.name)
 
-            # Property-based replacements
             for key, value in asset.properties.items():
                 placeholder = f"{{{key}}}"
                 command = command.replace(placeholder, str(value))

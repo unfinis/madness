@@ -23,24 +23,78 @@ triggers:
 steps:
   - id: enum4linux
     name: Enum4Linux Full Enumeration
-    description: Comprehensive SMB enumeration
-    command: "enum4linux -a {host} | tee enum4linux_{host}.txt"
+    description: Comprehensive SMB enumeration using various techniques
     order: 1
     timeout_seconds: 300
+    commands:
+      - tool: enum4linux
+        platforms: [linux, macos]
+        command: "enum4linux -a {host} | tee enum4linux_{host}.txt"
+        preferred: true
+        notes: "Most comprehensive enumeration tool for *nix systems"
+        requires_elevation: false
+      - tool: enum4linux-ng
+        platforms: [linux, macos, windows]
+        command: "enum4linux-ng -A {host} -oJ enum4linux_{host}.json"
+        preferred: false
+        notes: "Modern Python rewrite, works cross-platform with Python"
+        requires_elevation: false
+      - tool: PowerShell
+        platforms: [windows]
+        command: "Get-SmbShare -CimSession {host}; Get-SmbServerConfiguration -CimSession {host}"
+        preferred: true
+        notes: "Native Windows SMB enumeration via PowerShell"
+        requires_elevation: false
 
   - id: smbclient_shares
     name: List SMB Shares
-    description: List available shares
-    command: "smbclient -L //{host} -N | tee smbshares_{host}.txt"
+    description: List available shares without authentication
     order: 2
     timeout_seconds: 60
+    commands:
+      - tool: smbclient
+        platforms: [linux, macos]
+        command: "smbclient -L //{host} -N | tee smbshares_{host}.txt"
+        preferred: true
+        notes: "Standard Samba client tool"
+        requires_elevation: false
+      - tool: net
+        platforms: [windows]
+        command: "net view \\\\{host} /all > smbshares_{host}.txt"
+        preferred: true
+        notes: "Native Windows command"
+        requires_elevation: false
+      - tool: smbmap
+        platforms: [linux, macos, windows]
+        command: "smbmap -H {host} -u null -p null"
+        preferred: false
+        notes: "Cross-platform Python tool with detailed permissions"
+        requires_elevation: false
 
   - id: crackmapexec_smb
     name: CrackMapExec SMB
     description: Advanced SMB enumeration and null session checks
-    command: "crackmapexec smb {host} --shares --users --groups"
     order: 3
     timeout_seconds: 180
+    commands:
+      - tool: crackmapexec
+        platforms: [linux, macos, windows]
+        command: "crackmapexec smb {host} --shares --users --groups"
+        preferred: true
+        notes: "Most versatile SMB assessment tool, works on all platforms"
+        requires_elevation: false
+      - tool: nxc
+        platforms: [linux, macos, windows]
+        command: "nxc smb {host} --shares --users --groups"
+        preferred: false
+        notes: "NetExec - CrackMapExec successor with identical syntax"
+        requires_elevation: false
+      - tool: impacket-smbclient
+        platforms: [linux, macos, windows]
+        command: "impacket-smbclient {host} -no-pass"
+        preferred: false
+        notes: "Pure Python implementation from Impacket suite"
+        requires_elevation: false
 
 metadata:
   tools:

@@ -5,7 +5,7 @@ from pathlib import Path
 from .models import (
     Asset, Methodology, TriggerMatch, BatchCommand,
     Trigger, TriggerType, AssetType, DeduplicationConfig,
-    MethodologyStep
+    MethodologyStep, CommandAlternative
 )
 from .trigger_matcher import TriggerMatcher
 from .batch_generator import BatchGenerator
@@ -64,11 +64,26 @@ class MethodologyEngine:
         # Parse steps
         steps = []
         for idx, step_data in enumerate(data.get("steps", [])):
+            # Parse command alternatives if present (new format)
+            command_alternatives = []
+            if "commands" in step_data:
+                for cmd_data in step_data["commands"]:
+                    cmd_alt = CommandAlternative(
+                        tool=cmd_data["tool"],
+                        platforms=cmd_data.get("platforms", ["any"]),
+                        command=cmd_data["command"],
+                        preferred=cmd_data.get("preferred", False),
+                        notes=cmd_data.get("notes", ""),
+                        requires_elevation=cmd_data.get("requires_elevation", False)
+                    )
+                    command_alternatives.append(cmd_alt)
+
             step = MethodologyStep(
                 id=step_data.get("id", f"step_{idx}"),
                 name=step_data["name"],
                 description=step_data.get("description", ""),
-                command_template=step_data["command"],
+                command_template=step_data.get("command", ""),  # Legacy format (optional now)
+                commands=command_alternatives,  # New format
                 order=step_data.get("order", idx),
                 timeout_seconds=step_data.get("timeout_seconds"),
                 expected_outputs=step_data.get("expected_outputs", []),

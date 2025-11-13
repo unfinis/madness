@@ -633,9 +633,46 @@ function renderMethodologyDetail(m) {
                             </span>
                         </div>
                         <p style="color: #94a3b8; margin: 10px 0;">${escapeHtml(step.description)}</p>
-                        <div class="command-box" style="margin-top: 10px;">
-                            ${escapeHtml(step.command)}
-                        </div>
+
+                        ${step.commands && step.commands.length > 0 ? `
+                            <div style="margin-top: 15px;">
+                                <div style="color: #e2e8f0; font-weight: 600; margin-bottom: 10px; font-size: 0.9em;">
+                                    🔧 Command Alternatives:
+                                </div>
+                                ${step.commands.map((cmd, cmdIdx) => `
+                                    <div style="margin-bottom: 12px; border-left: 3px solid ${cmd.preferred ? '#10b981' : '#475569'}; padding-left: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                                            <span class="tool-tag" style="background: ${cmd.preferred ? 'rgba(16, 185, 129, 0.2)' : 'rgba(71, 85, 105, 0.2)'}; color: ${cmd.preferred ? '#6ee7b7' : '#94a3b8'};">
+                                                ${cmd.preferred ? '⭐ ' : ''}${escapeHtml(cmd.tool)}
+                                            </span>
+                                            ${cmd.platforms.map(platform => `
+                                                <span class="card-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; font-size: 0.75em;">
+                                                    ${escapeHtml(platform)}
+                                                </span>
+                                            `).join('')}
+                                            ${cmd.requires_elevation ? `
+                                                <span class="card-badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.75em;">
+                                                    🔒 REQUIRES ELEVATION
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                        <div class="command-box" style="margin: 8px 0;">
+                                            ${escapeHtml(cmd.command)}
+                                        </div>
+                                        ${cmd.notes ? `
+                                            <div style="color: #94a3b8; font-size: 0.85em; font-style: italic;">
+                                                💡 ${escapeHtml(cmd.notes)}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : step.command ? `
+                            <div class="command-box" style="margin-top: 10px;">
+                                ${escapeHtml(step.command)}
+                            </div>
+                        ` : ''}
+
                         ${step.requires_confirmation ? `
                             <div class="warning-box" style="margin-top: 10px;">
                                 ⚠️ This step requires manual confirmation before execution
