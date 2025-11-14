@@ -40,6 +40,10 @@ class AssetType(Enum):
 
     # Security Layer
     VULNERABILITY = "vulnerability"          # CVE, misconfiguration
+    FINDING = "finding"                      # Security finding / issue
+
+    # Domain / Infrastructure
+    DOMAIN = "domain"                        # DNS domain (example.com)
 
     # Other
     OTHER = "other"
