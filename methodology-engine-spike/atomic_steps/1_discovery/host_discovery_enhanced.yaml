@@ -1,0 +1,702 @@
+# Host Discovery Atomic Steps (Enhanced with UI Metadata)
+# Phase: DISCOVERY (Priority: 10)
+# Purpose: Discover live hosts on networks using various techniques
+
+category_metadata:
+  category_id: "host_discovery"
+  category_name: "Host Discovery"
+  icon: "🔍"
+  color: "#4CAF50"
+  description: "Identify live hosts on target networks"
+
+steps:
+  - id: host_discovery_icmp_ping_sweep
+    name: "ICMP Ping Sweep Discovery"
+    description: "Discover live hosts using ICMP echo requests (ping)"
+    phase: discovery
+    priority: 10
+
+    trigger_conditions:
+      - type: asset_created
+        asset_type: network_segment
+        description: "Triggers when a new network segment is added"
+      - type: property_not_null
+        asset_type: network_segment
+        property_name: cidr
+        description: "Requires CIDR notation for the network"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sn -PE -oX {output_dir}/nmap_ping_sweep_{cidr_safe}.xml {cidr}"
+        preferred: true
+        timeout: 300
+        requires_elevation: false
+        notes: "ICMP echo (ping) sweep - most common, works when ICMP allowed"
+        tool_check: "command -v nmap"
+        install_hint: "apt install nmap / brew install nmap"
+
+      - tool: fping
+        platforms: [linux, macos]
+        command: "fping -a -g {cidr} 2>/dev/null > {output_dir}/fping_{cidr_safe}.txt"
+        preferred: false
+        timeout: 300
+        requires_elevation: false
+        notes: "Faster parallel ping sweep, less detailed output"
+        tool_check: "command -v fping"
+        install_hint: "apt install fping / brew install fping"
+
+      - tool: masscan
+        platforms: [linux]
+        command: "masscan {cidr} -p0 --ping -oJ {output_dir}/masscan_ping_{cidr_safe}.json"
+        preferred: false
+        timeout: 120
+        requires_elevation: true
+        notes: "Ultra-fast ping discovery (requires root)"
+        tool_check: "command -v masscan"
+        install_hint: "apt install masscan"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: host
+          conditions:
+            - host_status: up
+          properties:
+            ip: "{host.address}"
+            hostname: "{host.hostnames[0]}"
+            state: "up"
+            mac_address: "{host.mac}"
+            vendor: "{host.vendor}"
+            discovery_method: "icmp_ping"
+            discovered_at: "{timestamp}"
+
+    deduplication_signature_fields: [cidr]
+    batch_compatible: false
+    cooldown_seconds: 3600
+    next_step_ids: [port_scan_quick_top_ports]
+
+    # Enhanced UI metadata
+    ui_metadata:
+      category: "Host Discovery"
+      icon: "🌐"
+      color: "#2196F3"
+      typical_duration: "2-5 minutes per /24 network"
+
+    # Detailed overview for UI
+    overview:
+      purpose: |
+        Identifies live hosts on a network by sending ICMP echo requests (ping).
+        This is typically the first step in network reconnaissance and provides
+        a quick inventory of active systems.
+
+      when_to_use:
+        - "Initial network mapping of unknown networks"
+        - "When ICMP traffic is allowed through firewalls"
+        - "For quick host enumeration before deeper scanning"
+        - "To validate network segments contain active hosts"
+
+      when_to_skip:
+        - "ICMP is blocked by perimeter or host-based firewalls"
+        - "Maximum stealth is required (ping sweeps are noisy)"
+        - "Time is critical and network is known to block ICMP"
+        - "Client specifically prohibits ICMP scanning"
+
+      expected_outcomes:
+        - "List of IP addresses for live hosts"
+        - "Hostnames (if reverse DNS is configured)"
+        - "MAC addresses and vendor information (on local networks)"
+        - "Rough network map showing host distribution"
+
+      technical_details:
+        protocol: "ICMP"
+        packet_type: "Echo Request (Type 8)"
+        response_type: "Echo Reply (Type 0)"
+        alternative_types: "Timestamp (Type 13), Address Mask (Type 17)"
+
+    # Risk assessment
+    risks:
+      - risk_id: "ids_ips_detection"
+        title: "IDS/IPS Detection"
+        severity: high
+        likelihood: high
+        description: |
+          ICMP ping sweeps are one of the most easily detected reconnaissance
+          techniques. Most modern IDS/IPS systems have built-in signatures for
+          detecting ping sweep behavior based on:
+          - High volume of ICMP echo requests to sequential IPs
+          - Short time windows between requests
+          - Source IP scanning multiple subnets
+
+        indicators:
+          - "Snort rule: 'ICMP ping sweep' (SID 469)"
+          - "Suricata rule: 'ET SCAN Potential ICMP Ping Sweep'"
+          - "Firewall logs showing ICMP blocks"
+
+        impact:
+          - "Security team alerted to reconnaissance activity"
+          - "Source IP may be blocked at firewall/IPS"
+          - "Engagement may be compromised if unauthorized"
+          - "Client may question authorization and scope"
+
+        mitigation:
+          - strategy: "Use slower timing templates"
+            details: "nmap -T2 or -T1 with --scan-delay 1s"
+            effectiveness: "Medium - reduces signature matches but still detectable"
+
+          - strategy: "Randomize target order"
+            details: "nmap --randomize-hosts to avoid sequential patterns"
+            effectiveness: "Low - still generates high ICMP volume"
+
+          - strategy: "Combine with legitimate traffic"
+            details: "Scan during business hours when ICMP traffic is normal"
+            effectiveness: "Medium - may blend in with normal operations"
+
+          - strategy: "Coordinate with security team"
+            details: "Whitelist source IP in IDS/IPS systems"
+            effectiveness: "High - eliminates alerting"
+
+          - strategy: "Use TCP discovery instead"
+            details: "Fall back to TCP SYN discovery method"
+            effectiveness: "High - less distinctive signature"
+
+      - risk_id: "network_congestion"
+        title: "Network Congestion / Disruption"
+        severity: medium
+        likelihood: low
+        description: |
+          High-rate ping sweeps can cause network congestion, especially on:
+          - Older network infrastructure (10/100Mbps)
+          - Saturated network links
+          - Networks with QoS policies limiting ICMP
+          - Embedded device networks (cameras, IoT)
+
+        impact:
+          - "Degraded network performance during scan"
+          - "Potential service disruption for real users"
+          - "Network equipment CPU saturation"
+          - "Possible device crashes (embedded systems)"
+
+        mitigation:
+          - strategy: "Conservative timing"
+            details: "Use -T2 timing template (polite)"
+            effectiveness: "High"
+
+          - strategy: "Rate limiting"
+            details: "--max-rate 100 packets/second"
+            effectiveness: "High"
+
+          - strategy: "Off-peak scanning"
+            details: "Schedule during maintenance windows (2-5 AM)"
+            effectiveness: "High"
+
+          - strategy: "Test on small subnet first"
+            details: "Start with single /28 to verify no issues"
+            effectiveness: "High - identifies problems early"
+
+      - risk_id: "icmp_blocked"
+        title: "ICMP Blocking / False Negatives"
+        severity: low
+        likelihood: high
+        description: |
+          Many networks block ICMP echo requests, leading to false negatives
+          where live hosts appear down:
+          - Windows hosts with default firewall settings
+          - Perimeter firewalls blocking inbound ICMP
+          - Cloud security groups without ICMP rules
+          - Host-based firewalls on Linux systems
+
+        impact:
+          - "Incomplete host inventory"
+          - "Missing critical systems in scope"
+          - "Wasted time on empty subnets"
+          - "False confidence in network map"
+
+        mitigation:
+          - strategy: "Test with known hosts first"
+            details: "Ping 2-3 known-good hosts to verify ICMP works"
+            effectiveness: "High - validates before full scan"
+
+          - strategy: "Use TCP SYN discovery"
+            details: "nmap -sn -PS22,80,443,3389,445 (common ports)"
+            effectiveness: "High - works when ICMP blocked"
+
+          - strategy: "ARP scan for local networks"
+            details: "nmap -sn -PR (Layer 2, can't be blocked)"
+            effectiveness: "Very High - for local subnets only"
+
+          - strategy: "Multiple discovery methods"
+            details: "Combine ICMP, TCP, UDP, and ARP"
+            effectiveness: "Very High - comprehensive coverage"
+
+    # Common issues and troubleshooting
+    common_issues:
+      - issue_id: "no_hosts_found"
+        title: "No Hosts Discovered Despite Known Existence"
+        severity: high
+
+        symptoms:
+          - "Nmap reports: 'Note: Host seems down. If it is really up...'"
+          - "Output shows 0 hosts up"
+          - "All IP addresses marked as 'down'"
+          - "No response from hosts known to be online"
+
+        root_causes:
+          - cause: "ICMP blocked by firewall"
+            frequency: "Very Common"
+            diagnosis: "Test: ping single known host. If fails, ICMP blocked."
+
+          - cause: "Wrong network interface"
+            frequency: "Common"
+            diagnosis: "Check: ip addr / ifconfig. Verify correct interface selected."
+
+          - cause: "VPN routing issues"
+            frequency: "Common"
+            diagnosis: "Verify: route -n / netstat -rn. Check routing table."
+
+          - cause: "Wrong CIDR notation"
+            frequency: "Occasional"
+            diagnosis: "Verify: 192.168.1.0/24 not 192.168.1.1/24"
+
+        solutions:
+          - solution: "Verify ICMP connectivity"
+            commands:
+              - "ping -c 1 <known_host>"
+              - "ping -c 1 8.8.8.8  # Test internet connectivity"
+            expected: "If ping fails, ICMP is blocked. Use TCP discovery."
+
+          - solution: "Check network interface"
+            commands:
+              - "ip addr show"
+              - "ip route show"
+              - "nmap -e <interface> -sn -PE <target>"
+            expected: "Verify interface has IP in target network range"
+
+          - solution: "Use TCP SYN discovery instead"
+            commands:
+              - "nmap -sn -PS22,80,443 <target>"
+              - "nmap -sn -PS1-1024 <target>  # More comprehensive"
+            expected: "Should discover hosts even if ICMP blocked"
+
+          - solution: "Use ARP scan (local network only)"
+            commands:
+              - "nmap -sn -PR <target>  # Requires root"
+              - "sudo arp-scan --interface=eth0 --localnet"
+            expected: "Most reliable for local subnet, requires root"
+
+        prevention:
+          - "Always test connectivity to known host first"
+          - "Verify network interface and routing"
+          - "Use multiple discovery methods for redundancy"
+
+      - issue_id: "scan_very_slow"
+        title: "Scan Takes Excessively Long Time"
+        severity: medium
+
+        symptoms:
+          - "Scan running for hours on small subnet"
+          - "Frequent timeouts in output"
+          - "Progress bar not moving"
+          - "Nmap shows 'reduced to one probe at a time'"
+
+        root_causes:
+          - cause: "High packet loss"
+            frequency: "Common"
+            diagnosis: "Check: ping statistics show >5% loss"
+
+          - cause: "Rate limiting by firewall/IPS"
+            frequency: "Common"
+            diagnosis: "Scan slows down after initial fast period"
+
+          - cause: "Poor network quality"
+            frequency: "Common"
+            diagnosis: "High latency (>100ms) to targets"
+
+          - cause: "Default timing too aggressive"
+            frequency: "Occasional"
+            diagnosis: "Nmap automatically backs off timing"
+
+        solutions:
+          - solution: "Reduce timing aggressiveness"
+            commands:
+              - "nmap -sn -T2 <target>  # Polite timing"
+              - "nmap -sn -T1 <target>  # Sneaky timing (very slow)"
+            expected: "Slower but more reliable completion"
+
+          - solution: "Increase timeout values"
+            commands:
+              - "nmap -sn --host-timeout 10m <target>"
+              - "nmap -sn --max-rtt-timeout 2s <target>"
+            expected: "Reduces retransmissions, faster overall"
+
+          - solution: "Use faster tool for initial sweep"
+            commands:
+              - "fping -a -g <cidr>  # Much faster than nmap"
+              - "masscan <cidr> -p0 --ping --rate 1000"
+            expected: "Completes in fraction of time"
+
+          - solution: "Test network quality first"
+            commands:
+              - "ping -c 100 <target> | tail -5"
+              - "mtr -n -c 50 <target>  # Check routing issues"
+            expected: "Identifies if network suitable for scanning"
+
+      - issue_id: "permission_denied"
+        title: "Permission Denied / Operation Not Permitted"
+        severity: high
+
+        symptoms:
+          - "Error: 'You requested a scan type which requires root privileges'"
+          - "Error: 'socket: Operation not permitted'"
+          - "Error: 'pcap_open_live: <interface>: You don't have permission'"
+          - "Command exits immediately with error"
+
+        root_causes:
+          - cause: "Insufficient privileges"
+            frequency: "Very Common"
+            diagnosis: "Running as non-root user"
+
+          - cause: "Missing capabilities"
+            frequency: "Common"
+            diagnosis: "Nmap binary lacks CAP_NET_RAW capability"
+
+          - cause: "SELinux/AppArmor restrictions"
+            frequency: "Occasional"
+            diagnosis: "Security policy blocking raw socket access"
+
+        solutions:
+          - solution: "Run with sudo"
+            commands:
+              - "sudo nmap -sn -PE <target>"
+            expected: "Should work if user in sudoers"
+
+          - solution: "Set capabilities on nmap binary"
+            commands:
+              - "sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip /usr/bin/nmap"
+              - "getcap /usr/bin/nmap  # Verify capabilities set"
+            expected: "Allows non-root execution"
+
+          - solution: "Check SELinux/AppArmor"
+            commands:
+              - "getenforce  # Check if SELinux enabled"
+              - "sudo aa-status  # Check AppArmor"
+              - "sudo ausearch -m avc -ts recent  # Check denials"
+            expected: "Identify if security policy causing issue"
+
+    # Findings and reporting guidance
+    findings:
+      categories:
+        - "Information Disclosure"
+        - "Network Mapping"
+        - "Reconnaissance"
+
+      typical_findings:
+        - finding_id: "live_hosts_discovered"
+          finding_type: "Live Hosts Identified"
+          severity: informational
+          cvss_score: 0.0
+
+          description: |
+            Network reconnaissance successfully identified live hosts on the target
+            network using ICMP echo requests. This provides a foundation for
+            further enumeration and security assessment.
+
+          business_impact: |
+            While not a vulnerability, network visibility enables attackers to
+            identify targets for exploitation. Understanding which systems are
+            accessible is the first step in a targeted attack.
+
+          technical_details: |
+            ICMP ping sweeps were conducted against IP ranges within scope.
+            Hosts responding to ICMP echo requests were catalogued with their
+            IP addresses, hostnames (where available), and MAC addresses
+            (for local network hosts).
+
+          report_template: |
+            ## Live Host Discovery
+
+            **Severity**: Informational
+            **CVSS Score**: 0.0 (Informational)
+
+            ### Summary
+            Network reconnaissance identified **{host_count}** live hosts on the
+            **{network_cidr}** network segment using ICMP echo requests.
+
+            ### Affected Systems
+            {host_table}
+
+            ### Technical Details
+            ICMP ping sweeps (echo requests, type 8) were sent to all IP addresses
+            in the target range. Hosts responding with echo replies (type 0) were
+            marked as active. The following information was collected:
+
+            - IP addresses of responding hosts
+            - Hostnames via reverse DNS lookups
+            - MAC addresses and vendor OUI (local network only)
+            - Response times and TTL values
+
+            **Scan Command**:
+            ```
+            nmap -sn -PE {cidr}
+            ```
+
+            **Sample Output**:
+            ```
+            Host is up (0.0012s latency).
+            MAC Address: 00:0C:29:3E:2F:58 (VMware)
+            Nmap scan report for webserver01.company.com (192.168.1.10)
+            ```
+
+            ### Security Implications
+            - Provides attackers with target inventory
+            - Enables targeted attacks on specific systems
+            - First step in kill chain (reconnaissance)
+            - May reveal network segmentation strategy
+
+            ### Evidence
+            - Full scan results: `nmap_ping_sweep_{timestamp}.xml`
+            - Host list: `discovered_hosts_{timestamp}.csv`
+            - Network diagram: `network_map_{timestamp}.pdf`
+
+            ### Recommendations
+
+            **Priority: Low**
+
+            1. **Network Segmentation**
+               - Implement VLANs to limit reconnaissance scope
+               - Isolate sensitive systems (databases, domain controllers)
+               - Use private VLANs where appropriate
+
+            2. **Host-Based Firewalls**
+               - Configure Windows Firewall to block ICMP on workstations
+               - Use iptables rules on Linux systems
+               - Consider blocking ICMP on DMZ systems
+
+            3. **Intrusion Detection**
+               - Deploy IDS/IPS to detect reconnaissance activity
+               - Configure alerts for ping sweep patterns
+               - Monitor for sequential ICMP requests
+
+            4. **Legitimate Scanning**
+               - Document authorized scanning tools and source IPs
+               - Whitelist vulnerability scanners
+               - Implement change control for network discovery
+
+            **Note**: Blocking ICMP may impact network troubleshooting. Consider
+            business impact before implementation.
+
+        - finding_id: "icmp_responses_enabled"
+          finding_type: "ICMP Echo Responses Allowed"
+          severity: low
+          cvss_score: 2.0
+
+          description: |
+            Hosts on the target network respond to ICMP echo requests from
+            external sources, facilitating network reconnaissance.
+
+          business_impact: |
+            Responding to ICMP enables attackers to:
+            - Quickly enumerate live hosts
+            - Infer network topology from response times
+            - Perform OS fingerprinting via TTL analysis
+            - Validate target accessibility before attacks
+
+          report_template: |
+            ## ICMP Echo Responses Enabled
+
+            **Severity**: Low
+            **CVSS v3.1 Score**: 2.0 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+
+            ### Summary
+            **{responsive_host_count}** hosts on the **{network_cidr}** network
+            respond to ICMP echo requests from external sources, enabling easy
+            network reconnaissance.
+
+            ### Affected Systems
+            {host_list}
+
+            ### Technical Details
+            ICMP echo requests (type 8) sent to hosts elicited echo replies
+            (type 0), confirming host availability. Response characteristics:
+
+            - Average response time: {avg_response_ms} ms
+            - TTL values observed: {ttl_values}
+            - MAC addresses visible (local): {mac_visible}
+
+            ### Attack Scenarios
+            1. **Reconnaissance**: Attacker enumerates live targets
+            2. **OS Fingerprinting**: TTL values reveal OS type
+            3. **Topology Mapping**: Response times infer network structure
+            4. **Availability Monitoring**: Track online status of targets
+
+            ### Recommendations
+
+            **Priority: Low**
+
+            1. **Perimeter Firewall Rules**
+               - Block ICMP echo requests at firewall for external networks
+               - Allow ICMP from trusted management networks only
+               - Consider rate-limiting instead of complete block
+
+            2. **Host-Based Firewall**
+               - Disable ICMP responses on sensitive systems
+               - DMZ hosts should not respond to external ICMP
+               - Database and application servers: block ICMP
+
+            3. **Monitoring**
+               - Alert on ICMP flood or sweep patterns
+               - Log ICMP requests for forensics
+               - Track source IPs performing reconnaissance
+
+            **Impact Considerations**:
+            - Blocking ICMP may hinder network troubleshooting
+            - Some applications rely on ICMP for path MTU discovery
+            - May affect VPN or monitoring systems
+
+            **Alternative Approach**:
+            - Use ICMP rate limiting instead of complete block
+            - Allow ICMP from known-good monitoring sources
+            - Implement split policies (internal allow, external deny)
+
+        - finding_id: "hostname_patterns_revealed"
+          finding_type: "Internal Network Structure Disclosure via Hostnames"
+          severity: medium
+          cvss_score: 3.5
+          when: "descriptive_hostnames_detected"
+
+          description: |
+            Reverse DNS lookups revealed descriptive hostnames that disclose
+            server roles, purposes, and internal network organization.
+
+          business_impact: |
+            Hostname patterns provide attackers with:
+            - Server functions (db01, web-prod, dc-backup)
+            - Priority targets (database, domain controllers)
+            - Network organization and naming conventions
+            - Environment types (prod, dev, test, staging)
+            - Predictable naming for targeted enumeration
+
+          report_template: |
+            ## Internal Network Structure Disclosure
+
+            **Severity**: Medium
+            **CVSS v3.1 Score**: 3.5 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+
+            ### Summary
+            Reverse DNS queries revealed descriptive hostname patterns that
+            disclose internal network organization, server purposes, and
+            infrastructure layout.
+
+            ### Discovered Patterns
+
+            **Server Roles**:
+            {role_examples}
+
+            **Environment Indicators**:
+            {env_examples}
+
+            **Location/Department**:
+            {location_examples}
+
+            ### Information Disclosed
+            1. **Critical Systems Identified**:
+               - {critical_count} database servers
+               - {dc_count} domain controllers
+               - {web_count} web servers
+               - {backup_count} backup systems
+
+            2. **Naming Conventions**:
+               - Pattern: `{role}-{env}{number}.{domain}`
+               - Example: `db-prod01.company.com`
+               - Predictable numbering scheme
+
+            3. **Network Organization**:
+               - Clear segmentation by function
+               - Environment separation visible
+               - Department/location indicators
+
+            ### Attack Scenarios
+            1. **Target Prioritization**:
+               - Attacker focuses on `db-prod*` (databases)
+               - Domain controllers (`dc-*`) targeted for AD attacks
+               - Backup systems (`backup-*`) sought for data exfiltration
+
+            2. **Predictive Enumeration**:
+               - Found `web-prod01` and `web-prod02`
+               - Attacker guesses `web-prod03`, `web-prod04` exist
+               - Tests sequential numbers for complete inventory
+
+            3. **Social Engineering**:
+               - Hostnames used in phishing campaigns
+               - Legitimate-looking server names in emails
+               - Technical credibility in pretexting
+
+            ### Evidence
+            {hostname_table}
+
+            ### Recommendations
+
+            **Priority: Medium**
+
+            1. **Split-Horizon DNS**
+               - Implement different DNS views for internal/external
+               - External DNS: Generic or non-descriptive names
+               - Internal DNS: Descriptive names for administration
+
+            2. **Hostname Obfuscation (External)**
+               - Use non-descriptive names for external-facing DNS
+               - Example: `prod-db01.company.com` → `h-7f3a2e.company.com`
+               - Maintain internal mapping for operations
+
+            3. **Reverse DNS Configuration**
+               - Remove reverse DNS entries for internal systems
+               - Use generic PTR records for external interfaces
+               - Limit information in DNS TXT records
+
+            4. **Naming Convention Review**
+               - Avoid sequential numbering in external DNS
+               - Use randomized or hashed identifiers
+               - Consider UUID-based naming for external
+
+            5. **Network Segmentation**
+               - Ensure sensitive systems not in internet-facing DNS
+               - Database servers should have no external DNS records
+               - Management interfaces: internal DNS only
+
+            **Implementation Note**:
+            Balance security with operational needs. Internal IT staff require
+            descriptive names for troubleshooting. Implement split-horizon
+            DNS to maintain both security and usability.
+
+metadata:
+  category: "Host Discovery"
+  phase: discovery
+  priority_range: 10
+  estimated_duration: "2-5 minutes per /24 network"
+
+  tools_required:
+    - name: nmap
+      required: true
+      min_version: "7.0"
+      check_command: "nmap --version"
+      install: "apt install nmap / brew install nmap / yum install nmap"
+
+    - name: fping
+      required: false
+      check_command: "fping --version"
+      install: "apt install fping / brew install fping"
+
+    - name: masscan
+      required: false
+      platforms: [linux]
+      check_command: "masscan --version"
+      install: "apt install masscan"
+
+  ui_display:
+    card_color: "#4CAF50"
+    icon: "🔍"
+    progress_formula: "completed / (completed + pending + failed) * 100"
+    health_rules:
+      error: "failure_rate > 50%"
+      warning: "failure_rate > 10% OR progress < 20% after 10 minutes"
+      good: "default"
