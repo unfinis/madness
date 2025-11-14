@@ -377,215 +377,214 @@ function initializeNetworkDiagram() {
         return;
     }
 
-    // Prepare nodes from assets
+    // Show empty state if no assets
+    if (allAssets.length === 0) {
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 18px;">No assets to display. Create some assets to see the network diagram.</div>';
+        return;
+    } else {
+        container.innerHTML = ''; // Clear empty state
+    }
+
+    // Best Practice: Organize assets by network segments and security zones
+    // This follows professional network topology diagram conventions
+
     const nodes = allAssets.map(asset => {
         const { color, shape, icon } = getAssetNodeStyle(asset.type);
-        const assetName = asset.name || `${asset.type} ${asset.id.slice(0, 8)}`;
-        const label = icon ? `${icon}\n${assetName}` : assetName;
+        const props = asset.properties || {};
+
+        // Best Practice: Include IP address in label if available
+        let labelText = asset.name || asset.type;
+        if (props.ip_address || props.ip) {
+            labelText += `\n${props.ip_address || props.ip}`;
+        }
+
+        // Add icon for visual recognition
+        const label = icon ? `${icon} ${labelText}` : labelText;
+
+        // Determine security zone for grouping
+        const zoneName = determineSecurityZone(asset);
 
         return {
             id: asset.id,
             label: label,
-            title: createNodeTooltip(asset), // HTML tooltip
+            title: createNodeTooltip(asset),
+            group: zoneName, // Group by security zone
+            shape: shape,
             color: {
                 background: color,
-                border: adjustColor(color, -20),
+                border: adjustColor(color, -30),
                 highlight: {
+                    background: adjustColor(color, 30),
+                    border: color
+                },
+                hover: {
                     background: adjustColor(color, 20),
-                    border: adjustColor(color, -40)
+                    border: color
                 }
             },
-            shape: shape,
             font: {
-                color: '#e2e8f0',
-                size: 14,
-                face: 'Segoe UI',
+                color: '#ffffff',
+                size: 12,
+                face: 'Arial, sans-serif',
                 multi: 'html',
-                bold: { color: '#ffffff', size: 16 }
+                align: 'center'
             },
             borderWidth: 2,
-            borderWidthSelected: 4
+            borderWidthSelected: 3,
+            size: 25,
+            // Store metadata for filtering/organizing
+            assetType: asset.type,
+            zoneName: zoneName
         };
     });
 
-    // Prepare edges from relationships (use allRelationships, not asset.relationships)
+    // Best Practice: Show relationships with clear direction and meaning
     const edges = allRelationships.map(rel => {
         const edgeStyle = getRelationshipEdgeStyle(rel.relationship_type);
+        const relLabel = formatRelationshipType(rel.relationship_type);
+
         return {
+            id: rel.id,
             from: rel.source_asset_id,
             to: rel.target_asset_id,
-            label: formatRelationshipType(rel.relationship_type),
+            label: relLabel,
             ...edgeStyle,
             font: {
-                color: '#94a3b8',
-                size: 11,
-                align: 'middle',
-                background: 'rgba(15, 23, 42, 0.8)',
+                color: '#cbd5e1',
+                size: 10,
+                align: 'top',
+                background: 'rgba(15, 23, 42, 0.9)',
                 strokeWidth: 0
+            },
+            smooth: {
+                enabled: true,
+                type: 'cubicBezier',
+                roundness: 0.5
             }
         };
     });
 
-    // Determine hierarchical levels and groups for network topology best practices
-    // Level 0: Network segments (top)
-    // Level 1: Infrastructure (routers, firewalls, domain controllers)
-    // Level 2: Servers and services
-    // Level 3: Workstations and endpoints
-    // Level 4: Users and credentials (bottom)
-    const assetLevels = nodes.map(node => {
-        const asset = allAssets.find(a => a.id === node.id);
-        let level = 2; // default middle level
-        let group = 'default';  // For visual grouping/segregation
-
-        if (asset) {
-            const type = asset.type.toLowerCase();
-            const name = (asset.name || '').toLowerCase();
-            const props = asset.properties || {};
-
-            // Determine security zone/group based on type and properties
-            if (name.includes('dmz') || name.includes('external') || props.zone === 'dmz') {
-                group = 'dmz';
-            } else if (name.includes('internal') || name.includes('corp') || props.zone === 'internal') {
-                group = 'internal';
-            } else if (type.includes('internet') || type.includes('cloud') || name.includes('external')) {
-                group = 'external';
-            } else if (type.includes('user') || type.includes('credential')) {
-                group = 'identity';
-            }
-
-            // Network infrastructure at top
-            if (type.includes('network_segment') || type.includes('subnet') || type.includes('vlan') || type.includes('internet') || type.includes('cloud')) {
-                level = 0;
-            }
-            // Core infrastructure
-            else if (type.includes('router') || type.includes('firewall') || type.includes('domain_controller') || type.includes('switch')) {
-                level = 1;
-            }
-            // Servers and critical services
-            else if (type.includes('server') || type.includes('dns') || type.includes('database') || type.includes('storage') || type.includes('nas') || type.includes('san')) {
-                level = 2;
-            }
-            // Services and applications
-            else if (type.includes('service') || type.includes('web') || type.includes('application') || type.includes('smb') || type.includes('share')) {
-                level = 3;
-            }
-            // Endpoints
-            else if (type.includes('host') || type.includes('workstation') || type.includes('laptop') || type.includes('mobile') || type.includes('wireless')) {
-                level = 4;
-            }
-            // Users and credentials at bottom
-            else if (type.includes('user') || type.includes('credential')) {
-                level = 5;
-            }
-        }
-
-        return { ...node, level, group };
-    });
-
-    // Create vis.js network
     const data = {
-        nodes: new vis.DataSet(assetLevels),
+        nodes: new vis.DataSet(nodes),
         edges: new vis.DataSet(edges)
     };
 
+    // Best Practice: Use clear, organized layout with minimal line crossing
     const options = {
         nodes: {
-            // DON'T override shape here - let individual nodes specify their shapes
-            size: 30,  // Default size (individual nodes can override)
+            // Individual nodes control their own shapes
             shadow: {
                 enabled: true,
-                color: 'rgba(0,0,0,0.5)',
-                size: 10,
-                x: 3,
-                y: 3
-            },
-            margin: 10
-        },
-        groups: {
-            // Visual segregation zones - subtle border enhancements
-            dmz: {
-                borderWidth: 3,
-                borderWidthSelected: 5,
-                shapeProperties: {
-                    borderDashes: [10, 5]  // Dashed border for DMZ
-                }
-            },
-            external: {
-                borderWidth: 3,
-                borderWidthSelected: 5,
-                shapeProperties: {
-                    borderDashes: [5, 10]  // Different dash pattern for external
-                }
-            },
-            internal: {
-                borderWidth: 2,
-                borderWidthSelected: 4
-            },
-            identity: {
-                borderWidth: 2,
-                borderWidthSelected: 4,
-                shapeProperties: {
-                    borderDashes: false
-                }
-            }
-        },
-        edges: {
-            width: 2,
-            shadow: {
-                enabled: true,
-                color: 'rgba(0,0,0,0.3)',
-                size: 5,
+                color: 'rgba(0,0,0,0.4)',
+                size: 8,
                 x: 2,
                 y: 2
             },
-            smooth: {
-                type: 'cubicBezier',
-                forceDirection: 'vertical',  // Vertical hierarchy
-                roundness: 0.4
+            margin: {
+                top: 10,
+                right: 10,
+                bottom: 10,
+                left: 10
             }
         },
+        // Best Practice: Visual grouping by security zones
+        groups: {
+            internet: {
+                color: {
+                    background: '#94a3b8',
+                    border: '#64748b',
+                    highlight: { background: '#cbd5e1', border: '#94a3b8' }
+                },
+                borderWidth: 3,
+                shapeProperties: { borderDashes: [15, 10] }
+            },
+            dmz: {
+                color: {
+                    background: '#f59e0b',
+                    border: '#d97706',
+                    highlight: { background: '#fbbf24', border: '#f59e0b' }
+                },
+                borderWidth: 3,
+                shapeProperties: { borderDashes: [10, 5] }
+            },
+            internal: {
+                color: {
+                    background: '#3b82f6',
+                    border: '#2563eb',
+                    highlight: { background: '#60a5fa', border: '#3b82f6' }
+                },
+                borderWidth: 2
+            },
+            management: {
+                color: {
+                    background: '#8b5cf6',
+                    border: '#7c3aed',
+                    highlight: { background: '#a78bfa', border: '#8b5cf6' }
+                },
+                borderWidth: 2
+            },
+            identity: {
+                color: {
+                    background: '#ef4444',
+                    border: '#dc2626',
+                    highlight: { background: '#f87171', border: '#ef4444' }
+                },
+                borderWidth: 2
+            }
+        },
+        edges: {
+            arrows: {
+                to: {
+                    enabled: true,
+                    scaleFactor: 0.5
+                }
+            },
+            shadow: {
+                enabled: false
+            },
+            smooth: {
+                enabled: true,
+                type: 'cubicBezier',
+                roundness: 0.5
+            },
+            physics: true
+        },
+        // Best Practice: Force-directed layout with good spacing
         physics: {
             enabled: true,
-            hierarchicalRepulsion: {
-                centralGravity: 0.0,
-                springLength: 150,
-                springConstant: 0.01,
-                nodeDistance: 200,
-                damping: 0.09
+            forceAtlas2Based: {
+                gravitationalConstant: -50,
+                centralGravity: 0.01,
+                springLength: 200,
+                springConstant: 0.08,
+                damping: 0.4,
+                avoidOverlap: 1
             },
+            maxVelocity: 50,
+            solver: 'forceAtlas2Based',
             stabilization: {
                 enabled: true,
-                iterations: 200,
-                updateInterval: 25
-            },
-            solver: 'hierarchicalRepulsion'
+                iterations: 300,
+                updateInterval: 25,
+                onlyDynamicEdges: false,
+                fit: true
+            }
         },
         interaction: {
             hover: true,
-            tooltipDelay: 200,
+            tooltipDelay: 100,
             zoomView: true,
             dragView: true,
             navigationButtons: true,
-            keyboard: {
-                enabled: true
-            }
+            keyboard: true
         },
         layout: {
-            hierarchical: {
-                enabled: true,
-                levelSeparation: 200,
-                nodeSpacing: 150,
-                treeSpacing: 200,
-                blockShifting: true,
-                edgeMinimization: true,
-                parentCentralization: true,
-                direction: 'UD',  // Up-Down: Network segments at top, users at bottom
-                sortMethod: 'directed'  // Follow edge directions
-            }
+            randomSeed: 42,
+            improvedLayout: true
         }
     };
 
-    // Destroy existing network if present
+    // Destroy existing network
     if (networkInstance) {
         networkInstance.destroy();
     }
@@ -593,7 +592,7 @@ function initializeNetworkDiagram() {
     // Create new network
     networkInstance = new vis.Network(container, data, options);
 
-    // Add click event to show asset details
+    // Event handlers
     networkInstance.on('click', function(params) {
         if (params.nodes.length > 0) {
             const assetId = params.nodes[0];
@@ -601,7 +600,6 @@ function initializeNetworkDiagram() {
         }
     });
 
-    // Add double-click to edit asset
     networkInstance.on('doubleClick', function(params) {
         if (params.nodes.length > 0) {
             const assetId = params.nodes[0];
@@ -612,8 +610,52 @@ function initializeNetworkDiagram() {
         }
     });
 
-    // Reset update flag
+    // Once stabilized, fit to screen
+    networkInstance.once('stabilizationIterationsDone', function() {
+        networkInstance.fit({
+            animation: {
+                duration: 1000,
+                easingFunction: 'easeInOutQuad'
+            }
+        });
+    });
+
     needsNetworkUpdate = false;
+}
+
+// Helper function to determine security zone
+function determineSecurityZone(asset) {
+    const type = (asset.type || '').toLowerCase();
+    const name = (asset.name || '').toLowerCase();
+    const props = asset.properties || {};
+
+    // Explicit zone property takes precedence
+    if (props.zone) {
+        return props.zone.toLowerCase();
+    }
+
+    // Internet/External
+    if (type.includes('internet') || type.includes('cloud') || name.includes('external') || name.includes('internet')) {
+        return 'internet';
+    }
+
+    // DMZ - perimeter network
+    if (name.includes('dmz') || name.includes('perimeter') || props.public_facing) {
+        return 'dmz';
+    }
+
+    // Management network
+    if (name.includes('mgmt') || name.includes('management') || name.includes('admin')) {
+        return 'management';
+    }
+
+    // Identity/Users
+    if (type.includes('user') || type.includes('credential') || type.includes('identity')) {
+        return 'identity';
+    }
+
+    // Default to internal
+    return 'internal';
 }
 
 function getAssetNodeStyle(type) {
