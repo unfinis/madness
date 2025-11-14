@@ -847,16 +847,48 @@
         <div id="tab-network" class="tab-content">
             <div id="network-diagram" style="width: 100%; height: 700px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);"></div>
             <div style="margin-top: 20px; padding: 15px; background: rgba(15, 23, 42, 0.6); border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.2);">
-                <h3 style="margin-bottom: 10px; color: #60a5fa;">Legend</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                    <div><span style="color: #3b82f6;">●</span> Host</div>
-                    <div><span style="color: #8b5cf6;">●</span> Network Segment</div>
-                    <div><span style="color: #10b981;">●</span> Web Service</div>
-                    <div><span style="color: #f59e0b;">●</span> Domain Controller</div>
-                    <div><span style="color: #ef4444;">●</span> User/Credential</div>
-                    <div><span style="color: #06b6d4;">●</span> Database</div>
-                    <div><span style="color: #ec4899;">●</span> Application</div>
-                    <div><span style="color: #6366f1;">●</span> Other Assets</div>
+                <h3 style="margin-bottom: 15px; color: #60a5fa; font-size: 18px;">📋 Network Diagram Legend (Industry Standard Symbols)</h3>
+
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Core Infrastructure</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 13px;">
+                        <div><span style="color: #3b82f6;">⬜</span> 🖥️ Router/Switch</div>
+                        <div><span style="color: #ef4444;">⬜</span> 🛡️ Firewall</div>
+                        <div><span style="color: #3b82f6;">⬜</span> 💻 Host/Server</div>
+                        <div><span style="color: #10b981;">⬜</span> 🌐 Web Service</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Network & Data</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 13px;">
+                        <div><span style="color: #8b5cf6;">⬭</span> 🌐 Network Segment</div>
+                        <div><span style="color: #06b6d4;">🗄️</span> 💾 Database/Storage</div>
+                        <div><span style="color: #8b5cf6;">⬜</span> 📡 DNS Server</div>
+                        <div><span style="color: #f59e0b;">⭐</span> 👑 Domain Controller</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Security & Users</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 13px;">
+                        <div><span style="color: #ef4444;">◆</span> 🔍 IDS/IPS</div>
+                        <div><span style="color: #ef4444;">▲</span> 👤 User</div>
+                        <div><span style="color: #ef4444;">●</span> 🔑 Credential</div>
+                        <div><span style="color: #06b6d4;">⬜</span> 🔒 VPN</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;">Relationship Types</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 13px;">
+                        <div><span style="color: #10b981;">━━▶</span> Can Pivot To</div>
+                        <div><span style="color: #8b5cf6;">━━▶</span> Contains</div>
+                        <div><span style="color: #3b82f6;">━━▶</span> Connects To</div>
+                        <div><span style="color: #f59e0b;">╌╌▶</span> Depends On</div>
+                        <div><span style="color: #ef4444;">━━▶</span> Has Credential</div>
+                        <div><span style="color: #06b6d4;">╌╌▶</span> Trusts</div>
+                    </div>
                 </div>
             </div>
         </div>

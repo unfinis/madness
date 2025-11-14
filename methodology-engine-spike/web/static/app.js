@@ -372,8 +372,9 @@ function initializeNetworkDiagram() {
 
     // Prepare nodes from assets
     const nodes = allAssets.map(asset => {
-        const { color, shape } = getAssetNodeStyle(asset.type);
-        const label = asset.name || `${asset.type} ${asset.id.slice(0, 8)}`;
+        const { color, shape, icon } = getAssetNodeStyle(asset.type);
+        const assetName = asset.name || `${asset.type} ${asset.id.slice(0, 8)}`;
+        const label = icon ? `${icon}\n${assetName}` : assetName;
 
         return {
             id: asset.id,
@@ -391,7 +392,9 @@ function initializeNetworkDiagram() {
             font: {
                 color: '#e2e8f0',
                 size: 14,
-                face: 'Segoe UI'
+                face: 'Segoe UI',
+                multi: 'html',
+                bold: { color: '#ffffff', size: 16 }
             },
             borderWidth: 2,
             borderWidthSelected: 4
@@ -518,19 +521,65 @@ function initializeNetworkDiagram() {
 }
 
 function getAssetNodeStyle(type) {
+    // Industry-standard network diagram conventions
+    // Shapes follow Cisco/standard networking iconography
     const styles = {
-        host: { color: '#3b82f6', shape: 'dot' },
-        network_segment: { color: '#8b5cf6', shape: 'diamond' },
-        web_service: { color: '#10b981', shape: 'square' },
-        domain_controller: { color: '#f59e0b', shape: 'star' },
-        user: { color: '#ef4444', shape: 'triangle' },
-        credential: { color: '#ef4444', shape: 'triangle' },
-        database: { color: '#06b6d4', shape: 'hexagon' },
-        application: { color: '#ec4899', shape: 'box' },
-        service: { color: '#10b981', shape: 'ellipse' },
-        smb_share: { color: '#f59e0b', shape: 'box' },
-        dns_server: { color: '#8b5cf6', shape: 'diamond' },
-        default: { color: '#6366f1', shape: 'dot' }
+        // Core Infrastructure (Cisco Standard: Boxes/Squares)
+        router: { color: '#3b82f6', shape: 'box', icon: '⟲' },
+        switch: { color: '#3b82f6', shape: 'box', icon: '⇄' },
+        firewall: { color: '#ef4444', shape: 'box', icon: '🛡️' },
+
+        // Servers (Standard: Boxes/Towers)
+        host: { color: '#3b82f6', shape: 'square', icon: '🖥️' },
+        server: { color: '#3b82f6', shape: 'box', icon: '🖥️' },
+        web_server: { color: '#10b981', shape: 'box', icon: '🌐' },
+        web_service: { color: '#10b981', shape: 'box', icon: '🌐' },
+        database: { color: '#06b6d4', shape: 'database', icon: '💾' },
+        dns_server: { color: '#8b5cf6', shape: 'box', icon: '📡' },
+        domain_controller: { color: '#f59e0b', shape: 'star', icon: '👑' },
+
+        // Network Elements (Standard: Circles/Ellipses)
+        network_segment: { color: '#8b5cf6', shape: 'ellipse', icon: '🌐' },
+        subnet: { color: '#8b5cf6', shape: 'ellipse', icon: '🔗' },
+        vlan: { color: '#8b5cf6', shape: 'ellipse', icon: '🔀' },
+
+        // Cloud/External (Standard: Cloud shapes/Diamonds)
+        cloud: { color: '#94a3b8', shape: 'diamond', icon: '☁️' },
+        cloud_service: { color: '#94a3b8', shape: 'diamond', icon: '☁️' },
+        internet: { color: '#94a3b8', shape: 'diamond', icon: '🌍' },
+
+        // Workstations/Endpoints (Standard: Squares)
+        workstation: { color: '#3b82f6', shape: 'square', icon: '💻' },
+        laptop: { color: '#3b82f6', shape: 'square', icon: '💻' },
+        mobile: { color: '#06b6d4', shape: 'triangle', icon: '📱' },
+
+        // Users/Credentials (Standard: Triangles/Circles)
+        user: { color: '#ef4444', shape: 'triangle', icon: '👤' },
+        credential: { color: '#ef4444', shape: 'dot', icon: '🔑' },
+
+        // Applications/Services (Standard: Hexagons/Boxes)
+        application: { color: '#ec4899', shape: 'hexagon', icon: '📦' },
+        service: { color: '#10b981', shape: 'ellipse', icon: '⚙️' },
+        smb_share: { color: '#f59e0b', shape: 'box', icon: '📁' },
+        file_share: { color: '#f59e0b', shape: 'box', icon: '📁' },
+
+        // Security Devices (Standard: Shields/Special)
+        ids: { color: '#ef4444', shape: 'diamond', icon: '🔍' },
+        ips: { color: '#ef4444', shape: 'diamond', icon: '🛡️' },
+        vpn: { color: '#06b6d4', shape: 'box', icon: '🔒' },
+        load_balancer: { color: '#8b5cf6', shape: 'hexagon', icon: '⚖️' },
+
+        // Wireless (Standard: Antenna shapes)
+        wireless_ap: { color: '#10b981', shape: 'triangle', icon: '📶' },
+        access_point: { color: '#10b981', shape: 'triangle', icon: '📶' },
+
+        // Storage (Standard: Cylinders/Database shapes)
+        storage: { color: '#06b6d4', shape: 'database', icon: '💿' },
+        nas: { color: '#06b6d4', shape: 'database', icon: '💾' },
+        san: { color: '#06b6d4', shape: 'database', icon: '💾' },
+
+        // Default fallback
+        default: { color: '#64748b', shape: 'dot', icon: '❓' }
     };
 
     return styles[type] || styles.default;
