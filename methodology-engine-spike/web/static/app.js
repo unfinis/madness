@@ -7,6 +7,7 @@ let allAssets = [];
 let allMethodologies = [];
 let allTriggers = [];
 let allCommands = [];
+let allRelationships = [];  // Store relationships separately
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +23,8 @@ async function refreshAll() {
             loadAssets(),
             loadMethodologies(),
             loadTriggerMatches(),
-            loadBatchCommands()
+            loadBatchCommands(),
+            loadRelationships()
         ]);
         renderCurrentTab();
     } catch (error) {
@@ -67,6 +69,11 @@ async function loadTriggerMatches() {
 async function loadBatchCommands() {
     const response = await fetch(`${API_BASE}/api/batch-commands`);
     allCommands = await response.json();
+}
+
+async function loadRelationships() {
+    const response = await fetch(`${API_BASE}/api/relationships`);
+    allRelationships = await response.json();
 }
 
 // Tab switching
@@ -401,77 +408,157 @@ function initializeNetworkDiagram() {
         };
     });
 
-    // Prepare edges from relationships
-    const edges = [];
-    allAssets.forEach(asset => {
-        if (asset.relationships && Array.isArray(asset.relationships)) {
-            asset.relationships.forEach(rel => {
-                const edgeStyle = getRelationshipEdgeStyle(rel.type);
-                edges.push({
-                    from: asset.id,
-                    to: rel.target_asset_id,
-                    label: formatRelationshipType(rel.type),
-                    ...edgeStyle,
-                    font: {
-                        color: '#94a3b8',
-                        size: 11,
-                        align: 'middle',
-                        background: 'rgba(15, 23, 42, 0.8)',
-                        strokeWidth: 0
-                    }
-                });
-            });
+    // Prepare edges from relationships (use allRelationships, not asset.relationships)
+    const edges = allRelationships.map(rel => {
+        const edgeStyle = getRelationshipEdgeStyle(rel.relationship_type);
+        return {
+            from: rel.source_asset_id,
+            to: rel.target_asset_id,
+            label: formatRelationshipType(rel.relationship_type),
+            ...edgeStyle,
+            font: {
+                color: '#94a3b8',
+                size: 11,
+                align: 'middle',
+                background: 'rgba(15, 23, 42, 0.8)',
+                strokeWidth: 0
+            }
+        };
+    });
+
+    // Determine hierarchical levels and groups for network topology best practices
+    // Level 0: Network segments (top)
+    // Level 1: Infrastructure (routers, firewalls, domain controllers)
+    // Level 2: Servers and services
+    // Level 3: Workstations and endpoints
+    // Level 4: Users and credentials (bottom)
+    const assetLevels = nodes.map(node => {
+        const asset = allAssets.find(a => a.id === node.id);
+        let level = 2; // default middle level
+        let group = 'default';  // For visual grouping/segregation
+
+        if (asset) {
+            const type = asset.type.toLowerCase();
+            const name = (asset.name || '').toLowerCase();
+            const props = asset.properties || {};
+
+            // Determine security zone/group based on type and properties
+            if (name.includes('dmz') || name.includes('external') || props.zone === 'dmz') {
+                group = 'dmz';
+            } else if (name.includes('internal') || name.includes('corp') || props.zone === 'internal') {
+                group = 'internal';
+            } else if (type.includes('internet') || type.includes('cloud') || name.includes('external')) {
+                group = 'external';
+            } else if (type.includes('user') || type.includes('credential')) {
+                group = 'identity';
+            }
+
+            // Network infrastructure at top
+            if (type.includes('network_segment') || type.includes('subnet') || type.includes('vlan') || type.includes('internet') || type.includes('cloud')) {
+                level = 0;
+            }
+            // Core infrastructure
+            else if (type.includes('router') || type.includes('firewall') || type.includes('domain_controller') || type.includes('switch')) {
+                level = 1;
+            }
+            // Servers and critical services
+            else if (type.includes('server') || type.includes('dns') || type.includes('database') || type.includes('storage') || type.includes('nas') || type.includes('san')) {
+                level = 2;
+            }
+            // Services and applications
+            else if (type.includes('service') || type.includes('web') || type.includes('application') || type.includes('smb') || type.includes('share')) {
+                level = 3;
+            }
+            // Endpoints
+            else if (type.includes('host') || type.includes('workstation') || type.includes('laptop') || type.includes('mobile') || type.includes('wireless')) {
+                level = 4;
+            }
+            // Users and credentials at bottom
+            else if (type.includes('user') || type.includes('credential')) {
+                level = 5;
+            }
         }
+
+        return { ...node, level, group };
     });
 
     // Create vis.js network
     const data = {
-        nodes: new vis.DataSet(nodes),
+        nodes: new vis.DataSet(assetLevels),
         edges: new vis.DataSet(edges)
     };
 
     const options = {
         nodes: {
-            shape: 'dot',
-            size: 20,
+            // DON'T override shape here - let individual nodes specify their shapes
+            size: 30,  // Default size (individual nodes can override)
             shadow: {
                 enabled: true,
-                color: 'rgba(0,0,0,0.3)',
+                color: 'rgba(0,0,0,0.5)',
                 size: 10,
-                x: 2,
-                y: 2
+                x: 3,
+                y: 3
+            },
+            margin: 10
+        },
+        groups: {
+            // Visual segregation zones - subtle border enhancements
+            dmz: {
+                borderWidth: 3,
+                borderWidthSelected: 5,
+                shapeProperties: {
+                    borderDashes: [10, 5]  // Dashed border for DMZ
+                }
+            },
+            external: {
+                borderWidth: 3,
+                borderWidthSelected: 5,
+                shapeProperties: {
+                    borderDashes: [5, 10]  // Different dash pattern for external
+                }
+            },
+            internal: {
+                borderWidth: 2,
+                borderWidthSelected: 4
+            },
+            identity: {
+                borderWidth: 2,
+                borderWidthSelected: 4,
+                shapeProperties: {
+                    borderDashes: false
+                }
             }
         },
         edges: {
             width: 2,
             shadow: {
                 enabled: true,
-                color: 'rgba(0,0,0,0.2)',
+                color: 'rgba(0,0,0,0.3)',
                 size: 5,
-                x: 1,
-                y: 1
+                x: 2,
+                y: 2
             },
             smooth: {
                 type: 'cubicBezier',
-                forceDirection: 'none',
-                roundness: 0.5
+                forceDirection: 'vertical',  // Vertical hierarchy
+                roundness: 0.4
             }
         },
         physics: {
             enabled: true,
-            barnesHut: {
-                gravitationalConstant: -4000,
-                centralGravity: 0.3,
+            hierarchicalRepulsion: {
+                centralGravity: 0.0,
                 springLength: 150,
-                springConstant: 0.04,
-                damping: 0.09,
-                avoidOverlap: 0.5
+                springConstant: 0.01,
+                nodeDistance: 200,
+                damping: 0.09
             },
             stabilization: {
                 enabled: true,
-                iterations: 100,
+                iterations: 200,
                 updateInterval: 25
-            }
+            },
+            solver: 'hierarchicalRepulsion'
         },
         interaction: {
             hover: true,
@@ -484,8 +571,17 @@ function initializeNetworkDiagram() {
             }
         },
         layout: {
-            improvedLayout: true,
-            randomSeed: 42 // Consistent layout
+            hierarchical: {
+                enabled: true,
+                levelSeparation: 200,
+                nodeSpacing: 150,
+                treeSpacing: 200,
+                blockShifting: true,
+                edgeMinimization: true,
+                parentCentralization: true,
+                direction: 'UD',  // Up-Down: Network segments at top, users at bottom
+                sortMethod: 'directed'  // Follow edge directions
+            }
         }
     };
 
