@@ -1,0 +1,95 @@
+# HTTP Service Identification Atomic Steps
+# Phase: SERVICE_IDENTIFICATION (Priority: 7)
+# Purpose: Fingerprint HTTP services and detect web technologies
+
+steps:
+- id: service_identification_http_fingerprint
+  name: HTTP Service Fingerprinting
+  description: Identify HTTP server type, version, and technologies
+  phase: service_identification
+  priority: 7
+  trigger_conditions:
+  - type: property_match
+    asset_type: service
+    property_name: service_type
+    property_pattern: (http|https|http-proxy|http-alt)
+    description: HTTP-based service
+  - type: property_null
+    asset_type: service
+    property_name: http_fingerprinted
+  commands:
+  - tool: whatweb
+    platforms:
+    - linux
+    - macos
+    command: whatweb --color=never --log-xml={output_dir}/whatweb_{host_safe}_{port}.xml http://{host}:{port}/
+    preferred: true
+    timeout: 60
+    requires_elevation: false
+    notes: Web technology fingerprinting
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -p {port} --script http-headers,http-methods,http-title,http-server-header -oX {output_dir}/nmap_http_{host_safe}_{port}.xml
+      {host}
+    preferred: false
+    timeout: 120
+    requires_elevation: false
+    notes: HTTP enumeration with NSE scripts
+  - tool: curl
+    platforms:
+    - linux
+    - macos
+    - windows
+    command: curl -I -L -s http://{host}:{port}/ > {output_dir}/http_headers_{host_safe}_{port}.txt
+    preferred: false
+    timeout: 30
+    requires_elevation: false
+    notes: Simple HTTP header grab
+  output_parser:
+    type: custom
+    updates_asset:
+      properties:
+        http_fingerprinted: true
+        http_server: '{headers.Server}'
+        http_title: '{page.title}'
+        http_technologies: '{detected_technologies}'
+        http_framework: '{detected_framework}'
+        http_cms: '{detected_cms}'
+  deduplication_signature_fields:
+  - host
+  - port
+  batch_compatible: true
+  max_batch_size: 100
+  cooldown_seconds: 3600
+  next_step_ids:
+  - web_service_enumeration
+  metadata:
+    mitre_attack: T1046
+    references:
+    - https://github.com/urbanadventurer/WhatWeb
+    notes: 'HTTP fingerprinting identifies:
+
+      - Web server (Apache, Nginx, IIS)
+
+      - Application framework (Django, Rails, Laravel)
+
+      - CMS (WordPress, Drupal, Joomla)
+
+      - JavaScript libraries and frameworks
+
+      - WAF/CDN presence
+
+      '
+metadata:
+  category: HTTP Identification
+  phase: service_identification
+  priority_range: '7'
+  tools_required:
+  - whatweb (optional)
+  - nmap
+  - curl
+  notes: 'HTTP service fingerprinting and technology detection.
+
+    Identifies web servers, frameworks, CMS platforms.'

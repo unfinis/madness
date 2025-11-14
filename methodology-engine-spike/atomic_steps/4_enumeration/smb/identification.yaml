@@ -1,0 +1,95 @@
+# SMB Service Identification Atomic Steps
+# Phase: SERVICE_IDENTIFICATION (Priority: 7)
+# Purpose: Enumerate SMB protocol version and capabilities
+
+steps:
+- id: service_identification_smb_enumeration
+  name: SMB Service Identification
+  description: Enumerate SMB service version and capabilities
+  phase: service_identification
+  priority: 7
+  trigger_conditions:
+  - type: property_match
+    asset_type: service
+    property_name: port
+    property_pattern: (139|445)
+  - type: property_match
+    asset_type: service
+    property_name: protocol
+    property_pattern: tcp
+  - type: property_null
+    asset_type: service
+    property_name: smb_version
+  commands:
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -p {port} --script smb-protocols,smb-security-mode,smb-os-discovery -oX {output_dir}/nmap_smb_{host_safe}.xml
+      {host}
+    preferred: true
+    timeout: 120
+    requires_elevation: false
+    notes: SMB protocol and OS discovery
+  - tool: smbclient
+    platforms:
+    - linux
+    - macos
+    command: smbclient -L //{host}/ -N 2>&1 | tee {output_dir}/smbclient_{host_safe}.txt
+    preferred: false
+    timeout: 30
+    requires_elevation: false
+    notes: List SMB shares without authentication
+  - tool: enum4linux
+    platforms:
+    - linux
+    - macos
+    command: enum4linux -a {host} > {output_dir}/enum4linux_{host_safe}.txt
+    preferred: false
+    timeout: 300
+    requires_elevation: false
+    notes: Comprehensive SMB enumeration
+  output_parser:
+    type: nmap_xml
+    updates_asset:
+      properties:
+        service_type: smb
+        smb_version: '{smb.dialects}'
+        smb_signing: '{smb.signing}'
+        os_type: '{smb.os}'
+        computer_name: '{smb.computer_name}'
+        domain_name: '{smb.domain}'
+  deduplication_signature_fields:
+  - host
+  - port
+  batch_compatible: true
+  max_batch_size: 50
+  cooldown_seconds: 3600
+  next_step_ids:
+  - smb_enumeration
+  metadata:
+    mitre_attack: T1046
+    references:
+    - https://nmap.org/nsedoc/scripts/smb-protocols.html
+    notes: 'SMB identification reveals:
+
+      - SMB protocol versions (SMBv1, SMBv2, SMBv3)
+
+      - Message signing configuration
+
+      - OS and domain information
+
+      - Anonymous access availability
+
+      '
+metadata:
+  category: SMB Identification
+  phase: service_identification
+  priority_range: '7'
+  tools_required:
+  - nmap
+  - smbclient (optional)
+  - enum4linux (optional)
+  notes: 'SMB protocol version and configuration enumeration.
+
+    Identifies SMB version, signing, OS information.'

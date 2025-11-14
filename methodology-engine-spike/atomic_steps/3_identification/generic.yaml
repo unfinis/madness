@@ -1,0 +1,144 @@
+# Generic Service Identification Atomic Steps
+# Phase: SERVICE_IDENTIFICATION (Priority: 6-7)
+# Purpose: Generic identification techniques applicable to all services
+
+steps:
+- id: service_identification_banner_grab
+  name: Service Banner Grabbing
+  description: Grab banner from open port to identify service
+  phase: service_identification
+  priority: 7
+  trigger_conditions:
+  - type: asset_created
+    asset_type: service
+    description: New service discovered
+  - type: property_match
+    asset_type: service
+    property_name: state
+    property_pattern: open
+  - type: property_null
+    asset_type: service
+    property_name: service_type
+    description: Service type not yet identified
+  commands:
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -sV -p {port} -oX {output_dir}/nmap_banner_{host_safe}_{port}.xml {host}
+    preferred: true
+    timeout: 60
+    requires_elevation: false
+    notes: Nmap service version detection
+  - tool: nc
+    platforms:
+    - linux
+    - macos
+    command: echo '' | nc -vn -w 3 {host} {port} 2>&1 | tee {output_dir}/banner_{host_safe}_{port}.txt
+    preferred: false
+    timeout: 10
+    requires_elevation: false
+    notes: Raw netcat banner grab
+  - tool: amap
+    platforms:
+    - linux
+    command: amap -bq {host} {port} > {output_dir}/amap_{host_safe}_{port}.txt
+    preferred: false
+    timeout: 30
+    requires_elevation: false
+    notes: Application mapper for service identification
+  output_parser:
+    type: nmap_xml
+    updates_asset:
+      properties:
+        service_type: '{port.service.name}'
+        service_product: '{port.service.product}'
+        service_version: '{port.service.version}'
+        banner: '{port.service.extrainfo}'
+  deduplication_signature_fields:
+  - host
+  - port
+  batch_compatible: true
+  max_batch_size: 100
+  cooldown_seconds: 3600
+  next_step_ids:
+  - service_identification_nse_scripts
+  metadata:
+    mitre_attack: T1046
+    references:
+    - https://nmap.org/book/vscan.html
+    notes: 'Banner grabbing is the first step in service identification.
+
+      Reveals service type, version, and sometimes OS information.
+
+      Essential for vulnerability assessment and exploit selection.
+
+      '
+- id: service_identification_nse_scripts
+  name: Nmap NSE Service Discovery
+  description: Run Nmap NSE scripts for comprehensive service identification
+  phase: service_identification
+  priority: 6
+  trigger_conditions:
+  - type: property_not_null
+    asset_type: service
+    property_name: service_type
+    description: Service type identified
+  - type: property_null
+    asset_type: service
+    property_name: nse_scripts_run
+    description: NSE scripts not yet executed
+  commands:
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -sV -p {port} --script=banner,default,discovery,safe -oX {output_dir}/nmap_nse_{host_safe}_{port}.xml {host}
+    preferred: true
+    timeout: 300
+    requires_elevation: false
+    notes: Run safe NSE scripts for service discovery
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -p {port} --script={service_type}-* -oX {output_dir}/nmap_service_specific_{host_safe}_{port}.xml {host}
+    preferred: false
+    timeout: 300
+    requires_elevation: false
+    notes: Run service-specific NSE scripts (e.g., ssh-*, http-*, smb-*)
+  output_parser:
+    type: nmap_xml
+    updates_asset:
+      properties:
+        nse_scripts_run: true
+        nse_findings: '{script_results}'
+        additional_info: '{script_output}'
+  deduplication_signature_fields:
+  - host
+  - port
+  - service_type
+  batch_compatible: true
+  max_batch_size: 50
+  cooldown_seconds: 3600
+  next_step_ids: []
+  metadata:
+    mitre_attack: T1046
+    notes: 'NSE scripts provide deep service fingerprinting.
+
+      Can detect specific versions, configurations, vulnerabilities.
+
+      Safe scripts category avoids intrusive tests.
+
+      '
+metadata:
+  category: Generic Service Identification
+  phase: service_identification
+  priority_range: 6-7
+  tools_required:
+  - nmap
+  - nc (netcat)
+  - amap (optional)
+  notes: 'Generic service identification applicable to all discovered services.
+
+    Banner grabbing and NSE scripts provide foundation for service fingerprinting.'

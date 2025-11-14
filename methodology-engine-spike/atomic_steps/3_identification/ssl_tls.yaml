@@ -1,0 +1,94 @@
+# SSL/TLS Service Identification Atomic Steps
+# Phase: SERVICE_IDENTIFICATION (Priority: 7)
+# Purpose: Analyze SSL/TLS configurations on encrypted services
+
+steps:
+- id: service_identification_ssl_tls_scan
+  name: SSL/TLS Service Scanning
+  description: Identify and analyze SSL/TLS encrypted services
+  phase: service_identification
+  priority: 7
+  trigger_conditions:
+  - type: property_match
+    asset_type: service
+    property_name: port
+    property_pattern: (443|8443|636|3389|989|990|992|993|994|995)
+    description: Common SSL/TLS ports
+  - type: property_null
+    asset_type: service
+    property_name: ssl_analyzed
+  commands:
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -p {port} --script ssl-cert,ssl-enum-ciphers -oX {output_dir}/nmap_ssl_{host_safe}_{port}.xml {host}
+    preferred: true
+    timeout: 120
+    requires_elevation: false
+    notes: SSL certificate and cipher enumeration
+  - tool: sslscan
+    platforms:
+    - linux
+    - macos
+    command: sslscan --xml={output_dir}/sslscan_{host_safe}_{port}.xml {host}:{port}
+    preferred: false
+    timeout: 60
+    requires_elevation: false
+    notes: Comprehensive SSL/TLS scanner
+  - tool: testssl
+    platforms:
+    - linux
+    - macos
+    command: testssl.sh --jsonfile {output_dir}/testssl_{host_safe}_{port}.json {host}:{port}
+    preferred: false
+    timeout: 300
+    requires_elevation: false
+    notes: Detailed SSL/TLS testing including vulnerabilities
+  output_parser:
+    type: nmap_xml
+    updates_asset:
+      properties:
+        ssl_analyzed: true
+        ssl_version: '{ssl.version}'
+        ssl_cipher_suites: '{ssl.ciphers}'
+        ssl_cert_subject: '{ssl.cert.subject}'
+        ssl_cert_issuer: '{ssl.cert.issuer}'
+        ssl_cert_expiry: '{ssl.cert.not_after}'
+        ssl_vulnerabilities: '{ssl.vulnerabilities}'
+  deduplication_signature_fields:
+  - host
+  - port
+  batch_compatible: true
+  max_batch_size: 50
+  cooldown_seconds: 3600
+  next_step_ids:
+  - ssl_vulnerability_checks
+  metadata:
+    mitre_attack: T1046
+    cvss_related: true
+    references:
+    - https://testssl.sh/
+    - https://github.com/rbsec/sslscan
+    notes: 'SSL/TLS analysis reveals:
+
+      - Weak ciphers and protocols (SSLv3, TLS 1.0)
+
+      - Certificate validation issues
+
+      - Known vulnerabilities (POODLE, BEAST, Heartbleed)
+
+      - Certificate details for OSINT
+
+      '
+metadata:
+  category: SSL/TLS Identification
+  phase: service_identification
+  priority_range: '7'
+  tools_required:
+  - nmap
+  - sslscan (optional)
+  - testssl (optional)
+  notes: 'SSL/TLS analysis for encrypted services.
+
+    Identifies weak ciphers, protocol versions, and certificate details.'

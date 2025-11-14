@@ -1,0 +1,86 @@
+# SSH Service Identification Atomic Steps
+# Phase: SERVICE_IDENTIFICATION (Priority: 7)
+# Purpose: Identify SSH algorithms and configuration
+
+steps:
+- id: service_identification_ssh_algorithms
+  name: SSH Algorithm Enumeration
+  description: Enumerate supported SSH algorithms and configuration
+  phase: service_identification
+  priority: 7
+  trigger_conditions:
+  - type: property_match
+    asset_type: service
+    property_name: port
+    property_pattern: '22'
+  - type: property_match
+    asset_type: service
+    property_name: service_type
+    property_pattern: ssh
+  - type: property_null
+    asset_type: service
+    property_name: ssh_algorithms_enum
+  commands:
+  - tool: nmap
+    platforms:
+    - linux
+    - macos
+    command: nmap -p {port} --script ssh2-enum-algos,ssh-hostkey -oX {output_dir}/nmap_ssh_algos_{host_safe}.xml {host}
+    preferred: true
+    timeout: 60
+    requires_elevation: false
+    notes: Enumerate SSH algorithms and host keys
+  - tool: ssh-audit
+    platforms:
+    - linux
+    - macos
+    command: ssh-audit {host}:{port} > {output_dir}/ssh_audit_{host_safe}.txt
+    preferred: false
+    timeout: 30
+    requires_elevation: false
+    notes: Comprehensive SSH security audit
+  output_parser:
+    type: nmap_xml
+    updates_asset:
+      properties:
+        ssh_algorithms_enum: true
+        ssh_kex_algorithms: '{ssh.kex_algorithms}'
+        ssh_encryption_algorithms: '{ssh.encryption}'
+        ssh_mac_algorithms: '{ssh.mac}'
+        ssh_host_key_algorithms: '{ssh.host_key_algorithms}'
+        ssh_compression: '{ssh.compression}'
+  deduplication_signature_fields:
+  - host
+  - port
+  batch_compatible: true
+  max_batch_size: 100
+  cooldown_seconds: 3600
+  next_step_ids:
+  - ssh_enumeration
+  metadata:
+    mitre_attack: T1046
+    references:
+    - https://github.com/jtesta/ssh-audit
+    notes: 'SSH algorithm enumeration reveals:
+
+      - Weak algorithms (DES, MD5, SHA1)
+
+      - Key exchange methods
+
+      - Encryption ciphers
+
+      - MAC algorithms
+
+      - Host key types
+
+      '
+metadata:
+  category: SSH Identification
+  phase: service_identification
+  priority_range: '7'
+  tools_required:
+  - nmap
+  - ssh-audit (optional)
+  notes: 'SSH algorithm and configuration enumeration.
+
+    Identifies weak algorithms and security issues.'
