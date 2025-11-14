@@ -1,0 +1,491 @@
+# Port Scanning Atomic Steps
+# Phase: PORT_SCANNING (Priority: 7-8)
+# Trigger: Host discovered with state "up"
+
+steps:
+  - id: port_scan_quick_top_ports
+    name: "Quick Port Scan (Top 1000)"
+    description: "Fast scan of top 1000 most common TCP ports"
+    phase: port_scanning
+    priority: 8
+
+    trigger_conditions:
+      - type: asset_created
+        asset_type: host
+        description: "Triggers when a new host is added"
+      - type: property_match
+        asset_type: host
+        property_name: state
+        property_pattern: "up"
+        description: "Host must be in 'up' state"
+      - type: property_null
+        asset_type: host
+        property_name: ports_scanned
+        description: "Host hasn't been scanned yet"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -F -T4 -oX {output_dir}/nmap_quick_scan_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 300
+        requires_elevation: false
+        notes: "Fast scan (-F) of top 1000 ports with timing template 4"
+
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap --top-ports 1000 -T4 -oX {output_dir}/nmap_top1000_{ip_safe}.xml {ip}"
+        preferred: false
+        timeout: 300
+        requires_elevation: false
+        notes: "Explicit top 1000 ports scan"
+
+      - tool: masscan
+        platforms: [linux, macos]
+        command: "masscan {ip} -p1-65535 --top-ports 1000 --rate=1000 -oJ {output_dir}/masscan_top1000_{ip_safe}.json"
+        preferred: false
+        timeout: 120
+        requires_elevation: true
+        notes: "Ultra-fast masscan of top ports (requires root)"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: service
+          conditions:
+            - port_state: open
+          properties:
+            host: "{source_asset.ip}"
+            port: "{port.number}"
+            protocol: "{port.protocol}"
+            state: "open"
+            service_name: "{port.service.name}"
+
+      updates_asset:
+        properties:
+          ports_scanned: "top1000"
+          last_scan: "{timestamp}"
+          open_ports_count: "{open_ports.count}"
+
+    deduplication_signature_fields: [ip]
+    batch_compatible: true
+    max_batch_size: 256
+    cooldown_seconds: 3600
+    next_step_ids: [service_identification_banner_grab]
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: low
+      references:
+        - https://nmap.org/book/port-scanning.html
+      notes: |
+        Quick scan for rapid enumeration of common services.
+        Covers most common services (HTTP, SSH, SMB, RDP, etc.)
+        Should complete in 2-5 minutes per host.
+        Ideal for initial reconnaissance.
+
+  - id: port_scan_full_tcp
+    name: "Full TCP Port Scan (All 65535)"
+    description: "Comprehensive scan of all TCP ports"
+    phase: port_scanning
+    priority: 7
+
+    trigger_conditions:
+      - type: property_match
+        asset_type: host
+        property_name: ports_scanned
+        property_pattern: "top1000"
+        description: "Quick scan completed"
+      - type: property_match
+        asset_type: host
+        property_name: open_ports_count
+        property_pattern: ".*"
+        description: "Has open ports"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -p- -T4 -oX {output_dir}/nmap_full_tcp_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 3600
+        requires_elevation: false
+        notes: "Full TCP port scan, all 65535 ports"
+
+      - tool: masscan
+        platforms: [linux, macos]
+        command: "masscan {ip} -p1-65535 --rate=10000 -oJ {output_dir}/masscan_full_{ip_safe}.json"
+        preferred: false
+        timeout: 600
+        requires_elevation: true
+        notes: "Ultra-fast full port scan with masscan (10k packets/sec)"
+
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -p- -T2 --max-retries 1 -oX {output_dir}/nmap_full_stealth_{ip_safe}.xml {ip}"
+        preferred: false
+        timeout: 7200
+        requires_elevation: false
+        notes: "Slower stealth scan for IDS evasion"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: service
+          conditions:
+            - port_state: open
+          properties:
+            host: "{source_asset.ip}"
+            port: "{port.number}"
+            protocol: "tcp"
+            state: "open"
+
+      updates_asset:
+        properties:
+          ports_scanned: "full_tcp"
+          last_full_scan: "{timestamp}"
+          open_ports_count: "{open_ports.count}"
+
+    deduplication_signature_fields: [ip]
+    batch_compatible: true
+    max_batch_size: 50
+    cooldown_seconds: 86400
+    next_step_ids: [service_identification_banner_grab]
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: high
+      time_estimate_minutes: 20-60
+      notes: |
+        Comprehensive scan of all possible TCP ports.
+        May take 20-60 minutes per host.
+        Useful for finding services on non-standard ports.
+        May trigger IDS/IPS alerts.
+
+  - id: port_scan_udp_top_ports
+    name: "UDP Port Scan (Top 100)"
+    description: "Scan top 100 most common UDP ports"
+    phase: port_scanning
+    priority: 7
+
+    trigger_conditions:
+      - type: property_match
+        asset_type: host
+        property_name: ports_scanned
+        property_pattern: "(top1000|full_tcp)"
+        description: "TCP scan completed"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sU --top-ports 100 -T4 -oX {output_dir}/nmap_udp_top100_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 900
+        requires_elevation: true
+        notes: "UDP scan of top 100 ports (requires root)"
+
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sU -p53,161,137,123,138,1434 -oX {output_dir}/nmap_udp_critical_{ip_safe}.xml {ip}"
+        preferred: false
+        timeout: 300
+        requires_elevation: true
+        notes: "Scan only critical UDP services (DNS, SNMP, NetBIOS, NTP, MSSQL)"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: service
+          conditions:
+            - port_state: open
+          properties:
+            host: "{source_asset.ip}"
+            port: "{port.number}"
+            protocol: "udp"
+            state: "open|open|filtered"
+            service_name: "{port.service.name}"
+
+      updates_asset:
+        properties:
+          udp_ports_scanned: "top100"
+          last_udp_scan: "{timestamp}"
+
+    deduplication_signature_fields: [ip]
+    batch_compatible: true
+    max_batch_size: 50
+    cooldown_seconds: 3600
+    next_step_ids: [service_identification_banner_grab]
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: medium
+      time_estimate_minutes: 10-20
+      notes: |
+        UDP scanning is slower and less reliable than TCP.
+        Open UDP ports often show as "open|filtered".
+        Critical for finding DNS, SNMP, NTP services.
+        Requires root/admin privileges.
+
+  - id: port_scan_service_version
+    name: "Service Version Detection"
+    description: "Aggressive version detection scan on discovered ports"
+    phase: port_scanning
+    priority: 7
+
+    trigger_conditions:
+      - type: property_not_null
+        asset_type: host
+        property_name: open_ports_count
+        description: "Has open ports"
+      - type: property_match
+        asset_type: host
+        property_name: ports_scanned
+        property_pattern: "(top1000|full_tcp)"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sV -T4 -oX {output_dir}/nmap_version_scan_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 600
+        requires_elevation: false
+        notes: "Service version detection on all discovered ports"
+
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sV --version-intensity 9 -oX {output_dir}/nmap_version_aggressive_{ip_safe}.xml {ip}"
+        preferred: false
+        timeout: 1200
+        requires_elevation: false
+        notes: "Aggressive version detection (level 9) - most accurate"
+
+    output_parser:
+      type: nmap_xml
+      updates_assets:
+        asset_type: service
+        match_on: [host, port]
+        properties:
+          service_type: "{port.service.name}"
+          service_version: "{port.service.version}"
+          service_product: "{port.service.product}"
+          os_type: "{port.service.ostype}"
+          banner: "{port.service.extrainfo}"
+
+    deduplication_signature_fields: [ip]
+    batch_compatible: true
+    max_batch_size: 100
+    cooldown_seconds: 3600
+    next_step_ids: [service_identification_nse_scripts]
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: medium-high
+      notes: |
+        Service version detection sends various probes to identify services.
+        More accurate than banner grabbing alone.
+        May trigger application-level alerts.
+        Essential for vulnerability assessment.
+
+  - id: port_scan_syn_stealth
+    name: "TCP SYN Stealth Scan"
+    description: "Stealthy SYN scan without completing TCP handshake"
+    phase: port_scanning
+    priority: 8
+
+    trigger_conditions:
+      - type: asset_created
+        asset_type: host
+      - type: property_match
+        asset_type: host
+        property_name: state
+        property_pattern: "up"
+      - type: property_match
+        asset_type: host
+        property_name: stealth_required
+        property_pattern: true
+        description: "Stealth mode enabled for this target"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sS -p- -T2 --max-retries 1 -oX {output_dir}/nmap_syn_stealth_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 7200
+        requires_elevation: true
+        notes: "SYN stealth scan, slower timing to avoid detection"
+
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -sS --scan-delay 1s -p- -oX {output_dir}/nmap_syn_slow_{ip_safe}.xml {ip}"
+        preferred: false
+        timeout: 14400
+        requires_elevation: true
+        notes: "Very slow SYN scan with 1 second delay between packets"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: service
+          conditions:
+            - port_state: open
+          properties:
+            host: "{source_asset.ip}"
+            port: "{port.number}"
+            protocol: "tcp"
+            state: "open"
+
+    deduplication_signature_fields: [ip]
+    batch_compatible: true
+    max_batch_size: 20
+    cooldown_seconds: 86400
+    next_step_ids: []
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: low
+      stealth_level: high
+      notes: |
+        SYN scan doesn't complete TCP handshake (half-open).
+        Less likely to be logged by target applications.
+        Slower to avoid IDS/IPS detection.
+        Requires root/admin privileges.
+
+  - id: port_scan_specific_ports
+    name: "Targeted Port Scan"
+    description: "Scan specific ports based on intelligence"
+    phase: port_scanning
+    priority: 8
+
+    trigger_conditions:
+      - type: property_not_null
+        asset_type: host
+        property_name: target_ports
+        description: "Specific ports identified for scanning"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -p {target_ports} -T4 -oX {output_dir}/nmap_targeted_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 300
+        requires_elevation: false
+        notes: "Scan specific ports from intelligence gathering"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: service
+          conditions:
+            - port_state: open
+          properties:
+            host: "{source_asset.ip}"
+            port: "{port.number}"
+            protocol: "{port.protocol}"
+            state: "open"
+
+    deduplication_signature_fields: [ip, target_ports]
+    batch_compatible: true
+    max_batch_size: 100
+    cooldown_seconds: 1800
+    next_step_ids: [service_identification_banner_grab]
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: low
+      notes: |
+        Targeted scanning based on prior intelligence.
+        Used when specific ports are known from other sources.
+        Very fast and focused approach.
+
+  - id: port_scan_web_ports
+    name: "Web Service Port Scan"
+    description: "Comprehensive scan of web-related ports"
+    phase: port_scanning
+    priority: 8
+
+    trigger_conditions:
+      - type: asset_created
+        asset_type: host
+      - type: property_match
+        asset_type: host
+        property_name: state
+        property_pattern: "up"
+
+    commands:
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -p80,443,8000,8080,8443,8888,9000,9090,3000,5000 -T4 -oX {output_dir}/nmap_web_ports_{ip_safe}.xml {ip}"
+        preferred: true
+        timeout: 180
+        requires_elevation: false
+        notes: "Scan common web service ports"
+
+      - tool: nmap
+        platforms: [linux, macos]
+        command: "nmap -p- --script http-enum -T4 {ip}"
+        preferred: false
+        timeout: 3600
+        requires_elevation: false
+        notes: "Full port scan looking for any HTTP services"
+
+    output_parser:
+      type: nmap_xml
+      creates_assets:
+        - asset_type: service
+          conditions:
+            - port_state: open
+          properties:
+            host: "{source_asset.ip}"
+            port: "{port.number}"
+            protocol: "tcp"
+            state: "open"
+            service_category: "web"
+
+      updates_asset:
+        properties:
+          has_web_services: true
+
+    deduplication_signature_fields: [ip]
+    batch_compatible: true
+    max_batch_size: 200
+    cooldown_seconds: 3600
+    next_step_ids: [web_service_enumeration]
+
+    metadata:
+      mitre_attack: T1046
+      scan_intensity: low
+      notes: |
+        Focused scan for web services.
+        Covers common HTTP/HTTPS ports and alternatives.
+        Triggers web-specific enumeration steps.
+
+metadata:
+  phase: port_scanning
+  priority_range: 7-8
+  tools_required:
+    - nmap
+    - masscan (optional, requires root)
+  batch_commands:
+    quick_scan_batch: "nmap -F -T4 -oX {output_dir}/batch_quick.xml -iL {targets_file}"
+    masscan_batch: "masscan -iL {targets_file} -p1-65535 --top-ports 1000 --rate=10000 -oJ {output_dir}/batch_masscan.json"
+  notes: |
+    Port scanning is Phase 2 of penetration testing workflow.
+
+    SCANNING WORKFLOW:
+    1. Host discovered → Quick scan (top 1000 ports)
+    2. Open ports found → Full TCP scan (all 65535)
+    3. TCP complete → UDP scan (top 100)
+    4. Ports identified → Service version detection
+
+    SCAN TYPES BY PRIORITY:
+    - Priority 8: Quick scans, web port scans, targeted scans
+    - Priority 7: Full TCP, UDP, version detection
+
+    BATCH OPTIMIZATION:
+    - Quick scans: Up to 256 hosts in parallel
+    - Full scans: Up to 50 hosts in parallel
+    - UDP scans: Up to 50 hosts in parallel
+
+    STEALTH CONSIDERATIONS:
+    - Standard scans: -T4 timing (normal)
+    - Stealth scans: -T2 timing, longer delays
+    - Consider scan-delay for IDS evasion
