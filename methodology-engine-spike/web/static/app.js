@@ -77,7 +77,7 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-button').forEach((btn, index) => {
         btn.classList.remove('active');
         // Add active class to the button that matches the tab
-        const btnTab = ['assets', 'queue', 'library'][index];
+        const btnTab = ['assets', 'queue', 'library', 'network'][index];
         if (btnTab === tabName) {
             btn.classList.add('active');
         }
@@ -101,6 +101,9 @@ function renderCurrentTab() {
             break;
         case 'library':
             renderPlaybookLibraryTab();
+            break;
+        case 'network':
+            renderNetworkDiagram();
             break;
     }
 }
@@ -346,6 +349,288 @@ function createMethodologyCard(methodology) {
         </div>
     `;
 }
+
+// ============================================================================
+// NETWORK DIAGRAM TAB
+// ============================================================================
+let networkInstance = null;
+
+function renderNetworkDiagram() {
+    // Only initialize once or when data changes
+    if (!networkInstance || needsNetworkUpdate) {
+        initializeNetworkDiagram();
+    }
+}
+
+function initializeNetworkDiagram() {
+    const container = document.getElementById('network-diagram');
+
+    if (!container) {
+        console.error('Network diagram container not found');
+        return;
+    }
+
+    // Prepare nodes from assets
+    const nodes = allAssets.map(asset => {
+        const { color, shape } = getAssetNodeStyle(asset.type);
+        const label = asset.name || `${asset.type} ${asset.id.slice(0, 8)}`;
+
+        return {
+            id: asset.id,
+            label: label,
+            title: createNodeTooltip(asset), // HTML tooltip
+            color: {
+                background: color,
+                border: adjustColor(color, -20),
+                highlight: {
+                    background: adjustColor(color, 20),
+                    border: adjustColor(color, -40)
+                }
+            },
+            shape: shape,
+            font: {
+                color: '#e2e8f0',
+                size: 14,
+                face: 'Segoe UI'
+            },
+            borderWidth: 2,
+            borderWidthSelected: 4
+        };
+    });
+
+    // Prepare edges from relationships
+    const edges = [];
+    allAssets.forEach(asset => {
+        if (asset.relationships && Array.isArray(asset.relationships)) {
+            asset.relationships.forEach(rel => {
+                const edgeStyle = getRelationshipEdgeStyle(rel.type);
+                edges.push({
+                    from: asset.id,
+                    to: rel.target_asset_id,
+                    label: formatRelationshipType(rel.type),
+                    ...edgeStyle,
+                    font: {
+                        color: '#94a3b8',
+                        size: 11,
+                        align: 'middle',
+                        background: 'rgba(15, 23, 42, 0.8)',
+                        strokeWidth: 0
+                    }
+                });
+            });
+        }
+    });
+
+    // Create vis.js network
+    const data = {
+        nodes: new vis.DataSet(nodes),
+        edges: new vis.DataSet(edges)
+    };
+
+    const options = {
+        nodes: {
+            shape: 'dot',
+            size: 20,
+            shadow: {
+                enabled: true,
+                color: 'rgba(0,0,0,0.3)',
+                size: 10,
+                x: 2,
+                y: 2
+            }
+        },
+        edges: {
+            width: 2,
+            shadow: {
+                enabled: true,
+                color: 'rgba(0,0,0,0.2)',
+                size: 5,
+                x: 1,
+                y: 1
+            },
+            smooth: {
+                type: 'cubicBezier',
+                forceDirection: 'none',
+                roundness: 0.5
+            }
+        },
+        physics: {
+            enabled: true,
+            barnesHut: {
+                gravitationalConstant: -4000,
+                centralGravity: 0.3,
+                springLength: 150,
+                springConstant: 0.04,
+                damping: 0.09,
+                avoidOverlap: 0.5
+            },
+            stabilization: {
+                enabled: true,
+                iterations: 100,
+                updateInterval: 25
+            }
+        },
+        interaction: {
+            hover: true,
+            tooltipDelay: 200,
+            zoomView: true,
+            dragView: true,
+            navigationButtons: true,
+            keyboard: {
+                enabled: true
+            }
+        },
+        layout: {
+            improvedLayout: true,
+            randomSeed: 42 // Consistent layout
+        }
+    };
+
+    // Destroy existing network if present
+    if (networkInstance) {
+        networkInstance.destroy();
+    }
+
+    // Create new network
+    networkInstance = new vis.Network(container, data, options);
+
+    // Add click event to show asset details
+    networkInstance.on('click', function(params) {
+        if (params.nodes.length > 0) {
+            const assetId = params.nodes[0];
+            showAssetDetailsFromNetwork(assetId);
+        }
+    });
+
+    // Add double-click to edit asset
+    networkInstance.on('doubleClick', function(params) {
+        if (params.nodes.length > 0) {
+            const assetId = params.nodes[0];
+            const asset = allAssets.find(a => a.id === assetId);
+            if (asset) {
+                showEditAssetModal(asset);
+            }
+        }
+    });
+
+    // Reset update flag
+    needsNetworkUpdate = false;
+}
+
+function getAssetNodeStyle(type) {
+    const styles = {
+        host: { color: '#3b82f6', shape: 'dot' },
+        network_segment: { color: '#8b5cf6', shape: 'diamond' },
+        web_service: { color: '#10b981', shape: 'square' },
+        domain_controller: { color: '#f59e0b', shape: 'star' },
+        user: { color: '#ef4444', shape: 'triangle' },
+        credential: { color: '#ef4444', shape: 'triangle' },
+        database: { color: '#06b6d4', shape: 'hexagon' },
+        application: { color: '#ec4899', shape: 'box' },
+        service: { color: '#10b981', shape: 'ellipse' },
+        smb_share: { color: '#f59e0b', shape: 'box' },
+        dns_server: { color: '#8b5cf6', shape: 'diamond' },
+        default: { color: '#6366f1', shape: 'dot' }
+    };
+
+    return styles[type] || styles.default;
+}
+
+function getRelationshipEdgeStyle(relType) {
+    const styles = {
+        can_pivot_to: {
+            color: { color: '#10b981', highlight: '#34d399' },
+            arrows: 'to',
+            dashes: false,
+            width: 3
+        },
+        contains: {
+            color: { color: '#8b5cf6', highlight: '#a78bfa' },
+            arrows: 'to',
+            dashes: false
+        },
+        connects_to: {
+            color: { color: '#3b82f6', highlight: '#60a5fa' },
+            arrows: 'to',
+            dashes: false
+        },
+        depends_on: {
+            color: { color: '#f59e0b', highlight: '#fbbf24' },
+            arrows: 'to',
+            dashes: [5, 5]
+        },
+        has_credential: {
+            color: { color: '#ef4444', highlight: '#f87171' },
+            arrows: 'to',
+            dashes: false,
+            width: 2
+        },
+        trusts: {
+            color: { color: '#06b6d4', highlight: '#22d3ee' },
+            arrows: 'to',
+            dashes: [10, 5]
+        },
+        default: {
+            color: { color: '#64748b', highlight: '#94a3b8' },
+            arrows: 'to'
+        }
+    };
+
+    return styles[relType] || styles.default;
+}
+
+function createNodeTooltip(asset) {
+    let html = `<strong>${asset.name || asset.type}</strong><br>`;
+    html += `<em>Type: ${asset.type}</em><br>`;
+
+    if (asset.properties) {
+        html += '<br><strong>Properties:</strong><br>';
+        const props = Object.entries(asset.properties).slice(0, 5);
+        props.forEach(([key, value]) => {
+            const displayValue = typeof value === 'object' ? JSON.stringify(value).slice(0, 30) : String(value).slice(0, 30);
+            html += `${key}: ${displayValue}<br>`;
+        });
+        if (Object.keys(asset.properties).length > 5) {
+            html += `<em>... and ${Object.keys(asset.properties).length - 5} more</em>`;
+        }
+    }
+
+    return html;
+}
+
+function showAssetDetailsFromNetwork(assetId) {
+    const asset = allAssets.find(a => a.id === assetId);
+    if (!asset) return;
+
+    // Show a simple alert with asset details for now
+    // Could be enhanced to show a modal or sidebar
+    const details = {
+        Name: asset.name || 'Unnamed',
+        Type: asset.type,
+        ID: assetId,
+        Properties: JSON.stringify(asset.properties, null, 2),
+        Relationships: asset.relationships ? asset.relationships.length : 0
+    };
+
+    alert(Object.entries(details).map(([k, v]) => `${k}: ${v}`).join('\n'));
+}
+
+function formatRelationshipType(type) {
+    return type.split('_').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+function adjustColor(color, amount) {
+    // Simple color adjustment for borders/highlights
+    const num = parseInt(color.replace('#', ''), 16);
+    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+let needsNetworkUpdate = true;
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -1202,6 +1487,7 @@ async function submitAsset(event) {
             } else {
                 showNotification(`✓ Asset created successfully! ${result.triggered_methodologies || 0} methodologies triggered.`);
             }
+            needsNetworkUpdate = true; // Trigger network diagram refresh
             closeAssetModal();
             await refreshAll();
 
@@ -1473,6 +1759,7 @@ async function submitRelationship(event) {
         if (response.ok) {
             const result = await response.json();
             showNotification('✓ Relationship created successfully!');
+            needsNetworkUpdate = true; // Trigger network diagram refresh
             closeRelationshipModal();
             await refreshAll();
         } else {

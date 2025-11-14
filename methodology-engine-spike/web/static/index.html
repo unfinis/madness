@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Methodology Engine - Asset-Driven Attack Platform</title>
+    <!-- vis.js Network for network diagram visualization -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -824,6 +826,9 @@
             <button class="tab-button" onclick="switchTab('library')">
                 📚 Playbook Library
             </button>
+            <button class="tab-button" onclick="switchTab('network')">
+                🌐 Network Diagram
+            </button>
         </div>
 
         <!-- Tab Content -->
@@ -837,6 +842,23 @@
 
         <div id="tab-library" class="tab-content">
             <!-- Playbook Library content loaded here -->
+        </div>
+
+        <div id="tab-network" class="tab-content">
+            <div id="network-diagram" style="width: 100%; height: 700px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);"></div>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(15, 23, 42, 0.6); border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.2);">
+                <h3 style="margin-bottom: 10px; color: #60a5fa;">Legend</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <div><span style="color: #3b82f6;">●</span> Host</div>
+                    <div><span style="color: #8b5cf6;">●</span> Network Segment</div>
+                    <div><span style="color: #10b981;">●</span> Web Service</div>
+                    <div><span style="color: #f59e0b;">●</span> Domain Controller</div>
+                    <div><span style="color: #ef4444;">●</span> User/Credential</div>
+                    <div><span style="color: #06b6d4;">●</span> Database</div>
+                    <div><span style="color: #ec4899;">●</span> Application</div>
+                    <div><span style="color: #6366f1;">●</span> Other Assets</div>
+                </div>
+            </div>
         </div>
     </div>
 
