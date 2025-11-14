@@ -74,8 +74,14 @@ function switchTab(tabName) {
     currentTab = tabName;
 
     // Update tab buttons
-    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    document.querySelectorAll('.tab-button').forEach((btn, index) => {
+        btn.classList.remove('active');
+        // Add active class to the button that matches the tab
+        const btnTab = ['assets', 'queue', 'library'][index];
+        if (btnTab === tabName) {
+            btn.classList.add('active');
+        }
+    });
 
     // Update tab content
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
